@@ -50,6 +50,7 @@ export type Screen =
   | 'recruiter-ats-scanner'
   | 'recruiter-functional-ats'
   | 'recruiter-accuracy-first-ats'
+  | 'recruiter-professional-ats'
   | 'recruiter-automated-screening'
   | 'recruiter-analytics'
   | 'recruiter-advanced-analytics'
@@ -85,6 +86,7 @@ export type Screen =
   | 'candidate-ats-scanner'
   | 'candidate-functional-ats'
   | 'candidate-accuracy-first-ats'
+  | 'candidate-professional-ats'
   | 'ai-smart-notifications'
   | 'ats-diagnostic'
   | 'pricing'
@@ -106,7 +108,7 @@ export interface AppState {
     projectTitle: string;
     challengeDescription?: string;
   } | null;
-  assessmentBuilderData: any;
+  assessmentBuilderData: unknown;
 }
 
 export type UserType = 'recruiter' | 'candidate';

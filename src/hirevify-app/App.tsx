@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from "./components/ui/sonner";
@@ -19,34 +19,50 @@ function HireVifyApp() {
     projectTitle: string;
     challengeDescription?: string;
   } | null>(null);
-  const [assessmentBuilderData, setAssessmentBuilderData] = useState<any>(null);
+  const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
+  const hadAuthenticatedUser = useRef(false);
 
   // Check for diagnostic mode on load
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('diagnostic') === 'ats') {
-      setCurrentScreen('ats-diagnostic');
-    }
-    
-    // Check for direct screen access
-    const screenParam = urlParams.get('screen');
-    if (screenParam) {
-      switch (screenParam) {
-        case 'functional-ats':
-          setCurrentScreen('recruiter-functional-ats');
-          break;
-        case 'accuracy-first-ats':
-          setCurrentScreen('recruiter-accuracy-first-ats');
-          break;
-        case 'professional-ats':
-          setCurrentScreen('recruiter-professional-ats');
-          break;
-        default:
-          break;
+// Route user after login/signup and reset when logged out
+useEffect(() => {
+  if (user) {
+    hadAuthenticatedUser.current = true;
+
+    if (currentScreen === 'homepage') {
+      if (user.userType === 'recruiter') {
+        setSelectedProject(null);
+        setSelectedApplication(null);
+        setCurrentScreen('recruiter-dashboard');
+      } else {
+        setCurrentScreen('candidate-dashboard');
       }
     }
-  }, []);
 
+    return;
+  }
+
+  if (!hadAuthenticatedUser.current) {
+    return;
+  }
+
+  let active = true;
+
+  queueMicrotask(() => {
+    if (!active) {
+      return;
+    }
+
+    setCurrentScreen('homepage');
+    setSelectedProject(null);
+    setSelectedApplication(null);
+    setProjectChallengeData(null);
+    setAssessmentBuilderData(null);
+  });
+
+  return () => {
+    active = false;
+  };
+}, [user, currentScreen]);
   // Navigation hook with all methods - memoized to prevent re-creation on every render
   const navigation = useAppNavigation({
     user,
@@ -58,40 +74,71 @@ function HireVifyApp() {
     signOut
   });
 
-  // Handle user type selection from homepage - memoized to prevent re-creation
-  const handleUserTypeSelection = useMemo(() => {
-    return (userType: 'recruiter' | 'candidate') => {
-      if (!user) {
-        console.log(`User type selected: ${userType}, but no user authenticated`);
-        return;
-      }
+// Handle user type selection from homepage - memoized to prevent re-creation
+const handleUserTypeSelection = useMemo(() => {
+  return (userType: 'recruiter' | 'candidate') => {
+    console.log(`Force opening ${userType} dashboard from homepage test button`);
 
-      console.log(`Navigating to ${userType} dashboard`);
-      if (userType === 'recruiter') {
-        navigation.navigateToRecruiterDashboard();
-      } else {
-        navigation.navigateToCandidateDashboard();
-      }
-    };
-  }, [user, navigation]);
+    setSelectedProject(null);
+    setSelectedApplication(null);
 
-  // Reset screen when user logs out - simplified to prevent infinite loops
-  useEffect(() => {
-    if (!user) {
-      setCurrentScreen('homepage');
-      setSelectedProject(null);
-      setSelectedApplication(null);
-      setProjectChallengeData(null);
-      setAssessmentBuilderData(null);
+    if (userType === 'recruiter') {
+      setCurrentScreen('recruiter-dashboard');
+    } else {
+      setCurrentScreen('candidate-dashboard');
     }
-  }, [user]);
+  };
+}, [setCurrentScreen, setSelectedProject, setSelectedApplication]);
 
-  // Prevent render during initial loading state
-  if (typeof window !== 'undefined' && !window.document) {
-    return null;
+  // Route user after login/signup and reset when logged out
+useEffect(() => {
+  if (user) {
+    hadAuthenticatedUser.current = true;
+
+    // Open correct dashboard after login/signup
+    if (currentScreen === 'homepage') {
+      if (user.userType === 'recruiter') {
+        setSelectedProject(null);
+        setSelectedApplication(null);
+        setCurrentScreen('recruiter-dashboard');
+      } else {
+        setCurrentScreen('candidate-dashboard');
+      }
+    }
+
+    return;
   }
 
-  return (
+  if (!hadAuthenticatedUser.current) {
+    return;
+  }
+
+  let active = true;
+
+  queueMicrotask(() => {
+    if (!active) {
+      return;
+    }
+
+    setCurrentScreen('homepage');
+    setSelectedProject(null);
+    setSelectedApplication(null);
+    setProjectChallengeData(null);
+    setAssessmentBuilderData(null);
+  });
+
+  return () => {
+    active = false;
+  };
+}, [
+  user,
+  currentScreen,
+  setCurrentScreen,
+  setSelectedProject,
+  setSelectedApplication,
+  setProjectChallengeData,
+  setAssessmentBuilderData,
+]);  return (
     <div className="min-h-screen">
       <AppRouter
         currentScreen={currentScreen}
@@ -124,7 +171,6 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-
 
 
 

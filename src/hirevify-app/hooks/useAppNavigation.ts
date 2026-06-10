@@ -8,8 +8,12 @@ interface UseAppNavigationProps {
   setCurrentScreen: (screen: Screen) => void;
   setSelectedProject: (project: Project | null) => void;
   setSelectedApplication: (application: Application | null) => void;
-  setProjectChallengeData: (data: any) => void;
-  setAssessmentBuilderData: (data: any) => void;
+  setProjectChallengeData: (data: {
+    projectId: string;
+    projectTitle: string;
+    challengeDescription?: string;
+  } | null) => void;
+  setAssessmentBuilderData: (data: unknown) => void;
   signOut: () => Promise<void>;
 }
 
@@ -144,6 +148,11 @@ export const useAppNavigation = ({
     setCurrentScreen('candidate-functional-ats');
   }, [requireAuth, setCurrentScreen]);
 
+  const navigateToCandidateAccuracyFirstATS = useCallback(() => {
+    if (!requireAuth('access accuracy-first resume analyzer', 'candidate')) return;
+    setCurrentScreen('candidate-accuracy-first-ats');
+  }, [requireAuth, setCurrentScreen]);
+
   const navigateToAIMatchingDashboard = useCallback(() => {
     if (!requireAuth('access AI matching dashboard', 'recruiter')) return;
     setCurrentScreen('recruiter-ai-matching-dashboard');
@@ -173,7 +182,7 @@ export const useAppNavigation = ({
     }
   }, [requireAuth, user, setCurrentScreen]);
 
-  const navigateToCustomAssessmentBuilder = useCallback((existingAssessment?: any) => {
+  const navigateToCustomAssessmentBuilder = useCallback((existingAssessment?: unknown) => {
     if (!requireAuth('create custom assessments', 'recruiter')) return;
     setAssessmentBuilderData(existingAssessment || null);
     setCurrentScreen('recruiter-custom-assessment-builder');
@@ -338,6 +347,7 @@ export const useAppNavigation = ({
     navigateToAccuracyFirstATS,
     navigateToCandidateATSScanner,
     navigateToCandidateFunctionalATS,
+    navigateToCandidateAccuracyFirstATS,
     navigateToAIMatchingDashboard,
     navigateToPortfolio,
     navigateToAnalytics,

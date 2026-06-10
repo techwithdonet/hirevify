@@ -225,7 +225,7 @@ export function AISkillsDevelopment({ onBack, onUpgrade }: AISkillsDevelopmentPr
             {
               id: '2',
               title: 'TypeScript Fundamentals',
-              type: 'course',
+              type: 'video',
               duration: 300,
               completed: true,
               score: 85,

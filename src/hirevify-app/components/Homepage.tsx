@@ -5,8 +5,6 @@ import { useAuth } from './AuthProvider';
 import { 
   Building2, 
   Search, 
-  ArrowRight,
-  Users,
   Target,
   Shield,
   BarChart3,
@@ -17,7 +15,9 @@ import {
   CheckCircle,
   MessageCircle,
   Link,
-  GitBranch
+  GitBranch,
+  Menu,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { HireVifyLogo } from './HireVifyLogo';
@@ -29,18 +29,18 @@ interface HomepageProps {
 }
 
 export function Homepage({ onSelectUserType, onPostProject, onFindProject }: HomepageProps) {
-  const { connectionStatus, signIn, user } = useAuth();
+  const { signIn, user, setUser } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signin');
-  const [debugPanelOpen, setDebugPanelOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const scrollToSection = (sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
+  };
 
   const handleSignIn = () => {
     setAuthModalTab('signin');
-    setAuthModalOpen(true);
-  };
-
-  const handleSignUp = () => {
-    setAuthModalTab('signup');
     setAuthModalOpen(true);
   };
 
@@ -65,64 +65,93 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
     }
   };
 
-  // Test account login handlers
-  const handleTestRecruiterLogin = async () => {
-    try {
-      toast.info('Signing in as test recruiter...');
-      const result = await signIn('recruiter@hirevify.com', 'TestPassword123!');
-      if (result.success) {
-        toast.success('Successfully signed in as recruiter!');
-        // Navigate to recruiter dashboard after brief delay to show success message
-        setTimeout(() => {
-          onSelectUserType('recruiter');
-        }, 1000);
-      } else {
-        toast.error(`Login failed: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Test recruiter login error:', error);
-      toast.error('Failed to sign in as test recruiter');
-    }
-  };
+ // Test account login handlers
+const handleTestRecruiterLogin = async () => {
+  try {
+    toast.info('Signing in as test recruiter...');
 
-  const handleTestCandidateLogin = async () => {
-    try {
-      toast.info('Signing in as test candidate...');
-      const result = await signIn('candidate@hirevify.com', 'TestPassword123!');
-      if (result.success) {
-        toast.success('Successfully signed in as candidate!');
-        // Navigate to candidate dashboard after brief delay to show success message
-        setTimeout(() => {
-          onSelectUserType('candidate');
-        }, 1000);
-      } else {
-        toast.error(`Login failed: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Test candidate login error:', error);
-      toast.error('Failed to sign in as test candidate');
-    }
-  };
+    const result = await signIn('recruiter@hirevify.com', 'TestPassword123!');
 
+    if (result.success && result.user) {
+      const recruiterUser = {
+        ...result.user,
+        name: result.user.name || 'Test Recruiter',
+        email: 'recruiter@hirevify.com',
+        userType: 'recruiter' as const,
+        profileComplete: true,
+      };
+
+      setUser(recruiterUser);
+
+      localStorage.setItem('hirevify_user', JSON.stringify(recruiterUser));
+      localStorage.setItem('hirevify_access_token', recruiterUser.accessToken || '');
+
+      toast.success('Successfully signed in as recruiter!');
+
+      setTimeout(() => {
+        onSelectUserType('recruiter');
+      }, 300);
+    } else {
+      toast.error(result.message || 'Failed to sign in as test recruiter');
+    }
+  } catch (error) {
+    console.error('Test recruiter login error:', error);
+    toast.error('Failed to sign in as test recruiter');
+  }
+};
+
+const handleTestCandidateLogin = async () => {
+  try {
+    toast.info('Signing in as test candidate...');
+
+    const result = await signIn('candidate@hirevify.com', 'TestPassword123!');
+
+    if (result.success && result.user) {
+      const candidateUser = {
+        ...result.user,
+        name: result.user.name || 'Test Candidate',
+        email: 'candidate@hirevify.com',
+        userType: 'candidate' as const,
+        profileComplete: true,
+      };
+
+      setUser(candidateUser);
+
+      localStorage.setItem('hirevify_user', JSON.stringify(candidateUser));
+      localStorage.setItem('hirevify_access_token', candidateUser.accessToken || '');
+
+      toast.success('Successfully signed in as candidate!');
+
+      setTimeout(() => {
+        onSelectUserType('candidate');
+      }, 300);
+    } else {
+      toast.error(result.message || 'Failed to sign in as test candidate');
+    }
+  } catch (error) {
+    console.error('Test candidate login error:', error);
+    toast.error('Failed to sign in as test candidate');
+  }
+};
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-24">
+          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
             {/* HireVify Logo */}
             <div className="flex items-center">
-              <HireVifyLogo size="xl" />
+              <HireVifyLogo size="xl" className="h-10 sm:h-14 lg:h-20" />
             </div>
 
             {/* Navigation and Login - All Inline */}
-            <div className="flex items-center gap-3 md:gap-6">
+            <div className="hidden md:flex items-center gap-3 lg:gap-6">
               {/* Navigation Links - Always Visible */}
-              <nav className="flex items-center gap-3 md:gap-6">
+              <nav className="flex items-center gap-3 lg:gap-6">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => scrollToSection('features')}
                   className="text-gray-800 hover:text-primary hover:bg-primary/10 font-semibold px-3 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                 >
                   Features
@@ -130,7 +159,7 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => scrollToSection('how-it-works')}
                   className="text-gray-800 hover:text-primary hover:bg-primary/10 font-semibold px-3 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                 >
                   How it Works
@@ -138,7 +167,7 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => scrollToSection('testimonials')}
                   className="text-gray-800 hover:text-primary hover:bg-primary/10 font-semibold px-3 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                 >
                   Testimonials
@@ -156,12 +185,65 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
                 Login
               </Button>
             </div>
+
+            <div className="flex items-center gap-2 md:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignIn}
+                className="group border border-gray-300 text-gray-800 hover:border-primary hover:text-primary bg-white/90 rounded-lg font-semibold px-3"
+              >
+                <User className="w-4 h-4" />
+                Login
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-expanded={mobileMenuOpen}
+                aria-label="Toggle navigation menu"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                className="rounded-lg text-gray-800 hover:bg-primary/10 hover:text-primary"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
+
+          {mobileMenuOpen && (
+            <nav className="md:hidden border-t border-gray-200/70 py-3">
+              <div className="grid gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => scrollToSection('features')}
+                  className="justify-start rounded-lg text-gray-800 hover:bg-primary/10 hover:text-primary"
+                >
+                  Features
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => scrollToSection('how-it-works')}
+                  className="justify-start rounded-lg text-gray-800 hover:bg-primary/10 hover:text-primary"
+                >
+                  How it Works
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => scrollToSection('testimonials')}
+                  className="justify-start rounded-lg text-gray-800 hover:bg-primary/10 hover:text-primary"
+                >
+                  Testimonials
+                </Button>
+              </div>
+            </nav>
+          )}
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-teal-50/30 pt-20">
+      <section className={`relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-teal-50/30 sm:pt-28 ${mobileMenuOpen ? 'pt-56' : 'pt-24'}`}>
         {/* Modern Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Gradient Orbs */}
@@ -566,7 +648,7 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
                 
                 {/* Testimonial Text */}
                 <p className="text-gray-700 mb-8 leading-relaxed italic">
-                  "{testimonial.text}"
+                  &quot;{testimonial.text}&quot;
                 </p>
                 
                 {/* Author Info */}
@@ -717,6 +799,7 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
 
       {/* Auth Modal */}
       <AuthModal 
+        key={authModalTab}
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultTab={authModalTab}
@@ -724,7 +807,6 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
     </div>
   );
 }
-
 
 
 

@@ -51,6 +51,7 @@ interface Project {
 }
 
 interface RecruiterDashboardProps {
+  [key: string]: any;
   onPostProject: (project?: Project) => void;
   onViewProjects?: () => void;
   onViewATS: () => void;

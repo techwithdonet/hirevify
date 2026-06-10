@@ -38,7 +38,7 @@ interface AIMatchingDashboardProps {
 }
 
 export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardProps) {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<any>(null);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

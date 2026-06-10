@@ -11,12 +11,13 @@ import { Badge } from './ui/badge';
 import { FileText, Upload, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { productionFileStorage } from '../utils/ats/productionFileStorage';
+import { apiBaseUrl } from '../utils/supabase/info';
 
 interface DiagnosticResult {
   step: string;
-  status: 'success' | 'error' | 'warning';
+  status: 'success' | 'error' | 'warning' | 'info';
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 export function ATSUploadDiagnostic() {
@@ -124,7 +125,7 @@ export function ATSUploadDiagnostic() {
         formData.append('userId', 'diagnostic-user');
         formData.append('candidateId', 'diagnostic-candidate');
 
-        const response = await fetch('https://lfwfwnqoioqyxnbzlnje.supabase.co/functions/v1/make-server-d4feca44/files/ats-upload', {
+        const response = await fetch(`${apiBaseUrl}/files/ats-upload`, {
           method: 'POST',
           body: formData
         });
@@ -193,7 +194,7 @@ export function ATSUploadDiagnostic() {
         
         addResult({
           step: 'Environment Check',
-          status: 'info' as any,
+          status: 'info',
           message: `Environment: ${isDev ? 'Development' : isProduction ? 'Production' : 'Unknown'}`,
           details: {
             hostname: window.location.hostname,
@@ -331,14 +332,14 @@ export function ATSUploadDiagnostic() {
                   
                   <p className="text-sm text-gray-700 mb-2">{result.message}</p>
                   
-                  {result.details && (
+                  {result.details !== undefined ? (
                     <details className="text-xs text-gray-600">
                       <summary className="cursor-pointer font-medium mb-1">Details</summary>
                       <pre className="bg-gray-100 rounded p-2 overflow-auto">
-                        {JSON.stringify(result.details, null, 2)}
+                        {JSON.stringify(result.details, null, 2) ?? 'No details'}
                       </pre>
                     </details>
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>

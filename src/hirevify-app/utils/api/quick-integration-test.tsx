@@ -1,14 +1,34 @@
 // Quick integration test that can be run from browser console
 // Usage: copy and paste this entire function into browser console and run quickIntegrationTest()
 
+import { apiBaseUrl, projectId } from '../supabase/info';
+
+interface QuickIntegrationResult {
+  endpoint: string;
+  url: string;
+  status: number | null;
+  ok: boolean;
+  headers?: Record<string, string>;
+  data?: unknown;
+  text?: string;
+  error?: string;
+}
+
+declare global {
+  interface Window {
+    quickIntegrationTest?: typeof quickIntegrationTest;
+  }
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export async function quickIntegrationTest() {
-  const projectId = window.location.hostname.includes('localhost') ? 'your-project-id' : 
-    document.querySelector('meta[name="project-id"]')?.getAttribute('content') || 'your-project-id';
-    
   console.log('🔍 Quick Integration Test Starting...');
   console.log('📍 Project ID:', projectId);
   
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
+  const baseUrl = apiBaseUrl;
   console.log('🌐 Base URL:', baseUrl);
   
   const endpoints = [
@@ -19,7 +39,7 @@ export async function quickIntegrationTest() {
     '/integrations/health'
   ];
   
-  const results = [];
+  const results: QuickIntegrationResult[] = [];
   
   for (const endpoint of endpoints) {
     const url = baseUrl + endpoint;
@@ -35,7 +55,7 @@ export async function quickIntegrationTest() {
         }
       });
       
-      const result = {
+      const result: QuickIntegrationResult = {
         endpoint,
         url,
         status: response.status,
@@ -48,7 +68,7 @@ export async function quickIntegrationTest() {
           result.data = await response.json();
           console.log(`✅ ${endpoint}: SUCCESS (${response.status})`);
           console.log('   Data:', result.data);
-        } catch (jsonError) {
+        } catch {
           result.text = await response.text();
           console.log(`✅ ${endpoint}: SUCCESS (${response.status}) - Text response`);
           console.log('   Text:', result.text);
@@ -64,17 +84,18 @@ export async function quickIntegrationTest() {
       results.push(result);
       
     } catch (error) {
-      const result = {
+      const errorMessage = getErrorMessage(error);
+      const result: QuickIntegrationResult = {
         endpoint,
         url,
         status: null,
         ok: false,
-        error: error.message
+        error: errorMessage
       };
       
       results.push(result);
       console.log(`❌ ${endpoint}: NETWORK ERROR`);
-      console.log('   Error:', error.message);
+      console.log('   Error:', errorMessage);
     }
   }
   
@@ -133,7 +154,7 @@ export async function quickIntegrationTest() {
 
 // Make it available globally for easy console access
 if (typeof window !== 'undefined') {
-  (window as any).quickIntegrationTest = quickIntegrationTest;
+  window.quickIntegrationTest = quickIntegrationTest;
   console.log('🔧 Quick Integration Test loaded. Run quickIntegrationTest() in console to test endpoints.');
 }
 

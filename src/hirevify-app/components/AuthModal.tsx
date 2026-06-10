@@ -1,39 +1,48 @@
 import { useState } from 'react';
+
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Badge } from './ui/badge';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, Users, Briefcase } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertCircle, Users, Briefcase } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTab?: 'signin' | 'signup';
 }
 
-export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalProps) {
   const { signIn, signUp, isLoading, connectionStatus } = useAuth();
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
-  
-  // Form state
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [userType, setUserType] = useState<'recruiter' | 'candidate'>('candidate');
-  
-  // Test account helpers
-  const useTestAccount = (type: 'recruiter' | 'candidate') => {
-    setEmail(type === 'recruiter' ? 'recruiter@hirevify.com' : 'candidate@hirevify.com');
-    setPassword('TestPassword123!');
-    setUserType(type);
-    setActiveTab('signin');
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setUserType('candidate');
+    setShowPassword(false);
+  };
+
+  const handleClose = () => {
+    if (!formLoading && !isLoading) {
+      resetForm();
+      onClose();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,8 +52,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     try {
       if (activeTab === 'signin') {
         console.log('🔐 Attempting signin for:', email);
+
         const result = await signIn(email, password);
-        
+
         if (result.success) {
           console.log('✅ Signin successful');
           toast.success(result.message || 'Welcome back!');
@@ -56,8 +66,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       } else {
         console.log('📝 Attempting signup for:', email, userType);
+
         const result = await signUp(email, password, name, userType);
-        
+
         if (result.success) {
           console.log('✅ Signup successful');
           toast.success(result.message || 'Account created successfully!');
@@ -76,80 +87,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   };
 
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setName('');
-    setUserType('candidate');
-    setShowPassword(false);
-  };
-
-  const handleClose = () => {
-    if (!formLoading && !isLoading) {
-      resetForm();
-      onClose();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Welcome to HireVify
-            <Badge variant={connectionStatus === 'connected' ? 'default' : 'destructive'} className="text-xs">
-              {connectionStatus === 'connected' ? 'Online' : connectionStatus === 'checking' ? 'Connecting' : 'Offline'}
+            <Badge
+              variant={connectionStatus === 'connected' ? 'default' : 'destructive'}
+              className="text-xs"
+            >
+              {connectionStatus === 'connected'
+                ? 'Online'
+                : connectionStatus === 'checking'
+                  ? 'Connecting'
+                  : 'Offline'}
             </Badge>
           </DialogTitle>
+
           <DialogDescription>
-            Sign in to your existing account or create a new account to get started with HireVify's skills-first hiring platform.
+            Sign in to your existing account or create a new account to get started with HireVify&apos;s skills-first hiring platform.
           </DialogDescription>
         </DialogHeader>
-
-        {/* Test Accounts Section */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-blue-600" />
-              Quick Demo Access
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Skip the setup and try HireVify immediately with our test accounts
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => useTestAccount('recruiter')}
-                className="h-auto py-2 px-3 text-xs"
-                disabled={formLoading || isLoading}
-              >
-                <Briefcase className="h-3 w-3 mr-1" />
-                <div className="text-left">
-                  <div className="font-medium">Recruiter</div>
-                  <div className="text-muted-foreground">Post jobs</div>
-                </div>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => useTestAccount('candidate')}
-                className="h-auto py-2 px-3 text-xs"
-                disabled={formLoading || isLoading}
-              >
-                <Users className="h-3 w-3 mr-1" />
-                <div className="text-left">
-                  <div className="font-medium">Candidate</div>
-                  <div className="text-muted-foreground">Find jobs</div>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')}>
           <TabsList className="grid w-full grid-cols-2">
@@ -172,7 +131,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="bg-background"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="signin-password">Password</Label>
                 <div className="relative">
@@ -186,6 +145,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     disabled={formLoading || isLoading}
                     className="bg-background pr-10"
                   />
+
                   <Button
                     type="button"
                     variant="ghost"
@@ -203,10 +163,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
-                disabled={formLoading || isLoading || connectionStatus !== 'connected' || !email || !password}
+                disabled={
+                  formLoading ||
+                  isLoading ||
+                  connectionStatus !== 'connected' ||
+                  !email ||
+                  !password
+                }
               >
                 {formLoading ? (
                   <>
@@ -247,7 +213,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="bg-background"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <div className="relative">
@@ -262,6 +228,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     disabled={formLoading || isLoading}
                     className="bg-background pr-10"
                   />
+
                   <Button
                     type="button"
                     variant="ghost"
@@ -281,8 +248,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
               <div className="space-y-3">
                 <Label>I am a...</Label>
-                <RadioGroup 
-                  value={userType} 
+
+                <RadioGroup
+                  value={userType}
                   onValueChange={(value: 'recruiter' | 'candidate') => setUserType(value)}
                   disabled={formLoading || isLoading}
                 >
@@ -296,6 +264,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       </div>
                     </Label>
                   </div>
+
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="recruiter" id="recruiter" />
                     <Label htmlFor="recruiter" className="flex items-center gap-2 cursor-pointer">
@@ -309,10 +278,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </RadioGroup>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
-                disabled={formLoading || isLoading || connectionStatus !== 'connected' || !name || !email || !password || password.length < 8}
+                disabled={
+                  formLoading ||
+                  isLoading ||
+                  connectionStatus !== 'connected' ||
+                  !name ||
+                  !email ||
+                  !password ||
+                  password.length < 8
+                }
               >
                 {formLoading ? (
                   <>
@@ -333,8 +310,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <div className="flex items-center gap-2 text-yellow-800">
                 <AlertCircle className="h-4 w-4" />
                 <span className="text-sm">
-                  {connectionStatus === 'checking' 
-                    ? 'Connecting to server...' 
+                  {connectionStatus === 'checking'
+                    ? 'Connecting to server...'
                     : 'Connection issue. Please wait while we reconnect.'}
                 </span>
               </div>
@@ -345,8 +322,3 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     </Dialog>
   );
 }
-
-
-
-
-

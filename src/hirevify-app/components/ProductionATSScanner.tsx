@@ -574,7 +574,7 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-red-600">{stats.needsWork}</p>
-                <p className="text-xs text-gray-500">Needs Work (<65%)</p>
+                <p className="text-xs text-gray-500">Needs Work (&lt;65%)</p>
               </div>
             </CardContent>
           </Card>

@@ -1,12 +1,22 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { toast } from 'sonner';
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { toast } from "sonner";
+import { supabase } from "@/src/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  userType: 'recruiter' | 'candidate';
+  userType: "recruiter" | "candidate";
   isEmailVerified: boolean;
   profileComplete: boolean;
   createdAt: string;
@@ -17,9 +27,17 @@ interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   isLoading: boolean;
-  connectionStatus: 'checking' | 'connected' | 'error';
-  signUp: (email: string, password: string, name: string, userType: 'recruiter' | 'candidate') => Promise<{ success: boolean; message: string; user?: User }>;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; message: string; user?: User }>;
+  connectionStatus: "checking" | "connected" | "error";
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    userType: "recruiter" | "candidate"
+  ) => Promise<{ success: boolean; message: string; user?: User }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string; user?: User }>;
   signOut: () => Promise<void>;
 }
 
@@ -29,253 +47,214 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Server API base URL
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
+function mapUserTypeToDbRole(userType: "recruiter" | "candidate") {
+  return userType;
+}
 
+function mapDbRoleToUserType(role: string): "recruiter" | "candidate" {
+  return role === "recruiter" ? "recruiter" : "candidate";
+}
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [connectionStatus, setConnectionStatus] =
+    useState<"checking" | "connected" | "error">("checking");
 
-  // Enhanced setUser function that keeps tokens synchronized
-  const setUserWithTokenSync = (newUser: User | null) => {
+  const setUserWithTokenSync = useCallback((newUser: User | null) => {
     setUser(newUser);
-    
-    if (newUser) {
-      // Ensure token is always synced in localStorage
-      if (newUser.accessToken) {
-        localStorage.setItem('hirevify_access_token', newUser.accessToken);
-        localStorage.setItem('hirevify_user', JSON.stringify(newUser));
-      }
-    } else {
-      // Clear all storage when user is null
-      localStorage.removeItem('hirevify_user');
-      localStorage.removeItem('hirevify_access_token');
-    }
-  };
 
-  useEffect(() => {
-    console.log('🚀 AuthProvider: Initializing authentication system...');
-    initializeAuth();
+    if (newUser) {
+      localStorage.setItem("hirevify_user", JSON.stringify(newUser));
+      localStorage.setItem("hirevify_access_token", newUser.accessToken || "");
+    } else {
+      localStorage.removeItem("hirevify_user");
+      localStorage.removeItem("hirevify_access_token");
+    }
   }, []);
 
-  const initializeAuth = async () => {
+  const loadUserFromSession = useCallback(async (session: Session) => {
     try {
-      // Check server connection first
-      await checkServerConnection();
-      
-      // Check for stored session
-      await checkStoredSession();
-      
+      const authUser = session.user;
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("auth_user_id", authUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn("Profile load failed:", error.message);
+      }
+
+      const loadedUser: User = {
+        id: profile?.id || authUser.id,
+        email: authUser.email || "",
+        name: profile?.full_name || authUser.user_metadata?.name || "HireVify User",
+        userType: mapDbRoleToUserType(profile?.role || authUser.user_metadata?.userType || "employee"),
+        isEmailVerified: !!authUser.email_confirmed_at,
+        profileComplete: true,
+        createdAt: profile?.created_at || authUser.created_at || new Date().toISOString(),
+        accessToken: session.access_token || "",
+      };
+
+      setUserWithTokenSync(loadedUser);
     } catch (error) {
-      console.error('❌ Auth initialization failed:', error);
-      setConnectionStatus('error');
+      console.error("Failed to load user from session:", error);
+    }
+  }, [setUserWithTokenSync]);
+
+  const initializeAuth = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setConnectionStatus("checking");
+
+      const { error } = await supabase.from("profiles").select("id").limit(1);
+
+      if (error) {
+        console.warn("Supabase connection check failed:", error.message);
+        setConnectionStatus("error");
+      } else {
+        setConnectionStatus("connected");
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (sessionData.session?.user) {
+        await loadUserFromSession(sessionData.session);
+      }
+    } catch (error) {
+      console.error("Auth initialization failed:", error);
+      setConnectionStatus("error");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadUserFromSession]);
 
-  const checkServerConnection = async () => {
-    try {
-      console.log('🌐 Checking server connection...');
-      setConnectionStatus('checking');
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
-      
-      const response = await fetch(`${API_BASE}/auth/health`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-      });
+  useEffect(() => {
+    let active = true;
 
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const healthData = await response.json();
-        console.log('✅ Server connection successful:', healthData.message);
-        setConnectionStatus('connected');
-        
-        // Show test account info
-        if (healthData.testAccounts) {
-          console.log('🧪 Test accounts available:', healthData.testAccounts);
-        }
-      } else {
-        throw new Error(`Server responded with ${response.status}`);
+    queueMicrotask(() => {
+      if (active) {
+        void initializeAuth();
       }
-    } catch (error) {
-      console.log('⚠️ Server connection unavailable, running in offline mode');
-      setConnectionStatus('error');
-      
-      // Don't retry automatically - let the app work offline
-      // setTimeout(checkServerConnection, 5000);
-    }
-  };
+    });
 
-  const checkStoredSession = async () => {
-    try {
-      console.log('🔍 Checking for stored session...');
-      
-      const storedUser = localStorage.getItem('hirevify_user');
-      const storedToken = localStorage.getItem('hirevify_access_token');
-      
-      if (storedUser && storedToken) {
-        console.log('📱 Found stored session, verifying...');
-        
-        const userData = JSON.parse(storedUser);
-        
-        if (!userData.email || !userData.userType) {
-          console.log('❌ Invalid stored user data');
-          clearSession();
-          return;
-        }
-        
-        // Verify token is still valid
-        try {
-          const response = await fetch(`${API_BASE}/auth/verify-token`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token: storedToken })
-          });
-
-          if (response.ok) {
-            const verificationData = await response.json();
-            if (verificationData.valid && verificationData.user) {
-              const user: User = {
-                ...verificationData.user,
-                accessToken: storedToken
-              };
-              setUserWithTokenSync(user);
-              console.log('✅ Session restored for:', user.email);
-              return;
-            }
-          }
-          
-          console.log('❌ Token verification failed');
-          clearSession();
-          
-        } catch (verifyError) {
-          console.log('⚠️ Token verification request failed, using offline session');
-          userData.accessToken = storedToken;
-          setUserWithTokenSync(userData);
-        }
-      } else {
-        console.log('ℹ️ No stored session found');
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) {
+        setUserWithTokenSync(null);
+        return;
       }
-    } catch (error) {
-      console.error('❌ Error checking stored session:', error);
-      clearSession();
-    }
-  };
 
-  const clearSession = () => {
-    localStorage.removeItem('hirevify_user');
-    localStorage.removeItem('hirevify_access_token');
-    setUserWithTokenSync(null);
-  };
+      await loadUserFromSession(session);
+    });
 
-  const makeApiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [initializeAuth, loadUserFromSession, setUserWithTokenSync]);
+
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    userType: "recruiter" | "candidate"
+  ) => {
     try {
-      console.log(`🌐 API call: ${endpoint}`);
-      
-      const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`📡 Response: ${response.status} for ${endpoint}`);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error(`❌ API call failed for ${endpoint}:`, error);
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timed out. Please check your connection.');
-      }
-      
-      throw error;
-    }
-  };
-
-  const signUp = async (email: string, password: string, name: string, userType: 'recruiter' | 'candidate') => {
-    try {
-      console.log('📝 Starting signup for:', email.toLowerCase(), userType);
       setIsLoading(true);
 
-      // Validation
-      if (!email || !password || !name || !userType) {
-        throw new Error('All fields are required');
+      const cleanEmail = email.toLowerCase().trim();
+
+      if (!cleanEmail || !password || !name || !userType) {
+        throw new Error("All fields are required");
       }
 
       if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long');
+        throw new Error("Password must be at least 8 characters long");
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error('Please enter a valid email address');
+      if (!emailRegex.test(cleanEmail)) {
+        throw new Error("Please enter a valid email address");
       }
 
-      const response = await makeApiCall('/auth/signup', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, name, userType })
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            name,
+            userType,
+          },
+        },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Signup failed');
+      if (error) {
+        throw new Error(error.message);
       }
 
-      // Signup successful
-      if (result.user && result.accessToken) {
-        const user: User = {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          userType: result.user.userType,
-          isEmailVerified: true,
-          profileComplete: result.user.profileComplete || false,
-          createdAt: result.user.createdAt,
-          accessToken: result.accessToken
-        };
-
-        // Store session
-        localStorage.setItem('hirevify_user', JSON.stringify(user));
-        localStorage.setItem('hirevify_access_token', result.accessToken);
-
-        setUserWithTokenSync(user);
-        console.log('✅ Signup completed for:', user.email);
-
-        return {
-          success: true,
-          message: result.message || 'Account created successfully! Welcome to HireVify.',
-          user
-        };
+      if (!data.user) {
+        throw new Error("Signup failed. Please try again.");
       }
 
-      throw new Error('Invalid response from server');
+     const dbRole = mapUserTypeToDbRole(userType);
 
+const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .upsert(
+    {
+      auth_user_id: data.user.id,
+      full_name: name,
+      email: cleanEmail,
+      role: dbRole,
+      company_name: userType === "recruiter" ? name : null,
+    },
+    {
+      onConflict: "auth_user_id",
+    }
+  )
+  .select("*")
+  .single();
+
+if (profileError) {
+  console.error("Profile insert failed:", profileError);
+  throw new Error(`Profile creation failed: ${profileError.message}`);
+}
+      if (profileError) {
+        console.warn("Profile insert warning:", profileError.message);
+      }
+
+      const session = data.session;
+
+      const newUser: User = {
+        id: profile?.id || data.user.id,
+        email: cleanEmail,
+        name,
+        userType,
+        isEmailVerified: !!data.user.email_confirmed_at,
+        profileComplete: true,
+        createdAt: profile?.created_at || data.user.created_at || new Date().toISOString(),
+        accessToken: session?.access_token || "",
+      };
+
+      if (session?.access_token) {
+        setUserWithTokenSync(newUser);
+      }
+
+      return {
+        success: true,
+        message: session
+          ? "Account created successfully! Welcome to HireVify."
+          : "Account created. Please check your email to confirm your account.",
+        user: newUser,
+      };
     } catch (error) {
-      console.error('❌ Signup error:', error);
+      console.error("Signup error:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Signup failed'
+        message: error instanceof Error ? error.message : "Signup failed",
       };
     } finally {
       setIsLoading(false);
@@ -284,141 +263,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Starting signin for:', email.toLowerCase());
       setIsLoading(true);
 
-      if (!email || !password) {
-        throw new Error('Email and password are required');
+      const cleanEmail = email.toLowerCase().trim();
+
+      if (!cleanEmail || !password) {
+        throw new Error("Email and password are required");
       }
 
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error('Please enter a valid email address');
-      }
-
-      // If server is unavailable, use offline mode for test accounts
-      if (connectionStatus === 'error') {
-        return handleOfflineSignIn(email, password);
-      }
-
-      console.log('📤 Sending signin request...');
-      const response = await makeApiCall('/auth/signin', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          email: email.toLowerCase().trim(), 
-          password
-        })
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
       });
 
-      const result = await response.json();
-      console.log('📥 Signin response:', { status: response.status, hasUser: !!result.user });
-
-      if (!response.ok) {
-        console.error('❌ Signin failed with status:', response.status, result);
-        throw new Error(result.error || `Sign in failed (${response.status})`);
+      if (error) {
+        throw new Error(error.message);
       }
 
-      // Signin successful
-      if (result.user && result.accessToken) {
-        const user: User = {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          userType: result.user.userType,
-          isEmailVerified: result.user.isEmailVerified || true,
-          profileComplete: result.user.profileComplete || false,
-          createdAt: result.user.createdAt,
-          accessToken: result.accessToken
-        };
-
-        // Store session
-        localStorage.setItem('hirevify_user', JSON.stringify(user));
-        localStorage.setItem('hirevify_access_token', result.accessToken);
-
-        setUserWithTokenSync(user);
-        console.log('✅ Signin completed for:', user.email);
-
-        return {
-          success: true,
-          message: result.message || 'Successfully signed in! Welcome back.',
-          user
-        };
+      if (!data.session || !data.user) {
+        throw new Error("Login failed. Please try again.");
       }
 
-      throw new Error('Invalid response from server');
+      await loadUserFromSession(data.session);
 
+      const storedUser = localStorage.getItem("hirevify_user");
+      const loggedInUser = storedUser
+        ? (JSON.parse(storedUser) as User)
+        : undefined;
+
+      return {
+        success: true,
+        message: "Successfully signed in! Welcome back.",
+        user: loggedInUser,
+      };
     } catch (error) {
-      console.error('❌ Signin error:', error);
-      
-      // Fallback to offline mode for test accounts
-      if (connectionStatus === 'error') {
-        return handleOfflineSignIn(email, password);
-      }
-      
+      console.error("Signin error:", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Sign in failed. Please try again.'
+        message: error instanceof Error ? error.message : "Sign in failed. Please try again.",
       };
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Offline mode signin for testing
-  const handleOfflineSignIn = async (email: string, password: string) => {
-    console.log('🔄 Using offline mode signin...');
-    
-    // Test account credentials
-    const testAccounts = {
-      'recruiter@hirevify.com': { password: 'TestPassword123!', userType: 'recruiter' as const, name: 'Test Recruiter' },
-      'candidate@hirevify.com': { password: 'TestPassword123!', userType: 'candidate' as const, name: 'Test Candidate' }
-    };
-
-    const testAccount = testAccounts[email.toLowerCase() as keyof typeof testAccounts];
-    
-    if (testAccount && testAccount.password === password) {
-      const user: User = {
-        id: `offline-${testAccount.userType}-${Date.now()}`,
-        email: email.toLowerCase(),
-        name: testAccount.name,
-        userType: testAccount.userType,
-        isEmailVerified: true,
-        profileComplete: true,
-        createdAt: new Date().toISOString(),
-        accessToken: `offline-token-${Date.now()}`
-      };
-
-      // Store session
-      localStorage.setItem('hirevify_user', JSON.stringify(user));
-      localStorage.setItem('hirevify_access_token', user.accessToken);
-
-      setUserWithTokenSync(user);
-      console.log('✅ Offline signin completed for:', user.email);
-
-      return {
-        success: true,
-        message: '✅ Successfully signed in (Offline Mode)! Welcome back.',
-        user
-      };
-    }
-
-    return {
-      success: false,
-      message: 'Invalid credentials. Use test accounts: recruiter@hirevify.com or candidate@hirevify.com with password: TestPassword123!'
-    };
-  };
-
   const signOut = async () => {
     try {
-      console.log('🚪 Signing out user...');
-      clearSession();
-      console.log('✅ User signed out successfully');
-      toast.success('Signed out successfully');
+      await supabase.auth.signOut();
+      setUserWithTokenSync(null);
+      toast.success("Signed out successfully");
     } catch (error) {
-      console.error('❌ Sign out error:', error);
-      clearSession(); // Clear anyway
-      toast.error('Error signing out, but session cleared');
+      console.error("Sign out error:", error);
+      setUserWithTokenSync(null);
+      toast.error("Error signing out, but session cleared");
     }
   };
 
@@ -441,13 +338,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }
-
-
-
-
-

@@ -1,14 +1,9 @@
 /**
  * Production File Storage for Enhanced ATS - Phase 1 Integration
- * Integrates with new AI enhancement systems
  */
 
-import { enhancedOpenAIService } from '../ai/enhanced-openai-service';
-import { ensembleOCRSystem } from './ensemble-ocr-system';
-import { confidenceScoringSystem } from '../ai/confidence-scoring-system';
-import { activeLearningPipeline } from '../ai/active-learning-pipeline';
-
 import { createClient } from '../supabase/client';
+import { apiBaseUrl } from '../supabase/info';
 
 interface FileUploadResult {
   success: boolean;
@@ -118,7 +113,7 @@ class ProductionFileStorageService {
         const { data: { session } } = await this.supabase.auth.getSession();
         const accessToken = session?.access_token;
 
-        const response = await fetch(`https://lfwfwnqoioqyxnbzlnje.supabase.co/functions/v1/make-server-d4feca44/files/ats-upload`, {
+        const response = await fetch(`${apiBaseUrl}/files/ats-upload`, {
           method: 'POST',
           headers: {
             ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
@@ -322,7 +317,7 @@ class ProductionFileStorageService {
   /**
    * List files for a user
    */
-  async listUserFiles(userId: string): Promise<any[]> {
+  async listUserFiles(userId: string): Promise<unknown[]> {
     try {
       const { data, error } = await this.supabase.storage
         .from(this.bucketName)
@@ -401,7 +396,7 @@ class ProductionFileStorageService {
    */
   async isStorageAvailable(): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.storage.listBuckets();
+      const { error } = await this.supabase.storage.listBuckets();
       return !error;
     } catch {
       return false;

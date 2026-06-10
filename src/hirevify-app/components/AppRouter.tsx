@@ -155,7 +155,7 @@ export function AppRouter({
     case 'recruiter-dashboard':
       return (
         <RecruiterDashboard 
-          onPostProject={navigation.navigateToPostProject}
+          onPostProject={(project?: any) => navigation.navigateToPostProject(project)}
           onViewProjects={navigation.navigateToProjects}
           onViewATS={navigation.navigateToATS}
           onViewATSScanner={navigation.navigateToATSScanner}

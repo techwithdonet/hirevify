@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, Users, Clock, Target, DollarSign, Calendar, Filter, Download, RefreshCw, Eye, BarChart3, PieChart, LineChart, Activity, Award, Briefcase, UserCheck, AlertTriangle, CheckCircle, Globe, MapPin, Zap } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Users, Clock, Target, DollarSign, Calendar, Filter, Download, RefreshCw, Eye, BarChart3, PieChart, LineChart, Activity, Award, Briefcase, UserCheck, AlertTriangle, CheckCircle, Globe, Star, MapPin, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -311,7 +311,7 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.map((item, index) => (
+              {data.map((item: { name: string; value: number; color?: string }, index: number) => (
                 <div key={item.name}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium">{item.name}</span>

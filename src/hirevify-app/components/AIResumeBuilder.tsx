@@ -26,10 +26,9 @@ import {
   TrendingUp,
   AlertCircle,
   RefreshCw,
-  Sparkles,
-  BarChart3,
-  Eye,
-  Magic
+ Sparkles,
+BarChart3,
+Eye
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';

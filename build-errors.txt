@@ -1,0 +1,353 @@
+src/hirevify-app/components/AppRouter.tsx(186,11): error TS2322: Type 'Project | null' is not assignable to type 'Project | null | undefined'.
+  Property 'applications' is missing in type 'import("E:/hirevify-next/src/hirevify-app/types/app").Project' but required in type 'Project'.
+src/hirevify-app/components/AppRouter.tsx(194,11): error TS2322: Type '(project?: import("E:/hirevify-next/src/hirevify-app/types/app").Project | undefined) => void' is not assignable to type '(project?: import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project | undefined) => void'.
+  Types of parameters 'project' and 'project' are incompatible.
+    Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project | undefined' is not assignable to type 'import("E:/hirevify-next/src/hirevify-app/types/app").Project | undefined'.
+      Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project' is not assignable to type 'import("E:/hirevify-next/src/hirevify-app/types/app").Project'.
+        Types of property 'status' are incompatible.
+          Type '"active" | "paused" | "closed" | "deleted"' is not assignable to type '"draft" | "active" | "paused" | "completed"'.
+            Type '"closed"' is not assignable to type '"draft" | "active" | "paused" | "completed"'.
+src/hirevify-app/components/AppRouter.tsx(235,11): error TS2322: Type '{ onBack: () => void; onStartInterview: () => void; selectedApplication: Application | null; }' is not assignable to type 'IntrinsicAttributes & ATSViewProps'.
+  Property 'selectedApplication' does not exist on type 'IntrinsicAttributes & ATSViewProps'.
+src/hirevify-app/components/AppRouter.tsx(288,11): error TS2322: Type '{ onBack: () => void; onUpgrade: () => void; onAdvancedAnalytics: () => void; }' is not assignable to type 'IntrinsicAttributes & RecruiterAnalyticsProps'.
+  Property 'onAdvancedAnalytics' does not exist on type 'IntrinsicAttributes & RecruiterAnalyticsProps'.
+src/hirevify-app/components/AppRouter.tsx(523,11): error TS2322: Type '(videoData: VideoSubmissionData) => Promise<void>' is not assignable to type '(videoData: VideoSubmission) => void'.
+  Types of parameters 'videoData' and 'videoData' are incompatible.
+    Property 'videoUrl' is missing in type 'VideoSubmission' but required in type 'VideoSubmissionData'.
+src/hirevify-app/components/AuthProvider.tsx(226,62): error TS2339: Property 'message' does not exist on type 'never'.
+src/hirevify-app/components/CandidateATSScanner.tsx(161,61): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/hirevify-app/components/CandidateSearch.tsx(445,9): error TS2367: This comparison appears to be unintentional because the types 'boolean' and 'string' have no overlap.
+src/hirevify-app/components/EnhancedProductionATSScanner.tsx(189,50): error TS2339: Property 'processDocument' does not exist on type 'EnsembleOCRSystem'.
+src/hirevify-app/components/EnhancedProductionATSScanner.tsx(256,48): error TS2339: Property 'processDocument' does not exist on type 'EnsembleOCRSystem'.
+src/hirevify-app/components/EnhancedProductionATSScanner.tsx(408,11): error TS2554: Expected 0 arguments, but got 1.
+src/hirevify-app/components/EnhancedProductionATSScanner.tsx(425,62): error TS2339: Property 'learningPriority' does not exist on type '{ overallProgress: number; modelAccuracy: number; samplesProcessed: number; learningVelocity: number; qualityScore: number; topImprovementAreas: string[]; recentActivity: any[]; } | { shouldRequestHumanReview: boolean; uncertaintyAreas: never[]; improvementPotential: number; learningPriority: string; suggestedAction...'.
+  Property 'learningPriority' does not exist on type '{ overallProgress: number; modelAccuracy: number; samplesProcessed: number; learningVelocity: number; qualityScore: number; topImprovementAreas: string[]; recentActivity: any[]; }'.
+src/hirevify-app/components/EnhancedProductionATSScanner.tsx(731,23): error TS2322: Type 'unknown[]' is not assignable to type 'ReactNode'.
+  Type 'unknown[]' is not assignable to type 'Iterable<ReactNode>'.
+    The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+      Type 'IteratorResult<unknown, undefined>' is not assignable to type 'IteratorResult<ReactNode, any>'.
+        Type 'IteratorYieldResult<unknown>' is not assignable to type 'IteratorResult<ReactNode, any>'.
+          Type 'IteratorYieldResult<unknown>' is not assignable to type 'IteratorYieldResult<ReactNode>'.
+            Type 'unknown' is not assignable to type 'ReactNode'.
+src/hirevify-app/components/ErrorBoundary.tsx(166,20): error TS2322: Type '{ children: Element; fallback: ReactNode; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<ErrorBoundary> & Readonly<Props>'.
+  Property 'fallback' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<ErrorBoundary> & Readonly<Props>'.
+src/hirevify-app/components/integration-hub/ConnectionDialog.tsx(23,46): error TS2339: Property 'name' does not exist on type '"" | Integration'.
+  Property 'name' does not exist on type '""'.
+src/hirevify-app/components/integration-hub/hooks.ts(52,44): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(171,67): error TS18046: 'endpointError' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(206,59): error TS18046: 'ultraError' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(280,11): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(280,47): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(285,54): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(642,60): error TS18046: 'routeError' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(664,57): error TS18046: 'kvError' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(712,49): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/IntegrationHub.tsx(986,75): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+src/hirevify-app/components/IntegrationHub.tsx(990,37): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+src/hirevify-app/components/IntegrationHub.tsx(992,16): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+  No index signature with a parameter of type 'string' was found on type '{ slack: { name: string; description: string; requiredCredentials: { key: string; label: string; type: string; placeholder: string; }[]; defaultSettings: { notifyOnApplication: boolean; notifyOnInterview: boolean; channel: string; }; }; workday: { ...; }; google_workspace: { ...; }; calendly: { ...; }; }'.
+src/hirevify-app/components/IntegrationHub.tsx(992,85): error TS7006: Parameter 'cred' implicitly has an 'any' type.
+src/hirevify-app/components/MarketIntelligenceDashboard.tsx(446,22): error TS2304: Cannot find name 'Lightbulb'.
+src/hirevify-app/components/MessagingCenter.tsx(41,17): error TS2339: Property 'accessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/MicroInternships.tsx(204,73): error TS7006: Parameter 'skill' implicitly has an 'any' type.
+src/hirevify-app/components/NotificationCenter.tsx(29,17): error TS2339: Property 'accessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/NotificationCenter.tsx(170,26): error TS2345: Argument of type 'Notification[]' is not assignable to parameter of type 'SetStateAction<Notification[]>'.
+  Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/communications").Notification[]' is not assignable to type 'Notification[]'.
+    Property 'userId' is missing in type 'import("E:/hirevify-next/src/hirevify-app/utils/api/communications").Notification' but required in type 'Notification'.
+src/hirevify-app/components/OTPVerification.tsx(197,19): error TS2322: Type '(el: HTMLInputElement | null) => HTMLInputElement | null' is not assignable to type 'Ref<HTMLInputElement> | undefined'.
+  Type '(el: HTMLInputElement | null) => HTMLInputElement | null' is not assignable to type '(instance: HTMLInputElement | null) => void | (() => VoidOrUndefinedOnly)'.
+    Type 'HTMLInputElement | null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+      Type 'null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+src/hirevify-app/components/PricingPage.tsx(47,17): error TS2339: Property 'accessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/PricingPage.tsx(162,25): error TS2339: Property 'phone' does not exist on type 'User'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(223,23): error TS2322: Type 'unknown' is not assignable to type 'number | null | undefined'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(229,23): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(241,31): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(261,31): error TS2322: Type 'unknown' is not assignable to type 'number | null | undefined'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(262,80): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.
+src/hirevify-app/components/ProfessionalATSDashboard.tsx(263,23): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/hirevify-app/components/ProjectChallengeVideoRecording.tsx(129,11): error TS2339: Property 'getAccessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/ProjectSearch.tsx(52,17): error TS2339: Property 'accessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/ProjectSearch.tsx(94,50): error TS2345: Argument of type 'ProjectFilters' is not assignable to parameter of type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").ProjectFilters'.
+  Types of property 'sortBy' are incompatible.
+    Type 'string | undefined' is not assignable to type '"budget" | "newest" | "oldest" | "mostApplied" | undefined'.
+      Type 'string' is not assignable to type '"budget" | "newest" | "oldest" | "mostApplied" | undefined'.
+src/hirevify-app/components/ProjectSearch.tsx(98,21): error TS2345: Argument of type 'Project[]' is not assignable to parameter of type 'SetStateAction<Project[]>'.
+  Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project[]' is not assignable to type 'Project[]'.
+    Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project' is not assignable to type 'Project'.
+      Types of property 'status' are incompatible.
+        Type '"active" | "paused" | "closed" | "deleted"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+          Type '"active"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+src/hirevify-app/components/ProjectSearch.tsx(99,29): error TS2345: Argument of type 'Project[]' is not assignable to parameter of type 'SetStateAction<Project[]>'.
+  Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project[]' is not assignable to type 'Project[]'.
+    Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project' is not assignable to type 'Project'.
+      Types of property 'status' are incompatible.
+        Type '"active" | "paused" | "closed" | "deleted"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+          Type '"active"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+src/hirevify-app/components/ProjectSearch.tsx(103,43): error TS2345: Argument of type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project[]' is not assignable to parameter of type 'Project[]'.
+  Type 'import("E:/hirevify-next/src/hirevify-app/utils/api/projects").Project' is not assignable to type 'Project'.
+    Types of property 'status' are incompatible.
+      Type '"active" | "paused" | "closed" | "deleted"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+        Type '"active"' is not assignable to type '"available" | "applied" | "completed" | "in-progress" | "selected" | "submitted" | undefined'.
+src/hirevify-app/components/ProjectSearch.tsx(174,81): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/components/ProjectSearch.tsx(187,15): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(187,30): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(188,31): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(188,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/hirevify-app/components/ProjectSearch.tsx(192,29): error TS7006: Parameter 'userSkill' implicitly has an 'any' type.
+src/hirevify-app/components/ProjectSearch.tsx(309,16): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(309,31): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(313,29): error TS2339: Property 'skills' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(313,40): error TS7006: Parameter 'skill' implicitly has an 'any' type.
+src/hirevify-app/components/ProjectSearch.tsx(320,45): error TS7006: Parameter 'skill' implicitly has an 'any' type.
+src/hirevify-app/components/ProjectSearch.tsx(387,27): error TS2339: Property 'resumeData' does not exist on type 'User'.
+src/hirevify-app/components/ProjectSearch.tsx(388,31): error TS2339: Property 'portfolioItems' does not exist on type 'User'.
+src/hirevify-app/components/QuestionBank.tsx(669,35): error TS2352: Conversion of type 'string' to type 'string[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/hirevify-app/components/QuestionBank.tsx(675,41): error TS2345: Argument of type '(prev: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }' is not assignable to parameter of type 'SetStateAction<{ text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }>'.
+  Type '(prev: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }' is not assignable to type '(prevState: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }'.
+    Call signature return types '{ correctAnswer: any[]; text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }' and '{ text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }' are incompatible.
+      The types of 'correctAnswer' are incompatible between these types.
+        Type 'any[]' is not assignable to type 'string'.
+src/hirevify-app/components/QuestionBank.tsx(680,41): error TS2345: Argument of type '(prev: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }' is not assignable to parameter of type 'SetStateAction<{ text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }>'.
+  Type '(prev: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }' is not assignable to type '(prevState: { text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }) => { ...; }'.
+    Call signature return types '{ correctAnswer: any[]; text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }' and '{ text: string; type: "multiple-choice" | "true-false" | "single-choice"; options: string[]; correctAnswer: string; explanation: string; skill: string; category: string; difficulty: "medium" | "easy" | "hard"; tags: string[]; timeLimit: number | undefined; }' are incompatible.
+      The types of 'correctAnswer' are incompatible between these types.
+        Type 'any[]' is not assignable to type 'string'.
+src/hirevify-app/components/QuestionBank.tsx(793,26): error TS2304: Cannot find name 'CheckCircle'.
+src/hirevify-app/components/ResumeBuilder.tsx(843,8): error TS2367: This comparison appears to be unintentional because the types '"template" | "contact" | "summary" | "experience" | "skills" | "education" | "review"' and '"welcome"' have no overlap.
+src/hirevify-app/components/ResumeBuilder.tsx(843,37): error TS2367: This comparison appears to be unintentional because the types '"template" | "contact" | "summary" | "experience" | "skills" | "education" | "review"' and '"ats-report"' have no overlap.
+src/hirevify-app/components/ScreenRenderer.tsx(7,26): error TS2307: Cannot find module './Homepage_fixed' or its corresponding type declarations.
+src/hirevify-app/components/ScreenRenderer.tsx(19,32): error TS2307: Cannot find module './IntegrationHub_Resilient' or its corresponding type declarations.
+src/hirevify-app/components/ScreenRenderer.tsx(20,44): error TS2307: Cannot find module './IntegrationHub_OfflineMode' or its corresponding type declarations.
+src/hirevify-app/components/ScreenRenderer.tsx(142,11): error TS2322: Type 'Project | null' is not assignable to type 'Project | null | undefined'.
+  Property 'applications' is missing in type 'import("E:/hirevify-next/src/hirevify-app/types/navigation").Project' but required in type 'Project'.
+src/hirevify-app/components/ScreenRenderer.tsx(191,11): error TS2322: Type '{ onBack: any; onStartInterview: any; selectedApplication: Application | null; }' is not assignable to type 'IntrinsicAttributes & ATSViewProps'.
+  Property 'selectedApplication' does not exist on type 'IntrinsicAttributes & ATSViewProps'.
+src/hirevify-app/components/ScreenRenderer.tsx(199,11): error TS2322: Type '{ onBack: any; onUpgrade: any; }' is not assignable to type 'IntrinsicAttributes & ATSResumesScannerProps'.
+  Property 'onUpgrade' does not exist on type 'IntrinsicAttributes & ATSResumesScannerProps'.
+src/hirevify-app/components/ScreenRenderer.tsx(216,11): error TS2322: Type '{ onBack: any; onUpgrade: any; onAdvancedAnalytics: any; }' is not assignable to type 'IntrinsicAttributes & RecruiterAnalyticsProps'.
+  Property 'onAdvancedAnalytics' does not exist on type 'IntrinsicAttributes & RecruiterAnalyticsProps'.
+src/hirevify-app/components/ScreenRenderer.tsx(293,10): error TS2739: Type '{ onBuildResume: any; onViewPortfolio: any; onTakeKnowledgeAssessment: any; onVideoInterview: any; onSearchProjects: any; onViewInterviews: any; onViewSettings: any; onViewMessages: any; ... 9 more ...; unreadMessages: number; }' is missing the following properties from type 'CandidateDashboardProps': onAIInterviewCoach, onSkillsDevelopmentAI, onMarketIntelligence, onATSScanner
+src/hirevify-app/components/ScreenRenderer.tsx(432,11): error TS2322: Type '(videoData: VideoSubmissionData) => Promise<void>' is not assignable to type '(videoData: VideoSubmission) => void'.
+  Types of parameters 'videoData' and 'videoData' are incompatible.
+    Property 'videoUrl' is missing in type 'VideoSubmission' but required in type 'VideoSubmissionData'.
+src/hirevify-app/components/SkillsDevelopmentAI.tsx(964,22): error TS2552: Cannot find name 'Download'. Did you mean 'onload'?
+src/hirevify-app/components/SubscriptionManager.tsx(29,17): error TS2339: Property 'accessToken' does not exist on type 'AuthContextType'.
+src/hirevify-app/components/ui/calendar.tsx(5,27): error TS2307: Cannot find module 'react-day-picker@8.10.1' or its corresponding type declarations.
+src/hirevify-app/components/ui/calendar.tsx(63,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/hirevify-app/components/ui/calendar.tsx(66,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/hirevify-app/components/ui/carousel.tsx(6,8): error TS2307: Cannot find module 'embla-carousel-react@8.6.0' or its corresponding type declarations.
+src/hirevify-app/components/ui/chart.tsx(109,3): error TS2339: Property 'payload' does not exist on type 'Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; allowEscapeViewBox?: AllowInDimension | undefined; ... 24 more ...; wrapperStyle?: CSSProperties | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }'.
+src/hirevify-app/components/ui/chart.tsx(114,3): error TS2339: Property 'label' does not exist on type 'Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; allowEscapeViewBox?: AllowInDimension | undefined; ... 24 more ...; wrapperStyle?: CSSProperties | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }'.
+src/hirevify-app/components/ui/chart.tsx(182,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/hirevify-app/components/ui/chart.tsx(182,29): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/hirevify-app/components/ui/chart.tsx(260,39): error TS2344: Type '"verticalAlign" | "payload"' does not satisfy the constraint '"string" | "name" | "id" | "d" | "k" | "r" | "x" | "y" | "z" | "filter" | "fill" | "values" | "type" | "children" | "min" | "max" | "suppressHydrationWarning" | "className" | "color" | ... 431 more ... | "portal"'.
+  Type '"payload"' is not assignable to type '"string" | "name" | "id" | "d" | "k" | "r" | "x" | "y" | "z" | "filter" | "fill" | "values" | "type" | "children" | "min" | "max" | "suppressHydrationWarning" | "className" | "color" | ... 431 more ... | "portal"'.
+src/hirevify-app/components/ui/chart.tsx(266,17): error TS2339: Property 'length' does not exist on type '{}'.
+src/hirevify-app/components/ui/chart.tsx(278,16): error TS2339: Property 'map' does not exist on type '{}'.
+src/hirevify-app/components/ui/chart.tsx(278,21): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/hirevify-app/components/ui/command.tsx(4,45): error TS2307: Cannot find module 'cmdk@1.1.1' or its corresponding type declarations.
+src/hirevify-app/components/ui/drawer.tsx(4,43): error TS2307: Cannot find module 'vaul@1.1.2' or its corresponding type declarations.
+src/hirevify-app/components/ui/input-otp.tsx(4,43): error TS2307: Cannot find module 'input-otp@1.4.2' or its corresponding type declarations.
+src/hirevify-app/components/ui/input-otp.tsx(47,61): error TS2339: Property 'slots' does not exist on type '{}'.
+src/hirevify-app/components/ui/resizable.tsx(5,37): error TS2307: Cannot find module 'react-resizable-panels@2.1.7' or its corresponding type declarations.
+src/hirevify-app/hooks/useAppNavigation.ts(255,22): error TS2345: Argument of type '"candidate-ai-skills-development"' is not assignable to parameter of type 'Screen'.
+src/hirevify-app/hooks/useAppNavigation.ts(260,22): error TS2345: Argument of type '"candidate-ai-career-advisor"' is not assignable to parameter of type 'Screen'.
+src/hirevify-app/utils/ai/active-learning-pipeline.tsx(87,11): error TS2564: Property 'modelPerformance' has no initializer and is not definitely assigned in the constructor.
+src/hirevify-app/utils/ai/active-learning-pipeline.tsx(88,11): error TS2564: Property 'learningMetrics' has no initializer and is not definitely assigned in the constructor.
+src/hirevify-app/utils/ai/active-learning-pipeline.tsx(90,11): error TS2564: Property 'retrainingTriggers' has no initializer and is not definitely assigned in the constructor.
+src/hirevify-app/utils/ai/active-learning-pipeline.tsx(394,11): error TS7034: Variable 'fieldUncertainties' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ai/active-learning-pipeline.tsx(407,9): error TS7005: Variable 'fieldUncertainties' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ai/applicationPredictor.tsx(328,28): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ beginner: number; intermediate: number; advanced: number; expert: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ beginner: number; intermediate: number; advanced: number; expert: number; }'.
+src/hirevify-app/utils/ai/applicationPredictor.tsx(329,27): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ beginner: number; intermediate: number; advanced: number; expert: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ beginner: number; intermediate: number; advanced: number; expert: number; }'.
+src/hirevify-app/utils/ai/enhanced-openai-service.tsx(230,16): error TS2304: Cannot find name 'Deno'.
+src/hirevify-app/utils/ai/enhanced-openai-service.tsx(230,40): error TS2304: Cannot find name 'Deno'.
+src/hirevify-app/utils/ai/enhanced-openai-service.tsx(231,14): error TS2304: Cannot find name 'Deno'.
+src/hirevify-app/utils/ai/enhanced-openai-service.tsx(257,99): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/hirevify-app/utils/ai/learning-system.tsx(73,11): error TS2564: Property 'modelWeights' has no initializer and is not definitely assigned in the constructor.
+src/hirevify-app/utils/ai/learning-system.tsx(304,9): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ skills: number; experience: number; location: number; salary: number; company_size: number; culture: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ skills: number; experience: number; location: number; salary: number; company_size: number; culture: number; }'.
+src/hirevify-app/utils/ai/learning-system.tsx(305,25): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ skills: number; experience: number; location: number; salary: number; company_size: number; culture: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ skills: number; experience: number; location: number; salary: number; company_size: number; culture: number; }'.
+src/hirevify-app/utils/ai/learning-system.tsx(329,9): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ keywords: number; structure: number; experience: number; skills: number; achievements: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ keywords: number; structure: number; experience: number; skills: number; achievements: number; }'.
+src/hirevify-app/utils/ai/learning-system.tsx(330,25): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ keywords: number; structure: number; experience: number; skills: number; achievements: number; }'.
+  No index signature with a parameter of type 'string' was found on type '{ keywords: number; structure: number; experience: number; skills: number; achievements: number; }'.
+src/hirevify-app/utils/ai/resumeAnalysisService.tsx(173,49): error TS2339: Property 'generateCompletion' does not exist on type 'OpenAIService'.
+src/hirevify-app/utils/ai/resumeOptimizer.tsx(744,11): error TS2393: Duplicate function implementation.
+src/hirevify-app/utils/ai/resumeOptimizer.tsx(1024,9): error TS2393: Duplicate function implementation.
+src/hirevify-app/utils/ai/simple-openai-service.tsx(337,10): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+src/hirevify-app/utils/ai/simple-openai-service.tsx(337,10): error TS2484: Export declaration conflicts with exported declaration of 'AnalysisResult'.
+src/hirevify-app/utils/ai/simple-openai-service.tsx(337,26): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+src/hirevify-app/utils/ai/simple-openai-service.tsx(337,26): error TS2484: Export declaration conflicts with exported declaration of 'VisionAnalysisResult'.
+src/hirevify-app/utils/api/applications.tsx(82,95): error TS1016: A required parameter cannot follow an optional parameter.
+src/hirevify-app/utils/api/auth.tsx(1,10): error TS2305: Module '"../supabase/client"' has no exported member 'supabase'.
+src/hirevify-app/utils/api/auth.tsx(188,69): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(191,11): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(237,72): error TS18046: 'backendError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(262,73): error TS18046: 'supabaseError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(273,15): error TS18046: 'backendError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(274,15): error TS18046: 'backendError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(275,15): error TS18046: 'supabaseError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(276,15): error TS18046: 'localError' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(329,61): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(374,56): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/auth.tsx(408,77): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/backend-health.tsx(211,30): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(97,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(173,49): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(179,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(265,49): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(271,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/comprehensive-backend-test.tsx(340,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(63,84): error TS18046: 'noAuthError' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(90,37): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(91,54): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(93,9): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(95,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(144,65): error TS18046: 'endpointError' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(166,47): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(167,64): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(206,43): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/connectivity-test.tsx(207,51): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/endpoint-diagnosis.tsx(82,43): error TS18046: 'jsonError' is of type 'unknown'.
+src/hirevify-app/utils/api/endpoint-diagnosis.tsx(113,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/endpoint-diagnosis.tsx(117,43): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/endpoint-diagnosis.tsx(249,41): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(63,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(105,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(154,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(209,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(263,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(385,34): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-auth-test.tsx(416,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-connectivity-test.tsx(87,28): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-connectivity-test.tsx(91,11): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-connectivity-test.tsx(176,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(22,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: number; ok: boolean; data: any; headers: { [k: string]: string; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(31,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: null; ok: boolean; error: any; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(36,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(49,24): error TS2345: Argument of type '{ name: string; endpoint: string; method: string; status: number; ok: boolean; headers: { [k: string]: string; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(58,24): error TS2345: Argument of type '{ name: string; endpoint: string; method: string; status: null; ok: boolean; error: any; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(64,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(78,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: number; ok: boolean; data: any; headers: { [k: string]: string; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(87,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: null; ok: boolean; error: any; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(92,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(104,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: number; ok: boolean; data: any; headers: { [k: string]: string; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(113,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: null; ok: boolean; error: any; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(118,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(130,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: number; ok: boolean; data: any; headers: { [k: string]: string; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(139,24): error TS2345: Argument of type '{ name: string; endpoint: string; status: null; ok: boolean; error: any; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(144,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(160,22): error TS2345: Argument of type '{ name: string; endpoint: string; status: string; ok: boolean; data: { userAgent: string; online: boolean; connection: string | { effectiveType: any; downlink: any; rtt: any; }; }; }' is not assignable to parameter of type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(169,52): error TS2339: Property 'ok' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(170,52): error TS2339: Property 'ok' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(179,32): error TS2339: Property 'name' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(179,46): error TS2339: Property 'endpoint' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(186,32): error TS2339: Property 'name' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(186,46): error TS2339: Property 'endpoint' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(186,64): error TS2339: Property 'status' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(187,16): error TS2339: Property 'error' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(188,41): error TS2339: Property 'error' does not exist on type 'never'.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(207,25): error TS7006: Parameter 'tests' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(209,37): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(219,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(220,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(221,39): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(234,31): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(240,35): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(241,42): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-diagnostics.tsx(253,40): error TS7006: Parameter 'diagnosticResults' implicitly has an 'any' type.
+src/hirevify-app/utils/api/integration-health-test.tsx(64,9): error TS7053: Element implicitly has an 'any' type because expression of type '"Authorization"' can't be used to index type '{ 'Content-Type': string; }'.
+  Property 'Authorization' does not exist on type '{ 'Content-Type': string; }'.
+src/hirevify-app/utils/api/integration-health-test.tsx(87,11): error TS2322: Type '{ text: string; }' is not assignable to type 'null'.
+src/hirevify-app/utils/api/integration-health-test.tsx(92,9): error TS2322: Type 'string' is not assignable to type 'null'.
+src/hirevify-app/utils/api/integration-health-test.tsx(105,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-health-test.tsx(109,50): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-health-test.tsx(146,15): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ 'ultra-integration': string; 'simple-test': string; 'ultra-ping': string; main: string; module: string; backup: string; status: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ 'ultra-integration': string; 'simple-test': string; 'ultra-ping': string; main: string; module: string; backup: string; status: string; }'.
+src/hirevify-app/utils/api/integration-health-test.tsx(173,54): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integration-health-test.tsx(174,37): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(79,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(141,63): error TS18046: 'endpointError' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(165,9): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(181,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(210,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(236,53): error TS18046: 'kvError' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(239,16): error TS18046: 'kvError' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(287,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(415,9): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(424,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(453,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(493,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(528,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(558,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(592,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(624,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/integrations.tsx(657,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/quick-test.tsx(51,22): error TS18046: 'err' is of type 'unknown'.
+src/hirevify-app/utils/api/quick-test.tsx(72,16): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/quick-test.tsx(75,43): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(55,52): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(129,40): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(163,58): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(200,61): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(248,65): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(319,63): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/resilient-connectivity-test.tsx(324,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/simple-connectivity-test.tsx(62,48): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/simple-connectivity-test.tsx(95,34): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/api/simple-connectivity-test.tsx(96,14): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/enhancedPDFParser.tsx(323,11): error TS2322: Type 'PDFSection[]' is not assignable to type 'ResumeSection[]'.
+  Property 'items' is missing in type 'PDFSection' but required in type 'ResumeSection'.
+src/hirevify-app/utils/ats/enhancedPDFParser.tsx(982,7): error TS2367: This comparison appears to be unintentional because the types '"contact" | "summary" | "experience" | "skills" | "education" | "header" | "certifications" | "projects" | "other"' and '"languages"' have no overlap.
+src/hirevify-app/utils/ats/enterpriseATSScorer.tsx(162,26): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ technology: { critical: string[]; important: string[]; tools: string[]; }; }'.
+  No index signature with a parameter of type 'string' was found on type '{ technology: { critical: string[]; important: string[]; tools: string[]; }; }'.
+src/hirevify-app/utils/ats/enterpriseDocumentParser.tsx(339,52): error TS2339: Property 'recognize' does not exist on type 'never'.
+src/hirevify-app/utils/ats/enterpriseDocumentParser.tsx(378,7): error TS2322: Type '{ extractionMetadata: { confidence: number; processingMethod: string; aiAnalysisUsed: true; parsingErrors: never[]; enhancementNotes: string[]; }; personalInfo?: { name: string; email: string; ... 4 more ...; GitBranch?: string; } | undefined; ... 8 more ...; volunteering?: { ...; }[] | undefined; }' is not assignable to type 'EnterpriseResumeData'.
+  Types of property 'personalInfo' are incompatible.
+    Type '{ name: string; email: string; phone: string; location: string; Link?: string | undefined; portfolio?: string | undefined; GitBranch?: string | undefined; } | undefined' is not assignable to type '{ name: string; email: string; phone: string; location: string; Link?: string | undefined; portfolio?: string | undefined; GitBranch?: string | undefined; }'.
+      Type 'undefined' is not assignable to type '{ name: string; email: string; phone: string; location: string; Link?: string | undefined; portfolio?: string | undefined; GitBranch?: string | undefined; }'.
+src/hirevify-app/utils/ats/enterpriseDocumentParser.tsx(711,7): error TS2322: Type '{}[]' is not assignable to type '{ id: string; institution: string; degree: string; field: string; graduationDate: string; location: string; gpa?: string | undefined; achievements: string[]; relevantCoursework?: string[] | undefined; }[]'.
+  Type '{}' is missing the following properties from type '{ id: string; institution: string; degree: string; field: string; graduationDate: string; location: string; gpa?: string | undefined; achievements: string[]; relevantCoursework?: string[] | undefined; }': id, institution, degree, field, and 3 more.
+src/hirevify-app/utils/ats/functionalDocumentParser.tsx(250,47): error TS1501: This regular expression flag is only available when targeting 'es2018' or later.
+src/hirevify-app/utils/ats/functionalDocumentParser.tsx(328,51): error TS1501: This regular expression flag is only available when targeting 'es2018' or later.
+src/hirevify-app/utils/ats/professionalScoring.tsx(211,11): error TS18048: 'content.extractedData.sections.summary' is possibly 'undefined'.
+src/hirevify-app/utils/ats/professionalScoring.tsx(363,16): error TS18048: 'sections.summary' is possibly 'undefined'.
+src/hirevify-app/utils/ats/professionalScoring.tsx(363,53): error TS18048: 'sections.summary' is possibly 'undefined'.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(113,26): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(178,52): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(661,11): error TS7034: Variable 'foundTechnical' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(662,11): error TS7034: Variable 'foundSoft' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(663,11): error TS7034: Variable 'foundTools' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(664,11): error TS7034: Variable 'foundFrameworks' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(665,11): error TS7034: Variable 'foundLanguages' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(701,30): error TS7005: Variable 'foundTechnical' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(702,25): error TS7005: Variable 'foundSoft' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(703,26): error TS7005: Variable 'foundTools' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(704,31): error TS7005: Variable 'foundFrameworks' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(705,30): error TS7005: Variable 'foundLanguages' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(720,11): error TS7034: Variable 'projects' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(723,12): error TS7005: Variable 'projects' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(727,11): error TS7034: Variable 'certifications' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/hirevify-app/utils/ats/reliableDocumentParser.tsx(730,12): error TS7005: Variable 'certifications' implicitly has an 'any[]' type.
+src/hirevify-app/utils/ats/simpleTextExtractor.tsx(34,70): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/simpleTextExtractor.tsx(140,25): error TS1501: This regular expression flag is only available when targeting 'es2018' or later.
+src/hirevify-app/utils/ats/universalDocumentParser.tsx(109,65): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/universalDocumentParser.tsx(129,74): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/universalDocumentParser.tsx(159,48): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/universalDocumentParser.tsx(909,5): error TS2322: Type 'boolean | null' is not assignable to type 'boolean'.
+  Type 'null' is not assignable to type 'boolean'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(55,11): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(57,18): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(59,18): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(59,51): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(60,28): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(62,53): error TS18046: 'error' is of type 'unknown'.
+src/hirevify-app/utils/ats/workingDocumentParser.tsx(200,60): error TS18046: 'error' is of type 'unknown'.

@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Brain, 
+  Play,
   TrendingUp, 
   Target, 
   MapPin,
