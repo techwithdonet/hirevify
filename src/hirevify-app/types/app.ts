@@ -15,6 +15,7 @@ export interface Project {
   status: 'draft' | 'active' | 'paused' | 'completed';
   createdAt: string;
   updatedAt: string;
+applications?: Application[];
 }
 
 export interface Application {
