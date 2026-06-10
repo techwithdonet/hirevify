@@ -1,4 +1,4 @@
-/**
+﻿/**
  * App Router Component
  * 
  * Handles screen rendering logic based on current screen state
@@ -183,7 +183,7 @@ export function AppRouter({
       return (
         <ProjectPostingFlow 
           onBack={navigation.navigateToRecruiterDashboard}
-          existingProject={selectedProject}
+          existingProject={selectedProject as any}
         />
       );
 
