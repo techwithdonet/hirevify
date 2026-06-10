@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Accuracy-First ATS Scanner</title>
+</head>
+<body>
+    <h1>Test Navigation to Accuracy-First ATS Scanner</h1>
+    <p>Navigate directly to test the new scanner:</p>
+    <ul>
+        <li><a href="?screen=recruiter-accuracy-first-ats">Recruiter Accuracy-First ATS Scanner</a></li>
+        <li><a href="?screen=candidate-accuracy-first-ats">Candidate Accuracy-First ATS Scanner</a></li>
+    </ul>
+    
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const screen = urlParams.get('screen');
+        if (screen) {
+            console.log('Setting screen to:', screen);
+            // This would need to be integrated with your app's navigation system
+            // For now, this is just for testing the URL structure
+        }
+    </script>
+</body>
+</html>
