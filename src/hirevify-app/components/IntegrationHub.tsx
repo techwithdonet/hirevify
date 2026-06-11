@@ -71,6 +71,20 @@ interface IntegrationHubProps {
   onUpgrade: () => void;
 }
 
+// Helper function to safely extract error message
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String((error as any).message);
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Unknown error occurred';
+}
+
 export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
@@ -168,7 +182,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
               console.log(`⚠️ ${endpoint.name} failed with status ${healthResponse.status}`);
             }
           } catch (endpointError) {
-            console.log(`⚠️ ${endpoint.name} failed with error:`, endpointError.message);
+            console.log(`⚠️ ${endpoint.name} failed with error:`, getErrorMessage(endpointError));
           }
         }
         
@@ -203,7 +217,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
               console.log('❌ Even ultra-simple endpoint failed:', ultraResponse.status);
             }
           } catch (ultraError) {
-            console.log('❌ Ultra-simple endpoint error:', ultraError.message);
+            console.log('❌ Ultra-simple endpoint error:', getErrorMessage(ultraError));
           }
           
           throw new Error(`Complete backend failure. All endpoints failed. Last status: ${healthResponse?.status || 'No response'}`);
@@ -277,12 +291,12 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       setConnectedIntegrations([]);
       setServiceStatus('unhealthy');
       
-      if (error.message?.includes('fetch') || error.message?.includes('Network')) {
+      if (getErrorMessage(error)?.includes('fetch') || getErrorMessage(error)?.includes('Network')) {
         toast.error('Network error: Unable to connect to integration service', {
           description: 'Check your internet connection and try again.'
         });
       } else {
-        toast.error('Error loading integrations: ' + error.message);
+        toast.error('Error loading integrations: ' + getErrorMessage(error));
       }
     } finally {
       setLoading(false);

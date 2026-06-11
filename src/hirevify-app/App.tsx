@@ -8,7 +8,7 @@ import type { Screen, Project, Application } from './types/app';
 
 // Simplified App State Management Component
 function HireVifyApp() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading, authInitialized } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('homepage');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -22,47 +22,51 @@ function HireVifyApp() {
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
   const hadAuthenticatedUser = useRef(false);
 
-  // Check for diagnostic mode on load
-// Route user after login/signup and reset when logged out
-useEffect(() => {
-  if (user) {
-    hadAuthenticatedUser.current = true;
-
-    if (currentScreen === 'homepage') {
-      if (user.userType === 'recruiter') {
-        setSelectedProject(null);
-        setSelectedApplication(null);
-        setCurrentScreen('recruiter-dashboard');
-      } else {
-        setCurrentScreen('candidate-dashboard');
-      }
-    }
-
-    return;
-  }
-
-  if (!hadAuthenticatedUser.current) {
-    return;
-  }
-
-  let active = true;
-
-  queueMicrotask(() => {
-    if (!active) {
+  // Route user after login/signup and reset when logged out
+  useEffect(() => {
+    // Wait for auth initialization before routing
+    if (!authInitialized) {
       return;
     }
 
-    setCurrentScreen('homepage');
-    setSelectedProject(null);
-    setSelectedApplication(null);
-    setProjectChallengeData(null);
-    setAssessmentBuilderData(null);
-  });
+    if (user) {
+      hadAuthenticatedUser.current = true;
 
-  return () => {
-    active = false;
-  };
-}, [user, currentScreen]);
+      if (currentScreen === 'homepage') {
+        if (user.userType === 'recruiter') {
+          setSelectedProject(null);
+          setSelectedApplication(null);
+          setCurrentScreen('recruiter-dashboard');
+        } else {
+          setCurrentScreen('candidate-dashboard');
+        }
+      }
+
+      return;
+    }
+
+    if (!hadAuthenticatedUser.current) {
+      return;
+    }
+
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) {
+        return;
+      }
+
+      setCurrentScreen('homepage');
+      setSelectedProject(null);
+      setSelectedApplication(null);
+      setProjectChallengeData(null);
+      setAssessmentBuilderData(null);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [user, currentScreen, authInitialized]);
   // Navigation hook with all methods - memoized to prevent re-creation on every render
   const navigation = useAppNavigation({
     user,
@@ -138,7 +142,21 @@ useEffect(() => {
   setSelectedApplication,
   setProjectChallengeData,
   setAssessmentBuilderData,
-]);  return (
+]);
+
+  // Show full-page loading screen while auth is initializing
+  if (!authInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-slate-200 border-t-green-500 rounded-full animate-spin" />
+          <p className="text-slate-600 font-medium">Loading HireVify...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <div className="min-h-screen">
       <AppRouter
         currentScreen={currentScreen}

@@ -371,27 +371,27 @@
 /* Status color utilities for components */
 @layer utilities {
   .status-applied {
-    @apply bg-blue-100 text-blue-800 border-blue-200;
+    background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe;
   }
   
   .status-screening {
-    @apply bg-yellow-100 text-yellow-800 border-yellow-200;
+    background-color: #fef3c7; color: #92400e; border-color: #fde68a;
   }
   
   .status-interview {
-    @apply bg-purple-100 text-purple-800 border-purple-200;
+    background-color:#f3e8ff; color:#6b21a8; border-color:#e9d5ff;
   }
   
   .status-offer {
-    @apply bg-green-100 text-green-800 border-green-200;
+    background-color:#dcfce7; color:#166534; border-color:#bbf7d0;
   }
   
   .status-rejected {
-    @apply bg-red-100 text-red-800 border-red-200;
+    background-color:#fee2e2; color:#991b1b; border-color:#fecaca;
   }
   
   .status-hired {
-    @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+    background-color:#d1fae5; color:#065f46; border-color:#a7f3d0;
   }
 
   /* Match score color utilities */
@@ -501,5 +501,8 @@
     transform: none !important;
   }
 }
+
+
+
 
 

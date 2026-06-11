@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { ExternalLink, Edit, Trash2 } from 'lucide-react';
 import { PortfolioItem } from './types';
-import { getTypeIcon, getTypeColor } from './utils';
 
 interface PortfolioItemCardProps {
   item: PortfolioItem;
@@ -12,22 +11,12 @@ interface PortfolioItemCardProps {
 }
 
 export function PortfolioItemCard({ item, onEdit, onDelete }: PortfolioItemCardProps) {
-  const IconComponent = getTypeIcon(item.type);
-
   return (
     <Card className="border border-border hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-              <IconComponent className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-foreground">{item.title}</CardTitle>
-              <Badge className={getTypeColor(item.type)} variant="secondary">
-                {item.type}
-              </Badge>
-            </div>
+          <div>
+            <CardTitle className="text-foreground">{item.title}</CardTitle>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm" onClick={() => onEdit?.(item)}>
@@ -48,9 +37,9 @@ export function PortfolioItemCard({ item, onEdit, onDelete }: PortfolioItemCardP
         <p className="text-muted-foreground text-sm">{item.description}</p>
         
         <div className="flex flex-wrap gap-2">
-          {item.technologies.map((tech) => (
-            <Badge key={tech} variant="secondary" className="text-xs">
-              {tech}
+          {item.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              {tag}
             </Badge>
           ))}
         </div>
@@ -60,7 +49,15 @@ export function PortfolioItemCard({ item, onEdit, onDelete }: PortfolioItemCardP
             variant="outline" 
             size="sm" 
             className="flex-1 border-border text-foreground hover:bg-muted"
-            onClick={() => window.open(item.url, '_blank')}
+            onClick={() => {
+  const rawUrl = item.url || (item as any).projectUrl || '';
+  const finalUrl =
+    rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+      ? rawUrl
+      : `https://${rawUrl}`;
+
+  window.open(finalUrl, '_blank');
+}}
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             View Project
