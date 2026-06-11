@@ -1,164 +1,167 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
-import { Plus, X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { NewPortfolioItem, PortfolioItem } from './types';
 
 interface AddPortfolioFormProps {
-  onAdd: (item: NewPortfolioItem) => void;
+  onAdd: (item: NewPortfolioItem) => void | Promise<void>;
   onCancel: () => void;
+  mode?: 'add' | 'edit';
+  initialItem?: PortfolioItem | null;
 }
 
-export function AddPortfolioForm({ onAdd, onCancel }: AddPortfolioFormProps) {
-  const [newItem, setNewItem] = useState<NewPortfolioItem>({
-    title: '',
-    description: '',
-    type: 'website',
-    url: '',
-    technologies: []
-  });
-  const [newTechnology, setNewTechnology] = useState('');
+export function AddPortfolioForm({
+  onAdd,
+  onCancel,
+  mode = 'add',
+  initialItem = null,
+}: AddPortfolioFormProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [url, setUrl] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
 
-  const addTechnology = () => {
-    if (newTechnology.trim() && !newItem.technologies.includes(newTechnology.trim())) {
-      setNewItem({
-        ...newItem,
-        technologies: [...newItem.technologies, newTechnology.trim()]
-      });
-      setNewTechnology('');
+  const isEditMode = mode === 'edit';
+
+  useEffect(() => {
+    if (!initialItem) return;
+
+    setTitle(initialItem.title || '');
+    setDescription(initialItem.description || '');
+    setUrl(
+      (initialItem as any).url ||
+        (initialItem as any).projectUrl ||
+        (initialItem as any).project_url ||
+        ''
+    );
+    setTags(
+      (initialItem as any).tags ||
+        (initialItem as any).technologies ||
+        (initialItem as any).skills ||
+        []
+    );
+  }, [initialItem]);
+
+  const handleAddTag = () => {
+    const value = tagInput.trim();
+
+    if (!value) return;
+    if (tags.includes(value)) {
+      setTagInput('');
+      return;
     }
+
+    setTags((prev) => [...prev, value]);
+    setTagInput('');
   };
 
-  const removeTechnology = (tech: string) => {
-    setNewItem({
-      ...newItem,
-      technologies: newItem.technologies.filter(t => t !== tech)
-    });
+  const handleRemoveTag = (tag: string) => {
+    setTags((prev) => prev.filter((item) => item !== tag));
   };
 
-  const handleSubmit = () => {
-    if (newItem.title && newItem.description && newItem.url) {
-      onAdd(newItem);
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addTechnology();
-    }
+    if (!title.trim()) return;
+    if (!description.trim()) return;
+
+    await onAdd({
+      title: title.trim(),
+      description: description.trim(),
+      url: url.trim(),
+      tags,
+      technologies: tags,
+    } as NewPortfolioItem);
   };
 
   return (
     <Card className="border border-border">
       <CardHeader>
-        <CardTitle className="text-foreground">Add New Project</CardTitle>
+        <CardTitle>
+          {isEditMode ? 'Edit Project' : 'Add New Project'}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-foreground">Project Title</Label>
+
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <Input
-              value={newItem.title}
-              onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-              placeholder="e.g. E-commerce React App"
-              className="bg-input-background border-border text-foreground"
+              placeholder="Project title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-foreground">Type</Label>
-            <select
-              value={newItem.type}
-              onChange={(e) => setNewItem({ ...newItem, type: e.target.value as any })}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-input-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="website">Website</option>
-              <option value="GitBranch">GitBranch Repository</option>
-              <option value="design">Design Project</option>
-              <option value="document">Document</option>
-            </select>
-          </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label className="text-foreground">Description</Label>
-          <Textarea
-            value={newItem.description}
-            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-            placeholder="Describe your project..."
-            rows={3}
-            className="bg-input-background border-border text-foreground resize-none"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-foreground">URL</Label>
-          <Input
-            value={newItem.url}
-            onChange={(e) => setNewItem({ ...newItem, url: e.target.value })}
-            placeholder="https://..."
-            className="bg-input-background border-border text-foreground"
-          />
-        </div>
-
-        <div className="space-y-3">
-          <Label className="text-foreground">Technologies</Label>
-          <div className="flex gap-2">
-            <Input
-              value={newTechnology}
-              onChange={(e) => setNewTechnology(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Add technology"
-              className="bg-input-background border-border text-foreground"
+          <div>
+            <Textarea
+              placeholder="Project description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
             />
-            <Button onClick={addTechnology} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6">
-              <Plus className="w-4 h-4" />
+          </div>
+
+          <div>
+            <Input
+              placeholder="Project URL"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add skill or technology"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+
+              <Button type="button" variant="outline" onClick={handleAddTag}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+
+            <Button type="submit">
+              {isEditMode ? 'Update Project' : 'Add Project'}
             </Button>
           </div>
-          
-          {newItem.technologies.length > 0 && (
-            <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg">
-              {newItem.technologies.map((tech) => (
-                <Badge key={tech} variant="secondary" className="px-3 py-1">
-                  {tech}
-                  <button
-                    onClick={() => removeTechnology(tech)}
-                    className="ml-2 hover:text-red-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={onCancel}
-            variant="outline"
-            className="flex-1 border-border text-foreground hover:bg-muted"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!newItem.title || !newItem.description || !newItem.url}
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            Add Project
-          </Button>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );
 }
-
-
-
-
-

@@ -1,19 +1,22 @@
 export interface PortfolioItem {
   id: string;
+  user_id: string;
   title: string;
-  description: string;
-  type: 'website' | 'GitBranch' | 'design' | 'document';
-  url: string;
-  image?: string;
-  technologies: string[];
+  description: string | null;
+  url: string | null;
+  image_urls: string[];
+  tags: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface NewPortfolioItem {
   title: string;
-  description: string;
-  type: 'website' | 'GitBranch' | 'design' | 'document';
-  url: string;
-  technologies: string[];
+  description: string | null;
+  url: string | null;
+  image_urls?: string[];
+  tags: string[];
+  user_id?: string;
 }
 
 

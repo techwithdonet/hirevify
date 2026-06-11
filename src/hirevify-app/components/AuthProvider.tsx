@@ -27,6 +27,7 @@ interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   isLoading: boolean;
+  authInitialized: boolean;
   connectionStatus: "checking" | "connected" | "error";
   signUp: (
     email: string,
@@ -57,6 +58,7 @@ function mapDbRoleToUserType(role: string): "recruiter" | "candidate" {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [connectionStatus, setConnectionStatus] =
     useState<"checking" | "connected" | "error">("checking");
 
@@ -150,8 +152,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await loadUserFromSession(session);
     });
 
+    // Mark auth as initialized after initial setup
+    const timeout = setTimeout(() => {
+      if (active) {
+        setAuthInitialized(true);
+      }
+    }, 500);
+
     return () => {
       active = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [initializeAuth, loadUserFromSession, setUserWithTokenSync]);
@@ -220,11 +230,11 @@ const { data: profile, error: profileError } = await supabase
 
 if (profileError) {
   console.error("Profile insert failed:", profileError);
-  throw new Error(`Profile creation failed: ${profileError.message}`);
+  const errorMessage = typeof profileError === 'object' && profileError !== null && 'message' in profileError 
+    ? (profileError as any).message 
+    : String(profileError);
+  throw new Error(`Profile creation failed: ${errorMessage}`);
 }
-      if (profileError) {
-        console.warn("Profile insert warning:", profileError.message);
-      }
 
       const session = data.session;
 
@@ -325,6 +335,7 @@ if (profileError) {
         user,
         setUser: setUserWithTokenSync,
         isLoading,
+        authInitialized,
         connectionStatus,
         signUp,
         signIn,

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { assessmentsService } from '../services/assessmentsService';
 
 interface SkillsAssessmentProps {
   onBack: () => void;
@@ -208,8 +209,9 @@ const SAMPLE_QUESTION: Question = {
 
 export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }: SkillsAssessmentProps) {
   const { user } = useAuth();
-  const [assessments, setAssessments] = useState<Assessment[]>(PREDEFINED_ASSESSMENTS);
-  const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>(MOCK_ASSESSMENT_RESULTS);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [assessmentResults, setAssessmentResults] = useState<AssessmentResult[]>([]);
+  const [isLoadingAssessments, setIsLoadingAssessments] = useState(true);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [activeTab, setActiveTab] = useState(userType === 'recruiter' ? 'manage-assessments' : 'available-assessments');
   const [searchTerm, setSearchTerm] = useState('');
@@ -231,6 +233,82 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
   const categories = ['all', 'Frontend Development', 'Backend Development', 'Programming Languages', 'Data Science', 'DevOps', 'Mobile Development'];
   const difficulties = ['all', 'beginner', 'intermediate', 'advanced'];
 
+  useEffect(() => {
+    const loadAssessments = async () => {
+      try {
+        setIsLoadingAssessments(true);
+
+        const { data, error } = await assessmentsService.getAssessments();
+
+        if (error) {
+          toast.error('Failed to load assessments');
+          setAssessments([]);
+          return;
+        }
+
+        const mappedAssessments: Assessment[] = data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description || '',
+          category: item.category || 'General',
+          duration: item.duration_minutes,
+          difficulty: item.level as 'beginner' | 'intermediate' | 'advanced',
+          skills: item.skills || [],
+          passingScore: item.passing_score,
+          questions: [],
+          createdBy: 'HireVify',
+          createdAt: item.created_at,
+          isActive: item.is_active,
+          assignedCandidates: 0,
+          completionRate: 0,
+          averageScore: 0,
+        }));
+
+        setAssessments(mappedAssessments);
+      } catch (error) {
+        console.error('Error loading assessments:', error);
+        toast.error('Failed to load assessments');
+        setAssessments([]);
+      } finally {
+        setIsLoadingAssessments(false);
+      }
+    };
+
+    loadAssessments();
+  }, []);
+
+  useEffect(() => {
+    const loadMyResults = async () => {
+      if (!user?.id) {
+        setAssessmentResults([]);
+        return;
+      }
+
+      const { data, error } = await assessmentsService.getMyResults(user.id);
+
+      if (error) {
+        setAssessmentResults([]);
+        return;
+      }
+
+      const mappedResults: AssessmentResult[] = data.map((item: any) => ({
+        id: item.id,
+        assessmentId: item.assessment_id,
+        candidateId: item.user_id,
+        candidateName: user?.name || 'Candidate',
+        candidateEmail: user?.email || '',
+        score: item.score || 0,
+        timeSpent: Math.round((item.time_spent || 0) / 60),
+        answers: item.answers || {},
+        completedAt: item.submitted_at || item.created_at,
+        status: item.status || 'completed',
+      }));
+
+      setAssessmentResults(mappedResults);
+    };
+
+    loadMyResults();
+  }, [user?.id]);
   const filteredAssessments = assessments.filter(assessment => {
     const matchesSearch = assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          assessment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -252,7 +330,50 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
       toast.success(`Starting ${assessment.title} assessment`);
     }
   };
+  const handleSubmitAssessment = async () => {
+    if (!selectedAssessment || !user?.id) {
+      toast.error('Please login to submit assessment');
+      return;
+    }
 
+    const selectedAnswer = answers[SAMPLE_QUESTION.id];
+    const isCorrect = selectedAnswer === String(SAMPLE_QUESTION.correctAnswer);
+    const score = isCorrect ? 100 : 0;
+
+    const { data, error } = await assessmentsService.saveResult({
+      userId: user.id,
+      assessmentId: selectedAssessment.id,
+      score,
+      timeSpent: selectedAssessment.duration * 60 - timeRemaining,
+      answers,
+      passed: score >= selectedAssessment.passingScore,
+    });
+
+    if (error) {
+      toast.error('Failed to save assessment result');
+      return;
+    }
+
+    const newResult: AssessmentResult = {
+      id: data?.id || crypto.randomUUID(),
+      assessmentId: selectedAssessment.id,
+      candidateId: user.id,
+      candidateName: user?.name || 'Candidate',
+      candidateEmail: user?.email || '',
+      score,
+      timeSpent: Math.round((selectedAssessment.duration * 60 - timeRemaining) / 60),
+      answers,
+      completedAt: new Date().toISOString(),
+      status: 'completed',
+    };
+
+    setAssessmentResults((prev) => [newResult, ...prev]);
+
+    toast.success(`Assessment completed! Score: ${score}%`);
+    setIsAssessmentActive(false);
+    setSelectedAssessment(null);
+    setActiveTab('my-results');
+  };
   const handleAssignAssessment = (assessment: Assessment) => {
     setSelectedAssessment(assessment);
     setShowAssignDialog(true);
@@ -601,12 +722,8 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
                   <Button variant="outline" disabled>
                     Previous Question
                   </Button>
-                  <Button 
-                    onClick={() => {
-                      toast.success('Assessment completed! (This is a demo)');
-                      setIsAssessmentActive(false);
-                      setSelectedAssessment(null);
-                    }}
+                                   <Button 
+                    onClick={handleSubmitAssessment}
                     disabled={!answers[SAMPLE_QUESTION.id]}
                   >
                     Submit Assessment
@@ -727,21 +844,64 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
             </div>
           </TabsContent>
 
-          <TabsContent value="my-results" className="space-y-6">
+                   <TabsContent value="my-results" className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-xl font-semibold">My Assessment Results</h3>
-              
-              <Card className="p-8 text-center">
-                <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h4 className="text-lg font-medium mb-2">No Completed Assessments</h4>
-                <p className="text-muted-foreground">
-                  Your assessment results and certificates will appear here once you complete assessments.
-                </p>
-                <Button className="mt-4" onClick={() => setActiveTab('available-assessments')}>
-                  <Play className="w-4 h-4 mr-2" />
-                  Take Your First Assessment
-                </Button>
-              </Card>
+
+              {assessmentResults.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h4 className="text-lg font-medium mb-2">No Completed Assessments</h4>
+                  <p className="text-muted-foreground">
+                    Your assessment results and certificates will appear here once you complete assessments.
+                  </p>
+                  <Button className="mt-4" onClick={() => setActiveTab('available-assessments')}>
+                    <Play className="w-4 h-4 mr-2" />
+                    Take Your First Assessment
+                  </Button>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {assessmentResults.map((result) => {
+                    const assessment = assessments.find((a) => a.id === result.assessmentId);
+                    const passingScore = assessment?.passingScore || 70;
+                    const passed = result.score >= passingScore;
+
+                    return (
+                      <Card key={result.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <h4 className="font-semibold text-lg">
+                                {assessment?.title || 'Assessment'}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                Completed on {new Date(result.completedAt).toLocaleDateString()}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Time spent: {result.timeSpent} minutes
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <div className={`text-3xl font-bold ${getScoreColor(result.score)}`}>
+                                {result.score}%
+                              </div>
+                              <Badge variant={passed ? 'default' : 'destructive'}>
+                                {passed ? 'Passed' : 'Failed'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="mt-4">
+                            <Progress value={result.score} className="h-2" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

@@ -184,6 +184,15 @@ const handleTestCandidateLogin = async () => {
                 <User className="w-4 h-4 mr-2 group-hover:text-primary transition-colors" />
                 Login
               </Button>
+              {/* Admin Button - Temporary */}
+              <a 
+                href="/admin1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-gray-400 hover:text-primary transition-colors px-2 py-1"
+              >
+                Admin
+              </a>
             </div>
 
             <div className="flex items-center gap-2 md:hidden">
@@ -328,75 +337,7 @@ const handleTestCandidateLogin = async () => {
             </span>
           </div>
 
-          {/* Test Options Section */}
-          <div className="mt-12 max-w-lg mx-auto">
-            {/* Authentication Tester */}
-            <div className="flex items-center justify-between mb-6 px-4 py-3 bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-sm">
-              <span className="text-sm font-medium text-gray-700">Authentication Tester</span>
-              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200">
-                connected
-              </span>
-            </div>
 
-            {/* Test Buttons */}
-            <div className="flex flex-wrap gap-3 justify-center mb-6">
-              <Button
-                size="sm"
-                onClick={() => {
-                  // Run all tests functionality
-                  toast.success('Running all tests...');
-                }}
-                className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg font-medium text-sm"
-              >
-                Run All Tests
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleTestRecruiterLogin}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium text-sm"
-              >
-                Test Recruiter
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleTestCandidateLogin}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium text-sm"
-              >
-                Test Candidate
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  // Reset accounts functionality
-                  toast.info('Resetting test accounts...');
-                }}
-                className="border-red-300 text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg font-medium text-sm"
-              >
-                Reset Accounts
-              </Button>
-            </div>
-
-            {/* Test Accounts Section */}
-            <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg p-4 shadow-sm">
-              <h3 className="font-semibold text-blue-900 mb-3 text-sm">Test Accounts</h3>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-blue-800">Recruiter:</span>{' '}
-                  <span className="text-blue-600">recruiter@hirevify.com / TestPassword123!</span>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-800">Candidate:</span>{' '}
-                  <span className="text-blue-600">candidate@hirevify.com / TestPassword123!</span>
-                </div>
-              </div>
-              <p className="text-xs text-blue-600 mt-3 italic">
-                These accounts are automatically created and maintained by the system.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 

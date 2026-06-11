@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { profilesService } from '@/src/hirevify-app/services/profilesService';
 
 interface CandidateSearchProps {
   onBack: () => void;
@@ -92,324 +93,58 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
   });
 
   // Comprehensive candidate database with realistic profiles
-  const [candidates] = useState<Candidate[]>([
-    {
-      id: '1',
-      name: 'Sarah Chen',
-      title: 'Senior Frontend Developer',
-      location: 'San Francisco, CA',
-      experience: '5-7 years',
-      skills: ['React', 'TypeScript', 'Node.js', 'GraphQL', 'AWS', 'Redux', 'CSS-in-JS', 'Testing'],
-      matchScore: 95,
-      availability: 'two-weeks',
-      salaryRange: { min: 120000, max: 150000, currency: 'USD' },
-      lastActive: '2 hours ago',
-      isVerified: true,
-      profileCompleteness: 98,
-      bio: 'Passionate frontend developer with 6 years of experience building scalable React applications. Led the frontend architecture for 3 major product launches at tech startups. Expert in modern JavaScript, responsive design, and performance optimization.',
-      preferredWorkType: ['Remote', 'Hybrid'],
-      education: 'BS Computer Science - Stanford University',
-      certifications: ['AWS Certified Developer', 'React Expert Certification'],
-      portfolioItems: 8,
-      GitBranch: 'GitBranch.com/sarahchen',
-      Link: 'Link.com/in/sarahchen',
-      yearsOfExperience: 6,
-      previousCompanies: ['Airbnb', 'Stripe', 'Medium'],
-      achievements: [
-        'Led frontend team of 5 developers',
-        'Improved app performance by 40%',
-        'Mentored 12+ junior developers'
-      ],
-      languages: ['English', 'Mandarin'],
-      timezone: 'PST',
-      responseRate: 95,
-      hiringSuccessRate: 88
-    },
-    {
-      id: '2',
-      name: 'Marcus Johnson',
-      title: 'Full Stack Engineer',
-      location: 'Austin, TX',
-      experience: '3-5 years',
-      skills: ['JavaScript', 'Python', 'React', 'Django', 'PostgreSQL', 'Docker', 'Git', 'API Design'],
-      matchScore: 88,
-      availability: 'one-month',
-      salaryRange: { min: 90000, max: 120000, currency: 'USD' },
-      lastActive: '1 day ago',
-      isVerified: true,
-      profileCompleteness: 92,
-      bio: 'Full-stack developer with strong problem-solving skills and 4 years of experience in agile environments. Specialized in building RESTful APIs and modern web applications. Passionate about clean code and user experience.',
-      preferredWorkType: ['Remote', 'On-site'],
-      education: 'BS Software Engineering - UT Austin',
-      certifications: ['Python Certified Developer'],
-      portfolioItems: 5,
-      GitBranch: 'GitBranch.com/marcusj',
-      Link: 'Link.com/in/marcusjohnson',
-      yearsOfExperience: 4,
-      previousCompanies: ['Dell', 'IBM', 'Local Startup'],
-      achievements: [
-        'Built 3 production applications from scratch',
-        'Reduced API response time by 60%',
-        'Implemented CI/CD pipeline'
-      ],
-      languages: ['English', 'Spanish'],
-      timezone: 'CST',
-      responseRate: 87,
-      hiringSuccessRate: 82
-    },
-    {
-      id: '3',
-      name: 'Priya Patel',
-      title: 'DevOps Engineer',
-      location: 'Seattle, WA',
-      experience: '7+ years',
-      skills: ['Docker', 'Kubernetes', 'AWS', 'Terraform', 'CI/CD', 'Python', 'Monitoring', 'Security'],
-      matchScore: 92,
-      availability: 'immediate',
-      salaryRange: { min: 130000, max: 160000, currency: 'USD' },
-      lastActive: '3 hours ago',
-      isVerified: true,
-      profileCompleteness: 96,
-      bio: 'Experienced DevOps engineer with 8 years specializing in cloud infrastructure and automation. Expert in containerization, microservices architecture, and implementing robust CI/CD pipelines. Strong focus on security and monitoring.',
-      preferredWorkType: ['Remote'],
-      education: 'MS Computer Engineering - University of Washington',
-      certifications: ['AWS Solutions Architect', 'Kubernetes Administrator', 'Security+'],
-      portfolioItems: 6,
-      GitBranch: 'GitBranch.com/priyapatel',
-      Link: 'Link.com/in/priyapatel',
-      yearsOfExperience: 8,
-      previousCompanies: ['Microsoft', 'Amazon', 'Netflix'],
-      achievements: [
-        'Reduced deployment time by 80%',
-        'Managed infrastructure for 10M+ users',
-        'Led security compliance initiatives'
-      ],
-      languages: ['English', 'Hindi', 'Gujarati'],
-      timezone: 'PST',
-      responseRate: 98,
-      hiringSuccessRate: 94
-    },
-    {
-      id: '4',
-      name: 'Ahmed Hassan',
-      title: 'Senior Backend Developer',
-      location: 'New York, NY',
-      experience: '5-7 years',
-      skills: ['Java', 'Spring Boot', 'Microservices', 'Kafka', 'MongoDB', 'Redis', 'Elasticsearch'],
-      matchScore: 85,
-      availability: 'two-weeks',
-      salaryRange: { min: 110000, max: 140000, currency: 'USD' },
-      lastActive: '5 hours ago',
-      isVerified: true,
-      profileCompleteness: 89,
-      bio: 'Backend engineer with 6 years of experience designing and implementing scalable microservices. Expert in distributed systems, message queues, and high-performance databases. Strong advocate for test-driven development.',
-      preferredWorkType: ['Hybrid', 'On-site'],
-      education: 'BS Computer Science - NYU',
-      certifications: ['Oracle Java Certified', 'MongoDB Professional'],
-      portfolioItems: 4,
-      GitBranch: 'GitBranch.com/ahmedh',
-      Link: 'Link.com/in/ahmedhassan',
-      yearsOfExperience: 6,
-      previousCompanies: ['Goldman Sachs', 'JP Morgan', 'Bloomberg'],
-      achievements: [
-        'Architected high-frequency trading system',
-        'Optimized database queries (90% improvement)',
-        'Led migration to microservices'
-      ],
-      languages: ['English', 'Arabic'],
-      timezone: 'EST',
-      responseRate: 91,
-      hiringSuccessRate: 85
-    },
-    {
-      id: '5',
-      name: 'Jennifer Liu',
-      title: 'UX/UI Designer',
-      location: 'Los Angeles, CA',
-      experience: '3-5 years',
-      skills: ['Figma', 'Sketch', 'Adobe Creative Suite', 'User Research', 'Prototyping', 'HTML/CSS'],
-      matchScore: 79,
-      availability: 'immediate',
-      salaryRange: { min: 85000, max: 110000, currency: 'USD' },
-      lastActive: '1 hour ago',
-      isVerified: false,
-      profileCompleteness: 85,
-      bio: 'Creative UX/UI designer with 4 years of experience creating user-centered designs. Skilled in user research, wireframing, and prototyping. Passionate about accessibility and inclusive design practices.',
-      preferredWorkType: ['Remote', 'Hybrid'],
-      education: 'BA Design - UCLA',
-      certifications: ['Google UX Design Certificate'],
-      portfolioItems: 12,
-      Link: 'Link.com/in/jenniferliu',
-      yearsOfExperience: 4,
-      previousCompanies: ['Disney', 'Hulu', 'Design Agency'],
-      achievements: [
-        'Redesigned app resulting in 25% increase in user engagement',
-        'Led user research for 5 major products',
-        'Established design system used by 20+ designers'
-      ],
-      languages: ['English', 'Mandarin'],
-      timezone: 'PST',
-      responseRate: 76,
-      hiringSuccessRate: 71
-    },
-    {
-      id: '6',
-      name: 'Robert Kim',
-      title: 'Data Scientist',
-      location: 'Chicago, IL',
-      experience: '7+ years',
-      skills: ['Python', 'R', 'Machine Learning', 'TensorFlow', 'SQL', 'Spark', 'Statistics', 'Visualization'],
-      matchScore: 91,
-      availability: 'one-month',
-      salaryRange: { min: 125000, max: 155000, currency: 'USD' },
-      lastActive: '2 days ago',
-      isVerified: true,
-      profileCompleteness: 94,
-      bio: 'Senior data scientist with 7 years of experience building ML models and driving data-driven decisions. Expert in statistical analysis, deep learning, and big data processing. Published researcher with 15+ papers.',
-      preferredWorkType: ['Remote', 'Hybrid'],
-      education: 'PhD Statistics - University of Chicago',
-      certifications: ['Google Cloud ML Engineer', 'AWS ML Specialty'],
-      portfolioItems: 7,
-      GitBranch: 'GitBranch.com/robertkim',
-      Link: 'Link.com/in/robertkim',
-      yearsOfExperience: 7,
-      previousCompanies: ['Google', 'Uber', 'Citadel'],
-      achievements: [
-        'Built recommendation system serving 50M users',
-        'Increased model accuracy by 30%',
-        'Led data science team of 8 members'
-      ],
-      languages: ['English', 'Korean'],
-      timezone: 'CST',
-      responseRate: 89,
-      hiringSuccessRate: 91
-    },
-    {
-      id: '7',
-      name: 'Maria Garcia',
-      title: 'Product Manager',
-      location: 'Miami, FL',
-      experience: '5-7 years',
-      skills: ['Product Strategy', 'User Research', 'Analytics', 'Agile', 'Roadmapping', 'A/B Testing'],
-      matchScore: 83,
-      availability: 'two-weeks',
-      salaryRange: { min: 115000, max: 145000, currency: 'USD' },
-      lastActive: '6 hours ago',
-      isVerified: true,
-      profileCompleteness: 91,
-      bio: 'Strategic product manager with 6 years of experience launching successful products. Expert in user research, data analysis, and cross-functional team leadership. Proven track record of driving growth and user engagement.',
-      preferredWorkType: ['Hybrid', 'Remote'],
-      education: 'MBA - Wharton, BS Engineering - MIT',
-      certifications: ['Certified Product Manager', 'Google Analytics'],
-      portfolioItems: 3,
-      Link: 'Link.com/in/mariagarcia',
-      yearsOfExperience: 6,
-      previousCompanies: ['Facebook', 'Shopify', 'Startup'],
-      achievements: [
-        'Launched 3 products with 1M+ users',
-        'Increased user retention by 40%',
-        'Led product team of 12 members'
-      ],
-      languages: ['English', 'Spanish', 'Portuguese'],
-      timezone: 'EST',
-      responseRate: 93,
-      hiringSuccessRate: 87
-    },
-    {
-      id: '8',
-      name: 'David Thompson',
-      title: 'Cybersecurity Engineer',
-      location: 'Washington, DC',
-      experience: '7+ years',
-      skills: ['Security Assessment', 'Penetration Testing', 'SIEM', 'Compliance', 'Network Security', 'Python'],
-      matchScore: 87,
-      availability: 'immediate',
-      salaryRange: { min: 135000, max: 170000, currency: 'USD' },
-      lastActive: '4 hours ago',
-      isVerified: true,
-      profileCompleteness: 93,
-      bio: 'Cybersecurity engineer with 8 years protecting enterprise systems. Expert in threat detection, vulnerability assessment, and security compliance. Strong background in government and financial sectors.',
-      preferredWorkType: ['On-site', 'Hybrid'],
-      education: 'MS Cybersecurity - George Washington University',
-      certifications: ['CISSP', 'CEH', 'Security+', 'CISM'],
-      portfolioItems: 2,
-      Link: 'Link.com/in/davidthompson',
-      yearsOfExperience: 8,
-      previousCompanies: ['Lockheed Martin', 'Department of Defense', 'Booz Allen'],
-      achievements: [
-        'Prevented 50+ security incidents',
-        'Led SOC 2 compliance initiatives',
-        'Designed security architecture for federal systems'
-      ],
-      languages: ['English'],
-      timezone: 'EST',
-      responseRate: 84,
-      hiringSuccessRate: 79
-    },
-    {
-      id: '9',
-      name: 'Lisa Wong',
-      title: 'Frontend Developer',
-      location: 'Portland, OR',
-      experience: '3-5 years',
-      skills: ['Vue.js', 'JavaScript', 'CSS', 'Webpack', 'Git', 'REST APIs', 'Responsive Design'],
-      matchScore: 76,
-      availability: 'one-month',
-      salaryRange: { min: 75000, max: 95000, currency: 'USD' },
-      lastActive: '12 hours ago',
-      isVerified: false,
-      profileCompleteness: 78,
-      bio: 'Frontend developer with 3 years of experience creating beautiful, responsive web applications. Passionate about modern JavaScript frameworks and user experience design. Strong attention to detail and code quality.',
-      preferredWorkType: ['Remote', 'Hybrid'],
-      education: 'BS Computer Science - Oregon State',
-      certifications: [],
-      portfolioItems: 6,
-      GitBranch: 'GitBranch.com/lisawong',
-      yearsOfExperience: 3,
-      previousCompanies: ['Nike', 'Local Agency'],
-      achievements: [
-        'Rebuilt company website (20% performance improvement)',
-        'Implemented design system',
-        'Mentored 2 junior developers'
-      ],
-      languages: ['English', 'Cantonese'],
-      timezone: 'PST',
-      responseRate: 68,
-      hiringSuccessRate: 64
-    },
-    {
-      id: '10',
-      name: 'Carlos Rodriguez',
-      title: 'Mobile Developer',
-      location: 'Denver, CO',
-      experience: '5-7 years',
-      skills: ['React Native', 'Swift', 'Kotlin', 'Firebase', 'App Store', 'Mobile UI/UX', 'Testing'],
-      matchScore: 89,
-      availability: 'immediate',
-      salaryRange: { min: 105000, max: 130000, currency: 'USD' },
-      lastActive: '30 minutes ago',
-      isVerified: true,
-      profileCompleteness: 88,
-      bio: 'Mobile developer with 5 years of experience building iOS and Android applications. Expert in React Native and native development. Published 8 apps with 2M+ combined downloads.',
-      preferredWorkType: ['Remote', 'Hybrid'],
-      education: 'BS Software Engineering - Colorado State',
-      certifications: ['iOS Developer Certification'],
-      portfolioItems: 8,
-      GitBranch: 'GitBranch.com/carlosr',
-      Link: 'Link.com/in/carlosrodriguez',
-      yearsOfExperience: 5,
-      previousCompanies: ['Spotify', 'Lyft', 'Mobile Startup'],
-      achievements: [
-        'Built app with 1M+ downloads',
-        'Reduced app crash rate by 95%',
-        'Led mobile team of 4 developers'
-      ],
-      languages: ['English', 'Spanish'],
-      timezone: 'MST',
-      responseRate: 92,
-      hiringSuccessRate: 86
-    }
-  ]);
+    const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
+
+  // Load candidates from Supabase
+  useEffect(() => {
+    const loadCandidates = async () => {
+      try {
+        setIsLoadingCandidates(true);
+        const { data, error } = await profilesService.searchProfiles({});
+        if (error) {
+          console.error('Error loading candidates:', error);
+          toast.error('Failed to load candidates');
+        } else if (data) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            name: p.full_name || 'Professional',
+            title: p.headline || 'Professional',
+            location: p.location || 'Remote',
+            experience: p.years_of_experience ? `${p.years_of_experience} years` : 'Not specified',
+            skills: p.skills || [],
+            matchScore: 75,
+            availability: 'immediate' as const,
+            salaryRange: { min: 50000, max: 150000, currency: 'USD' },
+            lastActive: p.updated_at,
+            isVerified: p.is_verified || false,
+            profileCompleteness: 75,
+            bio: p.bio || '',
+            preferredWorkType: ['Remote'],
+            education: p.education || '',
+            certifications: p.certifications || [],
+            portfolioItems: 0,
+            yearsOfExperience: p.years_of_experience || 0,
+            previousCompanies: p.previous_companies || [],
+            achievements: p.achievements || [],
+            languages: p.languages || [],
+            timezone: p.timezone || 'UTC',
+            responseRate: 80,
+            hiringSuccessRate: 75,
+            GitBranch: '',
+            Link: ''
+          }));
+          setCandidates(mapped);
+        }
+      } catch (error) {
+        console.error('Error loading candidates:', error);
+        toast.error('Failed to load candidate data');
+      } finally {
+        setIsLoadingCandidates(false);
+      }
+    };
+    loadCandidates();
+  }, []);
 
   const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>(candidates);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
@@ -1295,6 +1030,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
     </div>
   );
 }
+
 
 
 

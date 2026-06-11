@@ -250,7 +250,8 @@ export class AIResumeOptimizer {
     suggestions.push(...this.optimizeSkills(resume, jobDescription));
     
     // Achievement quantification
-    suggestions.push(...this.optimizeAchievements(resume));
+// Achievement quantification
+suggestions.push(...this.optimizeAchievementSuggestions(resume));
     
     // Keyword optimization
     suggestions.push(...this.optimizeKeywords(resume, jobDescription));
@@ -741,11 +742,22 @@ export class AIResumeOptimizer {
     return suggestions;
   }
 
-  private optimizeAchievements(resume: ResumeData): ResumeOptimizationSuggestion[] {
+  private optimizeAchievementSuggestions(resume: ResumeData): ResumeOptimizationSuggestion[] {
     const suggestions: ResumeOptimizationSuggestion[] = [];
     
-    resume.experience.forEach((exp, index) => {
-      exp.achievements.forEach((achievement, achIndex) => {
+   const experiences = Array.isArray(resume?.experience) ? resume.experience : [];
+
+experiences.forEach((exp, index) => {
+  const achievements = Array.isArray(exp?.achievements)
+    ? exp.achievements
+    : typeof exp?.achievements === 'string'
+      ? exp.achievements
+          .split('\n')
+          .map((item: string) => item.trim())
+          .filter(Boolean)
+      : [];
+
+  achievements.forEach((achievement, achIndex) => {
         if (!this.isQuantified(achievement)) {
           suggestions.push({
             id: `achievement-quantify-${index}-${achIndex}`,

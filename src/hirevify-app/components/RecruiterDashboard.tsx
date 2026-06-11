@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback } from './ui/avatar';
@@ -32,10 +32,17 @@ import {
   FileText,
   Lightbulb,
   Brain,
-  Scan
+  Scan,
+  Zap,
+  Loader
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { usePremiumAccess } from '../utils/premium';
+import { profilesService } from '@/src/hirevify-app/services/profilesService';
+import { jobsService } from '@/src/hirevify-app/services/jobsService';
+import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
+import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsService';
+import { toast } from 'sonner';
 
 interface Project {
   id: string;
@@ -96,9 +103,15 @@ export function RecruiterDashboard({
 }: RecruiterDashboardProps) {
   const { user } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [recruiterProfile, setRecruiterProfile] = useState<any>(null);
+  const [postedJobs, setPostedJobs] = useState<any[]>([]);
+  const [applicants, setApplicants] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   
   // Safe premium access with fallbacks
-  let checkAccess, getSubscription, subscription;
+  let checkAccess, getSubscription, premiumSubscription;
   let aiMatchingAccess = false;
   let atsAccess = false;
   let assessmentsAccess = false;
@@ -109,7 +122,7 @@ export function RecruiterDashboard({
     const premiumAccess = usePremiumAccess();
     checkAccess = premiumAccess.checkAccess;
     getSubscription = premiumAccess.getSubscription;
-    subscription = getSubscription();
+    premiumSubscription = getSubscription();
 
     // Optimize access checks
     aiMatchingAccess = checkAccess('ai-matching');
@@ -119,16 +132,63 @@ export function RecruiterDashboard({
     integrationsAccess = checkAccess('integrations');
   } catch (error) {
     console.error('Error accessing premium features:', error);
-    subscription = { isActive: false, tier: 'free', expiresAt: null, trialEndsAt: null };
+    premiumSubscription = { isActive: false, tier: 'free', expiresAt: null, trialEndsAt: null };
   }
 
-  // Remove demo data - start with empty arrays
-  const projects: Project[] = [];
+  // Load recruiter data from Supabase
+  useEffect(() => {
+    const loadRecruiterData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setIsLoading(true);
+
+        // Load subscription
+        const subData = await subscriptionsService.getUserSubscription(user.id);
+        if (subData.data) {
+          setSubscription(subData.data);
+        } else {
+          setSubscription({ tier: 'free', isActive: false });
+        }
+
+        // Load recruiter profile
+        const profileData = await profilesService.getRecruiterProfile(user.id);
+        if (profileData.data) {
+          setRecruiterProfile(profileData.data);
+        }
+
+        // Load posted jobs
+        const jobsData = await jobsService.getRecruiterJobs(user.id);
+        if (jobsData.data) {
+          setPostedJobs(jobsData.data);
+        }
+
+        // Load applications
+        const appData = await applicationsService.getRecruiterApplications(user.id);
+        if (appData.data) {
+          setApplicants(appData.data);
+        }
+
+        // Load stats
+        const statsData = await jobsService.getRecruiterStats(user.id);
+        if (statsData.data) {
+          setStats(statsData.data);
+        }
+      } catch (error) {
+        console.error('Error loading recruiter data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRecruiterData();
+  }, [user?.id]);
 
   const sidebarItems = useMemo(() => [
     { icon: BarChart3, label: 'Dashboard', active: true, count: null },
-    { icon: FolderOpen, label: 'Projects', active: false, count: projects.length || null, onClick: onViewProjects },
-    { icon: Users, label: 'Candidates', active: false, count: null, onClick: onViewATS },
+    { icon: FolderOpen, label: 'Projects', active: false, count: postedJobs.length || null, onClick: onViewProjects },
+    { icon: Users, label: 'Candidates', active: false, count: applicants.length || null, onClick: onViewATS },
     { 
       icon: Brain, 
       label: 'AI Matching', 
@@ -178,7 +238,8 @@ export function RecruiterDashboard({
     },
     { icon: Settings, label: 'Settings', active: false, count: null, onClick: onViewSettings },
   ], [
-    projects.length, 
+    postedJobs.length, 
+    applicants.length,
     aiMatchingAccess,
     atsAccess,
     assessmentsAccess,
@@ -201,486 +262,305 @@ export function RecruiterDashboard({
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Professional Sidebar */}
-      <aside className="w-80 bg-card border-r border-border flex flex-col">
-        {/* Logo Section */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center space-x-3 mb-2">
-            <HireVifyLogo size="md" />
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <HireVifyLogo size="md" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Recruiter Dashboard</h1>
+                <p className="text-sm text-gray-500">Manage your hiring pipeline</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Premium Status */}
+              {subscription?.isActive ? (
+                <Badge className="hidden md:flex bg-emerald-100 text-emerald-800 border border-emerald-200 px-4 py-2 font-semibold rounded-full">
+                  <Crown className="w-4 h-4 mr-2 text-emerald-600" />
+                  {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
+                </Badge>
+              ) : (
+                <Button onClick={onUpgrade} className="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+              )}
+              
+              <div className="flex items-center space-x-1">
+                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg hover:bg-emerald-50">
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadNotifications > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </Badge>
+                  )}
+                </Button>
+                
+                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg hover:bg-emerald-50">
+                  <MessageSquare className="w-5 h-5 text-gray-600" />
+                  {unreadMessages > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
+                      {unreadMessages}
+                    </Badge>
+                  )}
+                </Button>
+                
+                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg hover:bg-emerald-50">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </Button>
+                
+                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg hover:bg-red-50">
+                  <LogOut className="w-5 h-5 text-gray-600" />
+                </Button>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-            Recruiter Portal
-          </p>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          {sidebarItems.map((item, index) => (
-            <Button
-              key={index}
-              variant={item.active ? "default" : "ghost"}
-              className={`w-full justify-between h-12 px-4 ${
-                item.active 
-                  ? 'bg-primary text-primary-foreground shadow-sm' 
-                  : 'text-foreground hover:bg-muted hover:text-foreground'
-              }`}
-              onClick={item.onClick}
-            >
-              <div className="flex items-center flex-1 min-w-0">
-                <item.icon className="w-5 h-5 mr-3 shrink-0" />
-                <span className="flex-1 text-left ">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {(item as any).isNew && (
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-1.5 py-0.5 shrink-0">
-                    NEW
-                  </Badge>
-                )}
-                {item.premium && !item.hasAccess && <Crown className="w-4 h-4 text-yellow-500 shrink-0" />}
-                {item.premium && item.hasAccess && <Crown className="w-4 h-4 text-green-500 shrink-0" />}
-                {item.count && (
-                  <Badge variant="secondary" className="bg-muted text-muted-foreground text-xs shrink-0">
-                    {item.count}
-                  </Badge>
-                )}
-              </div>
-            </Button>
-          ))}
-        </nav>
-
-        {/* Upgrade Section / Premium Status */}
-        <div className="p-4 border-t border-border">
-          {subscription.isActive ? (
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-              <CardContent className="p-4">
-                <div className="flex items-center mb-3">
-                  <Crown className="w-5 h-5 text-green-600 mr-2" />
-                  <span className="font-semibold text-foreground">{subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)} Plan</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                  Enjoying premium features! Access to all advanced tools and priority support.
-                </p>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={onUpgrade}
-                  className="w-full border-green-200 text-green-700 hover:bg-green-50 font-medium"
-                >
-                  Manage Plan
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-              <CardContent className="p-4">
-                <div className="flex items-center mb-3">
-                  <Crown className="w-5 h-5 text-primary mr-2" />
-                  <span className="font-semibold text-foreground">Upgrade to Pro</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                  Unlock advanced analytics, AI-powered screening, and priority support.
-                </p>
-                <Button 
-                  size="sm" 
-                  onClick={onUpgrade}
-                  className="w-full bg-primary hover:bg-primary-hover text-primary-foreground font-medium"
-                >
-                  Upgrade Now
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-border">
-          <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-3 w-full justify-start p-2 hover:bg-muted">
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                    {user ? getUserInitials(user.name) : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left">
-                  <p className="font-medium text-foreground">{user?.name || 'User'}</p>
-                  <p className="text-sm text-muted-foreground">Recruiter</p>
-                </div>
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => {}}>
-                <User className="w-4 h-4 mr-2" />
-                View Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onViewSettings}>
-                <Settings className="w-4 h-4 mr-2" />
-                Account Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => {
-                  setUserMenuOpen(false);
-                  onLogout();
-                }}
-                className="text-red-600 focus:text-red-600"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </aside>
+      </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        {/* Enhanced Header */}
-        <header className="bg-card border-b border-border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Welcome to HireVify, {user?.name?.split(' ')[0] || 'User'}!
-              </h1>
-              <p className="text-muted-foreground">
-                Get started by posting your first project or exploring our hiring tools
-              </p>
+      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+        {isLoading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-4">
+              <Loader className="w-12 h-12 animate-spin text-emerald-600" />
+              <p className="text-gray-600">Loading your dashboard...</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
-                onClick={onSearchCandidates}
-                className="border-border text-foreground hover:bg-muted"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Search Candidates
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={onViewNotifications}
-                className="border-border text-foreground hover:bg-muted relative"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadNotifications > 0 && (
-                  <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[1.25rem] h-5 rounded-full p-0 flex items-center justify-center">
-                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                  </Badge>
-                )}
-              </Button>
-              <Button 
-                onClick={() => onPostProject()}
-                className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium px-6"
-                size="lg"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Post Your First Project
-              </Button>
+          </div>
+        )}
+
+        {!isLoading && (
+        <>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewProjects}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Active Projects</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{postedJobs.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <FolderOpen className="w-6 h-6 text-emerald-600" />
+              </div>
             </div>
           </div>
 
-          {/* Quick Stats - All showing 0 for new users */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { 
-                label: 'Active Projects', 
-                value: '0',
-                icon: FolderOpen,
-                color: 'text-primary',
-                bg: 'bg-primary/10',
-                onClick: onViewProjects
-              },
-              { 
-                label: 'Total Applications', 
-                value: '0',
-                icon: Users,
-                color: 'text-success',
-                bg: 'bg-success/10',
-                onClick: onViewATS
-              },
-              { 
-                label: 'Interviews Scheduled', 
-                value: '0',
-                icon: Calendar,
-                color: 'text-warning',
-                bg: 'bg-warning/10',
-                onClick: onViewInterviews
-              },
-              { 
-                label: 'Days Active',
-                value: 'New',
-                icon: BarChart3,
-                color: 'text-secondary-600',
-                bg: 'bg-secondary/10',
-                onClick: onViewAnalytics
-              }
-            ].map((stat, index) => (
-              <div 
-                key={index} 
-                className="flex items-center p-4 bg-muted/30 rounded-xl cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={stat.onClick}
-              >
-                <div className={`w-10 h-10 ${stat.bg} rounded-lg flex items-center justify-center mr-3`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="font-bold text-xl text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </div>
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewATS}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Applications</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{applicants.length}</p>
               </div>
-            ))}
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
           </div>
-        </header>
 
-        {/* Content Area - Getting Started */}
-        <div className="flex-1 p-6 space-y-8">
-          {projects.length === 0 ? (
-            /* Getting Started Section for New Users */
-            <>
-              <section>
-                <Card className="border border-border">
-                  <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-2xl font-bold text-foreground flex items-center justify-center">
-                      <Lightbulb className="w-6 h-6 mr-2 text-primary" />
-                      Welcome to Skills-First Hiring
-                    </CardTitle>
-                    <CardDescription className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                      Transform your hiring process with project-based evaluation and AI-powered matching. Get started in just a few steps.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Plus className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="font-semibold text-foreground mb-2">1. Post Your First Project</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Create a project posting with specific requirements and let candidates showcase their skills through real work.
-                        </p>
-                        <Button 
-                          onClick={() => onPostProject()}
-                          className="bg-primary hover:bg-primary-hover text-primary-foreground"
-                        >
-                          Create Project
-                        </Button>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Users className="w-8 h-8 text-success" />
-                        </div>
-                        <h3 className="font-semibold text-foreground mb-2">2. Review Candidates</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Evaluate candidates based on their project submissions and real work samples instead of just resumes.
-                        </p>
-                        <Button 
-                          variant="outline"
-                          onClick={onViewATS}
-                          className="border-border text-foreground hover:bg-muted"
-                        >
-                          Explore ATS
-                        </Button>
-                      </div>
-                      
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Award className="w-8 h-8 text-warning" />
-                        </div>
-                        <h3 className="font-semibold text-foreground mb-2">3. Use Skills Assessments</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Create custom assessments to validate technical skills and ensure the perfect match for your needs.
-                        </p>
-                        <Button 
-                          variant="outline"
-                          onClick={onViewSkillsAssessment}
-                          className="border-border text-foreground hover:bg-muted"
-                        >
-                          <Crown className="w-4 h-4 mr-2 text-yellow-500" />
-                          Try Assessments
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* Quick Actions Section */}
-              <section>
-                <Card className="border border-border">
-                  <CardHeader>
-                    <CardTitle className="text-foreground flex items-center">
-                      <Star className="w-5 h-5 mr-2 text-primary" />
-                      Quick Actions
-                    </CardTitle>
-                    <CardDescription className="text-muted-foreground">
-                      Essential tools to get your hiring process started
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {[
-                        {
-                          title: 'Post New Project',
-                          description: 'Create your first project posting',
-                          icon: Plus,
-                          onClick: () => onPostProject(),
-                          color: 'text-primary',
-                          bg: 'bg-primary/10'
-                        },
-                        {
-                          title: 'Search Candidates',
-                          description: 'Browse our talent pool',
-                          icon: Search,
-                          onClick: onSearchCandidates,
-                          color: 'text-success',
-                          bg: 'bg-success/10'
-                        },
-                        {
-                          title: 'Skills-First Hiring',
-                          description: 'Learn our methodology',
-                          icon: Target,
-                          onClick: onSkillsFirstHiring,
-                          color: 'text-purple-600',
-                          bg: 'bg-purple-100'
-                        },
-                        {
-                          title: 'Employer Education',
-                          description: 'Best hiring practices',
-                          icon: FileText,
-                          onClick: onEmployerEducation,
-                          color: 'text-blue-600',
-                          bg: 'bg-blue-100'
-                        }
-                      ].map((action, index) => (
-                        <Button 
-                          key={index}
-                          variant="outline" 
-                          onClick={action.onClick}
-                          className="h-auto p-6 border-border text-left hover:bg-muted hover:border-primary/20 transition-all duration-200"
-                        >
-                          <div className="w-full">
-                            <div className="flex items-center mb-3">
-                              <div className={`w-10 h-10 ${action.bg} rounded-lg flex items-center justify-center mr-3`}>
-                                <action.icon className={`w-5 h-5 ${action.color}`} />
-                              </div>
-                            </div>
-                            <h4 className="font-medium text-foreground mb-1">{action.title}</h4>
-                            <p className="text-sm text-muted-foreground">{action.description}</p>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-
-              {/* Features Overview */}
-              <section>
-                <Card className="border border-border">
-                  <CardHeader>
-                    <CardTitle className="text-foreground">Why Choose Skills-First Hiring?</CardTitle>
-                    <CardDescription className="text-muted-foreground">
-                      Transform how you evaluate and hire talent
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Target className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground mb-2">Project-Based Evaluation</h4>
-                          <p className="text-sm text-muted-foreground">
-                            See real work samples and assess candidates based on actual project outcomes, not just keywords on a resume.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <BarChart3 className="w-5 h-5 text-success" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground mb-2">AI-Powered Matching</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Our advanced AI analyzes skills, project requirements, and preferences to find perfect matches with 95% accuracy.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Award className="w-5 h-5 text-warning" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground mb-2">Skills Assessments</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Create custom technical assessments and coding challenges to validate skills before making hiring decisions.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <TrendingUp className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground mb-2">Advanced Analytics</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Track hiring metrics, diversity insights, and ROI with comprehensive analytics and reporting dashboards.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </section>
-            </>
-          ) : (
-            /* Active Projects Section - for users with existing projects */
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">Active Projects</h2>
-                  <p className="text-muted-foreground">Manage your current project postings and applications</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Button variant="outline" className="border-border text-foreground hover:bg-muted">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button variant="outline" onClick={onViewATS} className="border-border text-foreground hover:bg-muted">
-                    <Users className="w-4 h-4 mr-2" />
-                    View All Candidates
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewInterviews}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Interviews</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.interviewsScheduled || 0}</p>
               </div>
-
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {projects.map((project) => (
-                  <Card 
-                    key={project.id} 
-                    className="border border-border hover:shadow-lg transition-all duration-300 hover:border-primary/20 cursor-pointer"
-                    onClick={() => onPostProject(project)}
-                  >
-                    {/* Project card content would go here */}
-                  </Card>
-                ))}
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-purple-600" />
               </div>
-            </section>
-          )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewAnalytics}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Hire Rate</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.hireRate || 'N/A'}</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <Button 
+            onClick={() => onPostProject()}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md h-auto h-14"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Post New Project
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={onSearchCandidates}
+            className="border-gray-300 text-gray-900 hover:bg-gray-50 font-semibold px-6 py-3 rounded-lg h-auto h-14"
+          >
+            <Search className="w-5 h-5 mr-2" />
+            Search Candidates
+          </Button>
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Hiring Tools</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onClick={onViewAIMatchingDashboard} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                  <div className="flex items-center justify-between mb-3">
+                    <Brain className="w-6 h-6 text-emerald-600" />
+                    {aiMatchingAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">AI Matching</h3>
+                  <p className="text-sm text-gray-600">Smart candidate matching</p>
+                </button>
+
+                <button onClick={onViewATSScanner} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                  <div className="flex items-center justify-between mb-3">
+                    <Scan className="w-6 h-6 text-blue-600" />
+                    {atsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">ATS Scanner</h3>
+                  <p className="text-sm text-gray-600">Resume screening tool</p>
+                </button>
+
+                <button onClick={onViewSkillsAssessment} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                  <div className="flex items-center justify-between mb-3">
+                    <Award className="w-6 h-6 text-purple-600" />
+                    {assessmentsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Assessments</h3>
+                  <p className="text-sm text-gray-600">Custom skills tests</p>
+                </button>
+
+                <button onClick={onViewAnalytics} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                  <div className="flex items-center justify-between mb-3">
+                    <BarChart3 className="w-6 h-6 text-orange-600" />
+                    {analyticsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Analytics</h3>
+                  <p className="text-sm text-gray-600">Hiring insights</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Features Overview */}
+            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Why Skills-First Hiring?</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <Target className="w-5 h-5 text-emerald-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Project-Based Evaluation</h4>
+                    <p className="text-sm text-gray-600">See real work samples instead of just resumes</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <Zap className="w-5 h-5 text-emerald-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">AI-Powered Matching</h4>
+                    <p className="text-sm text-gray-600">Advanced AI finds the perfect candidates automatically</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <Award className="w-5 h-5 text-emerald-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Skills Assessments</h4>
+                    <p className="text-sm text-gray-600">Create custom tests to validate technical skills</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="space-y-6">
+            {/* Premium Status */}
+            {!subscription?.isActive ? (
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+                <div className="text-center">
+                  <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-2">Go Premium</h3>
+                  <p className="text-sm text-gray-600 mb-4">Unlock AI matching, advanced analytics, and more</p>
+                  <Button onClick={onUpgrade} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg">
+                    Upgrade Now
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+                <div className="text-center">
+                  <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
+                  <h3 className="font-bold text-gray-900 mb-1">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
+                  <p className="text-sm text-gray-600">All premium features enabled</p>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-4">Recent Applications</h3>
+              {applicants.length > 0 ? (
+                <div className="space-y-3">
+                  {applicants.slice(0, 3).map((app: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.candidate_id}</p>
+                      <p className="text-xs text-gray-500">Status: {app.status || 'pending'}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No applications yet</p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Links */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-4">Navigation</h3>
+              <div className="space-y-2">
+                <button onClick={onViewProjects} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">
+                  View All Projects
+                </button>
+                <button onClick={onViewInterviews} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">
+                  Schedule Interviews
+                </button>
+                <button onClick={onViewIntegrations} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors flex items-center justify-between">
+                  Integrations
+                  {integrationsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </>
+        )}
       </main>
     </div>
   );
 }
-
-
-
-
-

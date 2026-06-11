@@ -1,0 +1,276 @@
+/**
+ * Profiles Service
+ * Handles user profile operations from Supabase
+ */
+
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+
+export interface Profile {
+  id: string;
+  auth_user_id: string;
+  email: string;
+  full_name: string;
+  role: 'candidate' | 'recruiter' | 'admin';
+  avatar_url: string | null;
+  bio: string | null;
+  phone: string | null;
+  location: string | null;
+  timezone: string;
+  company_name: string | null;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CandidateProfile {
+  id: string;
+  user_id: string;
+  headline: string | null;
+  bio: string | null;
+  years_of_experience: number;
+  skills: string[];
+  education: string | null;
+  certifications: string[];
+  languages: string[];
+  previous_companies: string[];
+  achievements: string[];
+  resume_url: string | null;
+  portfolio_url: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  preferred_work_type: string[];
+  availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string;
+  timezone: string | null;
+  response_rate: number;
+  profile_completeness: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecruiterProfile {
+  id: string;
+  user_id: string;
+  company_name: string;
+  company_size: 'startup' | 'small' | 'medium' | 'large' | 'enterprise' | null;
+  industry: string | null;
+  company_website: string | null;
+  company_logo_url: string | null;
+  company_description: string | null;
+  hiring_team_size: number;
+  verified_recruiter: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+class ProfilesService {
+  private supabase = createSupabaseBrowserClient();
+
+  /**
+   * Get user profile by ID
+   */
+  async getProfile(userId: string) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single<Profile>();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Get profile by auth user ID
+   */
+  async getProfileByAuthId(authUserId: string) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('*')
+      .eq('auth_user_id', authUserId)
+      .single<Profile>();
+
+    if (error) {
+      console.error('Error fetching profile by auth ID:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Update profile
+   */
+  async updateProfile(userId: string, updates: Partial<Omit<Profile, 'id' | 'auth_user_id' | 'created_at' | 'updated_at'>>) {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single<Profile>();
+
+    if (error) {
+      console.error('Error updating profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Get candidate profile
+   */
+  async getCandidateProfile(userId: string) {
+    const { data, error } = await this.supabase
+      .from('candidate_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single<CandidateProfile>();
+
+    if (error) {
+      // Profile doesn't exist yet or table doesn't exist - return empty profile
+      if (error.code === 'PGRST116' || error.code === 'PGRST205' || error.code === '42P01' || error.code === '42501') {
+        return {
+          data: {
+            id: userId,
+            user_id: userId,
+            headline: '',
+            bio: '',
+            years_of_experience: 0,
+            skills: [],
+            education: '',
+            certifications: [],
+            languages: [],
+            previous_companies: [],
+            achievements: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          } as CandidateProfile,
+          error: null,
+        };
+      }
+      console.error('Error fetching candidate profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Update candidate profile
+   */
+  async updateCandidateProfile(userId: string, updates: Partial<Omit<CandidateProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
+    const { data, error } = await this.supabase
+      .from('candidate_profiles')
+      .update(updates)
+      .eq('user_id', userId)
+      .select()
+      .single<CandidateProfile>();
+
+    if (error) {
+      console.error('Error updating candidate profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Get recruiter profile
+   */
+  async getRecruiterProfile(userId: string) {
+    const { data, error } = await this.supabase
+      .from('recruiter_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single<RecruiterProfile>();
+
+    if (error) {
+      console.error('Error fetching recruiter profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Update recruiter profile
+   */
+  async updateRecruiterProfile(userId: string, updates: Partial<Omit<RecruiterProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
+    const { data, error } = await this.supabase
+      .from('recruiter_profiles')
+      .update(updates)
+      .eq('user_id', userId)
+      .select()
+      .single<RecruiterProfile>();
+
+    if (error) {
+      console.error('Error updating recruiter profile:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
+   * Search profiles
+   */
+  async searchProfiles(searchTerm: string, role?: 'candidate' | 'recruiter') {
+    let query = this.supabase
+      .from('profiles')
+      .select('*')
+      .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%`);
+
+    if (role) {
+      query = query.eq('role', role);
+    }
+
+    const { data, error } = await query.returns<Profile[]>();
+
+    if (error) {
+      console.error('Error searching profiles:', error);
+      return { data: [], error };
+    }
+
+    return { data: data || [], error: null };
+  }
+
+  /**
+   * Get profile completeness percentage
+   */
+  getProfileCompletenessPercentage(profile: Profile, detailedProfile?: CandidateProfile | RecruiterProfile) {
+    let completeness = 0;
+    let totalFields = 0;
+
+    // Main profile fields
+    const mainProfileFields = ['full_name', 'email', 'role', 'avatar_url', 'bio', 'location'];
+    mainProfileFields.forEach((field) => {
+      totalFields++;
+      if (profile[field as keyof Profile]) {
+        completeness++;
+      }
+    });
+
+    // Detailed profile fields
+    if (detailedProfile) {
+      const detailedFields = ['headline', 'bio', 'skills', 'education', 'certifications'];
+      detailedFields.forEach((field) => {
+        totalFields++;
+        const value = detailedProfile[field as keyof typeof detailedProfile];
+        if (value && (Array.isArray(value) ? value.length > 0 : value)) {
+          completeness++;
+        }
+      });
+    }
+
+    return Math.round((completeness / totalFields) * 100);
+  }
+}
+
+export const profilesService = new ProfilesService();

@@ -232,7 +232,7 @@ export function AppRouter({
         <ATSView 
           onBack={navigation.navigateToRecruiterDashboard}
           onStartInterview={navigation.navigateToLiveInterview}
-          selectedApplication={selectedApplication}
+          selectedCandidate={selectedApplication as any}
         />
       );
 
