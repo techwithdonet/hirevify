@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 /**
  * Reliable Document Parser - Simple and Effective
  * 
@@ -73,8 +74,8 @@ export interface ReliableResumeData {
 export class ReliableDocumentParser {
   
   async parseDocument(file: File): Promise<ReliableResumeData> {
-    console.log('🚀 RELIABLE PARSER - Starting document parsing for:', file.name);
-    console.log('📊 File details:', {
+    console.log('ðŸš€ RELIABLE PARSER - Starting document parsing for:', file.name);
+    console.log('ðŸ“Š File details:', {
       name: file.name,
       size: `${(file.size / 1024).toFixed(1)} KB`,
       type: file.type || 'unknown',
@@ -93,21 +94,21 @@ export class ReliableDocumentParser {
       }
 
       // Step 1: Extract text content
-      console.log('🔄 Starting text extraction...');
+      console.log('ðŸ”„ Starting text extraction...');
       const extractedText = await this.extractTextFromFile(file);
       
-      console.log('📄 Text extracted successfully, length:', extractedText.length);
-      console.log('📄 First 200 characters:', extractedText.substring(0, 200));
+      console.log('ðŸ“„ Text extracted successfully, length:', extractedText.length);
+      console.log('ðŸ“„ First 200 characters:', extractedText.substring(0, 200));
       
       // Step 2: Parse the extracted text
-      console.log('🔄 Starting resume text parsing...');
+      console.log('ðŸ”„ Starting resume text parsing...');
       const result = await this.parseResumeText(extractedText);
       
-      console.log('✅ Document parsing completed successfully');
+      console.log('âœ… Document parsing completed successfully');
       return result;
       
     } catch (error) {
-      console.error('❌ Document parsing failed:', error);
+      console.error('âŒ Document parsing failed:', error);
       
       // Provide specific error messages
       let errorMessage = error.message;
@@ -124,7 +125,7 @@ export class ReliableDocumentParser {
   }
 
   private async extractTextFromFile(file: File): Promise<string> {
-    console.log('📄 Extracting text from:', file.type || 'unknown', file.name);
+    console.log('ðŸ“„ Extracting text from:', file.type || 'unknown', file.name);
     
     try {
       // Try to read the file as text regardless of type
@@ -134,11 +135,11 @@ export class ReliableDocumentParser {
         throw new Error('File contains insufficient readable text');
       }
       
-      console.log('✅ Text extraction successful, length:', text.length);
+      console.log('âœ… Text extraction successful, length:', text.length);
       return text;
       
     } catch (error) {
-      console.error('❌ Text extraction failed:', error);
+      console.error('âŒ Text extraction failed:', error);
       
       // Provide helpful error messages based on file type
       if (file.name.toLowerCase().endsWith('.pdf')) {
@@ -164,18 +165,18 @@ export class ReliableDocumentParser {
 
     for (let i = 0; i < strategies.length; i++) {
       try {
-        console.log(`📄 Trying reading strategy ${i + 1}...`);
+        console.log(`ðŸ“„ Trying reading strategy ${i + 1}...`);
         const text = await strategies[i]();
         
         if (text && text.length > 10) {
           const cleaned = this.cleanTextContent(text);
           if (cleaned.length > 10) {
-            console.log(`✅ Successfully read file with strategy ${i + 1}, length:`, cleaned.length);
+            console.log(`âœ… Successfully read file with strategy ${i + 1}, length:`, cleaned.length);
             return cleaned;
           }
         }
       } catch (error) {
-        console.log(`❌ Strategy ${i + 1} failed:`, error.message);
+        console.log(`âŒ Strategy ${i + 1} failed:`, error.message);
         // Continue to next strategy
       }
     }
@@ -281,7 +282,7 @@ export class ReliableDocumentParser {
   }
 
   private async parseResumeText(text: string): Promise<ReliableResumeData> {
-    console.log('🔍 PARSING RESUME TEXT');
+    console.log('ðŸ” PARSING RESUME TEXT');
     
     // Clean the text
     const cleanText = this.cleanText(text);
@@ -320,7 +321,7 @@ export class ReliableDocumentParser {
       }
     };
 
-    console.log('🎯 PARSING COMPLETE:', {
+    console.log('ðŸŽ¯ PARSING COMPLETE:', {
       name: result.personalInfo.name,
       email: result.personalInfo.email,
       experience_count: result.experience.length,
@@ -342,7 +343,7 @@ export class ReliableDocumentParser {
   }
 
   private extractPersonalInfo(text: string, lines: string[]) {
-    console.log('🔍 Extracting personal info...');
+    console.log('ðŸ” Extracting personal info...');
     
     // Name - try multiple simple strategies
     let name = 'Name not found';
@@ -412,7 +413,7 @@ export class ReliableDocumentParser {
     const portfolioMatch = text.match(/https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     const portfolio = portfolioMatch ? portfolioMatch[0] : '';
 
-    console.log('✅ Personal info extracted:', { name, email, phone, location });
+    console.log('âœ… Personal info extracted:', { name, email, phone, location });
 
     return {
       name,
@@ -426,7 +427,7 @@ export class ReliableDocumentParser {
   }
 
   private extractProfessionalSummary(text: string, lines: string[]): string {
-    console.log('🔍 Extracting professional summary...');
+    console.log('ðŸ” Extracting professional summary...');
     
     const summaryKeywords = ['summary', 'objective', 'profile', 'overview', 'about'];
     
@@ -450,7 +451,7 @@ export class ReliableDocumentParser {
         
         if (summaryLines.length > 0) {
           const summary = summaryLines.join(' ').substring(0, 500);
-          console.log('✅ Summary found');
+          console.log('âœ… Summary found');
           return summary;
         }
       }
@@ -462,7 +463,7 @@ export class ReliableDocumentParser {
       
       if (line.length > 100 && line.includes('.') && 
           !line.includes('@') && !line.includes('http')) {
-        console.log('✅ Summary found via content heuristic');
+        console.log('âœ… Summary found via content heuristic');
         return line.substring(0, 300);
       }
     }
@@ -471,7 +472,7 @@ export class ReliableDocumentParser {
   }
 
   private extractWorkExperience(text: string, lines: string[]) {
-    console.log('🔍 Extracting work experience...');
+    console.log('ðŸ” Extracting work experience...');
     
     const experiences = [];
     const experienceKeywords = ['experience', 'employment', 'work history', 'career'];
@@ -506,7 +507,7 @@ export class ReliableDocumentParser {
       const experienceText = lines.slice(startIndex, endIndex).join('\n');
       
       // Pattern for "Position at Company (2020-2023)"
-      const jobPattern = /(.+?)\s+at\s+(.+?)\s*(?:\(|\,)?\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi;
+      const jobPattern = /(.+?)\s+at\s+(.+?)\s*(?:\(|\,)?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
       let match;
       let expId = 1;
       
@@ -534,7 +535,7 @@ export class ReliableDocumentParser {
       
       // Alternative pattern for comma-separated format
       if (experiences.length === 0) {
-        const altPattern = /([^,\n]+),\s*([^,\n]+),\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi;
+        const altPattern = /([^,\n]+),\s*([^,\n]+),\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
         
         while ((match = altPattern.exec(experienceText)) !== null) {
           const position = match[1].trim();
@@ -560,12 +561,12 @@ export class ReliableDocumentParser {
       }
     }
     
-    console.log(`✅ Found ${experiences.length} work experience entries`);
+    console.log(`âœ… Found ${experiences.length} work experience entries`);
     return experiences;
   }
 
   private extractEducation(text: string, lines: string[]) {
-    console.log('🔍 Extracting education...');
+    console.log('ðŸ” Extracting education...');
     
     const education = [];
     const educationKeywords = ['education', 'academic', 'university', 'college'];
@@ -621,12 +622,12 @@ export class ReliableDocumentParser {
       }
     }
     
-    console.log(`✅ Found ${education.length} education entries`);
+    console.log(`âœ… Found ${education.length} education entries`);
     return education;
   }
 
   private extractSkills(text: string, lines: string[]) {
-    console.log('🔍 Extracting skills...');
+    console.log('ðŸ” Extracting skills...');
     
     // Common skill lists
     const technicalSkills = [
@@ -705,7 +706,7 @@ export class ReliableDocumentParser {
       languages: [...new Set(foundLanguages)]
     };
     
-    console.log('✅ Skills extracted:', {
+    console.log('âœ… Skills extracted:', {
       technical: skills.technical.length,
       soft: skills.soft.length,
       tools: skills.tools.length,
@@ -719,14 +720,14 @@ export class ReliableDocumentParser {
   private extractProjects(text: string, lines: string[]) {
     const projects = [];
     // Simple project extraction - can be enhanced later
-    console.log('✅ Projects extraction (basic implementation)');
+    console.log('âœ… Projects extraction (basic implementation)');
     return projects;
   }
 
   private extractCertifications(text: string, lines: string[]) {
     const certifications = [];
     // Simple certification extraction - can be enhanced later
-    console.log('✅ Certifications extraction (basic implementation)');
+    console.log('âœ… Certifications extraction (basic implementation)');
     return certifications;
   }
 
@@ -759,6 +760,9 @@ export class ReliableDocumentParser {
     return Math.min(score, 100);
   }
 }
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -44,8 +44,8 @@ export interface IntegrationLog {
 // Test integration routes (debug function)
 export async function testIntegrationRoutes(): Promise<{ success: boolean; routes?: any; error?: string }> {
   try {
-    console.log('📋 Testing integration routes...');
-    console.log('📋 Routes test URL:', `${API_BASE}/integrations/test-routes`);
+    console.log('ðŸ“‹ Testing integration routes...');
+    console.log('ðŸ“‹ Routes test URL:', `${API_BASE}/integrations/test-routes`);
     
     const response = await fetch(`${API_BASE}/integrations/test-routes`, {
       method: 'GET',
@@ -54,11 +54,11 @@ export async function testIntegrationRoutes(): Promise<{ success: boolean; route
       },
     });
 
-    console.log('📋 Routes test response status:', response.status);
+    console.log('ðŸ“‹ Routes test response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('📋 Routes test failed with status:', response.status, errorText);
+      console.error('ðŸ“‹ Routes test failed with status:', response.status, errorText);
       return {
         success: false,
         error: `HTTP ${response.status}: ${errorText || 'Routes test failed'}`
@@ -66,14 +66,14 @@ export async function testIntegrationRoutes(): Promise<{ success: boolean; route
     }
 
     const data = await response.json();
-    console.log('📋 Integration routes test response:', data);
+    console.log('ðŸ“‹ Integration routes test response:', data);
 
     return {
       success: true,
       routes: data,
     };
   } catch (error) {
-    console.error('❌ Integration routes test failed:', error);
+    console.error('âŒ Integration routes test failed:', error);
     return {
       success: false,
       error: error.message || 'Routes test failed'
@@ -84,7 +84,7 @@ export async function testIntegrationRoutes(): Promise<{ success: boolean; route
 // Health check for integration service
 export async function checkIntegrationServiceHealth(): Promise<{ success: boolean; status?: string; error?: string }> {
   try {
-    console.log('🏥 Testing integration service health...');
+    console.log('ðŸ¥ Testing integration service health...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -111,7 +111,7 @@ export async function checkIntegrationServiceHealth(): Promise<{ success: boolea
     
     for (const endpoint of healthEndpoints) {
       try {
-        console.log(`🏥 Trying ${endpoint.name}: ${endpoint.url}`);
+        console.log(`ðŸ¥ Trying ${endpoint.name}: ${endpoint.url}`);
         
         response = await fetch(endpoint.url, {
           method: 'GET',
@@ -121,24 +121,24 @@ export async function checkIntegrationServiceHealth(): Promise<{ success: boolea
           signal: controller.signal
         });
         
-        console.log(`🏥 ${endpoint.name} response status:`, response.status);
+        console.log(`ðŸ¥ ${endpoint.name} response status:`, response.status);
 
         if (response.ok) {
           try {
             data = await response.json();
             successfulEndpoint = endpoint.name;
-            console.log(`🏥 ${endpoint.name} health response:`, data);
+            console.log(`ðŸ¥ ${endpoint.name} health response:`, data);
             break;
           } catch (jsonError) {
-            console.error(`🏥 ${endpoint.name} JSON parse error:`, jsonError);
+            console.error(`ðŸ¥ ${endpoint.name} JSON parse error:`, jsonError);
             continue; // Try next endpoint
           }
         } else {
-          console.log(`🏥 ${endpoint.name} failed with status:`, response.status);
+          console.log(`ðŸ¥ ${endpoint.name} failed with status:`, response.status);
           continue; // Try next endpoint
         }
       } catch (endpointError) {
-        console.log(`🏥 ${endpoint.name} failed with error:`, endpointError.message);
+        console.log(`ðŸ¥ ${endpoint.name} failed with error:`, endpointError.message);
         continue; // Try next endpoint
       }
     }
@@ -159,7 +159,7 @@ export async function checkIntegrationServiceHealth(): Promise<{ success: boolea
       error: undefined
     };
   } catch (error) {
-    console.error('🏥 Integration service health check failed:', error);
+    console.error('ðŸ¥ Integration service health check failed:', error);
     
     // Provide more specific error messages
     if (error.name === 'AbortError') {
@@ -186,7 +186,7 @@ export async function checkIntegrationServiceHealth(): Promise<{ success: boolea
 // Test KV store access in integration service
 export async function testIntegrationKV(): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
-    console.log('🗄️ Testing integration service KV access...');
+    console.log('ðŸ—„ï¸ Testing integration service KV access...');
     
     const response = await fetch(`${API_BASE}/integrations/test-kv`, {
       method: 'GET',
@@ -196,7 +196,7 @@ export async function testIntegrationKV(): Promise<{ success: boolean; error?: s
     });
 
     const data = await response.json();
-    console.log('🗄️ KV test response:', data);
+    console.log('ðŸ—„ï¸ KV test response:', data);
 
     return {
       success: response.ok,
@@ -204,7 +204,7 @@ export async function testIntegrationKV(): Promise<{ success: boolean; error?: s
       data: data
     };
   } catch (error) {
-    console.error('❌ Error testing KV:', error);
+    console.error('âŒ Error testing KV:', error);
     return {
       success: false,
       error: error.message || 'KV test failed'
@@ -215,9 +215,9 @@ export async function testIntegrationKV(): Promise<{ success: boolean; error?: s
 // Debug authentication - test if token is valid
 export async function debugIntegrationAuth(accessToken: string): Promise<{ success: boolean; user?: any; error?: string; debug?: any }> {
   try {
-    console.log('🔍 Testing integration authentication...');
-    console.log('🔍 Debug URL:', `${API_BASE}/integrations/debug-auth`);
-    console.log('🔍 Token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
+    console.log('ðŸ” Testing integration authentication...');
+    console.log('ðŸ” Debug URL:', `${API_BASE}/integrations/debug-auth`);
+    console.log('ðŸ” Token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
 
     if (!accessToken) {
       return {
@@ -227,13 +227,13 @@ export async function debugIntegrationAuth(accessToken: string): Promise<{ succe
     }
 
     // Test KV access first but don't fail if it doesn't work
-    console.log('🗄️ Testing KV access...');
+    console.log('ðŸ—„ï¸ Testing KV access...');
     let kvTest;
     try {
       kvTest = await testIntegrationKV();
-      console.log('🗄️ KV test result:', kvTest.success ? 'PASSED' : 'FAILED');
+      console.log('ðŸ—„ï¸ KV test result:', kvTest.success ? 'PASSED' : 'FAILED');
     } catch (kvError) {
-      console.log('🗄️ KV test failed with error:', kvError.message);
+      console.log('ðŸ—„ï¸ KV test failed with error:', kvError.message);
       kvTest = {
         success: false,
         error: kvError.message,
@@ -242,7 +242,7 @@ export async function debugIntegrationAuth(accessToken: string): Promise<{ succe
     }
 
     // Test auth regardless of KV test result
-    console.log('🔍 Testing authentication...');
+    console.log('ðŸ” Testing authentication...');
     const response = await fetch(`${API_BASE}/integrations/debug-auth`, {
       method: 'POST',
       headers: {
@@ -251,15 +251,15 @@ export async function debugIntegrationAuth(accessToken: string): Promise<{ succe
       },
     });
 
-    console.log('🔍 Debug response status:', response.status);
+    console.log('ðŸ” Debug response status:', response.status);
 
     let data;
     try {
       const rawResponse = await response.text();
       data = JSON.parse(rawResponse);
-      console.log('🔍 Debug response data:', data);
+      console.log('ðŸ” Debug response data:', data);
     } catch (jsonError) {
-      console.error('🔍 Failed to parse debug response JSON:', jsonError);
+      console.error('ðŸ” Failed to parse debug response JSON:', jsonError);
       return {
         success: false,
         error: 'Invalid response from debug endpoint',
@@ -281,7 +281,7 @@ export async function debugIntegrationAuth(accessToken: string): Promise<{ succe
       };
     }
   } catch (error) {
-    console.error('❌ Error in debug auth:', error);
+    console.error('âŒ Error in debug auth:', error);
     return {
       success: false,
       error: error.message || 'Debug auth failed'
@@ -292,9 +292,9 @@ export async function debugIntegrationAuth(accessToken: string): Promise<{ succe
 // Get user's integrations
 export async function getUserIntegrations(accessToken: string): Promise<{ success: boolean; integrations?: Integration[]; error?: string }> {
   try {
-    console.log('🔗 Fetching user integrations...');
-    console.log('🔗 API URL:', `${API_BASE}/integrations/list`);
-    console.log('🔗 User token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
+    console.log('ðŸ”— Fetching user integrations...');
+    console.log('ðŸ”— API URL:', `${API_BASE}/integrations/list`);
+    console.log('ðŸ”— User token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
 
     if (!accessToken) {
       return {
@@ -304,22 +304,22 @@ export async function getUserIntegrations(accessToken: string): Promise<{ succes
     }
 
     // First test the health endpoint to ensure service is accessible
-    console.log('🏥 Testing integration service accessibility...');
+    console.log('ðŸ¥ Testing integration service accessibility...');
     try {
       // Use the health check function that tries multiple endpoints
       const healthResult = await checkIntegrationServiceHealth();
       
       if (!healthResult.success) {
-        console.error('❌ Integration service health check failed:', healthResult.error);
+        console.error('âŒ Integration service health check failed:', healthResult.error);
         return {
           success: false,
           error: healthResult.error || 'Integration service is not accessible'
         };
       }
 
-      console.log('✅ Integration service is accessible:', healthResult.status);
+      console.log('âœ… Integration service is accessible:', healthResult.status);
     } catch (healthError) {
-      console.error('❌ Integration service connectivity test failed:', healthError);
+      console.error('âŒ Integration service connectivity test failed:', healthError);
       return {
         success: false,
         error: 'Cannot connect to integration service. The backend may be down.'
@@ -327,7 +327,7 @@ export async function getUserIntegrations(accessToken: string): Promise<{ succes
     }
 
     // Now make the authenticated request
-    console.log('🔗 Making authenticated request to integration list...');
+    console.log('ðŸ”— Making authenticated request to integration list...');
     const response = await fetch(`${API_BASE}/integrations/list`, {
       method: 'GET',
       headers: {
@@ -336,19 +336,19 @@ export async function getUserIntegrations(accessToken: string): Promise<{ succes
       },
     });
 
-    console.log('🔗 Response status:', response.status);
-    console.log('🔗 Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('ðŸ”— Response status:', response.status);
+    console.log('ðŸ”— Response headers:', Object.fromEntries(response.headers.entries()));
 
     let data;
     let rawResponse = '';
     try {
       rawResponse = await response.text();
-      console.log('🔗 Raw response (first 200 chars):', rawResponse.substring(0, 200));
+      console.log('ðŸ”— Raw response (first 200 chars):', rawResponse.substring(0, 200));
       data = JSON.parse(rawResponse);
-      console.log('🔗 Parsed response data:', data);
+      console.log('ðŸ”— Parsed response data:', data);
     } catch (jsonError) {
-      console.error('🔗 Failed to parse JSON response:', jsonError);
-      console.error('🔗 Full raw response text:', rawResponse);
+      console.error('ðŸ”— Failed to parse JSON response:', jsonError);
+      console.error('ðŸ”— Full raw response text:', rawResponse);
       
       // Try to extract useful error information from non-JSON responses
       if (response.status === 401) {
@@ -375,7 +375,7 @@ export async function getUserIntegrations(accessToken: string): Promise<{ succes
     }
 
     if (!response.ok) {
-      console.error('🔗 API request failed:', response.status, data);
+      console.error('ðŸ”— API request failed:', response.status, data);
       
       // Provide detailed error messages
       let errorMessage = data.error || `HTTP ${response.status} error`;
@@ -396,13 +396,13 @@ export async function getUserIntegrations(accessToken: string): Promise<{ succes
       };
     }
 
-    console.log('🔗 Successfully fetched integrations:', data.integrations?.length || 0);
+    console.log('ðŸ”— Successfully fetched integrations:', data.integrations?.length || 0);
     return {
       success: true,
       integrations: data.integrations || []
     };
   } catch (error) {
-    console.error('❌ Error fetching user integrations:', error);
+    console.error('âŒ Error fetching user integrations:', error);
     
     // Check for specific error types
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -745,6 +745,8 @@ export const integrationTemplates = {
     }
   }
 };
+
+
 
 
 

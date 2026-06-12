@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Performance utilities to prevent timeouts and improve app responsiveness
  */
 
@@ -130,6 +130,8 @@ export function withPerformanceMonitoring<T extends (...args: any[]) => any>(
     return result;
   }) as T;
 }
+
+
 
 
 

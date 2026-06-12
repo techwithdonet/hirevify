@@ -1,4 +1,4 @@
-import React, { Component, ReactNode } from 'react';
+﻿import React, { Component, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     // If it's a Figma error, don't trigger error boundary
     if (isFigmaError(error)) {
-      console.debug('🚫 ErrorBoundary: Suppressed Figma error', error.message);
+      console.debug('ðŸš« ErrorBoundary: Suppressed Figma error', error.message);
       return { hasError: false };
     }
     
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // If it's a Figma error, just log and continue
     if (isFigmaError(error)) {
-      console.debug('🚫 ErrorBoundary: Figma error caught and suppressed', { error, errorInfo });
+      console.debug('ðŸš« ErrorBoundary: Figma error caught and suppressed', { error, errorInfo });
       this.setState({ hasError: false });
       return;
     }
@@ -176,6 +176,8 @@ export const withErrorBoundary = <P extends object>(
   
   return WrappedComponent;
 };
+
+
 
 
 

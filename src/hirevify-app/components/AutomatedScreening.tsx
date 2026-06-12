@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Automated Candidate Pre-screening
  * 
  * AI-powered system that automatically screens candidates against job requirements,
@@ -1043,6 +1043,8 @@ export function AutomatedScreening({ onBack, onUpgrade, projectId }: AutomatedSc
     </div>
   );
 }
+
+
 
 
 

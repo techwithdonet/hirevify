@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 export interface ConnectivityTestResult {
   success: boolean;
@@ -30,7 +30,7 @@ export async function quickBackendCheck(): Promise<boolean> {
 
   for (const url of testUrls) {
     try {
-      console.log(`🔍 Quick test: ${url}`);
+      console.log(`ðŸ” Quick test: ${url}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
@@ -46,17 +46,17 @@ export async function quickBackendCheck(): Promise<boolean> {
       clearTimeout(timeoutId);
       
       if (response.ok || response.status === 401 || response.status < 500) {
-        console.log(`✅ Quick test successful: ${url} (${response.status})`);
+        console.log(`âœ… Quick test successful: ${url} (${response.status})`);
         return true;
       }
       
-      console.log(`⚠️ Quick test non-ok response: ${url} (${response.status})`);
+      console.log(`âš ï¸ Quick test non-ok response: ${url} (${response.status})`);
     } catch (error) {
-      console.log(`❌ Quick test failed: ${url} - ${error.message}`);
+      console.log(`âŒ Quick test failed: ${url} - ${error.message}`);
     }
   }
   
-  console.log('❌ All quick tests failed');
+  console.log('âŒ All quick tests failed');
   return false;
 }
 
@@ -67,7 +67,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
   const startTime = Date.now();
   
   try {
-    console.log('🔍 Getting system status...');
+    console.log('ðŸ” Getting system status...');
     
     // Step 1: Test basic Supabase connectivity
     const supabaseAlive = await testSupabaseBasics();
@@ -80,7 +80,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     
     const responseTime = Date.now() - startTime;
     
-    console.log(`📊 System Status Results:`, {
+    console.log(`ðŸ“Š System Status Results:`, {
       supabase: supabaseAlive,
       backend: backendAlive,
       integrations: integrationsAlive,
@@ -120,7 +120,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     };
     
   } catch (error) {
-    console.error('💥 System status check failed:', error);
+    console.error('ðŸ’¥ System status check failed:', error);
     
     return {
       backend: 'unknown',
@@ -133,7 +133,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
 
 async function testSupabaseBasics(): Promise<boolean> {
   try {
-    console.log('🔍 Testing basic Supabase connectivity...');
+    console.log('ðŸ” Testing basic Supabase connectivity...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -152,15 +152,15 @@ async function testSupabaseBasics(): Promise<boolean> {
     
     // Supabase REST API should return 200 with OpenAPI spec or similar
     if (response.ok) {
-      console.log('✅ Supabase basic connectivity successful');
+      console.log('âœ… Supabase basic connectivity successful');
       return true;
     } else {
-      console.log(`⚠️ Supabase returned ${response.status}`);
+      console.log(`âš ï¸ Supabase returned ${response.status}`);
       return false;
     }
     
   } catch (error) {
-    console.log('❌ Supabase basic connectivity failed:', error.message);
+    console.log('âŒ Supabase basic connectivity failed:', error.message);
     return false;
   }
 }
@@ -174,7 +174,7 @@ async function testBackendServer(): Promise<boolean> {
   
   for (const endpoint of endpoints) {
     try {
-      console.log(`🔍 Testing backend endpoint: ${endpoint}`);
+      console.log(`ðŸ” Testing backend endpoint: ${endpoint}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -190,18 +190,18 @@ async function testBackendServer(): Promise<boolean> {
       clearTimeout(timeoutId);
       
       if (response.ok || response.status === 401) {
-        console.log(`✅ Backend endpoint successful: ${endpoint} (${response.status})`);
+        console.log(`âœ… Backend endpoint successful: ${endpoint} (${response.status})`);
         return true;
       } else {
-        console.log(`⚠️ Backend endpoint ${endpoint} returned ${response.status}`);
+        console.log(`âš ï¸ Backend endpoint ${endpoint} returned ${response.status}`);
       }
       
     } catch (error) {
-      console.log(`❌ Backend endpoint ${endpoint} failed:`, error.message);
+      console.log(`âŒ Backend endpoint ${endpoint} failed:`, error.message);
     }
   }
   
-  console.log('❌ All backend endpoints failed');
+  console.log('âŒ All backend endpoints failed');
   return false;
 }
 
@@ -214,7 +214,7 @@ async function testIntegrationEndpoints(): Promise<boolean> {
   
   for (const endpoint of endpoints) {
     try {
-      console.log(`🔍 Testing integration endpoint: ${endpoint}`);
+      console.log(`ðŸ” Testing integration endpoint: ${endpoint}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -231,10 +231,10 @@ async function testIntegrationEndpoints(): Promise<boolean> {
       clearTimeout(timeoutId);
       
       if (response.ok || response.status === 401) {
-        console.log(`✅ Integration endpoint successful: ${endpoint} (${response.status})`);
+        console.log(`âœ… Integration endpoint successful: ${endpoint} (${response.status})`);
         return true;
       } else {
-        console.log(`⚠️ Integration endpoint ${endpoint} returned ${response.status}`);
+        console.log(`âš ï¸ Integration endpoint ${endpoint} returned ${response.status}`);
         // Log response text for debugging
         try {
           const responseText = await response.text();
@@ -245,11 +245,11 @@ async function testIntegrationEndpoints(): Promise<boolean> {
       }
       
     } catch (error) {
-      console.log(`❌ Integration endpoint ${endpoint} failed:`, error.message);
+      console.log(`âŒ Integration endpoint ${endpoint} failed:`, error.message);
     }
   }
   
-  console.log('❌ All integration endpoints failed');
+  console.log('âŒ All integration endpoints failed');
   return false;
 }
 
@@ -270,7 +270,7 @@ export async function testAuthenticatedIntegrationAccess(accessToken: string): P
   }
   
   try {
-    console.log('🔐 Testing authenticated integration access...');
+    console.log('ðŸ” Testing authenticated integration access...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -289,7 +289,7 @@ export async function testAuthenticatedIntegrationAccess(accessToken: string): P
     
     if (response.ok) {
       const data = await response.json().catch(() => ({ integrations: [] }));
-      console.log('✅ Authenticated integration access successful');
+      console.log('âœ… Authenticated integration access successful');
       
       return {
         success: true,
@@ -301,7 +301,7 @@ export async function testAuthenticatedIntegrationAccess(accessToken: string): P
       };
     } else {
       const errorText = await response.text().catch(() => 'No response body');
-      console.log(`❌ Authenticated integration access failed: ${response.status}`);
+      console.log(`âŒ Authenticated integration access failed: ${response.status}`);
       
       return {
         success: false,
@@ -316,7 +316,7 @@ export async function testAuthenticatedIntegrationAccess(accessToken: string): P
     
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.log('💥 Authenticated integration access error:', error.message);
+    console.log('ðŸ’¥ Authenticated integration access error:', error.message);
     
     return {
       success: false,
@@ -366,6 +366,8 @@ export function getStatusMessage(status: SystemStatus): {
     color: 'info'
   };
 }
+
+
 
 
 

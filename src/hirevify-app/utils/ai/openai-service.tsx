@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OpenAI Service Integration for HireVify
  * 
  * Provides AI-powered analysis and generation for interviews, resumes, 
@@ -668,6 +668,8 @@ Provide detailed analysis in JSON format:
 export const aiService = new OpenAIService();
 export default aiService;
 export type { InterviewQuestion, ResponseAnalysis, ResumeOptimization, CareerRecommendation };
+
+
 
 
 

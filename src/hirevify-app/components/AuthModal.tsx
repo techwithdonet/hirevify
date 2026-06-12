@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
@@ -51,36 +51,36 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
     try {
       if (activeTab === 'signin') {
-        console.log('🔐 Attempting signin for:', email);
+        console.log('ðŸ” Attempting signin for:', email);
 
         const result = await signIn(email, password);
 
         if (result.success) {
-          console.log('✅ Signin successful');
+          console.log('âœ… Signin successful');
           toast.success(result.message || 'Welcome back!');
           onClose();
           resetForm();
         } else {
-          console.error('❌ Signin failed:', result.message);
+          console.error('âŒ Signin failed:', result.message);
           toast.error(result.message || 'Sign in failed');
         }
       } else {
-        console.log('📝 Attempting signup for:', email, userType);
+        console.log('ðŸ“ Attempting signup for:', email, userType);
 
         const result = await signUp(email, password, name, userType);
 
         if (result.success) {
-          console.log('✅ Signup successful');
+          console.log('âœ… Signup successful');
           toast.success(result.message || 'Account created successfully!');
           onClose();
           resetForm();
         } else {
-          console.error('❌ Signup failed:', result.message);
+          console.error('âŒ Signup failed:', result.message);
           toast.error(result.message || 'Sign up failed');
         }
       }
     } catch (error) {
-      console.error('❌ Auth error:', error);
+      console.error('âŒ Auth error:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setFormLoading(false);
@@ -322,3 +322,4 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
     </Dialog>
   );
 }
+

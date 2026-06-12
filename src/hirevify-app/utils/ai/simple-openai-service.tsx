@@ -1,4 +1,4 @@
-// Simple OpenAI Service - Client-side safe implementation
+﻿// Simple OpenAI Service - Client-side safe implementation
 // Provides fallback analysis without server dependencies
 
 export interface AnalysisResult {
@@ -40,23 +40,23 @@ class SimpleOpenAIService {
    * Analyze resume content using client-side processing
    */
   async analyzeResume(text: string, mode: string = 'comprehensive'): Promise<AnalysisResult> {
-    console.log('🔍 Simple OpenAI service: Analyzing resume content...');
+    console.log('ðŸ” Simple OpenAI service: Analyzing resume content...');
     
     try {
       // Input validation
       if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        console.warn('⚠️ Empty or invalid text provided to analyzeResume');
+        console.warn('âš ï¸ Empty or invalid text provided to analyzeResume');
         return this.getFallbackAnalysis();
       }
 
       // Simulate AI analysis with intelligent text processing
       const analysis = this.performClientSideAnalysis(text);
       
-      console.log('✅ Simple OpenAI analysis completed');
+      console.log('âœ… Simple OpenAI analysis completed');
       return analysis;
       
     } catch (error) {
-      console.error('❌ Simple OpenAI analysis failed:', error);
+      console.error('âŒ Simple OpenAI analysis failed:', error);
       return this.getFallbackAnalysis();
     }
   }
@@ -273,12 +273,12 @@ class SimpleOpenAIService {
    * Enhanced vision analysis - client-side safe version
    */
   async enhancedVisionAnalysis(imageData: string): Promise<VisionAnalysisResult> {
-    console.log('🔍 Simple vision analysis: Processing image data...');
+    console.log('ðŸ” Simple vision analysis: Processing image data...');
     
     try {
       // Input validation
       if (!imageData || typeof imageData !== 'string') {
-        console.warn('⚠️ Invalid image data provided to enhancedVisionAnalysis');
+        console.warn('âš ï¸ Invalid image data provided to enhancedVisionAnalysis');
       }
 
       // Return a basic analysis structure
@@ -296,7 +296,7 @@ class SimpleOpenAIService {
         confidence: 78
       };
     } catch (error) {
-      console.error('❌ Vision analysis failed:', error);
+      console.error('âŒ Vision analysis failed:', error);
       return {
         layout: {
           columns: 1,
@@ -334,7 +334,10 @@ export const simpleOpenAIService = new SimpleOpenAIService();
 export default simpleOpenAIService;
 
 // Additional exports for backwards compatibility
-export { AnalysisResult, VisionAnalysisResult };
+
+
+
+
 
 
 

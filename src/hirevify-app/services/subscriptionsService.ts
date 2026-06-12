@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Subscriptions Service
  * Handles subscription and premium access from Supabase
  */
@@ -214,3 +214,5 @@ class SubscriptionsService {
 }
 
 export const subscriptionsService = new SubscriptionsService();
+
+

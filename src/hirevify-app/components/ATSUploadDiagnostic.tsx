@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ATS Upload Diagnostic Tool
  * Quick diagnostic to identify file upload issues
  */
@@ -284,7 +284,7 @@ export function ATSUploadDiagnostic() {
                   <span className="font-medium">{selectedFile.name}</span>
                 </div>
                 <div className="text-sm text-gray-600 mt-1">
-                  Size: {(selectedFile.size / 1024).toFixed(1)} KB • Type: {selectedFile.type}
+                  Size: {(selectedFile.size / 1024).toFixed(1)} KB â€¢ Type: {selectedFile.type}
                 </div>
               </div>
             )}
@@ -391,9 +391,9 @@ export function ATSUploadDiagnostic() {
                 <strong>Quick Access URLs:</strong>
               </p>
               <ul className="text-xs text-blue-700 mt-1 space-y-1">
-                <li>• Functional ATS Scanner: <code>/?screen=functional-ats</code></li>
-                <li>• Accuracy-First Scanner: <code>/?screen=accuracy-first-ats</code></li>
-                <li>• Upload Diagnostic: <code>/?diagnostic=ats</code></li>
+                <li>â€¢ Functional ATS Scanner: <code>/?screen=functional-ats</code></li>
+                <li>â€¢ Accuracy-First Scanner: <code>/?screen=accuracy-first-ats</code></li>
+                <li>â€¢ Upload Diagnostic: <code>/?diagnostic=ats</code></li>
               </ul>
             </div>
           </div>
@@ -402,6 +402,8 @@ export function ATSUploadDiagnostic() {
     </div>
   );
 }
+
+
 
 
 

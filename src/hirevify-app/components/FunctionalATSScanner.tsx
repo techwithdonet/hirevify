@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Functional ATS Scanner - Working Prototype
  * 
  * A comprehensive resume parsing solution that combines multiple extraction strategies
@@ -209,10 +209,10 @@ export function FunctionalATSScanner() {
       const parser = new WorkingDocumentParser();
 
       // Use the parser to extract structured data from the document
-      console.log('🚀 Starting document parsing with WorkingDocumentParser...');
+      console.log('ðŸš€ Starting document parsing with WorkingDocumentParser...');
       const result = await parser.parseDocument(file);
       
-      console.log('📄 Parser result received:', result);
+      console.log('ðŸ“„ Parser result received:', result);
       
       if (result.extractionMetadata?.confidence && result.extractionMetadata.confidence > 0.5) {
         // Convert structured data back to text format for our processing pipeline
@@ -244,7 +244,7 @@ export function FunctionalATSScanner() {
             if (exp.description) extractedText += `${exp.description}\n`;
             if (exp.achievements && exp.achievements.length > 0) {
               exp.achievements.forEach(achievement => {
-                extractedText += `• ${achievement}\n`;
+                extractedText += `â€¢ ${achievement}\n`;
               });
             }
             extractedText += '\n';
@@ -299,7 +299,7 @@ export function FunctionalATSScanner() {
           });
         }
         
-        console.log('✅ Successfully converted structured data to text:', extractedText.substring(0, 300) + '...');
+        console.log('âœ… Successfully converted structured data to text:', extractedText.substring(0, 300) + '...');
         return extractedText;
       }
 
@@ -437,7 +437,7 @@ export function FunctionalATSScanner() {
         }
         
         // Look for dates
-        const datePattern = /(\d{4})\s*[-–]\s*(\d{4}|present)/i;
+        const datePattern = /(\d{4})\s*[-â€“]\s*(\d{4}|present)/i;
         const dateMatch = originalLine.match(datePattern);
         if (dateMatch) {
           currentExperience.startDate = dateMatch[1];
@@ -546,7 +546,7 @@ export function FunctionalATSScanner() {
       
       if (inSkillsSection) {
         // Split by common delimiters
-        const skills = line.split(/[,•·|]/).map(s => s.trim()).filter(s => s.length > 0);
+        const skills = line.split(/[,â€¢Â·|]/).map(s => s.trim()).filter(s => s.length > 0);
         foundTechnical.push(...skills);
       }
     }
@@ -904,7 +904,7 @@ export function FunctionalATSScanner() {
                 <div className="space-y-3">
                   <p className="text-xl font-medium text-foreground">{uploadedFile.name}</p>
                   <p className="text-muted-foreground">
-                    {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB • {uploadedFile.type}
+                    {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB â€¢ {uploadedFile.type}
                   </p>
                   <div className="flex justify-center">
                     <CheckCircle className="w-6 h-6 text-green-600" />
@@ -1389,6 +1389,8 @@ export function FunctionalATSScanner() {
     </div>
   );
 }
+
+
 
 
 

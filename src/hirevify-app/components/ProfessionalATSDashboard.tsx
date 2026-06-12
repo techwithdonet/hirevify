@@ -1,4 +1,4 @@
-// Professional ATS Dashboard - Show 95% Accuracy Metrics
+﻿// Professional ATS Dashboard - Show 95% Accuracy Metrics
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -24,7 +24,7 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
       const { atsAccuracyBenchmark } = await import('../utils/ats/accuracyBenchmark');
       const results = await atsAccuracyBenchmark.benchmarkAccuracy();
       setBenchmarkData(results);
-      console.log('🎯 ATS Accuracy Benchmark Results:', results);
+      console.log('ðŸŽ¯ ATS Accuracy Benchmark Results:', results);
     } catch (error) {
       console.error('Benchmark failed:', error);
       // Set fallback data
@@ -206,7 +206,7 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Industry Comparison</h3>
             <div className="space-y-4">
-              {Object.entries(benchmarkData.industryComparison).map(([system, accuracy]) => (
+              {Object.entries(benchmarkData.industryComparison as Record<string, number>).map(([system, accuracy]) => (
                 <div key={system} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${
@@ -220,13 +220,13 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
                   </div>
                   <div className="flex items-center gap-3">
                     <Progress 
-                      value={accuracy} 
+                      value={Number(accuracy)} 
                       className="w-24 h-2" 
                     />
                     <span className={`font-semibold ${
                       system === 'hirevify' ? 'text-primary' : 'text-muted-foreground'
                     }`}>
-                      {accuracy}%
+                      {Number(accuracy)}%
                     </span>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
                 <span className="text-sm font-medium text-green-800">
                   HireVify outperforms industry leaders by {
                     (benchmarkData.industryComparison.hirevify - 
-                     Math.max(...Object.values(benchmarkData.industryComparison).filter((_, i, arr) => 
+                     Math.max(...Object.values(benchmarkData.industryComparison as Record<string, number>).filter((_, i, arr) => 
                        Object.keys(benchmarkData.industryComparison)[i] !== 'hirevify'
                      ))).toFixed(1)
                   }%
@@ -258,9 +258,9 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
                     {metric.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                   </span>
                   <div className="flex items-center gap-2">
-                    <Progress value={accuracy} className="w-16 h-2" />
-                    <span className={`text-sm font-semibold ${getAccuracyColor(accuracy)}`}>
-                      {accuracy}%
+                    <Progress value={Number(accuracy)} className="w-16 h-2" />
+                    <span className={`text-sm font-semibold ${getAccuracyColor(Number(accuracy))}`}>
+                      {Number(accuracy)}%
                     </span>
                   </div>
                 </div>
@@ -358,6 +358,11 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
 };
 
 export default ProfessionalATSDashboard;
+
+
+
+
+
 
 
 

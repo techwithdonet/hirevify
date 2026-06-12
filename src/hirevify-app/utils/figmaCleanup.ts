@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Figma Webpack Cleanup Utility
  * 
  * This utility helps clean up any residual Figma webpack artifacts
@@ -126,6 +126,8 @@ export function emergencyFigmaCleanup(): void {
     console.error('Emergency cleanup failed:', error);
   }
 }
+
+
 
 
 

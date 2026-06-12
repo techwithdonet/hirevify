@@ -1,4 +1,4 @@
-// Universal Working Document Parser - Works with ANY resume
+﻿// Universal Working Document Parser - Works with ANY resume
 // Real document parsing for all file types
 
 import type { EnterpriseResumeData } from './enterpriseDocumentParser';
@@ -7,8 +7,8 @@ import { SimpleTextExtractor } from './simpleTextExtractor';
 class WorkingDocumentParser {
   
   async parseDocument(file: File): Promise<EnterpriseResumeData> {
-    console.log('🚀 UNIVERSAL ATS PARSER - Starting document parsing for:', file.name);
-    console.log('📊 File details:', {
+    console.log('ðŸš€ UNIVERSAL ATS PARSER - Starting document parsing for:', file.name);
+    console.log('ðŸ“Š File details:', {
       name: file.name,
       size: `${(file.size / 1024).toFixed(1)} KB`,
       type: file.type || 'unknown',
@@ -22,14 +22,14 @@ class WorkingDocumentParser {
       }
 
       // Extract text from the actual uploaded file
-      console.log('🔄 Starting text extraction...');
+      console.log('ðŸ”„ Starting text extraction...');
       const extractedText = await this.extractTextFromFile(file);
       
-      console.log('📄 Text extraction completed');
-      console.log('📊 Extracted text length:', extractedText.length);
+      console.log('ðŸ“„ Text extraction completed');
+      console.log('ðŸ“Š Extracted text length:', extractedText.length);
       
       if (extractedText.length > 0) {
-        console.log('📄 First 200 characters:', extractedText.substring(0, 200));
+        console.log('ðŸ“„ First 200 characters:', extractedText.substring(0, 200));
       }
       
       // Validate extracted text
@@ -38,18 +38,18 @@ class WorkingDocumentParser {
       }
 
       if (extractedText.trim().length < 100) {
-        console.warn('⚠️ Warning: Document contains very little text content');
+        console.warn('âš ï¸ Warning: Document contains very little text content');
       }
       
       // Parse the extracted text
-      console.log('🔄 Starting resume text parsing...');
+      console.log('ðŸ”„ Starting resume text parsing...');
       const result = await this.parseResumeText(extractedText);
       
-      console.log('✅ Document parsing completed successfully');
+      console.log('âœ… Document parsing completed successfully');
       return result;
       
     } catch (error) {
-      console.error('❌ DOCUMENT PARSING ERROR:', error);
+      console.error('âŒ DOCUMENT PARSING ERROR:', error);
       
       // Provide helpful error messages based on error type
       if (error.message.includes('timed out')) {
@@ -65,7 +65,7 @@ class WorkingDocumentParser {
   }
 
   private async extractTextFromFile(file: File): Promise<string> {
-    console.log('🔍 EXTRACTING TEXT FROM FILE:', file.type, 'Size:', file.size, 'bytes');
+    console.log('ðŸ” EXTRACTING TEXT FROM FILE:', file.type, 'Size:', file.size, 'bytes');
     
     try {
       // Validate file size (50MB limit)
@@ -84,17 +84,17 @@ class WorkingDocumentParser {
         return await this.extractFromText(file);
       } else {
         // Try to read as text for unknown types
-        console.log('⚠️ Unknown file type, attempting text extraction');
+        console.log('âš ï¸ Unknown file type, attempting text extraction');
         return await this.extractFromText(file);
       }
     } catch (error) {
-      console.error('❌ TEXT EXTRACTION ERROR:', error);
+      console.error('âŒ TEXT EXTRACTION ERROR:', error);
       throw new Error(`Unable to extract readable text from this file format`);
     }
   }
 
   private async extractFromPDF(file: File): Promise<string> {
-    console.log('📄 EXTRACTING FROM PDF');
+    console.log('ðŸ“„ EXTRACTING FROM PDF');
     
     try {
       // Use the improved SimpleTextExtractor for PDFs
@@ -107,15 +107,15 @@ class WorkingDocumentParser {
         // Validate that it looks like resume content
         const validation = SimpleTextExtractor.validateResumeText(cleanedText);
         if (validation.isValid) {
-          console.log('✅ PDF text extracted and validated successfully');
+          console.log('âœ… PDF text extracted and validated successfully');
           return cleanedText;
         } else {
-          console.warn('⚠️ Extracted text validation failed:', validation.reason);
+          console.warn('âš ï¸ Extracted text validation failed:', validation.reason);
         }
       }
       
-      console.log('⚠️ PDF text extraction unsuccessful');
-      console.log('💡 For better PDF support, please:');
+      console.log('âš ï¸ PDF text extraction unsuccessful');
+      console.log('ðŸ’¡ For better PDF support, please:');
       console.log('   1. Convert your PDF to a .txt file, or');
       console.log('   2. Copy and paste the content into a .txt file, or');
       console.log('   3. Use the Professional ATS Scanner for advanced PDF processing');
@@ -123,13 +123,13 @@ class WorkingDocumentParser {
       throw new Error('Unable to extract readable text from this PDF. Please try converting to .txt format or use the Professional ATS Scanner.');
       
     } catch (error) {
-      console.error('❌ PDF EXTRACTION ERROR:', error);
+      console.error('âŒ PDF EXTRACTION ERROR:', error);
       throw new Error('PDF processing failed. Please convert to .txt format or use Professional ATS Scanner for full PDF support.');
     }
   }
 
   private async extractFromWord(file: File): Promise<string> {
-    console.log('📝 EXTRACTING FROM WORD DOCUMENT');
+    console.log('ðŸ“ EXTRACTING FROM WORD DOCUMENT');
     
     try {
       // Use the improved SimpleTextExtractor for Word documents
@@ -142,15 +142,15 @@ class WorkingDocumentParser {
         // Validate that it looks like resume content
         const validation = SimpleTextExtractor.validateResumeText(cleanedText);
         if (validation.isValid) {
-          console.log('✅ Word document text extracted and validated successfully');
+          console.log('âœ… Word document text extracted and validated successfully');
           return cleanedText;
         } else {
-          console.warn('⚠️ Extracted text validation failed:', validation.reason);
+          console.warn('âš ï¸ Extracted text validation failed:', validation.reason);
         }
       }
       
-      console.log('⚠️ Word document text extraction unsuccessful');
-      console.log('💡 For better Word document support, please:');
+      console.log('âš ï¸ Word document text extraction unsuccessful');
+      console.log('ðŸ’¡ For better Word document support, please:');
       console.log('   1. Save your document as a .txt file, or');
       console.log('   2. Copy and paste the content into a .txt file, or');
       console.log('   3. Use the Professional ATS Scanner for advanced Word processing');
@@ -158,13 +158,13 @@ class WorkingDocumentParser {
       throw new Error('Unable to extract readable text from this Word document. Please save as .txt format or use the Professional ATS Scanner.');
       
     } catch (error) {
-      console.error('❌ WORD EXTRACTION ERROR:', error);
+      console.error('âŒ WORD EXTRACTION ERROR:', error);
       throw new Error('Word document processing failed. Please save as .txt format or use Professional ATS Scanner for full Word support.');
     }
   }
 
   private async extractFromText(file: File): Promise<string> {
-    console.log('📝 EXTRACTING FROM TEXT FILE');
+    console.log('ðŸ“ EXTRACTING FROM TEXT FILE');
     
     try {
       // First try simple text reading
@@ -176,17 +176,17 @@ class WorkingDocumentParser {
         const validation = SimpleTextExtractor.validateResumeText(cleanedText);
         
         if (validation.isValid) {
-          console.log('✅ Text file processed successfully');
+          console.log('âœ… Text file processed successfully');
           return cleanedText;
         } else {
-          console.warn('⚠️ Text file validation warning:', validation.reason);
+          console.warn('âš ï¸ Text file validation warning:', validation.reason);
           // Still return the text even if validation fails, as it might still be processable
           return cleanedText;
         }
       }
       
       // If simple reading fails, try with enhanced extraction
-      console.log('🔄 Trying enhanced text extraction...');
+      console.log('ðŸ”„ Trying enhanced text extraction...');
       const enhancedText = await SimpleTextExtractor.extractText(file);
       
       if (enhancedText && enhancedText.length > 20) {
@@ -196,7 +196,7 @@ class WorkingDocumentParser {
       throw new Error('Text file appears to be empty or unreadable');
       
     } catch (error) {
-      console.error('❌ TEXT FILE EXTRACTION ERROR:', error);
+      console.error('âŒ TEXT FILE EXTRACTION ERROR:', error);
       throw new Error(`Failed to extract text from file: ${error.message}`);
     }
   }
@@ -214,7 +214,7 @@ class WorkingDocumentParser {
       reader.onload = (event) => {
         clearTimeout(timeout);
         const text = event.target?.result as string;
-        console.log('✅ FILE READ SUCCESSFULLY, length:', text?.length || 0);
+        console.log('âœ… FILE READ SUCCESSFULLY, length:', text?.length || 0);
         
         // Validate that we got actual text content
         if (!text || text.length === 0) {
@@ -233,7 +233,7 @@ class WorkingDocumentParser {
       
       reader.onerror = (error) => {
         clearTimeout(timeout);
-        console.error('❌ FILE READ ERROR:', error);
+        console.error('âŒ FILE READ ERROR:', error);
         reject(new Error('Failed to read file - file may be corrupted or in an unsupported format'));
       };
       
@@ -246,35 +246,35 @@ class WorkingDocumentParser {
         reader.readAsText(file, 'UTF-8');
       } catch (error) {
         clearTimeout(timeout);
-        console.error('❌ READER INITIALIZATION ERROR:', error);
+        console.error('âŒ READER INITIALIZATION ERROR:', error);
         reject(new Error('Failed to initialize file reader'));
       }
     });
   }
 
   private async parseResumeText(text: string): Promise<EnterpriseResumeData> {
-    console.log('🔍 PARSING RESUME TEXT - UNIVERSAL EXTRACTION');
-    console.log('📄 Text to parse (first 200 chars):', text.substring(0, 200));
+    console.log('ðŸ” PARSING RESUME TEXT - UNIVERSAL EXTRACTION');
+    console.log('ðŸ“„ Text to parse (first 200 chars):', text.substring(0, 200));
     
     // Extract personal information
     const personalInfo = this.extractPersonalInfo(text);
-    console.log('✅ EXTRACTED PERSONAL INFO:', personalInfo);
+    console.log('âœ… EXTRACTED PERSONAL INFO:', personalInfo);
 
     // Extract professional summary
     const professionalSummary = this.extractProfessionalSummary(text);
-    console.log('✅ EXTRACTED PROFESSIONAL SUMMARY');
+    console.log('âœ… EXTRACTED PROFESSIONAL SUMMARY');
 
     // Extract work experience
     const experience = this.extractWorkExperience(text);
-    console.log('✅ EXTRACTED WORK EXPERIENCE:', experience.length, 'entries');
+    console.log('âœ… EXTRACTED WORK EXPERIENCE:', experience.length, 'entries');
 
     // Extract education
     const education = this.extractEducation(text);
-    console.log('✅ EXTRACTED EDUCATION:', education.length, 'entries');
+    console.log('âœ… EXTRACTED EDUCATION:', education.length, 'entries');
 
     // Extract skills
     const skills = this.extractSkills(text);
-    console.log('✅ EXTRACTED SKILLS:', {
+    console.log('âœ… EXTRACTED SKILLS:', {
       technical: skills.technical.length,
       tools: skills.tools.length,
       soft: skills.soft.length,
@@ -283,7 +283,7 @@ class WorkingDocumentParser {
 
     // Extract projects
     const projects = this.extractProjects(text);
-    console.log('✅ EXTRACTED PROJECTS:', projects.length, 'entries');
+    console.log('âœ… EXTRACTED PROJECTS:', projects.length, 'entries');
 
     // Create final data structure
     const finalData: EnterpriseResumeData = {
@@ -311,8 +311,8 @@ class WorkingDocumentParser {
       }
     };
 
-    console.log('🎯 FINAL PARSED DATA:', finalData);
-    console.log('🎯 VERIFICATION:', {
+    console.log('ðŸŽ¯ FINAL PARSED DATA:', finalData);
+    console.log('ðŸŽ¯ VERIFICATION:', {
       name: finalData.personalInfo.name,
       email: finalData.personalInfo.email, 
       phone: finalData.personalInfo.phone,
@@ -324,7 +324,7 @@ class WorkingDocumentParser {
   }
 
   private extractPersonalInfo(text: string): any {
-    console.log('🔍 EXTRACTING PERSONAL INFO');
+    console.log('ðŸ” EXTRACTING PERSONAL INFO');
     
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
@@ -477,7 +477,7 @@ class WorkingDocumentParser {
     const portfolioMatch = text.match(portfolioPattern);
     const portfolio = portfolioMatch ? portfolioMatch[0] : '';
 
-    console.log('📋 Personal Info Extracted:', { name, email, phone, location });
+    console.log('ðŸ“‹ Personal Info Extracted:', { name, email, phone, location });
 
     return {
       name,
@@ -491,7 +491,7 @@ class WorkingDocumentParser {
   }
 
   private extractProfessionalSummary(text: string): string {
-    console.log('🔍 EXTRACTING PROFESSIONAL SUMMARY');
+    console.log('ðŸ” EXTRACTING PROFESSIONAL SUMMARY');
     
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
@@ -506,7 +506,7 @@ class WorkingDocumentParser {
       const line = lines[i].toLowerCase();
       
       if (summaryKeywords.some(keyword => line.includes(keyword) && line.length < 50)) {
-        console.log('📍 Found summary section at line:', i);
+        console.log('ðŸ“ Found summary section at line:', i);
         
         // Collect the next few lines as summary
         const summaryLines = [];
@@ -519,7 +519,7 @@ class WorkingDocumentParser {
           }
           
           // Add lines that look like summary content
-          if (nextLine.length > 20 && !nextLine.includes('•') && !nextLine.includes('http')) {
+          if (nextLine.length > 20 && !nextLine.includes('â€¢') && !nextLine.includes('http')) {
             summaryLines.push(nextLine);
           }
         }
@@ -527,7 +527,7 @@ class WorkingDocumentParser {
         if (summaryLines.length > 0) {
           const summary = summaryLines.join(' ').trim();
           if (summary.length > 50) {
-            console.log('✅ Summary found:', summary.substring(0, 100) + '...');
+            console.log('âœ… Summary found:', summary.substring(0, 100) + '...');
             return summary;
           }
         }
@@ -553,7 +553,7 @@ class WorkingDocumentParser {
                              !lowerLine.includes('college');
         
         if (isNotJobTitle) {
-          console.log('✅ Summary found via content analysis:', line.substring(0, 100) + '...');
+          console.log('âœ… Summary found via content analysis:', line.substring(0, 100) + '...');
           return line;
         }
       }
@@ -570,7 +570,7 @@ class WorkingDocumentParser {
         
         const combined = `${currentLine} ${nextLine}`;
         if (combined.length > 100 && combined.length < 600) {
-          console.log('✅ Summary found via paragraph analysis:', combined.substring(0, 100) + '...');
+          console.log('âœ… Summary found via paragraph analysis:', combined.substring(0, 100) + '...');
           return combined;
         }
       }
@@ -602,7 +602,7 @@ class WorkingDocumentParser {
   }
 
   private extractWorkExperience(text: string): any[] {
-    console.log('🔍 EXTRACTING WORK EXPERIENCE');
+    console.log('ðŸ” EXTRACTING WORK EXPERIENCE');
     
     const experiences = [];
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -617,7 +617,7 @@ class WorkingDocumentParser {
       const line = lines[i].toLowerCase();
       if (experienceKeywords.some(keyword => line.includes(keyword) && line.length < 50)) {
         experienceStartIndex = i + 1;
-        console.log('📍 Found experience section starting at line:', i);
+        console.log('ðŸ“ Found experience section starting at line:', i);
         break;
       }
     }
@@ -629,33 +629,33 @@ class WorkingDocumentParser {
         const line = lines[i].toLowerCase();
         if (nextSectionKeywords.some(keyword => line.includes(keyword) && line.length < 50)) {
           experienceEndIndex = i;
-          console.log('📍 Experience section ends at line:', i);
+          console.log('ðŸ“ Experience section ends at line:', i);
           break;
         }
       }
     }
     
     if (experienceStartIndex === -1) {
-      console.log('⚠️ No explicit experience section found, trying global patterns');
+      console.log('âš ï¸ No explicit experience section found, trying global patterns');
       experienceStartIndex = 0;
     }
     
     const experienceLines = lines.slice(experienceStartIndex, experienceEndIndex);
-    console.log('📄 Experience section lines:', experienceLines.length);
+    console.log('ðŸ“„ Experience section lines:', experienceLines.length);
     
     // Strategy 1: Look for job title and company patterns
     const jobPatterns = [
       // "Job Title at Company Name (2020-2023)"
-      /(.+?)\s+at\s+(.+?)\s*[\(,]?\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi,
+      /(.+?)\s+at\s+(.+?)\s*[\(,]?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
       
       // "Job Title, Company Name, 2020-2023"
-      /([^,]+),\s*([^,]+),\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi,
+      /([^,]+),\s*([^,]+),\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
       
       // "Company Name - Job Title (2020-2023)"
-      /(.+?)\s*[-–]\s*(.+?)\s*[\(,]?\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi,
+      /(.+?)\s*[-â€“]\s*(.+?)\s*[\(,]?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
       
       // "Job Title | Company Name | 2020-2023"
-      /([^|]+)\s*\|\s*([^|]+)\s*\|\s*(\d{4})\s*[-–]\s*(\d{4}|present)/gi
+      /([^|]+)\s*\|\s*([^|]+)\s*\|\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi
     ];
     
     const experienceText = experienceLines.join('\n');
@@ -687,8 +687,8 @@ class WorkingDocumentParser {
         }
         
         // Clean up the extracted data
-        position = position.replace(/[•\-\*]/g, '').trim();
-        company = company.replace(/[•\-\*]/g, '').trim();
+        position = position.replace(/[â€¢\-\*]/g, '').trim();
+        company = company.replace(/[â€¢\-\*]/g, '').trim();
         
         const isCurrent = endDate && endDate.toLowerCase().includes('present');
         
@@ -712,7 +712,7 @@ class WorkingDocumentParser {
     
     // Strategy 2: Look for structured experience entries (multiline)
     if (experiences.length === 0) {
-      console.log('🔄 Trying multiline experience extraction');
+      console.log('ðŸ”„ Trying multiline experience extraction');
       
       let currentExperience = null;
       
@@ -720,20 +720,20 @@ class WorkingDocumentParser {
         const line = experienceLines[i];
         
         // Look for date patterns that indicate a job entry
-        const datePattern = /(\d{4})\s*[-–]\s*(\d{4}|present)/gi;
+        const datePattern = /(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
         const dateMatch = line.match(datePattern);
         
         if (dateMatch) {
           // This line contains dates, try to find job title and company
           const beforeDate = line.substring(0, line.indexOf(dateMatch[0])).trim();
-          const parts = beforeDate.split(/[-–,|]/);
+          const parts = beforeDate.split(/[-â€“,|]/);
           
           if (parts.length >= 2) {
-            const position = parts[0].trim().replace(/[•\-\*]/g, '').trim();
-            const company = parts[1].trim().replace(/[•\-\*]/g, '').trim();
+            const position = parts[0].trim().replace(/[â€¢\-\*]/g, '').trim();
+            const company = parts[1].trim().replace(/[â€¢\-\*]/g, '').trim();
             
             if (position.length > 2 && company.length > 2) {
-              const [startDate, endDate] = dateMatch[0].split(/[-–]/).map(d => d.trim());
+              const [startDate, endDate] = dateMatch[0].split(/[-â€“]/).map(d => d.trim());
               const isCurrent = endDate.toLowerCase().includes('present');
               
               experiences.push({
@@ -755,14 +755,14 @@ class WorkingDocumentParser {
       }
     }
     
-    console.log('📊 Found', experiences.length, 'work experiences');
-    console.log('📋 Experience details:', experiences.map(exp => `${exp.position} at ${exp.company} (${exp.startDate}-${exp.endDate || 'present'})`));
+    console.log('ðŸ“Š Found', experiences.length, 'work experiences');
+    console.log('ðŸ“‹ Experience details:', experiences.map(exp => `${exp.position} at ${exp.company} (${exp.startDate}-${exp.endDate || 'present'})`));
     
     return experiences;
   }
 
   private extractEducation(text: string): any[] {
-    console.log('🔍 EXTRACTING EDUCATION');
+    console.log('ðŸ” EXTRACTING EDUCATION');
     
     const educationEntries = [];
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -777,7 +777,7 @@ class WorkingDocumentParser {
       const line = lines[i].toLowerCase();
       if (educationKeywords.some(keyword => line.includes(keyword) && line.length < 50)) {
         educationStartIndex = i + 1;
-        console.log('📍 Found education section starting at line:', i);
+        console.log('ðŸ“ Found education section starting at line:', i);
         break;
       }
     }
@@ -795,7 +795,7 @@ class WorkingDocumentParser {
     }
     
     if (educationStartIndex === -1) {
-      console.log('⚠️ No explicit education section found, trying global patterns');
+      console.log('âš ï¸ No explicit education section found, trying global patterns');
       educationStartIndex = 0;
     }
     
@@ -808,7 +808,7 @@ class WorkingDocumentParser {
       /(Bachelor|Master|PhD|Doctorate|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA|BSc|MSc|BA|MA)\s*(?:of\s+)?([^,\n]*),?\s*([^,\n]*(?:University|College|Institute|School)[^,\n]*),?\s*(\d{4})?/gi,
       
       // "Stanford University - Computer Science (B.S.) - 2020"
-      /([^-\n]*(?:University|College|Institute|School)[^-\n]*)\s*[-–]\s*([^-\n]*)\s*[\(\[]?(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA)[\)\]]?\s*[-–]?\s*(\d{4})?/gi,
+      /([^-\n]*(?:University|College|Institute|School)[^-\n]*)\s*[-â€“]\s*([^-\n]*)\s*[\(\[]?(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA)[\)\]]?\s*[-â€“]?\s*(\d{4})?/gi,
       
       // "Computer Science | Stanford University | 2020"
       /([^|\n]+)\s*\|\s*([^|\n]*(?:University|College|Institute|School)[^|\n]*)\s*\|\s*(\d{4})?/gi,
@@ -850,9 +850,9 @@ class WorkingDocumentParser {
         }
         
         // Clean up extracted data
-        degree = degree.trim().replace(/[•\-\*]/g, '').trim();
-        field = field.trim().replace(/[•\-\*]/g, '').trim();
-        institution = institution.trim().replace(/[•\-\*]/g, '').trim();
+        degree = degree.trim().replace(/[â€¢\-\*]/g, '').trim();
+        field = field.trim().replace(/[â€¢\-\*]/g, '').trim();
+        institution = institution.trim().replace(/[â€¢\-\*]/g, '').trim();
         graduationDate = graduationDate.trim();
         
         // Only add if we have meaningful data
@@ -872,7 +872,7 @@ class WorkingDocumentParser {
     
     // Strategy 2: Look for common education keywords in lines
     if (educationEntries.length === 0) {
-      console.log('🔄 Trying keyword-based education extraction');
+      console.log('ðŸ”„ Trying keyword-based education extraction');
       
       const educationKeywordsList = [
         'university', 'college', 'institute', 'school',
@@ -916,14 +916,14 @@ class WorkingDocumentParser {
       }
     }
     
-    console.log('📊 Found', educationEntries.length, 'education entries');
-    console.log('📋 Education details:', educationEntries.map(edu => `${edu.degree} from ${edu.institution} (${edu.graduationDate})`));
+    console.log('ðŸ“Š Found', educationEntries.length, 'education entries');
+    console.log('ðŸ“‹ Education details:', educationEntries.map(edu => `${edu.degree} from ${edu.institution} (${edu.graduationDate})`));
     
     return educationEntries;
   }
 
   private extractSkills(text: string): any {
-    console.log('🔍 EXTRACTING SKILLS');
+    console.log('ðŸ” EXTRACTING SKILLS');
     
     // Common technical skills
     const technicalSkills = [
@@ -970,7 +970,7 @@ class WorkingDocumentParser {
   }
 
   private extractProjects(text: string): any[] {
-    console.log('🔍 EXTRACTING PROJECTS');
+    console.log('ðŸ” EXTRACTING PROJECTS');
     
     // For now, return empty array - projects extraction is complex
     return [];
@@ -1001,6 +1001,8 @@ class WorkingDocumentParser {
 
 // Export the class so it can be imported
 export { WorkingDocumentParser };
+
+
 
 
 

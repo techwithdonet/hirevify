@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -194,7 +194,7 @@ export function OTPVerification({ email, type, onBack, onVerify, onResend }: OTP
               {otp.map((digit, index) => (
                 <Input
                   key={index}
-                  ref={el => inputRefs.current[index] = el}
+                  ref={(el) => { inputRefs.current[index] = el; }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -294,6 +294,9 @@ export function OTPVerification({ email, type, onBack, onVerify, onResend }: OTP
     </div>
   );
 }
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Reliable ATS Scanner - Simple, Fast, and Effective
  * 
  * This component focuses on delivering consistent results with real resumes.
@@ -104,7 +104,7 @@ export function ReliableATSScanner() {
     const startTime = Date.now();
 
     try {
-      console.log('🚀 Starting resume processing for:', uploadedFile.name);
+      console.log('ðŸš€ Starting resume processing for:', uploadedFile.name);
       
       // Show progress - File validation
       setProgress(10);
@@ -116,11 +116,11 @@ export function ReliableATSScanner() {
       
       // Parse document
       setProgress(30);
-      console.log('📄 Parsing document...');
+      console.log('ðŸ“„ Parsing document...');
       const result = await parser.parseDocument(uploadedFile);
       
       setProgress(70);
-      console.log('✅ Document parsed successfully');
+      console.log('âœ… Document parsed successfully');
 
       // Get raw text for display (optional, don't fail if this doesn't work)
       setProgress(80);
@@ -160,11 +160,11 @@ export function ReliableATSScanner() {
       setScanResult(scanResult);
       setProgress(100);
       
-      console.log('🎉 Resume processing completed in', processingTime, 'ms');
+      console.log('ðŸŽ‰ Resume processing completed in', processingTime, 'ms');
       toast.success(`Resume processed successfully in ${processingTime}ms!`);
       
     } catch (error: any) {
-      console.error('❌ Resume processing error:', error);
+      console.error('âŒ Resume processing error:', error);
       
       let errorMessage = error.message || 'Failed to process resume';
       
@@ -272,10 +272,10 @@ export function ReliableATSScanner() {
               {uploadedFile ? uploadedFile.name : 'Drop your resume here or click to browse'}
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Best with .TXT files • Also tries .PDF, .DOC, .DOCX • Max 10MB
+              Best with .TXT files â€¢ Also tries .PDF, .DOC, .DOCX â€¢ Max 10MB
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              💡 For best results: Copy your resume text and save as .txt file
+              ðŸ’¡ For best results: Copy your resume text and save as .txt file
             </p>
             
             <input
@@ -370,7 +370,7 @@ export function ReliableATSScanner() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Processed in {scanResult.processingTime}ms • {scanResult.data.extractionMetadata.processingMethod}
+              Processed in {scanResult.processingTime}ms â€¢ {scanResult.data.extractionMetadata.processingMethod}
             </p>
           </CardHeader>
           <CardContent>
@@ -591,18 +591,20 @@ export function ReliableATSScanner() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>• <strong>Best format:</strong> Copy your resume content and save as .txt file</li>
-            <li>• <strong>File size:</strong> Keep under 10MB for optimal performance</li>
-            <li>• <strong>Structure:</strong> Use clear section headers (Experience, Education, Skills)</li>
-            <li>• <strong>Dates:</strong> Include years in YYYY format (e.g., 2020-2023)</li>
-            <li>• <strong>Contact info:</strong> Include email, phone, and location clearly</li>
-            <li>• <strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support</li>
+            <li>â€¢ <strong>Best format:</strong> Copy your resume content and save as .txt file</li>
+            <li>â€¢ <strong>File size:</strong> Keep under 10MB for optimal performance</li>
+            <li>â€¢ <strong>Structure:</strong> Use clear section headers (Experience, Education, Skills)</li>
+            <li>â€¢ <strong>Dates:</strong> Include years in YYYY format (e.g., 2020-2023)</li>
+            <li>â€¢ <strong>Contact info:</strong> Include email, phone, and location clearly</li>
+            <li>â€¢ <strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support</li>
           </ul>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+
 
 
 

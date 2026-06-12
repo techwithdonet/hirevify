@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -35,15 +35,15 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
     }
   };
 
-  console.log('🧪 Starting comprehensive connectivity test...');
-  console.log('📊 Environment info:', result.environment);
+  console.log('ðŸ§ª Starting comprehensive connectivity test...');
+  console.log('ðŸ“Š Environment info:', result.environment);
 
   // Test 1: Main Server Health
   try {
-    console.log('1️⃣ Testing main server health...');
+    console.log('1ï¸âƒ£ Testing main server health...');
     
     // First try the simplest possible endpoint
-    console.log('🔍 Testing no-auth endpoint first...');
+    console.log('ðŸ” Testing no-auth endpoint first...');
     let response;
     try {
       response = await fetch(`${API_BASE}/test-no-auth`, {
@@ -55,12 +55,12 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
       });
       
       if (response.ok) {
-        console.log('✅ No-auth endpoint works - proceeding to main health check');
+        console.log('âœ… No-auth endpoint works - proceeding to main health check');
       } else {
-        console.log(`⚠️ No-auth endpoint returned ${response.status} - trying main health check anyway`);
+        console.log(`âš ï¸ No-auth endpoint returned ${response.status} - trying main health check anyway`);
       }
     } catch (noAuthError) {
-      console.log('⚠️ No-auth endpoint failed - trying main health check anyway:', noAuthError.message);
+      console.log('âš ï¸ No-auth endpoint failed - trying main health check anyway:', noAuthError.message);
     }
     
     // Now try main health endpoint
@@ -80,15 +80,15 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
     if (response.ok) {
       const data = await response.json();
       result.tests.mainServer.success = true;
-      console.log('✅ Main server health check passed:', data);
+      console.log('âœ… Main server health check passed:', data);
     } else {
       const errorText = await response.text();
       result.tests.mainServer.error = `HTTP ${response.status}: ${errorText}`;
-      console.log('❌ Main server health check failed:', response.status, errorText);
+      console.log('âŒ Main server health check failed:', response.status, errorText);
     }
   } catch (error) {
     result.tests.mainServer.error = error.message;
-    console.log('❌ Main server connectivity error:', error.message);
+    console.log('âŒ Main server connectivity error:', error.message);
     
     if (error.name === 'TimeoutError') {
       result.recommendations.push('Server is responding slowly or may be overloaded. Try again later.');
@@ -100,7 +100,7 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
   // Test 2: Integration Service Health
   if (result.tests.mainServer.success) {
     try {
-      console.log('2️⃣ Testing integration service health...');
+      console.log('2ï¸âƒ£ Testing integration service health...');
       const startTime = Date.now();
       
       // Try multiple endpoints in order of reliability
@@ -124,7 +124,7 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
       
       for (const endpoint of integrationEndpoints) {
         try {
-          console.log(`🔄 Trying ${endpoint.name}...`);
+          console.log(`ðŸ”„ Trying ${endpoint.name}...`);
           response = await fetch(endpoint.url, {
             method: 'GET',
             headers: {
@@ -135,13 +135,13 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
           
           if (response.ok) {
             successfulEndpoint = endpoint.name;
-            console.log(`✅ ${endpoint.name} succeeded`);
+            console.log(`âœ… ${endpoint.name} succeeded`);
             break;
           } else {
-            console.log(`⚠️ ${endpoint.name} failed with status ${response.status}`);
+            console.log(`âš ï¸ ${endpoint.name} failed with status ${response.status}`);
           }
         } catch (endpointError) {
-          console.log(`⚠️ ${endpoint.name} failed with error:`, endpointError.message);
+          console.log(`âš ï¸ ${endpoint.name} failed with error:`, endpointError.message);
         }
       }
       
@@ -156,15 +156,15 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
       if (response.ok) {
         const data = await response.json();
         result.tests.integrationService.success = true;
-        console.log('✅ Integration service health check passed:', data);
+        console.log('âœ… Integration service health check passed:', data);
       } else {
         const errorText = await response.text();
         result.tests.integrationService.error = `HTTP ${response.status}: ${errorText}`;
-        console.log('❌ Integration service health check failed:', response.status, errorText);
+        console.log('âŒ Integration service health check failed:', response.status, errorText);
       }
     } catch (error) {
       result.tests.integrationService.error = error.message;
-      console.log('❌ Integration service connectivity error:', error.message);
+      console.log('âŒ Integration service connectivity error:', error.message);
       result.recommendations.push('Integration service is not responding. This feature may be temporarily unavailable.');
     }
   } else {
@@ -175,7 +175,7 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
   // Test 3: Authentication (if token provided)
   if (accessToken && result.tests.integrationService.success) {
     try {
-      console.log('3️⃣ Testing authentication with integration service...');
+      console.log('3ï¸âƒ£ Testing authentication with integration service...');
       
       const response = await fetch(`${API_BASE}/integrations/list`, {
         method: 'GET',
@@ -192,11 +192,11 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
         result.tests.authentication.userInfo = {
           integrationsFound: data.integrations?.length || 0
         };
-        console.log('✅ Authentication test passed:', data);
+        console.log('âœ… Authentication test passed:', data);
       } else {
         const errorData = await response.json().catch(() => ({}));
         result.tests.authentication.error = `HTTP ${response.status}: ${errorData.error || 'Authentication failed'}`;
-        console.log('❌ Authentication test failed:', response.status, errorData);
+        console.log('âŒ Authentication test failed:', response.status, errorData);
         
         if (response.status === 401) {
           result.recommendations.push('Authentication failed. Try signing out and signing back in.');
@@ -204,7 +204,7 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
       }
     } catch (error) {
       result.tests.authentication.error = error.message;
-      console.log('❌ Authentication test error:', error.message);
+      console.log('âŒ Authentication test error:', error.message);
       result.recommendations.push('Authentication test failed due to connectivity issues.');
     }
   } else if (!accessToken) {
@@ -231,7 +231,7 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
     result.recommendations.push('All systems are operational and working correctly!');
   }
 
-  console.log('🧪 Connectivity test completed:', {
+  console.log('ðŸ§ª Connectivity test completed:', {
     success: result.success,
     mainServer: result.tests.mainServer.success,
     integrationService: result.tests.integrationService.success,
@@ -243,38 +243,38 @@ export async function runConnectivityTest(accessToken?: string): Promise<Connect
 }
 
 export function formatConnectivityTestResults(result: ConnectivityTestResult): string {
-  let report = '🧪 HireVify Connectivity Test Results\n\n';
+  let report = 'ðŸ§ª HireVify Connectivity Test Results\n\n';
   
   // Environment Info
-  report += '📊 Environment:\n';
-  report += `  • Project ID: ${result.environment.projectId}\n`;
-  report += `  • API Base: ${result.environment.apiBase}\n`;
-  report += `  • Has Public Key: ${result.environment.hasPublicKey ? '✅' : '❌'}\n`;
-  report += `  • Has User Token: ${result.environment.hasUserToken ? '✅' : '❌'}\n\n`;
+  report += 'ðŸ“Š Environment:\n';
+  report += `  â€¢ Project ID: ${result.environment.projectId}\n`;
+  report += `  â€¢ API Base: ${result.environment.apiBase}\n`;
+  report += `  â€¢ Has Public Key: ${result.environment.hasPublicKey ? 'âœ…' : 'âŒ'}\n`;
+  report += `  â€¢ Has User Token: ${result.environment.hasUserToken ? 'âœ…' : 'âŒ'}\n\n`;
   
   // Test Results
-  report += '🧪 Test Results:\n';
+  report += 'ðŸ§ª Test Results:\n';
   
   const serverTest = result.tests.mainServer;
-  report += `  1. Main Server: ${serverTest.success ? '✅' : '❌'}\n`;
+  report += `  1. Main Server: ${serverTest.success ? 'âœ…' : 'âŒ'}\n`;
   if (serverTest.responseTime) report += `     Response Time: ${serverTest.responseTime}ms\n`;
   if (serverTest.status) report += `     Status: ${serverTest.status}\n`;
   if (serverTest.error) report += `     Error: ${serverTest.error}\n`;
   
   const integrationTest = result.tests.integrationService;
-  report += `  2. Integration Service: ${integrationTest.success ? '✅' : '❌'}\n`;
+  report += `  2. Integration Service: ${integrationTest.success ? 'âœ…' : 'âŒ'}\n`;
   if (integrationTest.responseTime) report += `     Response Time: ${integrationTest.responseTime}ms\n`;
   if (integrationTest.status) report += `     Status: ${integrationTest.status}\n`;
   if (integrationTest.error) report += `     Error: ${integrationTest.error}\n`;
   
   const authTest = result.tests.authentication;
-  report += `  3. Authentication: ${authTest.success ? '✅' : '❌'}\n`;
+  report += `  3. Authentication: ${authTest.success ? 'âœ…' : 'âŒ'}\n`;
   if (authTest.userInfo) report += `     Integrations Found: ${authTest.userInfo.integrationsFound}\n`;
   if (authTest.error) report += `     Error: ${authTest.error}\n`;
   
   // Recommendations
   if (result.recommendations.length > 0) {
-    report += '\n💡 Recommendations:\n';
+    report += '\nðŸ’¡ Recommendations:\n';
     result.recommendations.forEach((rec, index) => {
       report += `  ${index + 1}. ${rec}\n`;
     });
@@ -282,6 +282,8 @@ export function formatConnectivityTestResults(result: ConnectivityTestResult): s
   
   return report;
 }
+
+
 
 
 

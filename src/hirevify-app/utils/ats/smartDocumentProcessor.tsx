@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Smart Document Processor
  * 
  * Handles multiple file formats and converts them to text for AI processing
@@ -509,6 +509,8 @@ export const documentProcessor = new SmartDocumentProcessor();
 
 // Export types
 export type { ProcessingResult };
+
+
 
 
 

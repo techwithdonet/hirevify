@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -445,9 +445,9 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
                     <Card className="p-4">
                       <h4 className="text-foreground mb-3 font-medium">Recommendations</h4>
                       <div className="space-y-2 text-sm text-muted-foreground">
-                        <p>• Consider for senior-level positions</p>
-                        <p>• Strong technical leadership potential</p>
-                        <p>• Schedule technical deep-dive interview</p>
+                        <p>â€¢ Consider for senior-level positions</p>
+                        <p>â€¢ Strong technical leadership potential</p>
+                        <p>â€¢ Schedule technical deep-dive interview</p>
                       </div>
                     </Card>
                   </TabsContent>
@@ -472,6 +472,8 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
     </div>
   );
 }
+
+
 
 
 

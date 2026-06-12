@@ -1,4 +1,4 @@
-// Testing Premium Access Override
+﻿// Testing Premium Access Override
 // This file provides a way to bypass premium checks during testing
 
 import { PremiumFeatureKey, PREMIUM_FEATURES, SubscriptionStatus } from './premium';
@@ -46,11 +46,13 @@ export const isTestingMode = () => TESTING_MODE;
  */
 export const logTestingStatus = () => {
   if (TESTING_MODE) {
-    console.log('🧪 TESTING MODE: Premium features are unlocked for testing');
+    console.log('ðŸ§ª TESTING MODE: Premium features are unlocked for testing');
   } else {
-    console.log('🔒 PRODUCTION MODE: Premium access controls are active');
+    console.log('ðŸ”’ PRODUCTION MODE: Premium access controls are active');
   }
 };
+
+
 
 
 

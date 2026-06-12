@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -564,7 +564,7 @@ export function ProjectChallengeVideoRecording({
                     <ul className="space-y-1 text-sm text-muted-foreground">
                       {currentQuestion.prompts.map((prompt, index) => (
                         <li key={index} className="flex items-start space-x-2">
-                          <span className="text-primary mt-1">•</span>
+                          <span className="text-primary mt-1">â€¢</span>
                           <span>{prompt}</span>
                         </li>
                       ))}
@@ -776,12 +776,12 @@ export function ProjectChallengeVideoRecording({
             <div>
               <h3 className="font-semibold text-primary mb-2">Important Instructions</h3>
               <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>• Record your answers in a quiet environment with good lighting</li>
-                <li>• Speak clearly and explain your thought process step by step</li>
-                <li>• Show relevant code, diagrams, or documentation when explaining</li>
-                <li>• Be honest about challenges and how you researched solutions</li>
-                <li>• Each question has a recommended time limit - use it effectively</li>
-                <li>• You can pause, re-record, or move between questions before final submission</li>
+                <li>â€¢ Record your answers in a quiet environment with good lighting</li>
+                <li>â€¢ Speak clearly and explain your thought process step by step</li>
+                <li>â€¢ Show relevant code, diagrams, or documentation when explaining</li>
+                <li>â€¢ Be honest about challenges and how you researched solutions</li>
+                <li>â€¢ Each question has a recommended time limit - use it effectively</li>
+                <li>â€¢ You can pause, re-record, or move between questions before final submission</li>
               </ul>
             </div>
           </div>
@@ -790,6 +790,8 @@ export function ProjectChallengeVideoRecording({
     </div>
   );
 }
+
+
 
 
 

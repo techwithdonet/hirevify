@@ -1,4 +1,4 @@
-export const learningPaths = [
+﻿export const learningPaths = [
   {
     id: 'marketing-to-ux',
     title: 'Marketing to UX Design',
@@ -93,7 +93,7 @@ export const successStories = [
   {
     id: 'story-1',
     name: 'Maria Rodriguez',
-    transition: 'Marketing → UX Design',
+    transition: 'Marketing â†’ UX Design',
     before: {
       title: 'Marketing Coordinator',
       salary: '$45,000/year'
@@ -109,7 +109,7 @@ export const successStories = [
   {
     id: 'story-2',
     name: 'David Chen',
-    transition: 'Teacher → Data Scientist',
+    transition: 'Teacher â†’ Data Scientist',
     before: {
       title: 'High School Teacher',
       salary: '$48,000/year'
@@ -125,7 +125,7 @@ export const successStories = [
   {
     id: 'story-3',
     name: 'Jennifer Park',
-    transition: 'Retail → Product Manager',
+    transition: 'Retail â†’ Product Manager',
     before: {
       title: 'Store Manager',
       salary: '$52,000/year'
@@ -146,6 +146,8 @@ export const statsData = [
   { label: '6 months', value: 'Average Duration' },
   { label: '$20k+', value: 'Avg Salary Increase' }
 ];
+
+
 
 
 

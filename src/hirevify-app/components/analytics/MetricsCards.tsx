@@ -1,4 +1,4 @@
-import { Card, CardContent } from '../ui/card';
+﻿import { Card, CardContent } from '../ui/card';
 import { TrendingUp, Users, Clock, Target, BarChart3 } from 'lucide-react';
 import { METRICS_CONFIG } from './constants';
 
@@ -38,6 +38,8 @@ export function MetricsCards() {
     </div>
   );
 }
+
+
 
 
 

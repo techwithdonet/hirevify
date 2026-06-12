@@ -1,4 +1,4 @@
-import { Globe, GitBranch, Image, FileText, Link } from 'lucide-react';
+﻿import { Globe, GitBranch, Image, FileText, Link } from 'lucide-react';
 
 export const getTypeIcon = (type: string) => {
   switch (type) {
@@ -19,6 +19,8 @@ export const getTypeColor = (type: string) => {
     default: return 'bg-gray-100 text-gray-800';
   }
 };
+
+
 
 
 

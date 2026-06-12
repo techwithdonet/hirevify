@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 /**
  * Smart Application Success Predictor
  * 
@@ -826,6 +827,9 @@ export class SmartApplicationPredictor {
 
 // Singleton instance
 export const smartApplicationPredictor = new SmartApplicationPredictor();
+
+
+
 
 
 

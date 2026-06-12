@@ -1,4 +1,4 @@
-export interface MicroInternship {
+﻿export interface MicroInternship {
   id: string;
   title: string;
   company: string;
@@ -43,6 +43,8 @@ export interface MicroInternshipsProps {
   onBack: () => void;
   onUpgrade: () => void;
 }
+
+
 
 
 

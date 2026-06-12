@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 /**
  * Resume Analysis Service
  * 
@@ -136,7 +137,7 @@ export class ResumeAnalysisService {
     jobDescription?: string,
     industry?: string
   ): Promise<DetailedResumeAnalysis> {
-    console.log('🤖 Starting comprehensive AI resume analysis...');
+    console.log('ðŸ¤– Starting comprehensive AI resume analysis...');
 
     try {
       // Calculate base metrics
@@ -148,11 +149,11 @@ export class ResumeAnalysisService {
       // Combine metrics with AI analysis
       const detailedAnalysis = this.combineAnalysis(baseMetrics, aiInsights, resumeData);
       
-      console.log('✅ Resume analysis completed successfully');
+      console.log('âœ… Resume analysis completed successfully');
       return detailedAnalysis;
 
     } catch (error) {
-      console.error('❌ Resume analysis failed:', error);
+      console.error('âŒ Resume analysis failed:', error);
       // Fallback to rule-based analysis
       return this.fallbackAnalysis(resumeData);
     }
@@ -1009,6 +1010,9 @@ Focus on actionable insights that will help improve the candidate's marketabilit
 
 // Export singleton instance
 export const resumeAnalysisService = new ResumeAnalysisService();
+
+
+
 
 
 

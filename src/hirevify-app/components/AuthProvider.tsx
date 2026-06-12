@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -25,6 +25,8 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  accessToken: string | null;
+  getAccessToken: () => Promise<string | null>;
   setUser: (user: User | null) => void;
   isLoading: boolean;
   authInitialized: boolean;
@@ -329,11 +331,25 @@ if (profileError) {
     }
   };
 
+  const accessToken = user?.accessToken || null;
+
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("Failed to get access token:", error.message);
+      return user?.accessToken || null;
+    }
+
+    return data.session?.access_token || user?.accessToken || null;
+  }, [user?.accessToken]);
   return (
     <AuthContext.Provider
       value={{
         user,
         setUser: setUserWithTokenSync,
+        accessToken,
+        getAccessToken,
         isLoading,
         authInitialized,
         connectionStatus,
@@ -356,3 +372,7 @@ export function useAuth() {
 
   return context;
 }
+
+
+
+

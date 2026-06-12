@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+﻿import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
@@ -20,7 +20,7 @@ export function ConnectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Connect {integration?.name}</DialogTitle>
+          <DialogTitle>Connect {integration && typeof integration !== "string" ? integration.name : ""}</DialogTitle>
           <DialogDescription>
             Enter your credentials to connect this integration.
           </DialogDescription>
@@ -146,6 +146,9 @@ export function ConnectionDialog({
     </Dialog>
   );
 }
+
+
+
 
 
 

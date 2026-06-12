@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -477,7 +477,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'pro-monthly',
     name: 'Professional',
-    price: 1999, // ₹1,999 per month
+    price: 1999, // â‚¹1,999 per month
     interval: 'month',
     razorpayPlanId: 'plan_pro_monthly_india',
     description: 'Advanced features for growing teams',
@@ -497,7 +497,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'pro-yearly',
     name: 'Professional (Annual)',
-    price: 19990, // ₹19,990 per year (2 months free)
+    price: 19990, // â‚¹19,990 per year (2 months free)
     interval: 'year',
     razorpayPlanId: 'plan_pro_yearly_india',
     description: 'Best value with 2 months free',
@@ -536,7 +536,7 @@ export const CANDIDATE_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'candidate-pro-monthly',
     name: 'Professional',
-    price: 249, // ₹249 per month
+    price: 249, // â‚¹249 per month
     interval: 'month',
     razorpayPlanId: 'plan_candidate_pro_monthly_india',
     description: 'Premium features to stand out',
@@ -554,7 +554,7 @@ export const CANDIDATE_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'candidate-pro-yearly',
     name: 'Professional (Annual)',
-    price: 1999, // ₹1,999 per year (5 months free)
+    price: 1999, // â‚¹1,999 per year (5 months free)
     interval: 'year',
     razorpayPlanId: 'plan_candidate_pro_yearly_india',
     description: 'Best value with 5 months free',
@@ -634,6 +634,8 @@ export const getSubscriptionStatusText = (status: string): string => {
     default: return 'Unknown Status';
   }
 };
+
+
 
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI-Powered Resume Data Extraction Service
  * 
  * Uses OpenAI to accurately extract structured data from resume content
@@ -392,6 +392,8 @@ export const resumeExtractor = new AIResumeExtractor();
 
 // Export types
 export type { ExtractedResumeData, ExtractionResult };
+
+
 
 
 

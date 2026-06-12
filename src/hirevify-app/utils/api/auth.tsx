@@ -1,4 +1,5 @@
-import { supabase } from '../supabase/client'
+﻿import { createClient } from '../supabase/client';
+const supabase = createClient();
 import { projectId, publicAnonKey } from '../supabase/info'
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`
@@ -148,7 +149,7 @@ class LocalStorageAuth {
 
 export class AuthAPI {
   static async signup(data: SignupData): Promise<User> {
-    console.log(`🔐 Creating ${data.userType} account: ${data.email}`)
+    console.log(`ðŸ” Creating ${data.userType} account: ${data.email}`)
     
     // Normalize email to lowercase
     const normalizedData = {
@@ -170,7 +171,7 @@ export class AuthAPI {
       const result = await response.json()
       
       if (!response.ok) {
-        console.error('❌ Backend signup failed:', result.error)
+        console.error('âŒ Backend signup failed:', result.error)
         
         // Handle specific error cases
         if (result.error.includes('already exists') || 
@@ -182,10 +183,10 @@ export class AuthAPI {
         throw new Error(result.error || `HTTP ${response.status}: Signup failed`)
       }
 
-      console.log('✅ Backend signup successful')
+      console.log('âœ… Backend signup successful')
       return result.user
     } catch (error) {
-      console.log('🔧 Backend signup failed, using local storage:', error.message)
+      console.log('ðŸ”§ Backend signup failed, using local storage:', error.message)
       
       // If it's a user-already-exists error, don't fall back to local storage
       if (error.message.includes('already exists')) {
@@ -195,17 +196,17 @@ export class AuthAPI {
       // Fall back to local storage for other errors
       try {
         const user = await LocalStorageAuth.signup(normalizedData)
-        console.log('💾 Local storage signup successful')
+        console.log('ðŸ’¾ Local storage signup successful')
         return user
       } catch (localError) {
-        console.error('❌ Local storage signup failed:', localError)
+        console.error('âŒ Local storage signup failed:', localError)
         throw localError
       }
     }
   }
 
   static async signIn(email: string, password: string): Promise<{ user: User; accessToken: string }> {
-    console.log(`🔐 Signing in: ${email}`)
+    console.log(`ðŸ” Signing in: ${email}`)
     
     // Normalize email to lowercase
     const normalizedEmail = email.toLowerCase().trim()
@@ -224,17 +225,17 @@ export class AuthAPI {
       const result = await response.json()
       
       if (!response.ok) {
-        console.log('🔧 Backend signin failed:', result.error)
+        console.log('ðŸ”§ Backend signin failed:', result.error)
         throw new Error(result.error || 'Sign in failed')
       }
 
-      console.log('✅ Backend signin successful')
+      console.log('âœ… Backend signin successful')
       return {
         user: result.user,
         accessToken: result.accessToken
       }
     } catch (backendError) {
-      console.log('🔧 Backend signin failed, trying direct Supabase:', backendError.message)
+      console.log('ðŸ”§ Backend signin failed, trying direct Supabase:', backendError.message)
       
       // Try direct Supabase auth as fallback
       try {
@@ -251,7 +252,7 @@ export class AuthAPI {
           throw new Error('No session created during sign in')
         }
 
-        console.log('✅ Direct Supabase sign in successful')
+        console.log('âœ… Direct Supabase sign in successful')
         const sessionData = await this.getSession(data.session.access_token)
         
         return {
@@ -259,15 +260,15 @@ export class AuthAPI {
           accessToken: data.session.access_token
         }
       } catch (supabaseError) {
-        console.log('🔧 Direct Supabase failed, trying local storage:', supabaseError.message)
+        console.log('ðŸ”§ Direct Supabase failed, trying local storage:', supabaseError.message)
         
         // Fall back to local storage
         try {
           const result = await LocalStorageAuth.signIn(normalizedEmail, password)
-          console.log('💾 Local storage sign in successful')
+          console.log('ðŸ’¾ Local storage sign in successful')
           return result
         } catch (localError) {
-          console.error('❌ All sign in methods failed')
+          console.error('âŒ All sign in methods failed')
           
           // Provide user-friendly error messages
           if (backendError.message.includes('Invalid login credentials') || 
@@ -284,25 +285,25 @@ export class AuthAPI {
   }
 
   static async signOut(): Promise<void> {
-    console.log('👋 Signing out')
+    console.log('ðŸ‘‹ Signing out')
     
     // Try both backend and local storage
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.log('⚠️ Supabase sign out error:', error)
+        console.log('âš ï¸ Supabase sign out error:', error)
       } else {
-        console.log('✅ Supabase sign out successful')
+        console.log('âœ… Supabase sign out successful')
       }
     } catch (error) {
-      console.log('🔧 Supabase sign out failed:', error)
+      console.log('ðŸ”§ Supabase sign out failed:', error)
     }
 
     try {
       await LocalStorageAuth.signOut()
-      console.log('💾 Local storage sign out successful')
+      console.log('ðŸ’¾ Local storage sign out successful')
     } catch (error) {
-      console.error('❌ Local storage sign out failed:', error)
+      console.error('âŒ Local storage sign out failed:', error)
     }
   }
 
@@ -319,14 +320,14 @@ export class AuthAPI {
         const result = await response.json()
         
         if (response.ok) {
-          console.log('✅ Backend session validation successful')
+          console.log('âœ… Backend session validation successful')
           return result
         } else {
-          console.log('🔧 Backend session validation failed:', result.error)
+          console.log('ðŸ”§ Backend session validation failed:', result.error)
           throw new Error(result.error || 'Session validation failed')
         }
       } catch (error) {
-        console.log('🔧 Backend session validation error:', error.message)
+        console.log('ðŸ”§ Backend session validation error:', error.message)
       }
     }
 
@@ -351,13 +352,13 @@ export class AuthAPI {
             
             if (response.ok) {
               const result = await response.json()
-              console.log('✅ Enhanced user data from backend')
+              console.log('âœ… Enhanced user data from backend')
               return result
             }
           } catch {}
           
           // Fallback to basic user data from Supabase
-          console.log('✅ Basic user data from Supabase')
+          console.log('âœ… Basic user data from Supabase')
           return {
             user: {
               id: user.id,
@@ -371,13 +372,13 @@ export class AuthAPI {
         }
       }
     } catch (error) {
-      console.log('🔧 Supabase session check failed:', error.message)
+      console.log('ðŸ”§ Supabase session check failed:', error.message)
     }
 
     // Fall back to local storage
     try {
       const result = await LocalStorageAuth.getSession()
-      console.log('💾 Local storage session found')
+      console.log('ðŸ’¾ Local storage session found')
       return result
     } catch (error) {
       throw new Error('No active session')
@@ -399,26 +400,29 @@ export class AuthAPI {
       const result = await response.json()
       
       if (response.ok) {
-        console.log('✅ Backend profile update successful')
+        console.log('âœ… Backend profile update successful')
         return result.profile
       } else {
         throw new Error(result.error || 'Profile update failed')
       }
     } catch (error) {
-      console.log('🔧 Backend profile update failed, using local storage:', error.message)
+      console.log('ðŸ”§ Backend profile update failed, using local storage:', error.message)
       
       // Fall back to local storage
       try {
         const user = await LocalStorageAuth.updateProfile(updates)
-        console.log('💾 Local storage profile update successful')
+        console.log('ðŸ’¾ Local storage profile update successful')
         return user
       } catch (localError) {
-        console.error('❌ Local storage profile update failed:', localError)
+        console.error('âŒ Local storage profile update failed:', localError)
         throw localError
       }
     }
   }
 }
+
+
+
 
 
 

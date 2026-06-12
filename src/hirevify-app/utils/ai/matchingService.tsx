@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HireVify AI Matching Service
  * 
  * Service layer that integrates the AI matching engine with the Supabase backend
@@ -152,7 +152,7 @@ class AIMatchingService {
       // Fetch candidate data
       const candidate = await this.fetchCandidate(candidateId);
       if (!candidate) {
-        console.warn(`❌ Candidate not found for matching: ${candidateId}`);
+        console.warn(`âŒ Candidate not found for matching: ${candidateId}`);
         throw new Error(`Candidate not found: ${candidateId}`);
       }
 
@@ -343,7 +343,7 @@ class AIMatchingService {
         return [];
       }
 
-      console.log(`✅ Fetched ${result.candidates.length} candidates for matching`);
+      console.log(`âœ… Fetched ${result.candidates.length} candidates for matching`);
       
       // Transform to AI engine format
       return result.candidates.map((candidate: any) => this.transformCandidateData(candidate));
@@ -543,6 +543,8 @@ class AIMatchingService {
 
 // Singleton instance for the application
 export const aiMatchingService = new AIMatchingService();
+
+
 
 
 

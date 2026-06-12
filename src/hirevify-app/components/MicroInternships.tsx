@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Clock, Calendar, DollarSign, Users, Star, CheckCircle, Play, Building, MapPin, Zap, Award, Target, TrendingUp, Timer, BookOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -201,7 +201,7 @@ export function MicroInternships({ onBack, onUpgrade }: MicroInternshipsProps) {
                         <div>
                           <div className="text-xs font-medium text-muted-foreground mb-1">Skills Required</div>
                           <div className="flex flex-wrap gap-1">
-                            {internship.skillsRequired.slice(0, 4).map((skill) => (
+                            {internship.skillsRequired.slice(0, 4).map((skill: string) => (
                               <Badge key={skill} variant="secondary" className="text-xs">
                                 {skill}
                               </Badge>
@@ -274,7 +274,7 @@ export function MicroInternships({ onBack, onUpgrade }: MicroInternshipsProps) {
                           <div>
                             <CardTitle className="text-lg mb-2">{internship.title}</CardTitle>
                             <div className="text-sm text-muted-foreground mb-2">
-                              {internship.company} • ${internship.payment}
+                              {internship.company} â€¢ ${internship.payment}
                             </div>
                             <Badge className={statusBadge.className}>
                               {statusBadge.label}
@@ -426,6 +426,9 @@ export function MicroInternships({ onBack, onUpgrade }: MicroInternshipsProps) {
     </div>
   );
 }
+
+
+
 
 
 

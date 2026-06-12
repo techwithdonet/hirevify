@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, ArrowLeft, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -82,7 +82,7 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
   const loadProjects = async () => {
     if (!accessToken) {
       setIsLoading(false);
-      console.log('⚠️ No access token available for project loading');
+      console.log('âš ï¸ No access token available for project loading');
       return;
     }
     
@@ -91,19 +91,19 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
     try {
       // Import and use the real API
       const { ProjectsAPI } = await import('../utils/api/projects');
-      const data = await ProjectsAPI.getProjects(filters);
+      const data = await ProjectsAPI.getProjects(filters as any);
       
       // Only update if we got valid data
       if (data && data.projects && Array.isArray(data.projects)) {
-        setProjects(data.projects);
-        setFilteredProjects(data.projects);
+        setProjects(data.projects as any);
+        setFilteredProjects(data.projects as any);
         
         // Generate AI recommendations for real projects only
         if (data.projects.length > 0) {
-          await generateAIRecommendations(data.projects);
+          await generateAIRecommendations(data.projects as any);
         }
         
-        console.log(`✅ Successfully loaded ${data.projects.length} real projects`);
+        console.log(`âœ… Successfully loaded ${data.projects.length} real projects`);
       } else {
         console.warn('Invalid project data received from API');
         setProjects([]);
@@ -136,7 +136,7 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
       const isTestUser = user.email && (user.email === 'candidate@hirevify.com' || user.email === 'recruiter@hirevify.com');
       
       if (!isTestUser) {
-        console.log('⚠️ AI matching skipped - not a configured test user, using skill-based matching');
+        console.log('âš ï¸ AI matching skipped - not a configured test user, using skill-based matching');
         generateSkillBasedRecommendations(projectList);
         return;
       }
@@ -163,7 +163,7 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
       
       if (topRecommendations.length > 0) {
         setRecommendations(topRecommendations);
-        console.log(`✅ AI matching success: Found ${result.matches.length} matches`);
+        console.log(`âœ… AI matching success: Found ${result.matches.length} matches`);
       } else {
         // Fallback to skill-based matching
         console.log('No AI matches found, falling back to skill-based matching');
@@ -184,12 +184,12 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
       return;
     }
 
-    if (user?.skills && user.skills.length > 0) {
-      const userSkills = user.skills.map(s => s.toLowerCase());
+    if ((user as any)?.skills && (user as any).skills.length > 0) {
+      const userSkills = (user as any).skills.map((s: string) => s.toLowerCase());
       const recommendedProjects = projectList
         .filter(project => 
           project.skills.some(skill => 
-            userSkills.some(userSkill => 
+            userSkills.some((userSkill: string) => 
               skill.toLowerCase().includes(userSkill) || userSkill.includes(skill.toLowerCase())
             )
           )
@@ -306,18 +306,18 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
     }
     
     // Skill-based matching calculation - no random fallback
-    if (!user?.skills || user.skills.length === 0) {
+    if (!(user as any)?.skills || (user as any).skills.length === 0) {
       return 50; // Default neutral score when no skills available
     }
     
-    const userSkills = user.skills.map(skill => skill.toLowerCase());
-    const projectSkills = project.skills.map(skill => skill.toLowerCase());
+    const userSkills = (user as any).skills.map((skill: string) => skill.toLowerCase());
+    const projectSkills = project.skills.map((skill: string) => skill.toLowerCase());
     
     if (projectSkills.length === 0) {
       return 50; // Default neutral score when project has no skills listed
     }
     
-    const matchedSkills = userSkills.filter(skill => 
+    const matchedSkills = userSkills.filter((skill: string) => 
       projectSkills.some(pSkill => pSkill.includes(skill) || skill.includes(pSkill))
     );
     
@@ -384,8 +384,8 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
       await ApplicationsAPI.submitApplication({
         projectId: selectedProject.id,
         coverLetter,
-        resumeData: user?.resumeData || {},
-        portfolioItems: user?.portfolioItems || []
+        resumeData: (user as any)?.resumeData || {},
+        portfolioItems: (user as any)?.portfolioItems || []
       }, accessToken);
       
       toast.success('Application submitted successfully!');
@@ -467,7 +467,7 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
               </Badge>
             </div>
             <h3 className="text-xl font-bold mb-1">{project.company}</h3>
-            <p className="text-muted-foreground">{project.type} • {project.location}</p>
+            <p className="text-muted-foreground">{project.type} â€¢ {project.location}</p>
           </div>
         </div>
 
@@ -480,7 +480,7 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
         {/* Challenge Description for Assigned Projects */}
         {project.status && ['selected', 'in-progress', 'completed'].includes(project.status) && project.challengeDescription && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">🎯 Project Challenge</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">ðŸŽ¯ Project Challenge</h4>
             <p className="text-blue-700 mb-3">{project.challengeDescription}</p>
             
             {/* Video Recording Section */}
@@ -1003,6 +1003,9 @@ export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: Pr
     </div>
   );
 }
+
+
+
 
 
 

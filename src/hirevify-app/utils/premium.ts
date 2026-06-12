@@ -1,4 +1,4 @@
-// Premium Features Access Control System
+﻿// Premium Features Access Control System
 import { useAuth } from '../components/AuthProvider';
 import { useMemo, useCallback } from 'react';
 
@@ -281,6 +281,8 @@ export const clearTestSubscription = () => {
   localStorage.removeItem('hirevify_subscription');
   console.log('Test subscription cleared');
 };
+
+
 
 
 

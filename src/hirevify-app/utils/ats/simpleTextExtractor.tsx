@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Simple Text Extractor for Various File Formats
  * 
  * This utility provides basic text extraction capabilities without requiring
@@ -11,13 +11,13 @@ export class SimpleTextExtractor {
    * Attempts to extract text from any file using multiple strategies
    */
   static async extractText(file: File): Promise<string> {
-    console.log('📄 SimpleTextExtractor: Processing file:', file.name, file.type);
+    console.log('ðŸ“„ SimpleTextExtractor: Processing file:', file.name, file.type);
 
     try {
       // Strategy 1: Try reading as UTF-8 text
       const textResult = await this.tryReadAsText(file);
       if (textResult.success && textResult.text.length > 50) {
-        console.log('✅ Successfully extracted text via UTF-8 reading');
+        console.log('âœ… Successfully extracted text via UTF-8 reading');
         return textResult.text;
       }
 
@@ -27,11 +27,11 @@ export class SimpleTextExtractor {
         try {
           const encodedResult = await this.readFileWithEncoding(file, encoding);
           if (encodedResult && encodedResult.length > 50) {
-            console.log(`✅ Successfully extracted text via ${encoding} encoding`);
+            console.log(`âœ… Successfully extracted text via ${encoding} encoding`);
             return encodedResult;
           }
         } catch (error) {
-          console.log(`❌ Failed to read with ${encoding} encoding:`, error.message);
+          console.log(`âŒ Failed to read with ${encoding} encoding:`, error.message);
         }
       }
 
@@ -39,7 +39,7 @@ export class SimpleTextExtractor {
       if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
         const pdfText = await this.extractFromSimplePDF(file);
         if (pdfText && pdfText.length > 50) {
-          console.log('✅ Successfully extracted text from simple PDF');
+          console.log('âœ… Successfully extracted text from simple PDF');
           return pdfText;
         }
       }
@@ -47,7 +47,7 @@ export class SimpleTextExtractor {
       throw new Error('Unable to extract readable text from this file format');
 
     } catch (error) {
-      console.error('❌ SimpleTextExtractor failed:', error);
+      console.error('âŒ SimpleTextExtractor failed:', error);
       throw error;
     }
   }
@@ -237,6 +237,8 @@ export class SimpleTextExtractor {
     return { isValid: true };
   }
 }
+
+
 
 
 

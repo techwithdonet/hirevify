@@ -1,4 +1,4 @@
-export interface Integration {
+﻿export interface Integration {
   id: string;
   name: string;
   description: string;
@@ -41,6 +41,8 @@ export interface ConnectionDialogProps {
   onSubmit: () => void;
   loading: boolean;
 }
+
+
 
 
 

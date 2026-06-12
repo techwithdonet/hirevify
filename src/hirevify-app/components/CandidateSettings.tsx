@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Shield, Bell, Settings, Download, Trash2, Eye, EyeOff, Save, Edit3, MapPin, Briefcase, DollarSign, Clock, Mail, Phone, Globe, Camera, Check, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -1208,6 +1208,8 @@ export function CandidateSettings({ onBack, onUpgrade }: CandidateSettingsProps)
     </div>
   );
 }
+
+
 
 
 

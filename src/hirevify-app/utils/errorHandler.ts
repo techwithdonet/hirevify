@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Global error handler for runtime errors
  */
 
@@ -57,7 +57,7 @@ export class ErrorHandler {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Details');
+      console.group('ðŸš¨ Error Details');
       console.error('Context:', context);
       console.error('Error:', error);
       console.error('Stack:', error.stack);
@@ -84,7 +84,7 @@ export class ErrorHandler {
     };
 
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🔴 Component Error: ${componentName}`);
+      console.group(`ðŸ”´ Component Error: ${componentName}`);
       console.error('Error:', error);
       console.error('Additional Context:', additionalContext);
       console.groupEnd();
@@ -131,6 +131,8 @@ declare global {
 }
 
 window.errorHandler = errorHandler;
+
+
 
 
 

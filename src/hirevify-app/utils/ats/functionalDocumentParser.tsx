@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Functional Document Parser - Enhanced Text Extraction
  * 
  * Provides robust text extraction from various document formats
@@ -490,6 +490,8 @@ class FunctionalDocumentParser {
 
 // Export singleton instance
 export const functionalDocumentParser = new FunctionalDocumentParser();
+
+
 
 
 

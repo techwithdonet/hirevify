@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
@@ -330,6 +330,8 @@ export function LiveInterviewScreen({ onEndInterview }: LiveInterviewScreenProps
     </div>
   );
 }
+
+
 
 
 

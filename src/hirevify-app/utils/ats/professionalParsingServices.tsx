@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Professional Parsing Services Integration
  * 
  * This file contains integrations with professional document parsing APIs
@@ -424,6 +424,8 @@ export const SETUP_INSTRUCTIONS = {
     pricing: 'Free tier: 1,000 transactions/month, then pay per use'
   }
 };
+
+
 
 
 

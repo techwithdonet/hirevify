@@ -1,4 +1,4 @@
-export const microInternships = [
+﻿export const microInternships = [
   {
     id: 'micro-1',
     title: 'Build a React Component Library Documentation Site',
@@ -202,6 +202,8 @@ export const statsData = [
   { label: '24 hours', value: 'Response Time' },
   { label: '90%+', value: 'Completion Rate' }
 ];
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info'
+﻿import { projectId, publicAnonKey } from '../supabase/info'
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`
 
@@ -79,7 +79,7 @@ export class ApplicationsAPI {
     return result.applications
   }
 
-  static async updateApplicationStatus(applicationId: string, status: string, notes?: string, accessToken: string): Promise<Application> {
+  static async updateApplicationStatus(applicationId: string, status: string, notes?: string, accessToken?: string): Promise<Application> {
     const response = await fetch(`${API_BASE}/applications/${applicationId}/status`, {
       method: 'PUT',
       headers: {
@@ -97,6 +97,9 @@ export class ApplicationsAPI {
     return result.application
   }
 }
+
+
+
 
 
 

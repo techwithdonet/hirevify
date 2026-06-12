@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Ensemble OCR System - Client-side compatible fallback
  * Provides OCR functionality without external dependencies
  */
@@ -25,7 +25,7 @@ class EnsembleOCRSystem {
   }
 
   private initializeProviders(): void {
-    console.log('🔍 Initializing ensemble OCR providers...');
+    console.log('ðŸ” Initializing ensemble OCR providers...');
     
     // Client-side fallback provider
     this.providers.push({
@@ -34,16 +34,16 @@ class EnsembleOCRSystem {
       process: this.clientSideFallback.bind(this)
     });
 
-    console.log(`✅ Initialized ${this.providers.length} OCR providers`);
+    console.log(`âœ… Initialized ${this.providers.length} OCR providers`);
   }
 
   async processImage(imageData: string): Promise<OCRResult> {
-    console.log('📸 Starting ensemble OCR processing...');
+    console.log('ðŸ“¸ Starting ensemble OCR processing...');
     
     const availableProviders = this.providers.filter(p => p.available);
     
     if (availableProviders.length === 0) {
-      console.log('⚠️ No OCR providers available, returning fallback text');
+      console.log('âš ï¸ No OCR providers available, returning fallback text');
       return {
         text: 'OCR processing not available in client-side mode. Please try uploading a text-based document format.',
         confidence: 0.1,
@@ -54,20 +54,20 @@ class EnsembleOCRSystem {
 
     // Use the first available provider
     const provider = availableProviders[0];
-    console.log(`🔄 Using OCR provider: ${provider.name}`);
+    console.log(`ðŸ”„ Using OCR provider: ${provider.name}`);
     
     try {
       const result = await provider.process(imageData);
-      console.log(`✅ OCR completed with ${provider.name}: ${result.confidence}% confidence`);
+      console.log(`âœ… OCR completed with ${provider.name}: ${result.confidence}% confidence`);
       return result;
     } catch (error) {
-      console.error(`❌ OCR failed with ${provider.name}:`, error);
+      console.error(`âŒ OCR failed with ${provider.name}:`, error);
       return this.getFallbackResult();
     }
   }
 
   private async clientSideFallback(imageData: string): Promise<OCRResult> {
-    console.log('🔄 Using client-side OCR fallback...');
+    console.log('ðŸ”„ Using client-side OCR fallback...');
     
     // Simulate OCR processing time
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -112,6 +112,8 @@ class EnsembleOCRSystem {
 // Export singleton instance
 export const ensembleOCRSystem = new EnsembleOCRSystem();
 export default ensembleOCRSystem;
+
+
 
 
 

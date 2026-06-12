@@ -1,4 +1,4 @@
-// Mock integration service for testing and offline mode
+﻿// Mock integration service for testing and offline mode
 import { 
   type Integration, 
   type IntegrationCredentials, 
@@ -62,7 +62,7 @@ export class MockIntegrationService {
     return safeOperation(async () => {
       await delay(100); // Reduced delay for better UX
       
-      console.log('🎭 Mock: Fetching user integrations...');
+      console.log('ðŸŽ­ Mock: Fetching user integrations...');
       return {
         success: true,
         integrations: [...mockConnectedIntegrations]
@@ -76,7 +76,7 @@ export class MockIntegrationService {
   static async getIntegration(integrationId: string): Promise<{ success: boolean; integration?: Integration; error?: string }> {
     await delay(200);
     
-    console.log('🎭 Mock: Fetching integration:', integrationId);
+    console.log('ðŸŽ­ Mock: Fetching integration:', integrationId);
     const integration = mockConnectedIntegrations.find(i => i.id === integrationId);
     
     if (!integration) {
@@ -100,7 +100,7 @@ export class MockIntegrationService {
     return safeOperation(async () => {
       await delay(800); // Simulate connection time
       
-      console.log('🎭 Mock: Connecting integration:', integrationId, 'with credentials:', Object.keys(credentials));
+      console.log('ðŸŽ­ Mock: Connecting integration:', integrationId, 'with credentials:', Object.keys(credentials));
       
       // Validate required credentials based on integration type
       const validationResult = this.validateCredentials(integrationId, credentials);
@@ -151,7 +151,7 @@ export class MockIntegrationService {
   static async disconnectIntegration(integrationId: string): Promise<{ success: boolean; error?: string }> {
     await delay(500);
     
-    console.log('🎭 Mock: Disconnecting integration:', integrationId);
+    console.log('ðŸŽ­ Mock: Disconnecting integration:', integrationId);
     
     const existingIndex = mockConnectedIntegrations.findIndex(i => i.id === integrationId);
     if (existingIndex === -1) {
@@ -178,7 +178,7 @@ export class MockIntegrationService {
   static async syncIntegration(integrationId: string): Promise<{ success: boolean; syncResult?: SyncResult; integration?: Integration; error?: string }> {
     await delay(800);
     
-    console.log('🎭 Mock: Syncing integration:', integrationId);
+    console.log('ðŸŽ­ Mock: Syncing integration:', integrationId);
     
     const integration = mockConnectedIntegrations.find(i => i.id === integrationId);
     if (!integration) {
@@ -220,7 +220,7 @@ export class MockIntegrationService {
   static async testIntegrationConnection(integrationId: string): Promise<{ success: boolean; testResult?: TestResult; error?: string }> {
     await delay(600);
     
-    console.log('🎭 Mock: Testing integration connection:', integrationId);
+    console.log('ðŸŽ­ Mock: Testing integration connection:', integrationId);
     
     const integration = mockConnectedIntegrations.find(i => i.id === integrationId);
     if (!integration) {
@@ -250,7 +250,7 @@ export class MockIntegrationService {
   static async getIntegrationLogs(integrationId: string): Promise<{ success: boolean; logs?: IntegrationLog[]; error?: string }> {
     await delay(400);
     
-    console.log('🎭 Mock: Fetching integration logs for:', integrationId);
+    console.log('ðŸŽ­ Mock: Fetching integration logs for:', integrationId);
     
     const logs = mockLogs
       .filter(log => log.integrationId === integrationId)
@@ -268,7 +268,7 @@ export class MockIntegrationService {
   ): Promise<{ success: boolean; integration?: Integration; error?: string }> {
     await delay(400);
     
-    console.log('🎭 Mock: Updating integration settings for:', integrationId, settings);
+    console.log('ðŸŽ­ Mock: Updating integration settings for:', integrationId, settings);
     
     const integration = mockConnectedIntegrations.find(i => i.id === integrationId);
     if (!integration) {
@@ -292,7 +292,7 @@ export class MockIntegrationService {
   static async checkServiceHealth(): Promise<{ success: boolean; status?: string; error?: string }> {
     await delay(100);
     
-    console.log('🎭 Mock: Service health check - always healthy in mock mode');
+    console.log('ðŸŽ­ Mock: Service health check - always healthy in mock mode');
     
     return {
       success: true,
@@ -449,6 +449,8 @@ export const mockTestIntegrationConnection = MockIntegrationService.testIntegrat
 export const mockGetIntegrationLogs = MockIntegrationService.getIntegrationLogs;
 export const mockUpdateIntegrationSettings = MockIntegrationService.updateIntegrationSettings;
 export const mockCheckIntegrationServiceHealth = MockIntegrationService.checkServiceHealth;
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { Activity, AlertCircle, Wifi, AlertTriangle, WifiOff } from 'lucide-react';
+﻿import { Activity, AlertCircle, Wifi, AlertTriangle, WifiOff } from 'lucide-react';
 import { Integration } from './types';
 
 export const getStatusBadge = (status: string) => {
@@ -69,6 +69,8 @@ export const getIntegrationCounts = (connectedIntegrations: any[], mergedIntegra
   const availableCount = mergedIntegrations.filter(i => i.status === 'available').length;
   return { connectedCount, availableCount };
 };
+
+
 
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Jobs/Projects Service
  * Handles all job posting and retrieval operations from Supabase
  */
@@ -246,3 +246,5 @@ class JobsService {
 }
 
 export const jobsService = new JobsService();
+
+

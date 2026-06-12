@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 // Professional ATS Scoring Engine
 import { ParsedResumeContent } from './documentParser';
 
@@ -369,6 +370,9 @@ export class ProfessionalATSScorer {
 }
 
 export const professionalATSScorer = new ProfessionalATSScorer();
+
+
+
 
 
 

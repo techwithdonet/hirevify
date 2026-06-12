@@ -1,4 +1,4 @@
-// Professional ATS Document Parser
+﻿// Professional ATS Document Parser
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 import { enhancedPDFParser } from './enhancedPDFParser';
@@ -219,7 +219,7 @@ export class ProfessionalDocumentParser {
       /^\s*[A-Z][a-z]+(\s+[A-Z][a-z]+)*\s*$/.test(line) // Title Case headers
     );
 
-    const hasBulletPoints = text.includes('•') || text.includes('◦') || text.includes('-');
+    const hasBulletPoints = text.includes('â€¢') || text.includes('â—¦') || text.includes('-');
     
     // Font consistency (simplified - would need more complex analysis)
     const fontConsistency = hasHeaders && hasBulletPoints ? 0.8 : 0.6;
@@ -237,6 +237,8 @@ export class ProfessionalDocumentParser {
 }
 
 export const documentParser = new ProfessionalDocumentParser();
+
+
 
 
 

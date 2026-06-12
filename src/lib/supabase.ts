@@ -1,4 +1,4 @@
-import {
+﻿import {
   createClient,
   type SupabaseClient,
   type SupabaseClientOptions,
@@ -98,3 +98,5 @@ export function getSupabaseBrowserClientInstance() {
 }
 
 export const supabase = createSupabaseBrowserClient();
+
+

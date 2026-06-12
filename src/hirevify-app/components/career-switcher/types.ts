@@ -1,4 +1,4 @@
-export interface CareerSwitcherTrackProps {
+﻿export interface CareerSwitcherTrackProps {
   onBack: () => void;
   onUpgrade: () => void;
 }
@@ -50,6 +50,8 @@ export interface SuccessStory {
   duration: string;
   salaryIncrease: string;
 }
+
+
 
 
 

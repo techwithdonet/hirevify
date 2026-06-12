@@ -1,4 +1,4 @@
-// Note: This file previously contained fake demo data. 
+﻿// Note: This file previously contained fake demo data. 
 // All analytics data is now fetched from actual user data via the API.
 // These configs are only used for component structure and should be populated with real data.
 
@@ -58,6 +58,8 @@ export const METRICS_CONFIG = [
     note: 'Requires cost tracking implementation'
   }
 ];
+
+
 
 
 

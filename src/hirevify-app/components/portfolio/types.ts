@@ -1,4 +1,4 @@
-export interface PortfolioItem {
+﻿export interface PortfolioItem {
   id: string;
   user_id: string;
   title: string;
@@ -18,6 +18,8 @@ export interface NewPortfolioItem {
   tags: string[];
   user_id?: string;
 }
+
+
 
 
 

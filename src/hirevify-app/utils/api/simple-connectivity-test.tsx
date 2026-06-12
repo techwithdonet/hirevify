@@ -1,8 +1,8 @@
-import { projectId } from '../supabase/info';
+﻿import { projectId } from '../supabase/info';
 
 // Ultra-simple connectivity test that doesn't require any authentication
 export async function testBasicConnectivity() {
-  console.log('🔍 Testing basic connectivity (no auth required)...');
+  console.log('ðŸ” Testing basic connectivity (no auth required)...');
   
   const testEndpoints = [
     {
@@ -19,7 +19,7 @@ export async function testBasicConnectivity() {
   
   for (const endpoint of testEndpoints) {
     try {
-      console.log(`🔄 Testing ${endpoint.name}...`);
+      console.log(`ðŸ”„ Testing ${endpoint.name}...`);
       
       const response = await fetch(endpoint.url, {
         method: 'GET',
@@ -29,12 +29,12 @@ export async function testBasicConnectivity() {
         }
       });
       
-      console.log(`📡 ${endpoint.name} response:`, response.status, response.statusText);
+      console.log(`ðŸ“¡ ${endpoint.name} response:`, response.status, response.statusText);
       
       if (response.ok) {
         try {
           const data = await response.json();
-          console.log(`✅ ${endpoint.name}: SUCCESS (JSON)`, data);
+          console.log(`âœ… ${endpoint.name}: SUCCESS (JSON)`, data);
           return { 
             success: true, 
             endpoint: endpoint.name, 
@@ -43,7 +43,7 @@ export async function testBasicConnectivity() {
           };
         } catch (jsonError) {
           const text = await response.text();
-          console.log(`✅ ${endpoint.name}: SUCCESS (TEXT)`, text);
+          console.log(`âœ… ${endpoint.name}: SUCCESS (TEXT)`, text);
           if (text.includes('INTEGRATION_SERVICE_HEALTHY') || text.includes('healthy')) {
             return { 
               success: true, 
@@ -55,11 +55,11 @@ export async function testBasicConnectivity() {
         }
       } else {
         const errorText = await response.text();
-        console.log(`❌ ${endpoint.name}: FAILED (${response.status})`, errorText);
+        console.log(`âŒ ${endpoint.name}: FAILED (${response.status})`, errorText);
       }
       
     } catch (error) {
-      console.log(`❌ ${endpoint.name}: ERROR`, error.message);
+      console.log(`âŒ ${endpoint.name}: ERROR`, error.message);
     }
   }
   
@@ -97,6 +97,8 @@ export async function quickConnectivityTest() {
     };
   }
 }
+
+
 
 
 

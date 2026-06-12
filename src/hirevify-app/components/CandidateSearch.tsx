@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -93,65 +93,102 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
   });
 
   // Comprehensive candidate database with realistic profiles
-    const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
 
   // Load candidates from Supabase
   useEffect(() => {
-    const loadCandidates = async () => {
+    async function loadCandidates() {
       try {
         setIsLoadingCandidates(true);
-        const { data, error } = await profilesService.searchProfiles({});
-        if (error) {
-          console.error('Error loading candidates:', error);
-          toast.error('Failed to load candidates');
-        } else if (data) {
-          const mapped = data.map((p: any) => ({
-            id: p.id,
-            name: p.full_name || 'Professional',
-            title: p.headline || 'Professional',
-            location: p.location || 'Remote',
-            experience: p.years_of_experience ? `${p.years_of_experience} years` : 'Not specified',
-            skills: p.skills || [],
-            matchScore: 75,
-            availability: 'immediate' as const,
-            salaryRange: { min: 50000, max: 150000, currency: 'USD' },
-            lastActive: p.updated_at,
-            isVerified: p.is_verified || false,
-            profileCompleteness: 75,
-            bio: p.bio || '',
-            preferredWorkType: ['Remote'],
-            education: p.education || '',
-            certifications: p.certifications || [],
-            portfolioItems: 0,
-            yearsOfExperience: p.years_of_experience || 0,
-            previousCompanies: p.previous_companies || [],
-            achievements: p.achievements || [],
-            languages: p.languages || [],
-            timezone: p.timezone || 'UTC',
-            responseRate: 80,
-            hiringSuccessRate: 75,
-            GitBranch: '',
-            Link: ''
-          }));
-          setCandidates(mapped);
+
+        const { data: profiles, error: profilesError } =
+          await profilesService.searchProfiles('', 'candidate');
+
+        if (profilesError) {
+          console.error('Error loading candidate profiles:', profilesError);
+          setCandidates([]);
+          setFilteredCandidates([]);
+          return;
         }
-      } catch (error) {
-        console.error('Error loading candidates:', error);
-        toast.error('Failed to load candidate data');
+
+        const authUserIds = (profiles || [])
+          .map((profile: any) => profile.auth_user_id)
+          .filter(Boolean);
+
+        const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+        const supabase = createSupabaseBrowserClient();
+
+        const { data: candidateDetails, error: detailsError } = await supabase
+          .from('candidate_profiles')
+          .select('*')
+          .in('user_id', authUserIds);
+
+        if (detailsError) {
+          console.error('Error loading candidate details:', detailsError);
+        }
+
+        const mapped = (profiles || []).map((profile: any, index: number) => {
+          const details = (candidateDetails || []).find(
+            (item: any) => item.user_id === profile.auth_user_id
+          );
+
+          return {
+            id: profile.id,
+            name: details?.full_name || profile.full_name || 'Candidate',
+            email: profile.email || '',
+            avatar: profile.avatar_url || '',
+            title: details?.headline || 'Candidate',
+            headline: details?.headline || 'Open to opportunities',
+            location: details?.location || 'Not specified',
+            phone: details?.phone || profile.phone || '',
+            skills: details?.skills || [],
+            experienceSummary: details?.experience_summary || '',
+            resumeUrl: details?.resume_url || '',
+
+            matchScore: Math.max(60, 95 - index * 4),
+            responseRate: Math.max(50, 90 - index * 3),
+            workType: 'Remote',
+            experience: 'Not specified',
+            timezone: 'IST',
+            availability: 'immediate' as const,
+
+            salaryRange: {
+              min: 30000,
+              max: 80000,
+              currency: 'USD',
+            },
+
+            lastActive: details?.updated_at || profile.created_at,
+            isVerified: false,
+            hasPortfolio: !!details?.resume_url,
+          };
+        });
+
+        setCandidates(mapped as unknown as Candidate[]);
+        setFilteredCandidates(mapped as unknown as Candidate[]);
+      } catch (err) {
+        console.error('Unexpected error loading candidates:', err);
+        setCandidates([]);
+        setFilteredCandidates([]);
       } finally {
         setIsLoadingCandidates(false);
       }
-    };
+    }
+
     loadCandidates();
   }, []);
 
+        
   const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>(candidates);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [aiRecommendations, setAiRecommendations] = useState<Candidate[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [showAiRecommendations, setShowAiRecommendations] = useState(true);
+  useEffect(() => {
+  setFilteredCandidates(candidates);
+}, [candidates]);
 
   const availableSkills = [
     'React', 'TypeScript', 'JavaScript', 'Node.js', 'Python', 'Java',
@@ -177,7 +214,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
   }, [searchFilters, sortBy]);
 
   const loadAIRecommendations = async () => {
-    if (!user?.userType === 'recruiter') return;
+    if (user?.userType !== 'recruiter') return;
     
     setIsLoadingAI(true);
     
@@ -610,7 +647,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
               <SelectValue placeholder="Any location" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any location</SelectItem>
+              <SelectItem value="any-location">Any location</SelectItem>
               {locations.map(location => (
                 <SelectItem key={location} value={location}>{location}</SelectItem>
               ))}
@@ -650,7 +687,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
               <SelectValue placeholder="Any experience" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any experience</SelectItem>
+              <SelectItem value="any-availability">Any availability</SelectItem>
               <SelectItem value="0-2 years">0-2 years</SelectItem>
               <SelectItem value="3-5 years">3-5 years</SelectItem>
               <SelectItem value="5-7 years">5-7 years</SelectItem>
@@ -667,7 +704,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
               <SelectValue placeholder="Any availability" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any availability</SelectItem>
+              <SelectItem value="any-availability">Any availability</SelectItem>
               <SelectItem value="immediate">Available immediately</SelectItem>
               <SelectItem value="two-weeks">2 weeks notice</SelectItem>
               <SelectItem value="one-month">1 month notice</SelectItem>
@@ -749,7 +786,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
               <SelectValue placeholder="Any timezone" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any timezone</SelectItem>
+              <SelectItem value="any-timezone">Any timezone</SelectItem>
               {timezones.map(tz => (
                 <SelectItem key={tz} value={tz}>{tz}</SelectItem>
               ))}
@@ -1030,6 +1067,12 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

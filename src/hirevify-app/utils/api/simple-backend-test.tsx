@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 /**
  * Simple, direct backend test that focuses on completely public endpoints
@@ -18,7 +18,7 @@ interface SimpleTestResult {
  * Test the most basic, guaranteed public endpoint
  */
 export async function testBasicBackend(): Promise<SimpleTestResult> {
-  console.log('🧪 Testing basic backend connectivity...');
+  console.log('ðŸ§ª Testing basic backend connectivity...');
   
   const startTime = Date.now();
   
@@ -37,8 +37,8 @@ export async function testBasicBackend(): Promise<SimpleTestResult> {
     const responseTime = Date.now() - startTime;
     const text = await response.text();
     
-    console.log(`📊 Response: ${response.status} in ${responseTime}ms`);
-    console.log(`📄 Content: ${text.substring(0, 100)}...`);
+    console.log(`ðŸ“Š Response: ${response.status} in ${responseTime}ms`);
+    console.log(`ðŸ“„ Content: ${text.substring(0, 100)}...`);
     
     if (response.ok) {
       return {
@@ -62,7 +62,7 @@ export async function testBasicBackend(): Promise<SimpleTestResult> {
   } catch (error: any) {
     const responseTime = Date.now() - startTime;
     
-    console.error('❌ Backend test failed:', error.message);
+    console.error('âŒ Backend test failed:', error.message);
     
     return {
       success: false,
@@ -82,7 +82,7 @@ export async function testMultipleEndpoints(): Promise<{
   message: string;
   results: SimpleTestResult[];
 }> {
-  console.log('🧪 Testing multiple backend endpoints...');
+  console.log('ðŸ§ª Testing multiple backend endpoints...');
   
   const endpoints = [
     {
@@ -110,7 +110,7 @@ export async function testMultipleEndpoints(): Promise<{
     const startTime = Date.now();
     
     try {
-      console.log(`🔍 Testing ${endpoint.name}...`);
+      console.log(`ðŸ” Testing ${endpoint.name}...`);
       
       const response = await fetch(endpoint.url, {
         method: 'GET',
@@ -130,7 +130,7 @@ export async function testMultipleEndpoints(): Promise<{
           responseTime,
           status: response.status
         });
-        console.log(`✅ ${endpoint.name} passed`);
+        console.log(`âœ… ${endpoint.name} passed`);
       } else {
         results.push({
           success: false,
@@ -140,7 +140,7 @@ export async function testMultipleEndpoints(): Promise<{
           status: response.status,
           error: `HTTP ${response.status}`
         });
-        console.log(`❌ ${endpoint.name} failed: ${response.status}`);
+        console.log(`âŒ ${endpoint.name} failed: ${response.status}`);
       }
       
     } catch (error: any) {
@@ -153,7 +153,7 @@ export async function testMultipleEndpoints(): Promise<{
         responseTime,
         error: error.message
       });
-      console.log(`❌ ${endpoint.name} error:`, error.message);
+      console.log(`âŒ ${endpoint.name} error:`, error.message);
     }
   }
   
@@ -214,7 +214,7 @@ export async function quickHealthCheck(): Promise<{
  * Test integration service specifically (public endpoints only)
  */
 export async function testIntegrationService(): Promise<SimpleTestResult> {
-  console.log('🔗 Testing integration service...');
+  console.log('ðŸ”— Testing integration service...');
   
   const startTime = Date.now();
   
@@ -264,6 +264,8 @@ export async function testIntegrationService(): Promise<SimpleTestResult> {
     };
   }
 }
+
+
 
 
 

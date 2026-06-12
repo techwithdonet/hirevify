@@ -1,4 +1,4 @@
-// Professional ATS Integration Service - Industry-Grade Implementation
+﻿// Professional ATS Integration Service - Industry-Grade Implementation
 import { enterpriseDocumentParser } from './enterpriseDocumentParser';
 import { enterpriseATSScorer } from './enterpriseATSScorer';
 import { aiService } from '../ai/openai-service';
@@ -53,18 +53,18 @@ export class ProfessionalATSService {
   ): Promise<ATSProcessingResult> {
     
     const startTime = Date.now();
-    console.log('🚀 Professional ATS processing started for:', file.name);
+    console.log('ðŸš€ Professional ATS processing started for:', file.name);
 
     try {
       // Step 1: Enterprise Document Parsing
-      console.log('📄 Phase 1: Enterprise document parsing...');
+      console.log('ðŸ“„ Phase 1: Enterprise document parsing...');
       const parsedData = await this.documentParser.parseDocument(file);
       
       const parsingTime = Date.now() - startTime;
-      console.log(`✅ Parsing completed in ${parsingTime}ms with confidence: ${parsedData.extractionMetadata.confidence}`);
+      console.log(`âœ… Parsing completed in ${parsingTime}ms with confidence: ${parsedData.extractionMetadata.confidence}`);
 
       // Step 2: Enterprise ATS Scoring
-      console.log('🎯 Phase 2: Enterprise ATS scoring...');
+      console.log('ðŸŽ¯ Phase 2: Enterprise ATS scoring...');
       const scoringStartTime = Date.now();
       
       const atsScore = await this.atsScorer.calculateEnterpriseScore(
@@ -76,24 +76,24 @@ export class ProfessionalATSService {
       );
 
       const scoringTime = Date.now() - scoringStartTime;
-      console.log(`✅ Scoring completed in ${scoringTime}ms. Overall score: ${atsScore.overall}`);
+      console.log(`âœ… Scoring completed in ${scoringTime}ms. Overall score: ${atsScore.overall}`);
 
       // Step 3: AI-Enhanced Insights (if enabled)
       let enhancedInsights = null;
       if (options.enableAIEnhancement) {
-        console.log('🤖 Phase 3: AI enhancement...');
+        console.log('ðŸ¤– Phase 3: AI enhancement...');
         enhancedInsights = await this.generateAIInsights(parsedData, atsScore, options);
       }
 
       // Step 4: Competitive Analysis (if enabled)
       let competitiveData = null;
       if (options.enableCompetitiveAnalysis) {
-        console.log('📊 Phase 4: Competitive analysis...');
+        console.log('ðŸ“Š Phase 4: Competitive analysis...');
         competitiveData = await this.performMarketAnalysis(parsedData, atsScore, options);
       }
 
       const totalTime = Date.now() - startTime;
-      console.log(`🏁 Professional ATS processing completed in ${totalTime}ms`);
+      console.log(`ðŸ Professional ATS processing completed in ${totalTime}ms`);
 
       // Step 5: Generate Comprehensive Result
       return this.buildComprehensiveResult(
@@ -111,7 +111,7 @@ export class ProfessionalATSService {
       );
 
     } catch (error) {
-      console.error('❌ Professional ATS processing failed:', error);
+      console.error('âŒ Professional ATS processing failed:', error);
       
       // Fallback to high-quality filename analysis
       return this.fallbackProcessing(file, options);
@@ -289,7 +289,7 @@ export class ProfessionalATSService {
     options: ATSProcessingOptions
   ): Promise<ATSProcessingResult> {
     
-    console.log('🔄 Executing fallback processing...');
+    console.log('ðŸ”„ Executing fallback processing...');
     
     const candidateName = this.extractNameFromFilename(file.name);
     const fallbackScore = 78; // Good baseline score
@@ -411,6 +411,8 @@ export class ProfessionalATSService {
 }
 
 export const professionalATSService = new ProfessionalATSService();
+
+
 
 
 

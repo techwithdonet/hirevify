@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Bell, MessageCircle, Settings, LogOut, Plus, Search, User, FileText, Award, Video, Calendar, Users, Zap, Target, Building, Timer, BookOpen, Star, ExternalLink, ArrowRight, Crown, Lightbulb, CheckCircle, PlayCircle, Brain, Sparkles, Scan, Loader } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -435,6 +435,8 @@ export function CandidateDashboard({
     </div>
   );
 }
+
+
 
 
 

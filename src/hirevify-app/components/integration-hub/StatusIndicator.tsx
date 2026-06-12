@@ -1,4 +1,4 @@
-import { Button } from '../ui/button';
+﻿import { Button } from '../ui/button';
 import { Loader2, RefreshCw, Server } from 'lucide-react';
 import { StatusIndicatorProps } from './types';
 import { getSystemStatusIcon } from './utils';
@@ -39,6 +39,8 @@ export function StatusIndicator({ systemStatus, checkingStatus, onCheckStatus }:
     </div>
   );
 }
+
+
 
 
 

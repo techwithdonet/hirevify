@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Demo Enhanced AI Service - Fallback for Enhanced ATS Scanner
  * Works without external API keys for demonstration purposes
  */
@@ -45,7 +45,7 @@ class DemoEnhancedService {
       return this.generateDemoData('');
     }
 
-    console.log('🔍 Extracting real data from text content:', textContent.substring(0, 200) + '...');
+    console.log('ðŸ” Extracting real data from text content:', textContent.substring(0, 200) + '...');
 
     // Extract basic info from text content using improved regex patterns
     const emailMatch = textContent.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
@@ -108,7 +108,7 @@ class DemoEnhancedService {
       references: []
     };
 
-    console.log('✅ Extracted real data:', {
+    console.log('âœ… Extracted real data:', {
       name: extractedData.personalInfo.fullName,
       email: extractedData.personalInfo.email,
       workExpCount: extractedData.workExperience.length,
@@ -418,7 +418,7 @@ class DemoEnhancedService {
   }
 
   private extractDateRange(text: string): { start: string; end: string } {
-    const dateMatch = text.match(/(\d{4}|\w+\s+\d{4})\s*[-–—]\s*(\d{4}|\w+\s+\d{4}|present|current)/i);
+    const dateMatch = text.match(/(\d{4}|\w+\s+\d{4})\s*[-â€“â€”]\s*(\d{4}|\w+\s+\d{4}|present|current)/i);
     if (dateMatch) {
       return { start: dateMatch[1], end: dateMatch[2] };
     }
@@ -593,6 +593,8 @@ class DemoEnhancedService {
 
 export const demoEnhancedService = new DemoEnhancedService();
 export default demoEnhancedService;
+
+
 
 
 

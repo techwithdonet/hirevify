@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { projectId } from '../../utils/supabase/info';
 import { 
@@ -17,14 +17,14 @@ export function useIntegrationHub(user: any) {
   const [loading, setLoading] = useState(true);
 
   const initializeHub = async () => {
-    console.log('🚀 Initializing Integration Hub...');
+    console.log('ðŸš€ Initializing Integration Hub...');
     setLoading(true);
     setCheckingStatus(true);
     
     try {
       // Quick initial check
       const quickCheck = await quickBackendCheck();
-      console.log('⚡ Quick backend check result:', quickCheck);
+      console.log('âš¡ Quick backend check result:', quickCheck);
       
       if (quickCheck) {
         // If quick check passes, do full status check
@@ -44,7 +44,7 @@ export function useIntegrationHub(user: any) {
         });
       }
     } catch (error) {
-      console.error('💥 Hub initialization failed:', error);
+      console.error('ðŸ’¥ Hub initialization failed:', error);
       setSystemStatus({
         backend: 'unknown',
         integrations: 'unknown',
@@ -58,30 +58,30 @@ export function useIntegrationHub(user: any) {
   };
 
   const checkSystemStatus = async () => {
-    console.log('🔍 Checking system status...');
+    console.log('ðŸ” Checking system status...');
     setCheckingStatus(true);
     
     try {
       const status = await getSystemStatus();
       setSystemStatus(status);
       
-      console.log('📊 System status updated:', status);
+      console.log('ðŸ“Š System status updated:', status);
       
       // Show appropriate toast messages
       if (status.backend === 'online' && systemStatus?.backend === 'offline') {
-        toast.success('🎉 Backend services restored!');
+        toast.success('ðŸŽ‰ Backend services restored!');
       } else if (status.backend === 'offline' && systemStatus?.backend === 'online') {
-        toast.error('⚠️ Backend services are now offline');
+        toast.error('âš ï¸ Backend services are now offline');
       }
       
       if (status.integrations === 'online' && systemStatus?.integrations === 'offline') {
-        toast.success('🔗 Integration services restored!');
+        toast.success('ðŸ”— Integration services restored!');
       } else if (status.integrations === 'offline' && systemStatus?.integrations === 'online') {
-        toast.warning('🔌 Integration services are now offline');
+        toast.warning('ðŸ”Œ Integration services are now offline');
       }
       
     } catch (error) {
-      console.error('💥 Status check failed:', error);
+      console.error('ðŸ’¥ Status check failed:', error);
       toast.error('Failed to check system status');
     } finally {
       setCheckingStatus(false);
@@ -90,17 +90,17 @@ export function useIntegrationHub(user: any) {
 
   const loadUserIntegrations = async () => {
     if (!user?.accessToken) {
-      console.log('🔗 No access token available for loading integrations');
+      console.log('ðŸ”— No access token available for loading integrations');
       return;
     }
 
     if (systemStatus?.integrations !== 'online') {
-      console.log('🔗 Skipping integration load - service offline');
+      console.log('ðŸ”— Skipping integration load - service offline');
       return;
     }
 
     try {
-      console.log('🔗 Loading user integrations...');
+      console.log('ðŸ”— Loading user integrations...');
       
       const result = await testAuthenticatedIntegrationAccess(user.accessToken);
       
@@ -116,18 +116,18 @@ export function useIntegrationHub(user: any) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ User integrations loaded:', data.integrations?.length || 0);
+          console.log('âœ… User integrations loaded:', data.integrations?.length || 0);
           setConnectedIntegrations(data.integrations || []);
         } else {
-          console.log(`⚠️ Integration list request failed: ${response.status}`);
+          console.log(`âš ï¸ Integration list request failed: ${response.status}`);
           setConnectedIntegrations([]);
         }
       } else {
-        console.log('❌ Authenticated integration access failed:', result.error);
+        console.log('âŒ Authenticated integration access failed:', result.error);
         setConnectedIntegrations([]);
       }
     } catch (error) {
-      console.error('💥 Error loading user integrations:', error);
+      console.error('ðŸ’¥ Error loading user integrations:', error);
       setConnectedIntegrations([]);
     }
   };
@@ -144,7 +144,7 @@ export function useIntegrationHub(user: any) {
     }
 
     try {
-      console.log('🔗 Attempting to connect integration:', integrationId);
+      console.log('ðŸ”— Attempting to connect integration:', integrationId);
       
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/integrations/connect`, {
         method: 'POST',
@@ -161,19 +161,19 @@ export function useIntegrationHub(user: any) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Integration connected successfully:', data);
+        console.log('âœ… Integration connected successfully:', data);
         toast.success('Integration connected successfully!');
         await loadUserIntegrations();
         return true;
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.error || 'Failed to connect integration. Please check your credentials and try again.';
-        console.error('❌ Integration connection failed:', errorData);
+        console.error('âŒ Integration connection failed:', errorData);
         toast.error(errorMsg);
         return false;
       }
     } catch (error) {
-      console.error('💥 Error connecting integration:', error);
+      console.error('ðŸ’¥ Error connecting integration:', error);
       toast.error('Connection failed due to an unexpected error. Please try again.');
       return false;
     }
@@ -186,7 +186,7 @@ export function useIntegrationHub(user: any) {
     // Set up periodic status checks
     const interval = setInterval(() => {
       if (systemStatus?.backend === 'offline' || systemStatus?.integrations === 'offline') {
-        console.log('🔄 Periodic status check (services offline)...');
+        console.log('ðŸ”„ Periodic status check (services offline)...');
         checkSystemStatus();
       }
     }, STATUS_CHECK_INTERVAL);
@@ -204,6 +204,8 @@ export function useIntegrationHub(user: any) {
     connectIntegration
   };
 }
+
+
 
 
 

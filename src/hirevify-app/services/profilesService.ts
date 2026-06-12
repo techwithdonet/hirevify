@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Profiles Service
  * Handles user profile operations from Supabase
  */
@@ -130,7 +130,7 @@ class ProfilesService {
     const { data, error } = await this.supabase
       .from('candidate_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single<CandidateProfile>();
 
     if (error) {
@@ -151,7 +151,7 @@ class ProfilesService {
             achievements: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as CandidateProfile,
+          } as unknown as CandidateProfile,
           error: null,
         };
       }
@@ -165,11 +165,11 @@ class ProfilesService {
   /**
    * Update candidate profile
    */
-  async updateCandidateProfile(userId: string, updates: Partial<Omit<CandidateProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
+  async updateCandidateProfile(userId: string, updates: Partial<Omit<CandidateProfile, 'id' | 'created_at' | 'updated_at'>>) {
     const { data, error } = await this.supabase
       .from('candidate_profiles')
       .update(updates)
-      .eq('user_id', userId)
+      .eq('id', userId)
       .select()
       .single<CandidateProfile>();
 
@@ -188,7 +188,7 @@ class ProfilesService {
     const { data, error } = await this.supabase
       .from('recruiter_profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single<RecruiterProfile>();
 
     if (error) {
@@ -202,11 +202,11 @@ class ProfilesService {
   /**
    * Update recruiter profile
    */
-  async updateRecruiterProfile(userId: string, updates: Partial<Omit<RecruiterProfile, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) {
+  async updateRecruiterProfile(userId: string, updates: Partial<Omit<RecruiterProfile, 'id' | 'created_at' | 'updated_at'>>) {
     const { data, error } = await this.supabase
       .from('recruiter_profiles')
       .update(updates)
-      .eq('user_id', userId)
+      .eq('id', userId)
       .select()
       .single<RecruiterProfile>();
 
@@ -221,26 +221,32 @@ class ProfilesService {
   /**
    * Search profiles
    */
-  async searchProfiles(searchTerm: string, role?: 'candidate' | 'recruiter') {
-    let query = this.supabase
-      .from('profiles')
-      .select('*')
-      .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company_name.ilike.%${searchTerm}%`);
+ async searchProfiles(searchTerm: string = '', role?: 'candidate' | 'recruiter') {
+  let query = this.supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-    if (role) {
-      query = query.eq('role', role);
-    }
-
-    const { data, error } = await query.returns<Profile[]>();
-
-    if (error) {
-      console.error('Error searching profiles:', error);
-      return { data: [], error };
-    }
-
-    return { data: data || [], error: null };
+  if (role) {
+    query = query.eq('role', role);
   }
 
+  if (searchTerm && searchTerm.trim().length > 0) {
+    const term = searchTerm.trim();
+    query = query.or(
+      `full_name.ilike.%${term}%,email.ilike.%${term}%,company_name.ilike.%${term}%`
+    );
+  }
+
+  const { data, error } = await query.returns<Profile[]>();
+
+  if (error) {
+    console.error('Error searching profiles:', error);
+    return { data: [], error };
+  }
+
+  return { data: data || [], error: null };
+}
   /**
    * Get profile completeness percentage
    */
@@ -274,3 +280,6 @@ class ProfilesService {
 }
 
 export const profilesService = new ProfilesService();
+
+
+

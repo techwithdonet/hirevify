@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Shield, Bell, Settings, Download, Trash2, Save, Building, Users, CreditCard, Plug, Crown, Plus, Edit3, Mail, Phone, Globe, MapPin, UserPlus, UserMinus, Check, X, Key, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -792,28 +792,28 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
                     <div className="p-3 border border-border rounded-lg">
                       <h5 className="font-medium text-red-700 mb-2">Admin</h5>
                       <ul className="text-sm space-y-1">
-                        <li>• Full access to all features</li>
-                        <li>• Manage team members</li>
-                        <li>• Billing and settings</li>
-                        <li>• Company information</li>
+                        <li>â€¢ Full access to all features</li>
+                        <li>â€¢ Manage team members</li>
+                        <li>â€¢ Billing and settings</li>
+                        <li>â€¢ Company information</li>
                       </ul>
                     </div>
                     <div className="p-3 border border-border rounded-lg">
                       <h5 className="font-medium text-blue-700 mb-2">Recruiter</h5>
                       <ul className="text-sm space-y-1">
-                        <li>• Post and manage jobs</li>
-                        <li>• View and contact candidates</li>
-                        <li>• Conduct assessments</li>
-                        <li>• Schedule interviews</li>
+                        <li>â€¢ Post and manage jobs</li>
+                        <li>â€¢ View and contact candidates</li>
+                        <li>â€¢ Conduct assessments</li>
+                        <li>â€¢ Schedule interviews</li>
                       </ul>
                     </div>
                     <div className="p-3 border border-border rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-2">Viewer</h5>
                       <ul className="text-sm space-y-1">
-                        <li>• View jobs and candidates</li>
-                        <li>• View analytics</li>
-                        <li>• Limited editing access</li>
-                        <li>• Cannot manage team</li>
+                        <li>â€¢ View jobs and candidates</li>
+                        <li>â€¢ View analytics</li>
+                        <li>â€¢ Limited editing access</li>
+                        <li>â€¢ Cannot manage team</li>
                       </ul>
                     </div>
                   </div>
@@ -1218,6 +1218,8 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
     </div>
   );
 }
+
+
 
 
 

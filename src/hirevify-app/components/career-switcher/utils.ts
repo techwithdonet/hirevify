@@ -1,4 +1,4 @@
-import { UserProgress } from './types';
+﻿import { UserProgress } from './types';
 
 export const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
@@ -26,6 +26,8 @@ export const getMockUserProgress = () => ({
   nextMilestone: 'Complete Portfolio Project',
   estimatedCompletion: '2024-06-15'
 });
+
+
 
 
 

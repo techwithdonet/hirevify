@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Save, Eye, Play, Trash2, Edit3, Copy, Settings, Brain, Clock, Target, Users, CheckCircle, AlertCircle, ChevronDown, ChevronUp, GripVertical, BarChart3 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -129,12 +129,12 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
   ];
 
   const questionTypes = [
-    { value: 'multiple-choice', label: 'Multiple Choice', icon: '✓' },
+    { value: 'multiple-choice', label: 'Multiple Choice', icon: 'âœ“' },
     { value: 'code', label: 'Coding Challenge', icon: '</>' },
-    { value: 'essay', label: 'Essay/Long Answer', icon: '📝' },
-    { value: 'true-false', label: 'True/False', icon: '❓' },
-    { value: 'ranking', label: 'Ranking/Ordering', icon: '📊' },
-    { value: 'matching', label: 'Matching', icon: '🔗' }
+    { value: 'essay', label: 'Essay/Long Answer', icon: 'ðŸ“' },
+    { value: 'true-false', label: 'True/False', icon: 'â“' },
+    { value: 'ranking', label: 'Ranking/Ordering', icon: 'ðŸ“Š' },
+    { value: 'matching', label: 'Matching', icon: 'ðŸ”—' }
   ];
 
   const updateAssessment = (updates: Partial<Assessment>) => {
@@ -303,7 +303,7 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
             {editingQuestionIndex !== null ? 'Edit Question' : 'Add New Question'}
           </CardTitle>
           <Button variant="ghost" onClick={() => setShowQuestionForm(false)}>
-            ×
+            Ã—
           </Button>
         </div>
       </CardHeader>
@@ -743,7 +743,7 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
                         <div className="flex flex-wrap gap-2">
                           {assessment.skills.map(skill => (
                             <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
-                              {skill} ×
+                              {skill} Ã—
                             </Badge>
                           ))}
                         </div>
@@ -1056,6 +1056,8 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
     </div>
   );
 }
+
+
 
 
 

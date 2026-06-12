@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI Career Advisor
  * 
  * Intelligent career guidance system that analyzes market trends, 
@@ -985,6 +985,8 @@ export function AICareerAdvisor({ onBack, onUpgrade }: AICareerAdvisorProps) {
     </div>
   );
 }
+
+
 
 
 

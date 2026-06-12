@@ -1,4 +1,4 @@
-// ATS Accuracy Benchmarking Tool - Measure against Industry Standards
+﻿// ATS Accuracy Benchmarking Tool - Measure against Industry Standards
 export interface AccuracyBenchmark {
   overallAccuracy: number;
   parsingAccuracy: number;
@@ -37,7 +37,7 @@ export class ATSAccuracyBenchmark {
    * Benchmark HireVify ATS against industry standards
    */
   async benchmarkAccuracy(): Promise<AccuracyBenchmark> {
-    console.log('🎯 Starting ATS accuracy benchmarking...');
+    console.log('ðŸŽ¯ Starting ATS accuracy benchmarking...');
     
     const testSuites = await this.runComprehensiveTests();
     const industryComparison = this.compareToIndustryLeaders(testSuites);
@@ -318,7 +318,7 @@ export class ATSAccuracyBenchmark {
       },
       {
         name: 'Bullet Point Recognition',
-        input: '• Developed web applications',
+        input: 'â€¢ Developed web applications',
         expected: 'bullet_point',
         category: 'format',
         weight: 0.05
@@ -657,6 +657,8 @@ export class ATSAccuracyBenchmark {
 }
 
 export const atsAccuracyBenchmark = new ATSAccuracyBenchmark();
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 export interface ConnectivityTestResult {
   success: boolean;
@@ -44,11 +44,11 @@ export async function testIntegrationConnectivity(): Promise<ConnectivityTestRes
     }
   ];
 
-  console.log('🔍 Testing Integration Hub connectivity...');
+  console.log('ðŸ” Testing Integration Hub connectivity...');
 
   for (const endpoint of testEndpoints) {
     try {
-      console.log(`🔍 Testing ${endpoint.name}...`);
+      console.log(`ðŸ” Testing ${endpoint.name}...`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), endpoint.timeout);
@@ -67,7 +67,7 @@ export async function testIntegrationConnectivity(): Promise<ConnectivityTestRes
 
       if (response.ok) {
         const data = await response.json().catch(() => ({ status: 'ok' }));
-        console.log(`✅ ${endpoint.name} successful:`, data);
+        console.log(`âœ… ${endpoint.name} successful:`, data);
         
         return {
           success: true,
@@ -77,7 +77,7 @@ export async function testIntegrationConnectivity(): Promise<ConnectivityTestRes
           timestamp
         };
       } else {
-        console.log(`⚠️ ${endpoint.name} returned ${response.status}`);
+        console.log(`âš ï¸ ${endpoint.name} returned ${response.status}`);
         const errorText = await response.text().catch(() => 'Unknown error');
         
         // Don't fail immediately, try next endpoint
@@ -85,13 +85,13 @@ export async function testIntegrationConnectivity(): Promise<ConnectivityTestRes
       }
     } catch (error) {
       const errorMessage = error.message || 'Unknown error';
-      console.log(`⚠️ ${endpoint.name} failed:`, errorMessage);
+      console.log(`âš ï¸ ${endpoint.name} failed:`, errorMessage);
       
       // Handle specific error types
       if (error.name === 'AbortError') {
-        console.log(`⚠️ ${endpoint.name} timed out after ${endpoint.timeout}ms`);
+        console.log(`âš ï¸ ${endpoint.name} timed out after ${endpoint.timeout}ms`);
       } else if (error instanceof TypeError && errorMessage.includes('fetch')) {
-        console.log(`⚠️ ${endpoint.name} network error:`, errorMessage);
+        console.log(`âš ï¸ ${endpoint.name} network error:`, errorMessage);
       }
       
       // Continue to next endpoint
@@ -124,7 +124,7 @@ export async function testAuthenticatedIntegrationEndpoints(accessToken: string)
   }
 
   try {
-    console.log('🔐 Testing authenticated Integration Hub endpoints...');
+    console.log('ðŸ” Testing authenticated Integration Hub endpoints...');
     
     // Test the integrations list endpoint
     const listUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/integrations/list`;
@@ -145,7 +145,7 @@ export async function testAuthenticatedIntegrationEndpoints(accessToken: string)
 
     if (response.ok) {
       const data = await response.json();
-      console.log('✅ Authenticated Integration Hub test successful:', data);
+      console.log('âœ… Authenticated Integration Hub test successful:', data);
       
       return {
         success: true,
@@ -156,7 +156,7 @@ export async function testAuthenticatedIntegrationEndpoints(accessToken: string)
       };
     } else {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      console.log('❌ Authenticated Integration Hub test failed:', errorData);
+      console.log('âŒ Authenticated Integration Hub test failed:', errorData);
       
       return {
         success: false,
@@ -168,7 +168,7 @@ export async function testAuthenticatedIntegrationEndpoints(accessToken: string)
       };
     }
   } catch (error) {
-    console.error('💥 Authenticated Integration Hub test error:', error);
+    console.error('ðŸ’¥ Authenticated Integration Hub test error:', error);
     
     return {
       success: false,
@@ -202,6 +202,8 @@ export async function quickIntegrationConnectivityTest(): Promise<boolean> {
     return false;
   }
 }
+
+
 
 
 

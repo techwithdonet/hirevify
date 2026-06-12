@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Market Intelligence Mock Data - FOR TESTING ONLY
  * 
- * ⚠️ WARNING: This file contains mock data for testing purposes only.
+ * âš ï¸ WARNING: This file contains mock data for testing purposes only.
  * Do NOT use this data in production or present it as real market intelligence.
  * Real market intelligence requires integration with legitimate data providers.
  */
@@ -190,6 +190,8 @@ export const generateMockHiringTrends = (): HiringTrend[] => [
     }
   }
 ];
+
+
 
 
 

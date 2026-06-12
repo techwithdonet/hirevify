@@ -191,7 +191,7 @@ export function AppRouter({
       return (
         <ProjectManagement 
           onBack={navigation.navigateToRecruiterDashboard}
-          onEditProject={navigation.navigateToPostProject}
+          onEditProject={(project) => navigation.navigateToPostProject(project as any)}
           onViewApplications={navigation.navigateToATS}
         />
       );
@@ -285,7 +285,6 @@ export function AppRouter({
         <RecruiterAnalytics 
           onBack={navigation.navigateToRecruiterDashboard}
           onUpgrade={navigation.navigateToPricing}
-          onAdvancedAnalytics={navigation.navigateToAdvancedAnalytics}
         />
       );
 
@@ -520,7 +519,7 @@ export function AppRouter({
       return (
         <ProjectChallengeVideoRecording 
           onBack={navigation.navigateToCandidateDashboard}
-          onComplete={async (videoData: VideoSubmissionData) => {
+          onComplete={async (videoData: any) => {
             try {
               console.log('Video submission completed:', {
                 projectId: videoData.projectId,
@@ -640,6 +639,9 @@ export function AppRouter({
       );
   }
 }
+
+
+
 
 
 

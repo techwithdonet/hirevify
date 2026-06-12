@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Resume Builder Constants
  * 
  * Shared constants and configuration for AI Resume Builder
@@ -76,6 +76,8 @@ export const MOCK_JOB_TARGET = {
   industry: "technology",
   remote: true
 };
+
+
 
 
 

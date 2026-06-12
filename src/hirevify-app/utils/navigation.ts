@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Navigation Utilities
  * 
  * Centralized navigation logic and authentication requirements
@@ -285,6 +285,8 @@ export class NavigationManager {
     this.setCurrentScreen('one-way-interview');
   };
 }
+
+
 
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enhanced ATS Resume Scanner - Bulletproof Edition
  * 
  * Zero syntax errors, comprehensive functionality
@@ -135,7 +135,7 @@ export function EnhancedATSScanner({
     setProcessingProgress(0);
     
     try {
-      toast.info(`🔬 Analyzing ${validFiles.length} resume(s) with AI...`);
+      toast.info(`ðŸ”¬ Analyzing ${validFiles.length} resume(s) with AI...`);
 
       const newCandidates: ATSCandidate[] = [];
 
@@ -186,7 +186,7 @@ export function EnhancedATSScanner({
       }
 
       setCandidates(prev => [...newCandidates, ...prev]);
-      toast.success(`✅ Successfully analyzed ${newCandidates.length} resume(s)!`);
+      toast.success(`âœ… Successfully analyzed ${newCandidates.length} resume(s)!`);
       
     } catch (error) {
       console.error('ATS processing error:', error);
@@ -516,7 +516,7 @@ export function EnhancedATSScanner({
                             {new Date(candidate.uploadedAt).toLocaleDateString()}
                           </div>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">{candidate.fileName} • {candidate.fileSize}</p>
+                        <p className="text-xs text-gray-400 mt-1">{candidate.fileName} â€¢ {candidate.fileSize}</p>
                       </div>
                     </div>
                     
@@ -602,6 +602,8 @@ export function EnhancedATSScanner({
     </div>
   );
 }
+
+
 
 
 

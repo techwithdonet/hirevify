@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 interface HealthCheckResult {
   success: boolean;
@@ -50,7 +50,7 @@ export class BackendHealthChecker {
     const startTime = Date.now();
 
     try {
-      console.log(`🔍 Testing ${name}: ${url}`);
+      console.log(`ðŸ” Testing ${name}: ${url}`);
 
       const response = await fetch(url, {
         ...options,
@@ -64,7 +64,7 @@ export class BackendHealthChecker {
       const responseTime = Date.now() - startTime;
       clearTimeout(timeoutId);
 
-      console.log(`📊 ${name} response: ${response.status} in ${responseTime}ms`);
+      console.log(`ðŸ“Š ${name} response: ${response.status} in ${responseTime}ms`);
 
       const result: HealthCheckResult = {
         success: response.ok,
@@ -112,7 +112,7 @@ export class BackendHealthChecker {
       clearTimeout(timeoutId);
       const responseTime = Date.now() - startTime;
 
-      console.error(`❌ ${name} failed:`, error.message);
+      console.error(`âŒ ${name} failed:`, error.message);
 
       let errorMessage = error.message;
       if (error.name === 'AbortError') {
@@ -138,7 +138,7 @@ export class BackendHealthChecker {
    * Test basic backend connectivity using the most reliable endpoints
    */
   async testBasicConnectivity(): Promise<HealthCheckResult> {
-    console.log('🏥 Testing basic backend connectivity...');
+    console.log('ðŸ¥ Testing basic backend connectivity...');
 
     // Ordered list of COMPLETELY PUBLIC endpoints to test (most reliable first)
     const endpoints = [
@@ -197,25 +197,25 @@ export class BackendHealthChecker {
         });
 
         if (result.success) {
-          console.log(`✅ Backend connectivity confirmed via ${endpoint.name}`);
+          console.log(`âœ… Backend connectivity confirmed via ${endpoint.name}`);
           return {
             success: true,
             message: `Backend is accessible via ${endpoint.name} (${result.details?.responseTime}ms)`,
             details: result.details
           };
         } else {
-          console.log(`⚠️ ${endpoint.name} failed, trying next...`);
+          console.log(`âš ï¸ ${endpoint.name} failed, trying next...`);
         }
 
       } catch (error) {
         const errorMessage = error.message || 'Unknown error';
-        console.log(`⚠️ ${endpoint.name} error: ${errorMessage}`);
+        console.log(`âš ï¸ ${endpoint.name} error: ${errorMessage}`);
         
         // Handle specific fetch errors
         if (errorMessage.includes('Failed to fetch')) {
-          console.log(`   💡 This is likely a CORS or network connectivity issue`);
+          console.log(`   ðŸ’¡ This is likely a CORS or network connectivity issue`);
         } else if (errorMessage.includes('TypeError')) {
-          console.log(`   💡 This might be a browser security restriction`);
+          console.log(`   ðŸ’¡ This might be a browser security restriction`);
         }
       }
     }
@@ -239,7 +239,7 @@ export class BackendHealthChecker {
    * Test integration service specifically
    */
   async testIntegrationService(): Promise<HealthCheckResult> {
-    console.log('🔗 Testing integration service...');
+    console.log('ðŸ”— Testing integration service...');
 
     // Use PUBLIC integration endpoints that don't require authentication
     const integrationEndpoints = [
@@ -303,7 +303,7 @@ export class BackendHealthChecker {
    * Test authentication flow
    */
   async testAuthentication(accessToken: string): Promise<HealthCheckResult> {
-    console.log('🔐 Testing authentication...');
+    console.log('ðŸ” Testing authentication...');
 
     if (!accessToken) {
       return {
@@ -345,7 +345,7 @@ export class BackendHealthChecker {
     summary: string;
     recommendations: string[];
   }> {
-    console.log('🔍 Running comprehensive health diagnostic...');
+    console.log('ðŸ” Running comprehensive health diagnostic...');
 
     const checks: HealthCheckResult[] = [];
     const recommendations: string[] = [];
@@ -433,6 +433,8 @@ export const testIntegrationService = () => healthChecker.testIntegrationService
 export const testAuthentication = (token: string) => healthChecker.testAuthentication(token);
 export const runFullDiagnostic = (token?: string) => healthChecker.runFullDiagnostic(token);
 export const getDiagnostics = () => healthChecker.getDiagnostics();
+
+
 
 
 

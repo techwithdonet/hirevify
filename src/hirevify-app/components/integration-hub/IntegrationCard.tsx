@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Clock, Settings, RefreshCw, Plus } from 'lucide-react';
@@ -108,6 +108,8 @@ export function IntegrationCard({
     </Card>
   );
 }
+
+
 
 
 

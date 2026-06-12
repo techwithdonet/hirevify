@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 export interface DiagnosticResult {
   test: string;
@@ -16,7 +16,7 @@ export interface DiagnosticResult {
 export async function runBackendDiagnostics(): Promise<DiagnosticResult[]> {
   const results: DiagnosticResult[] = [];
   
-  console.log('🔍 Starting comprehensive backend diagnostics...');
+  console.log('ðŸ” Starting comprehensive backend diagnostics...');
   
   // Test 1: Basic server connectivity
   const basicTest = await testBasicServerConnectivity();
@@ -34,7 +34,7 @@ export async function runBackendDiagnostics(): Promise<DiagnosticResult[]> {
   const corsTest = await testCORSHeaders();
   results.push(corsTest);
   
-  console.log('🔍 Backend diagnostics completed');
+  console.log('ðŸ” Backend diagnostics completed');
   return results;
 }
 
@@ -43,7 +43,7 @@ async function testBasicServerConnectivity(): Promise<DiagnosticResult> {
   const startTime = Date.now();
   
   try {
-    console.log('🔍 Testing basic server connectivity...');
+    console.log('ðŸ” Testing basic server connectivity...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -62,7 +62,7 @@ async function testBasicServerConnectivity(): Promise<DiagnosticResult> {
     
     if (response.ok) {
       const data = await response.json().catch(() => null);
-      console.log('✅ Basic server connectivity successful:', data);
+      console.log('âœ… Basic server connectivity successful:', data);
       
       return {
         test: 'Basic Server Connectivity',
@@ -74,7 +74,7 @@ async function testBasicServerConnectivity(): Promise<DiagnosticResult> {
       };
     } else {
       const errorText = await response.text().catch(() => 'No response body');
-      console.log('❌ Basic server connectivity failed:', response.status, errorText);
+      console.log('âŒ Basic server connectivity failed:', response.status, errorText);
       
       return {
         test: 'Basic Server Connectivity',
@@ -88,7 +88,7 @@ async function testBasicServerConnectivity(): Promise<DiagnosticResult> {
     }
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error('💥 Basic server connectivity error:', error);
+    console.error('ðŸ’¥ Basic server connectivity error:', error);
     
     return {
       test: 'Basic Server Connectivity',
@@ -127,7 +127,7 @@ async function testMainHealthEndpoints(): Promise<DiagnosticResult[]> {
     const startTime = Date.now();
     
     try {
-      console.log(`🔍 Testing ${endpoint.name}...`);
+      console.log(`ðŸ” Testing ${endpoint.name}...`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -146,7 +146,7 @@ async function testMainHealthEndpoints(): Promise<DiagnosticResult[]> {
       
       if (response.ok) {
         const data = await response.text().catch(() => 'Success');
-        console.log(`✅ ${endpoint.name} successful`);
+        console.log(`âœ… ${endpoint.name} successful`);
         
         results.push({
           test: endpoint.name,
@@ -157,7 +157,7 @@ async function testMainHealthEndpoints(): Promise<DiagnosticResult[]> {
           url: endpoint.url
         });
       } else {
-        console.log(`❌ ${endpoint.name} failed:`, response.status);
+        console.log(`âŒ ${endpoint.name} failed:`, response.status);
         
         results.push({
           test: endpoint.name,
@@ -170,7 +170,7 @@ async function testMainHealthEndpoints(): Promise<DiagnosticResult[]> {
       }
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      console.log(`💥 ${endpoint.name} error:`, error.message);
+      console.log(`ðŸ’¥ ${endpoint.name} error:`, error.message);
       
       results.push({
         test: endpoint.name,
@@ -216,7 +216,7 @@ async function testIntegrationEndpoints(): Promise<DiagnosticResult[]> {
     const startTime = Date.now();
     
     try {
-      console.log(`🔍 Testing ${endpoint.name}...`);
+      console.log(`ðŸ” Testing ${endpoint.name}...`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -236,7 +236,7 @@ async function testIntegrationEndpoints(): Promise<DiagnosticResult[]> {
       
       if (response.ok) {
         const data = await response.json().catch(() => ({ status: 'ok' }));
-        console.log(`✅ ${endpoint.name} successful:`, data);
+        console.log(`âœ… ${endpoint.name} successful:`, data);
         
         results.push({
           test: endpoint.name,
@@ -248,7 +248,7 @@ async function testIntegrationEndpoints(): Promise<DiagnosticResult[]> {
         });
       } else {
         const errorText = await response.text().catch(() => 'No response');
-        console.log(`❌ ${endpoint.name} failed:`, response.status, errorText);
+        console.log(`âŒ ${endpoint.name} failed:`, response.status, errorText);
         
         results.push({
           test: endpoint.name,
@@ -262,7 +262,7 @@ async function testIntegrationEndpoints(): Promise<DiagnosticResult[]> {
       }
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      console.log(`💥 ${endpoint.name} error:`, error.message);
+      console.log(`ðŸ’¥ ${endpoint.name} error:`, error.message);
       
       results.push({
         test: endpoint.name,
@@ -283,7 +283,7 @@ async function testCORSHeaders(): Promise<DiagnosticResult> {
   const startTime = Date.now();
   
   try {
-    console.log('🔍 Testing CORS headers...');
+    console.log('ðŸ” Testing CORS headers...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -308,7 +308,7 @@ async function testCORSHeaders(): Promise<DiagnosticResult> {
       'Access-Control-Allow-Headers': optionsResponse.headers.get('Access-Control-Allow-Headers'),
     };
     
-    console.log('🔍 CORS headers:', corsHeaders);
+    console.log('ðŸ” CORS headers:', corsHeaders);
     
     if (optionsResponse.ok || optionsResponse.status === 200) {
       return {
@@ -331,7 +331,7 @@ async function testCORSHeaders(): Promise<DiagnosticResult> {
     }
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error('💥 CORS test error:', error);
+    console.error('ðŸ’¥ CORS test error:', error);
     
     return {
       test: 'CORS Headers Test',
@@ -365,7 +365,7 @@ export async function isBackendReachable(): Promise<boolean> {
       });
       
       if (response.ok) {
-        console.log('✅ Backend is reachable via:', url);
+        console.log('âœ… Backend is reachable via:', url);
         return true;
       }
     } catch {
@@ -373,9 +373,11 @@ export async function isBackendReachable(): Promise<boolean> {
     }
   }
   
-  console.log('❌ Backend is not reachable via any endpoint');
+  console.log('âŒ Backend is not reachable via any endpoint');
   return false;
 }
+
+
 
 
 

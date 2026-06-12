@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -23,7 +23,7 @@ export interface DiagnosisReport {
 }
 
 export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
-  console.log('🔍 Starting comprehensive endpoint diagnosis...');
+  console.log('ðŸ” Starting comprehensive endpoint diagnosis...');
   
   const endpoints = [
     // Ultra-simple endpoints (absolutely no middleware)
@@ -55,7 +55,7 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
   let failedCount = 0;
   
   for (const endpoint of endpoints) {
-    console.log(`🔍 Testing ${endpoint.name}...`);
+    console.log(`ðŸ” Testing ${endpoint.name}...`);
     
     const startTime = Date.now();
     let diagnosis: EndpointDiagnosis;
@@ -95,10 +95,10 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
       
       if (response.ok) {
         successfulCount++;
-        console.log(`✅ ${endpoint.name}: ${response.status} (${responseTime}ms)`);
+        console.log(`âœ… ${endpoint.name}: ${response.status} (${responseTime}ms)`);
       } else {
         failedCount++;
-        console.log(`❌ ${endpoint.name}: ${response.status} (${responseTime}ms)`);
+        console.log(`âŒ ${endpoint.name}: ${response.status} (${responseTime}ms)`);
       }
       
     } catch (error) {
@@ -114,7 +114,7 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
       };
       
       failedCount++;
-      console.log(`💥 ${endpoint.name}: ${error.message} (${responseTime}ms)`);
+      console.log(`ðŸ’¥ ${endpoint.name}: ${error.message} (${responseTime}ms)`);
     }
     
     results.push(diagnosis);
@@ -140,19 +140,19 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
   if (!mainServerWorking) {
     recommendations.push('Critical: Main server is not responding. Check if the Supabase Edge Function is deployed and running.');
   } else {
-    recommendations.push('✅ Main server is working correctly.');
+    recommendations.push('âœ… Main server is working correctly.');
   }
   
   if (mainServerWorking && !backupEndpointsWorking) {
     recommendations.push('Warning: Integration backup endpoints are not working. Check main server routing.');
   } else if (backupEndpointsWorking) {
-    recommendations.push('✅ Integration backup endpoints are working.');
+    recommendations.push('âœ… Integration backup endpoints are working.');
   }
   
   if (mainServerWorking && backupEndpointsWorking && !serviceEndpointsWorking) {
     recommendations.push('Issue: Integration service module has problems. Check integration service routing and auth.');
   } else if (serviceEndpointsWorking) {
-    recommendations.push('✅ Integration service is working correctly.');
+    recommendations.push('âœ… Integration service is working correctly.');
   }
   
   // Check for specific 401 patterns
@@ -177,7 +177,7 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
     recommendations
   };
   
-  console.log('🔍 Endpoint diagnosis completed:', {
+  console.log('ðŸ” Endpoint diagnosis completed:', {
     total: report.totalEndpoints,
     successful: report.successfulEndpoints,
     failed: report.failedEndpoints,
@@ -188,18 +188,18 @@ export async function diagnoseAllEndpoints(): Promise<DiagnosisReport> {
 }
 
 export function formatDiagnosisReport(report: DiagnosisReport): string {
-  let output = '🔍 Endpoint Diagnosis Report\n\n';
+  let output = 'ðŸ” Endpoint Diagnosis Report\n\n';
   
-  output += `📊 Summary:\n`;
-  output += `  • Total Endpoints: ${report.totalEndpoints}\n`;
-  output += `  • Successful: ${report.successfulEndpoints}\n`;
-  output += `  • Failed: ${report.failedEndpoints}\n`;
-  output += `  • Success Rate: ${Math.round((report.successfulEndpoints / report.totalEndpoints) * 100)}%\n`;
-  output += `  • Timestamp: ${report.timestamp}\n\n`;
+  output += `ðŸ“Š Summary:\n`;
+  output += `  â€¢ Total Endpoints: ${report.totalEndpoints}\n`;
+  output += `  â€¢ Successful: ${report.successfulEndpoints}\n`;
+  output += `  â€¢ Failed: ${report.failedEndpoints}\n`;
+  output += `  â€¢ Success Rate: ${Math.round((report.successfulEndpoints / report.totalEndpoints) * 100)}%\n`;
+  output += `  â€¢ Timestamp: ${report.timestamp}\n\n`;
   
-  output += `📋 Detailed Results:\n`;
+  output += `ðŸ“‹ Detailed Results:\n`;
   for (const result of report.results) {
-    const status = result.success ? '✅' : '❌';
+    const status = result.success ? 'âœ…' : 'âŒ';
     const timing = `${result.responseTime}ms`;
     const statusCode = result.status > 0 ? `HTTP ${result.status}` : 'No Response';
     
@@ -213,9 +213,9 @@ export function formatDiagnosisReport(report: DiagnosisReport): string {
   }
   
   if (report.recommendations.length > 0) {
-    output += `\n💡 Recommendations:\n`;
+    output += `\nðŸ’¡ Recommendations:\n`;
     for (const recommendation of report.recommendations) {
-      output += `  • ${recommendation}\n`;
+      output += `  â€¢ ${recommendation}\n`;
     }
   }
   
@@ -252,6 +252,8 @@ export async function quickHealthCheck(): Promise<{ working: string[]; failing: 
   
   return { working, failing };
 }
+
+
 
 
 

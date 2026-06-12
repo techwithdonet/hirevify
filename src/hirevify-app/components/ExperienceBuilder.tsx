@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Briefcase, Calendar, CheckCircle, Clock, Star, Users, Zap, DollarSign, Building, MapPin, Play, BookOpen, Award, TrendingUp, Target } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -373,7 +373,7 @@ export function ExperienceBuilder({ onBack, onUpgrade }: ExperienceBuilderProps)
                           <CardTitle className="text-lg mb-2">{project.title}</CardTitle>
                           <div className="flex items-center text-sm text-muted-foreground mb-2">
                             <Building className="w-4 h-4 mr-1" />
-                            {project.company} • {project.companySize}
+                            {project.company} â€¢ {project.companySize}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
                             <MapPin className="w-4 h-4 mr-1" />
@@ -483,7 +483,7 @@ export function ExperienceBuilder({ onBack, onUpgrade }: ExperienceBuilderProps)
                             onClick={() => applyToProject(project.id)}
                           >
                             <Play className="w-4 h-4 mr-2" />
-                            Apply Now • {project.applicants} applied
+                            Apply Now â€¢ {project.applicants} applied
                           </Button>
                         )}
                       </div>
@@ -508,7 +508,7 @@ export function ExperienceBuilder({ onBack, onUpgrade }: ExperienceBuilderProps)
                           <div>
                             <CardTitle className="text-lg mb-2">{project.title}</CardTitle>
                             <div className="text-sm text-muted-foreground mb-2">
-                              {project.company} • {project.location}
+                              {project.company} â€¢ {project.location}
                             </div>
                             {getStatusBadge(record.status)}
                           </div>
@@ -786,6 +786,8 @@ export function ExperienceBuilder({ onBack, onUpgrade }: ExperienceBuilderProps)
     </div>
   );
 }
+
+
 
 
 

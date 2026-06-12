@@ -1,4 +1,4 @@
-// Quick integration test that can be run from browser console
+﻿// Quick integration test that can be run from browser console
 // Usage: copy and paste this entire function into browser console and run quickIntegrationTest()
 
 import { apiBaseUrl, projectId } from '../supabase/info';
@@ -25,11 +25,11 @@ function getErrorMessage(error: unknown) {
 }
 
 export async function quickIntegrationTest() {
-  console.log('🔍 Quick Integration Test Starting...');
-  console.log('📍 Project ID:', projectId);
+  console.log('ðŸ” Quick Integration Test Starting...');
+  console.log('ðŸ“ Project ID:', projectId);
   
   const baseUrl = apiBaseUrl;
-  console.log('🌐 Base URL:', baseUrl);
+  console.log('ðŸŒ Base URL:', baseUrl);
   
   const endpoints = [
     '/ultra-integration-health',
@@ -43,7 +43,7 @@ export async function quickIntegrationTest() {
   
   for (const endpoint of endpoints) {
     const url = baseUrl + endpoint;
-    console.log(`\n🔄 Testing: ${endpoint}`);
+    console.log(`\nðŸ”„ Testing: ${endpoint}`);
     
     try {
       const response = await fetch(url, {
@@ -66,17 +66,17 @@ export async function quickIntegrationTest() {
       if (response.ok) {
         try {
           result.data = await response.json();
-          console.log(`✅ ${endpoint}: SUCCESS (${response.status})`);
+          console.log(`âœ… ${endpoint}: SUCCESS (${response.status})`);
           console.log('   Data:', result.data);
         } catch {
           result.text = await response.text();
-          console.log(`✅ ${endpoint}: SUCCESS (${response.status}) - Text response`);
+          console.log(`âœ… ${endpoint}: SUCCESS (${response.status}) - Text response`);
           console.log('   Text:', result.text);
         }
       } else {
         const errorText = await response.text();
         result.error = errorText;
-        console.log(`❌ ${endpoint}: FAILED (${response.status})`);
+        console.log(`âŒ ${endpoint}: FAILED (${response.status})`);
         console.log('   Error:', errorText);
         console.log('   Headers:', result.headers);
       }
@@ -94,7 +94,7 @@ export async function quickIntegrationTest() {
       };
       
       results.push(result);
-      console.log(`❌ ${endpoint}: NETWORK ERROR`);
+      console.log(`âŒ ${endpoint}: NETWORK ERROR`);
       console.log('   Error:', errorMessage);
     }
   }
@@ -103,17 +103,17 @@ export async function quickIntegrationTest() {
   const working = results.filter(r => r.ok);
   const failed = results.filter(r => !r.ok);
   
-  console.log('\n📊 SUMMARY:');
-  console.log(`✅ Working: ${working.length}/${results.length}`);
-  console.log(`❌ Failed: ${failed.length}/${results.length}`);
+  console.log('\nðŸ“Š SUMMARY:');
+  console.log(`âœ… Working: ${working.length}/${results.length}`);
+  console.log(`âŒ Failed: ${failed.length}/${results.length}`);
   
   if (working.length > 0) {
-    console.log('\n✅ Working endpoints:');
+    console.log('\nâœ… Working endpoints:');
     working.forEach(r => console.log(`   - ${r.endpoint} (${r.status})`));
   }
   
   if (failed.length > 0) {
-    console.log('\n❌ Failed endpoints:');
+    console.log('\nâŒ Failed endpoints:');
     failed.forEach(r => console.log(`   - ${r.endpoint} (${r.status || 'Network Error'})`));
     
     // Analyze the most common error
@@ -121,7 +121,7 @@ export async function quickIntegrationTest() {
     const status404Count = failed.filter(r => r.status === 404).length;
     const networkErrorCount = failed.filter(r => r.status === null).length;
     
-    console.log('\n🔍 ERROR ANALYSIS:');
+    console.log('\nðŸ” ERROR ANALYSIS:');
     if (status401Count > 0) {
       console.log(`   - ${status401Count} endpoints returning 401 (authentication issue)`);
       console.log('   - SOLUTION: Check if endpoints are properly defined as public before middleware');
@@ -137,7 +137,7 @@ export async function quickIntegrationTest() {
   }
   
   if (working.length === 0) {
-    console.log('\n💡 RECOMMENDED ACTIONS:');
+    console.log('\nðŸ’¡ RECOMMENDED ACTIONS:');
     console.log('1. Check if the Supabase Edge Function is deployed');
     console.log('2. Verify the project ID is correct');
     console.log('3. Check Supabase Edge Function logs for errors');
@@ -155,8 +155,10 @@ export async function quickIntegrationTest() {
 // Make it available globally for easy console access
 if (typeof window !== 'undefined') {
   window.quickIntegrationTest = quickIntegrationTest;
-  console.log('🔧 Quick Integration Test loaded. Run quickIntegrationTest() in console to test endpoints.');
+  console.log('ðŸ”§ Quick Integration Test loaded. Run quickIntegrationTest() in console to test endpoints.');
 }
+
+
 
 
 

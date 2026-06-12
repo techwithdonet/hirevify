@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { 
@@ -53,7 +53,7 @@ export function ChatbotIntro({ userType, onClose }: ChatbotIntroProps) {
             <Bot className="w-8 h-8 text-primary" />
           </div>
           <CardTitle className="text-xl font-bold text-foreground">
-            Meet Your AI Assistant! 🤖
+            Meet Your AI Assistant! ðŸ¤–
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             I'm here to help you navigate HireVify and make the most of every feature.
@@ -117,6 +117,8 @@ export function ChatbotIntro({ userType, onClose }: ChatbotIntroProps) {
     </div>
   );
 }
+
+
 
 
 

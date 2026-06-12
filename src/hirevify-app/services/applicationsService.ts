@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Applications Service
  * Handles all job application operations from Supabase
  */
@@ -145,65 +145,52 @@ class ApplicationsService {
   /**
    * Get applications for a recruiter's jobs
    */
-  async getRecruiterApplications(recruiterId: string) {
-    const { data, error } = await this.supabase
-      .from('applications')
-      .select(
-        `
-        *,
-        job:job_id(id, title, recruiter_id),
-        candidate_profile:candidate_id(full_name, email, avatar_url)
-      `
-      )
-      .eq('job_id.recruiter_id', recruiterId)
-      .order('submitted_at', { ascending: false })
-      .returns<ApplicationWithDetails[]>();
+ async getRecruiterApplications(recruiterId: string) {
+  // Step 1: Get recruiter's jobs first
+  const { data: jobs, error: jobsError } = await this.supabase
+    .from('jobs')
+    .select('id, title, recruiter_id')
+    .eq('recruiter_id', recruiterId);
 
-    if (error) {
-      console.error('Error fetching recruiter applications:', error);
-      return { data: [], error };
-    }
-
-    return { data: data || [], error: null };
+  if (jobsError) {
+    console.error('Error fetching recruiter jobs for applications:', jobsError);
+    return { data: [], error: jobsError };
   }
 
-  /**
-   * Update application status
-   */
-  async updateApplicationStatus(
-    applicationId: string,
-    status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn',
-    notes?: string
-  ) {
-    const updates: any = { status, reviewed_at: new Date().toISOString() };
+  const jobIds = (jobs || []).map((job) => job.id);
 
-    if (status === 'rejected') {
-      updates.rejected_at = new Date().toISOString();
-    } else if (status === 'offer') {
-      // offer_accepted_at is set when candidate accepts, not when offer is made
-    } else if (status === 'hired') {
-      updates.offer_accepted_at = new Date().toISOString();
-    }
-
-    if (notes) {
-      updates.recruiter_notes = notes;
-    }
-
-    const { data, error } = await this.supabase
-      .from('applications')
-      .update(updates)
-      .eq('id', applicationId)
-      .select()
-      .single<Application>();
-
-    if (error) {
-      console.error('Error updating application status:', error);
-      return { data: null, error };
-    }
-
-    return { data, error: null };
+  if (jobIds.length === 0) {
+    return { data: [], error: null };
   }
 
+  // Step 2: Get applications for those jobs without broken Supabase joins
+  const { data, error } = await this.supabase
+    .from('applications')
+    .select('*')
+    .in('job_id', jobIds)
+    .order('submitted_at', { ascending: false })
+    .returns<Application[]>();
+
+  if (error) {
+    console.error('Error fetching recruiter applications:', error);
+    return { data: [], error };
+  }
+
+  const applicationsWithJobs = (data || []).map((application) => {
+    const job = jobs?.find((j) => j.id === application.job_id);
+
+    return {
+      ...application,
+      job: job
+        ? {
+            title: job.title,
+          }
+        : undefined,
+    };
+  });
+
+  return { data: applicationsWithJobs as ApplicationWithDetails[], error: null };
+}
   /**
    * Withdraw an application
    */
@@ -290,3 +277,5 @@ class ApplicationsService {
 }
 
 export const applicationsService = new ApplicationsService();
+
+

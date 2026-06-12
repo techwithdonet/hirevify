@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { ArrowLeft, BookOpen, Play, Download, Star, Clock, Users, Award, CheckCircle, TrendingUp, Brain, Target, Lightbulb, BarChart3, Crown, Search, Filter, Eye, ChevronRight, FileText, Video, Monitor, Headphones, ExternalLink, ChevronLeft, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -131,18 +131,18 @@ const generateBiasPreventionChecklist = () => {
 Comprehensive Guide to Fair and Inclusive Recruitment
 
 === JOB POSTING REVIEW ===
-□ Remove unnecessary degree requirements
-□ Use inclusive language throughout
-□ Focus on skills rather than years of experience
-□ Include diversity and inclusion statement
-□ Specify available accommodations
+â–¡ Remove unnecessary degree requirements
+â–¡ Use inclusive language throughout
+â–¡ Focus on skills rather than years of experience
+â–¡ Include diversity and inclusion statement
+â–¡ Specify available accommodations
 
 === INTERVIEW PROCESS ===
-□ Use structured interview format
-□ Ask consistent questions to all candidates
-□ Form diverse interview panels
-□ Document decision-making rationale
-□ Provide equal time to all candidates
+â–¡ Use structured interview format
+â–¡ Ask consistent questions to all candidates
+â–¡ Form diverse interview panels
+â–¡ Document decision-making rationale
+â–¡ Provide equal time to all candidates
 
 This checklist ensures fair and inclusive hiring practices throughout your recruitment process.`;
 };
@@ -1307,6 +1307,8 @@ export function EmployerEducation({ onBack, onUpgrade }: EmployerEducationProps)
     </div>
   );
 }
+
+
 
 
 

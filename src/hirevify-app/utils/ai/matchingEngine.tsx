@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HireVify AI Matching Engine
  * 
  * A sophisticated matching system that analyzes skills, project requirements,
@@ -617,6 +617,8 @@ export class AIMatchingEngine {
 
 // Singleton instance for the application
 export const aiMatchingEngine = new AIMatchingEngine();
+
+
 
 
 

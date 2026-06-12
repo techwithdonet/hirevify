@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -78,7 +78,7 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
 
     const { data, error } = await portfolioService.addPortfolioItem({
       title: newItem.title,
-      description: newItem.description,
+      description: newItem.description ?? '',
       projectUrl: (newItem as any).url || (newItem as any).projectUrl || '',
       githubUrl: (newItem as any).githubUrl || '',
       imageUrl: (newItem as any).imageUrl || '',
@@ -113,7 +113,7 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
 
     const { data, error } = await portfolioService.updatePortfolioItem(editingItem.id, {
       title: updatedItem.title,
-      description: updatedItem.description,
+      description: updatedItem.description ?? undefined,
       projectUrl: (updatedItem as any).url || (updatedItem as any).projectUrl || '',
       githubUrl: (updatedItem as any).githubUrl || '',
       imageUrl: (updatedItem as any).imageUrl || '',
@@ -313,3 +313,5 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
     </div>
   );
 }
+
+

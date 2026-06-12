@@ -1,4 +1,4 @@
-export type Screen = 
+﻿export type Screen = 
   | 'homepage'
   | 'recruiter-dashboard'
   | 'recruiter-post-project'
@@ -86,6 +86,8 @@ export interface VideoSubmissionData {
   duration: number;
   timestamp: number;
 }
+
+
 
 
 

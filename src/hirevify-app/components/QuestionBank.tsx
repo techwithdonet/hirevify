@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Search, Filter, Edit, Trash2, Copy, Eye, BookOpen, Tag, Clock, Target, AlertCircle } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Search, Filter, Edit, Trash2, Copy, Eye, BookOpen, Tag, Clock, Target, AlertCircle , CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -53,7 +53,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
     text: '',
     type: 'single-choice' as Question['type'],
     options: ['', '', '', ''],
-    correctAnswer: '',
+    correctAnswer: "" as string | string[],
     explanation: '',
     skill: '',
     category: '',
@@ -195,7 +195,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
       text: '',
       type: 'single-choice',
       options: ['', '', '', ''],
-      correctAnswer: '',
+      correctAnswer: "" as string | string[],
       explanation: '',
       skill: '',
       category: '',
@@ -310,9 +310,9 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'single-choice': return '◉';
-      case 'multiple-choice': return '☐';
-      case 'true-false': return '◯';
+      case 'single-choice': return 'â—‰';
+      case 'multiple-choice': return 'â˜';
+      case 'true-false': return 'â—¯';
       default: return '?';
     }
   };
@@ -666,7 +666,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
                     <div key={index} className="flex items-center space-x-2">
                       <Checkbox
                         id={`correct-${index}`}
-                        checked={(formData.correctAnswer as string[])?.includes(option) || false}
+                        checked={(formData.correctAnswer as unknown as string[])?.includes(option) || false}
                         onCheckedChange={(checked) => {
                           const currentAnswers = Array.isArray(formData.correctAnswer) 
                             ? formData.correctAnswer 
@@ -783,7 +783,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
                   {selectedQuestion.options.map((option, index) => (
                     <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50">
                       <span className="text-sm font-mono w-6 text-center">
-                        {selectedQuestion.type === 'multiple-choice' ? '☐' : '○'}
+                        {selectedQuestion.type === 'multiple-choice' ? 'â˜' : 'â—‹'}
                       </span>
                       <span className="text-sm">{option}</span>
                       {(Array.isArray(selectedQuestion.correctAnswer) 
@@ -826,6 +826,11 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
     </div>
   );
 }
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-import { Button } from './ui/button';
+﻿import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Video, Shield, Clock, Briefcase } from 'lucide-react';
 
@@ -73,10 +73,10 @@ export function CandidateJoinPage({ onJoinInterview, interviewLink }: CandidateJ
           <div className="text-left">
             <h3 className="text-foreground mb-3">Before you start:</h3>
             <ul className="text-muted-foreground text-sm space-y-2">
-              <li>• Ensure your camera and microphone are working</li>
-              <li>• Find a quiet, well-lit location</li>
-              <li>• Use a stable internet connection</li>
-              <li>• Have a copy of your resume available</li>
+              <li>â€¢ Ensure your camera and microphone are working</li>
+              <li>â€¢ Find a quiet, well-lit location</li>
+              <li>â€¢ Use a stable internet connection</li>
+              <li>â€¢ Have a copy of your resume available</li>
             </ul>
           </div>
         </div>
@@ -84,6 +84,8 @@ export function CandidateJoinPage({ onJoinInterview, interviewLink }: CandidateJ
     </div>
   );
 }
+
+
 
 
 

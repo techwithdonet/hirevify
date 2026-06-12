@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 // Enterprise ATS Scoring Engine - 95% Accuracy Target
 import { EnterpriseResumeData } from './enterpriseDocumentParser';
 import { aiService } from '../ai/openai-service';
@@ -68,7 +69,7 @@ export class EnterpriseATSScorer {
     experienceLevel?: string
   ): Promise<EnterpriseATSScore> {
     
-    console.log('🏢 Starting enterprise ATS scoring...');
+    console.log('ðŸ¢ Starting enterprise ATS scoring...');
 
     try {
       // Parallel execution of scoring components
@@ -111,11 +112,11 @@ export class EnterpriseATSScorer {
         confidenceLevel: this.calculateConfidenceLevel(resumeData.extractionMetadata)
       };
 
-      console.log('✅ Enterprise scoring completed with overall score:', overall);
+      console.log('âœ… Enterprise scoring completed with overall score:', overall);
       return enterpriseScore;
 
     } catch (error) {
-      console.error('❌ Enterprise scoring failed:', error);
+      console.error('âŒ Enterprise scoring failed:', error);
       
       // Fallback to basic scoring
       return this.fallbackScoring(resumeData);
@@ -687,6 +688,9 @@ Provide honest, professional assessment with specific reasoning.
 }
 
 export const enterpriseATSScorer = new EnterpriseATSScorer();
+
+
+
 
 
 

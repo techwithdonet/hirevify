@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI Skills Development System
  * 
  * Intelligent skills development platform that analyzes candidate profiles,
@@ -969,6 +969,8 @@ export function AISkillsDevelopment({ onBack, onUpgrade }: AISkillsDevelopmentPr
     </div>
   );
 }
+
+
 
 
 

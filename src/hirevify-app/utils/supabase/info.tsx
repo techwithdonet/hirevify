@@ -1,4 +1,4 @@
-import {
+﻿import {
   supabaseAnonKey,
   supabaseFunctionsUrl,
   supabaseProjectId,
@@ -15,3 +15,5 @@ export const storageApiUrl = supabaseStorageUrl;
 export const functionsApiUrl = supabaseFunctionsUrl;
 export const makeServerFunctionName = "make-server-d4feca44";
 export const apiBaseUrl = `${functionsApiUrl}/${makeServerFunctionName}`;
+
+

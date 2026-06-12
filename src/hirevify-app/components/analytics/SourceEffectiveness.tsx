@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { PieChart } from 'lucide-react';
 
 export function SourceEffectiveness() {
@@ -21,11 +21,11 @@ export function SourceEffectiveness() {
             Data is collected when candidates submit applications.
           </p>
           <ul className="text-purple-700 text-sm space-y-1">
-            <li>• Direct Applications: Company website applications</li>
-            <li>• Referrals: Employee and network referrals</li>
-            <li>• Social Media: Link, MessageCircle, etc.</li>
-            <li>• Job Boards: Indeed, Glassdoor, etc.</li>
-            <li>• Conversion rates calculated from actual hires</li>
+            <li>â€¢ Direct Applications: Company website applications</li>
+            <li>â€¢ Referrals: Employee and network referrals</li>
+            <li>â€¢ Social Media: Link, MessageCircle, etc.</li>
+            <li>â€¢ Job Boards: Indeed, Glassdoor, etc.</li>
+            <li>â€¢ Conversion rates calculated from actual hires</li>
           </ul>
           <p className="text-purple-700 text-sm mt-3 font-medium">
             All source data based on real application tracking.
@@ -35,6 +35,8 @@ export function SourceEffectiveness() {
     </Card>
   );
 }
+
+
 
 
 

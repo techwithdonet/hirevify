@@ -1,4 +1,4 @@
-// ENHANCED Professional ATS Document Parser with COMPREHENSIVE Name Extraction
+﻿// ENHANCED Professional ATS Document Parser with COMPREHENSIVE Name Extraction
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 
@@ -132,7 +132,7 @@ export class EnhancedDocumentParser {
   private extractNameFromDocument(text: string): string | undefined {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    console.log('🔍 ENHANCED: Scanning entire document for name patterns...');
+    console.log('ðŸ” ENHANCED: Scanning entire document for name patterns...');
     
     // Strategy 1: Look for explicit name labels/sections throughout the document
     const namePatterns = [
@@ -158,7 +158,7 @@ export class EnhancedDocumentParser {
         if (match && match[1]) {
           const extractedName = this.cleanExtractedName(match[1]);
           if (extractedName && this.isValidName(extractedName)) {
-            console.log(`✅ Found name via pattern on line ${i + 1}: "${extractedName}" from: "${line}"`);
+            console.log(`âœ… Found name via pattern on line ${i + 1}: "${extractedName}" from: "${line}"`);
             return extractedName;
           }
         }
@@ -180,7 +180,7 @@ export class EnhancedDocumentParser {
         if (headerPattern.test(currentLine)) {
           const extractedName = this.cleanExtractedName(nextLine);
           if (extractedName && this.isValidName(extractedName)) {
-            console.log(`✅ Found name after section header on line ${i + 2}: "${extractedName}" after header: "${currentLine}"`);
+            console.log(`âœ… Found name after section header on line ${i + 2}: "${extractedName}" after header: "${currentLine}"`);
             return extractedName;
           }
         }
@@ -200,7 +200,7 @@ export class EnhancedDocumentParser {
       if (match && match[1]) {
         const extractedName = this.cleanExtractedName(match[1]);
         if (extractedName && this.isValidName(extractedName)) {
-          console.log(`✅ Found name via key-value pattern: "${extractedName}"`);
+          console.log(`âœ… Found name via key-value pattern: "${extractedName}"`);
           return extractedName;
         }
       }
@@ -218,7 +218,7 @@ export class EnhancedDocumentParser {
       if (match && match[1]) {
         const extractedName = this.cleanExtractedName(match[1]);
         if (extractedName && this.isValidName(extractedName)) {
-          console.log(`✅ Found name via table pattern: "${extractedName}"`);
+          console.log(`âœ… Found name via table pattern: "${extractedName}"`);
           return extractedName;
         }
       }
@@ -235,7 +235,7 @@ export class EnhancedDocumentParser {
     for (const line of firstValidLines) {
       const extractedName = this.cleanExtractedName(line);
       if (extractedName && this.isValidName(extractedName)) {
-        console.log(`✅ Found name via enhanced first-line analysis: "${extractedName}"`);
+        console.log(`âœ… Found name via enhanced first-line analysis: "${extractedName}"`);
         return extractedName;
       }
     }
@@ -252,7 +252,7 @@ export class EnhancedDocumentParser {
       if (match && match[1]) {
         const extractedName = this.cleanExtractedName(match[1]);
         if (extractedName && this.isValidName(extractedName)) {
-          console.log(`✅ Found name via context pattern: "${extractedName}"`);
+          console.log(`âœ… Found name via context pattern: "${extractedName}"`);
           return extractedName;
         }
       }
@@ -270,13 +270,13 @@ export class EnhancedDocumentParser {
       if (match && match[1]) {
         const extractedName = this.cleanExtractedName(match[1]);
         if (extractedName && this.isValidName(extractedName)) {
-          console.log(`✅ Found name via emphasis pattern: "${extractedName}"`);
+          console.log(`âœ… Found name via emphasis pattern: "${extractedName}"`);
           return extractedName;
         }
       }
     }
     
-    console.log('⚠️ No name found using any of the 7 extraction strategies');
+    console.log('âš ï¸ No name found using any of the 7 extraction strategies');
     return undefined;
   }
 
@@ -339,11 +339,11 @@ export class EnhancedDocumentParser {
       const properCaseName = words.map(word => 
         word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
       ).join(' ');
-      console.log(`✓ Name validation passed (converted to proper case): "${properCaseName}"`);
+      console.log(`âœ“ Name validation passed (converted to proper case): "${properCaseName}"`);
       return true;
     }
     
-    console.log(`✓ Name validation passed: "${name}"`);
+    console.log(`âœ“ Name validation passed: "${name}"`);
     return true;
   }
 
@@ -430,7 +430,7 @@ export class EnhancedDocumentParser {
       /^\s*[A-Z][a-z]+(\s+[A-Z][a-z]+)*\s*$/.test(line) // Title Case headers
     );
 
-    const hasBulletPoints = text.includes('•') || text.includes('◦') || text.includes('-');
+    const hasBulletPoints = text.includes('â€¢') || text.includes('â—¦') || text.includes('-');
     
     // Font consistency (simplified - would need more complex analysis)
     const fontConsistency = hasHeaders && hasBulletPoints ? 0.8 : 0.6;
@@ -448,6 +448,8 @@ export class EnhancedDocumentParser {
 }
 
 export const enhancedDocumentParser = new EnhancedDocumentParser();
+
+
 
 
 

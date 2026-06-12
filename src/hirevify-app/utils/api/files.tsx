@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info'
+﻿import { projectId, publicAnonKey } from '../supabase/info'
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`
 
@@ -164,7 +164,7 @@ export class FilesAPI {
     targetIndustry?: string, 
     accessToken?: string
   ): Promise<ATSAnalysisResult> {
-    console.log('🚀 FilesAPI.processResumeATS called with:', {
+    console.log('ðŸš€ FilesAPI.processResumeATS called with:', {
       fileName: file.name,
       fileSize: file.size,
       targetRole,
@@ -174,7 +174,7 @@ export class FilesAPI {
     });
     
     if (!accessToken) {
-      console.error('❌ No access token provided to processResumeATS');
+      console.error('âŒ No access token provided to processResumeATS');
       throw new Error('Authentication required. No access token provided.');
     }
 
@@ -183,7 +183,7 @@ export class FilesAPI {
     if (targetRole) formData.append('targetRole', targetRole)
     if (targetIndustry) formData.append('targetIndustry', targetIndustry)
 
-    console.log('📤 Making ATS API request...');
+    console.log('ðŸ“¤ Making ATS API request...');
     const response = await fetch(`${API_BASE}/ats/process-resume`, {
       method: 'POST',
       headers: {
@@ -192,14 +192,14 @@ export class FilesAPI {
       body: formData
     })
 
-    console.log('📥 ATS API response received:', {
+    console.log('ðŸ“¥ ATS API response received:', {
       status: response.status,
       ok: response.ok,
       statusText: response.statusText
     });
 
     const result = await response.json()
-    console.log('📊 ATS API result:', {
+    console.log('ðŸ“Š ATS API result:', {
       hasResult: !!result,
       hasError: !!result.error,
       hasCode: !!result.code,
@@ -207,7 +207,7 @@ export class FilesAPI {
     });
     
     if (!response.ok) {
-      console.error('❌ ATS API Error Response:', {
+      console.error('âŒ ATS API Error Response:', {
         status: response.status,
         statusText: response.statusText,
         result
@@ -251,7 +251,7 @@ export class FilesAPI {
       throw enhancedError;
     }
 
-    console.log('✅ ATS processing completed successfully');
+    console.log('âœ… ATS processing completed successfully');
     return result
   }
 
@@ -297,6 +297,8 @@ export class FilesAPI {
     return result
   }
 }
+
+
 
 
 

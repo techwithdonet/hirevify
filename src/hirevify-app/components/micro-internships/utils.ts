@@ -1,4 +1,4 @@
-export const getDifficultyColor = (difficulty: string) => {
+﻿export const getDifficultyColor = (difficulty: string) => {
   switch (difficulty) {
     case 'Beginner': return 'bg-green-100 text-green-800 border-green-200';
     case 'Intermediate': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -80,6 +80,8 @@ export const getMockApplications = () => [
     appliedDate: '2024-02-10'
   }
 ];
+
+
 
 
 

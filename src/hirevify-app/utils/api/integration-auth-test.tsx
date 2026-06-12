@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { projectId, publicAnonKey } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -24,15 +24,15 @@ export async function runComprehensiveIntegrationAuthTest(
   accessToken: string,
   userEmail?: string
 ): Promise<ComprehensiveTestReport> {
-  console.log('🔍 Starting comprehensive integration authentication test...');
-  console.log('🔍 Token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
+  console.log('ðŸ” Starting comprehensive integration authentication test...');
+  console.log('ðŸ” Token (first 30 chars):', accessToken ? accessToken.substring(0, 30) + '...' : 'NO TOKEN');
   
   const steps: AuthTestResult[] = [];
   const startTime = Date.now();
   
   // Step 1: Test basic service connectivity
   try {
-    console.log('🏥 Step 1: Testing basic service connectivity...');
+    console.log('ðŸ¥ Step 1: Testing basic service connectivity...');
     
     const healthResponse = await fetch(`${API_BASE}/integrations/health`, {
       method: 'GET',
@@ -50,12 +50,12 @@ export async function runComprehensiveIntegrationAuthTest(
         data: { status: healthData.status, version: healthData.version },
         timestamp: new Date().toISOString()
       });
-      console.log('✅ Step 1: Service connectivity passed');
+      console.log('âœ… Step 1: Service connectivity passed');
     } else {
       throw new Error(`Health check failed with status ${healthResponse.status}`);
     }
   } catch (error) {
-    console.log('❌ Step 1: Service connectivity failed');
+    console.log('âŒ Step 1: Service connectivity failed');
     steps.push({
       success: false,
       step: 'service_connectivity',
@@ -67,7 +67,7 @@ export async function runComprehensiveIntegrationAuthTest(
   
   // Step 2: Test KV store access
   try {
-    console.log('🗄️ Step 2: Testing KV store access...');
+    console.log('ðŸ—„ï¸ Step 2: Testing KV store access...');
     
     const kvResponse = await fetch(`${API_BASE}/integrations/test-kv`, {
       method: 'GET',
@@ -89,7 +89,7 @@ export async function runComprehensiveIntegrationAuthTest(
           },
           timestamp: new Date().toISOString()
         });
-        console.log('✅ Step 2: KV store access passed');
+        console.log('âœ… Step 2: KV store access passed');
       } else {
         throw new Error(kvData.error || 'KV store test failed');
       }
@@ -97,7 +97,7 @@ export async function runComprehensiveIntegrationAuthTest(
       throw new Error(`KV test failed with status ${kvResponse.status}`);
     }
   } catch (error) {
-    console.log('❌ Step 2: KV store access failed');
+    console.log('âŒ Step 2: KV store access failed');
     steps.push({
       success: false,
       step: 'kv_store_access',
@@ -110,7 +110,7 @@ export async function runComprehensiveIntegrationAuthTest(
   // Step 3: Test session validation in auth service
   if (accessToken) {
     try {
-      console.log('🔍 Step 3: Testing session in auth service...');
+      console.log('ðŸ” Step 3: Testing session in auth service...');
       
       const sessionResponse = await fetch(`${API_BASE}/auth/debug-session`, {
         method: 'POST',
@@ -138,7 +138,7 @@ export async function runComprehensiveIntegrationAuthTest(
             },
             timestamp: new Date().toISOString()
           });
-          console.log('✅ Step 3: Session validation passed');
+          console.log('âœ… Step 3: Session validation passed');
         } else {
           throw new Error(sessionData.session?.isExpired ? 'Session has expired' : 'Session not found');
         }
@@ -146,7 +146,7 @@ export async function runComprehensiveIntegrationAuthTest(
         throw new Error(`Session validation failed with status ${sessionResponse.status}`);
       }
     } catch (error) {
-      console.log('❌ Step 3: Session validation failed');
+      console.log('âŒ Step 3: Session validation failed');
       steps.push({
         success: false,
         step: 'session_validation',
@@ -168,7 +168,7 @@ export async function runComprehensiveIntegrationAuthTest(
   // Step 4: Test integration service authentication
   if (accessToken) {
     try {
-      console.log('🔐 Step 4: Testing integration service authentication...');
+      console.log('ðŸ” Step 4: Testing integration service authentication...');
       
       const authResponse = await fetch(`${API_BASE}/integrations/debug-auth`, {
         method: 'POST',
@@ -192,7 +192,7 @@ export async function runComprehensiveIntegrationAuthTest(
             },
             timestamp: new Date().toISOString()
           });
-          console.log('✅ Step 4: Integration authentication passed');
+          console.log('âœ… Step 4: Integration authentication passed');
         } else {
           throw new Error(authData.error || 'Integration auth failed');
         }
@@ -201,7 +201,7 @@ export async function runComprehensiveIntegrationAuthTest(
         throw new Error(errorData.error || `Integration auth failed with status ${authResponse.status}`);
       }
     } catch (error) {
-      console.log('❌ Step 4: Integration authentication failed');
+      console.log('âŒ Step 4: Integration authentication failed');
       steps.push({
         success: false,
         step: 'integration_auth',
@@ -223,7 +223,7 @@ export async function runComprehensiveIntegrationAuthTest(
   // Step 5: Test integration list endpoint
   if (accessToken) {
     try {
-      console.log('📋 Step 5: Testing integration list endpoint...');
+      console.log('ðŸ“‹ Step 5: Testing integration list endpoint...');
       
       const listResponse = await fetch(`${API_BASE}/integrations/list`, {
         method: 'GET',
@@ -246,7 +246,7 @@ export async function runComprehensiveIntegrationAuthTest(
             },
             timestamp: new Date().toISOString()
           });
-          console.log('✅ Step 5: Integration list passed');
+          console.log('âœ… Step 5: Integration list passed');
         } else {
           throw new Error('Invalid response format from integration list');
         }
@@ -255,7 +255,7 @@ export async function runComprehensiveIntegrationAuthTest(
         throw new Error(errorData.error || `List request failed with status ${listResponse.status}`);
       }
     } catch (error) {
-      console.log('❌ Step 5: Integration list failed');
+      console.log('âŒ Step 5: Integration list failed');
       steps.push({
         success: false,
         step: 'integration_list',
@@ -284,13 +284,13 @@ export async function runComprehensiveIntegrationAuthTest(
   
   if (failedSteps.length === 0) {
     finalStatus = 'all_passed';
-    summary = `🎉 All 5 steps passed! Integration Hub is fully functional. Test completed in ${totalTime}ms.`;
+    summary = `ðŸŽ‰ All 5 steps passed! Integration Hub is fully functional. Test completed in ${totalTime}ms.`;
   } else if (passedSteps.length > 0) {
     finalStatus = 'partial_success';
-    summary = `⚠️ Partial success: ${passedSteps.length}/${steps.length} steps passed. ${failedSteps.length} issues need to be resolved.`;
+    summary = `âš ï¸ Partial success: ${passedSteps.length}/${steps.length} steps passed. ${failedSteps.length} issues need to be resolved.`;
   } else {
     finalStatus = 'failed';
-    summary = `❌ All steps failed. Integration Hub is not functional.`;
+    summary = `âŒ All steps failed. Integration Hub is not functional.`;
   }
   
   const recommendations: string[] = [];
@@ -329,7 +329,7 @@ export async function runComprehensiveIntegrationAuthTest(
     finalStatus
   };
   
-  console.log('📊 Test report generated:', {
+  console.log('ðŸ“Š Test report generated:', {
     finalStatus,
     passedSteps: passedSteps.length,
     failedSteps: failedSteps.length,
@@ -341,7 +341,7 @@ export async function runComprehensiveIntegrationAuthTest(
 
 // Quick authentication diagnostic
 export async function quickAuthDiagnostic(accessToken: string) {
-  console.log('🔍 Running quick authentication diagnostic...');
+  console.log('ðŸ” Running quick authentication diagnostic...');
   
   if (!accessToken) {
     return {
@@ -390,7 +390,7 @@ export async function quickAuthDiagnostic(accessToken: string) {
 
 // Test specific integration endpoint
 export async function testIntegrationEndpoint(accessToken: string, endpoint: string) {
-  console.log(`🧪 Testing integration endpoint: ${endpoint}`);
+  console.log(`ðŸ§ª Testing integration endpoint: ${endpoint}`);
   
   try {
     const response = await fetch(`${API_BASE}/integrations${endpoint}`, {
@@ -419,6 +419,8 @@ export async function testIntegrationEndpoint(accessToken: string, endpoint: str
     };
   }
 }
+
+
 
 
 

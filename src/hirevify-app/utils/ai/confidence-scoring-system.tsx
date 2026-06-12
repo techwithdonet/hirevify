@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Advanced Confidence Scoring System - Phase 1 Enhancement
  * Comprehensive confidence calculation for all ATS extractions
  * 
@@ -752,6 +752,8 @@ interface ValidationRule {
 
 export const confidenceScoringSystem = new ConfidenceScoringSystem();
 export default confidenceScoringSystem;
+
+
 
 
 

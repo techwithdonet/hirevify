@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Saved Jobs Service
  * Handles saved job bookmarking operations from Supabase
  */
@@ -122,3 +122,5 @@ class SavedJobsService {
 }
 
 export const savedJobsService = new SavedJobsService();
+
+

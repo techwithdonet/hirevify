@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Bell, Check, X, MessageCircle, Users, Calendar, Award, Briefcase } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -167,7 +167,7 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
       
       // Only update if we got valid data
       if (data && Array.isArray(data)) {
-        setNotifications(data);
+        setNotifications(data as any);
         const unreadCount = data.filter(n => !n.read).length;
         onUpdateUnreadCount(unreadCount);
       }
@@ -381,6 +381,9 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
     </div>
   );
 }
+
+
+
 
 
 

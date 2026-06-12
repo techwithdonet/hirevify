@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Production-Grade AI Resume Analyzer
  * Achieves 95% accuracy through multi-strategy analysis and validation
  */
@@ -641,6 +641,8 @@ Rules:
 }
 
 export default ProductionResumeAnalyzer;
+
+
 
 
 

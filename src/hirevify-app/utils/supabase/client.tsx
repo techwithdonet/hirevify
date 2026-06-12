@@ -1,4 +1,4 @@
-import {
+﻿import {
   createSupabaseBrowserClient,
   getSupabaseBrowserClientInstance,
   isSupabaseBrowserClientInitialized,
@@ -20,3 +20,5 @@ export function isClientInitialized() {
 export function getClientInstance() {
   return getSupabaseBrowserClientInstance();
 }
+
+

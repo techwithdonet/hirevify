@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from "./components/ui/sonner";
@@ -189,6 +189,8 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
+
 
 
 

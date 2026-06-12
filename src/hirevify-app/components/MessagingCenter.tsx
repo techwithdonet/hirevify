@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, ArrowLeft, Search, User, Circle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -505,6 +505,8 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
     </div>
   );
 }
+
+
 
 
 

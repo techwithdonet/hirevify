@@ -1,4 +1,4 @@
-// Professional Keyword Analysis Engine
+﻿// Professional Keyword Analysis Engine
 export interface KeywordAnalysis {
   extractedKeywords: string[];
   industryMatch: number;
@@ -280,6 +280,8 @@ export class ProfessionalKeywordAnalyzer {
 }
 
 export const professionalKeywordAnalyzer = new ProfessionalKeywordAnalyzer();
+
+
 
 
 

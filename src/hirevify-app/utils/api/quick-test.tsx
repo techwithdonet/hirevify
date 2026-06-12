@@ -1,4 +1,4 @@
-import { projectId } from '../supabase/info';
+﻿import { projectId } from '../supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
 
@@ -16,7 +16,7 @@ export async function runQuickConnectivityTest(): Promise<{
   results: QuickTestResult[];
   summary: string;
 }> {
-  console.log('🧪 Running quick connectivity test...');
+  console.log('ðŸ§ª Running quick connectivity test...');
   
   const testEndpoints = [
     { name: 'Ultra Ping', url: `${API_BASE}/ultra-ping` },
@@ -62,7 +62,7 @@ export async function runQuickConnectivityTest(): Promise<{
         error: !response.ok ? `HTTP ${response.status}` : parseError
       });
       
-      console.log(`${isWorking ? '✅' : '❌'} ${endpoint.name}: ${response.status}`);
+      console.log(`${isWorking ? 'âœ…' : 'âŒ'} ${endpoint.name}: ${response.status}`);
       
     } catch (error) {
       results.push({
@@ -72,7 +72,7 @@ export async function runQuickConnectivityTest(): Promise<{
         error: error.message
       });
       
-      console.log(`💥 ${endpoint.name}: ${error.message}`);
+      console.log(`ðŸ’¥ ${endpoint.name}: ${error.message}`);
     }
   }
   
@@ -81,11 +81,11 @@ export async function runQuickConnectivityTest(): Promise<{
   
   let summary;
   if (allWorking) {
-    summary = `🎉 All ${testEndpoints.length} endpoints are working correctly!`;
+    summary = `ðŸŽ‰ All ${testEndpoints.length} endpoints are working correctly!`;
   } else if (anyWorking) {
-    summary = `⚠️ ${workingCount}/${testEndpoints.length} endpoints are working. Some features may be limited.`;
+    summary = `âš ï¸ ${workingCount}/${testEndpoints.length} endpoints are working. Some features may be limited.`;
   } else {
-    summary = `❌ No endpoints are accessible. Backend appears to be completely down.`;
+    summary = `âŒ No endpoints are accessible. Backend appears to be completely down.`;
   }
   
   console.log(summary);
@@ -110,6 +110,8 @@ export async function ultraSimpleTest(): Promise<boolean> {
     return false;
   }
 }
+
+
 
 
 

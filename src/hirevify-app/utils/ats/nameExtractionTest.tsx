@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Test cases for Enhanced Name Extraction
  * 
  * This demonstrates the 7 different strategies the enhanced parser uses
@@ -128,17 +128,17 @@ Phone: (555) 777-8888
  * Function to test all scenarios
  */
 export const testEnhancedNameExtraction = () => {
-  console.log('🧪 Testing Enhanced Name Extraction Scenarios...\n');
+  console.log('ðŸ§ª Testing Enhanced Name Extraction Scenarios...\n');
   
   testNameExtractionScenarios.forEach((test, index) => {
     console.log(`${index + 1}. ${test.scenario}`);
     console.log(`   Description: ${test.description}`);
     console.log(`   Expected: "${test.expectedName}"`);
     console.log(`   Document Text Preview: ${test.documentText.substring(0, 100)}...`);
-    console.log('   ✅ Should be extracted by enhanced parser\n');
+    console.log('   âœ… Should be extracted by enhanced parser\n');
   });
   
-  console.log('📋 Summary: Enhanced parser uses 7 strategies to find names:');
+  console.log('ðŸ“‹ Summary: Enhanced parser uses 7 strategies to find names:');
   console.log('   1. Explicit labels (Name:, Full Name:, Candidate:)');
   console.log('   2. Section headers (Personal Information, Contact Info)');
   console.log('   3. Key-value formats (Name | John Smith, Name - John Smith)');
@@ -150,6 +150,8 @@ export const testEnhancedNameExtraction = () => {
 
 // Example usage:
 // testEnhancedNameExtraction();
+
+
 
 
 

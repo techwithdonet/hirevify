@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+﻿import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 
 export interface PortfolioItemRow {
   id: string;
@@ -276,3 +276,4 @@ class PortfolioService {
 }
 
 export const portfolioService = new PortfolioService();
+

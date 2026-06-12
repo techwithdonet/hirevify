@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ATS Error Handler Component
  * 
  * Provides user-friendly error messages and helpful suggestions
@@ -52,7 +52,7 @@ export function ATSErrorHandler({
           'Try the Professional ATS Scanner for advanced PDF processing',
           'Ensure your PDF contains selectable text (not just images)'
         ],
-        quickFix: 'Use File → Save As → Plain Text (.txt) in your PDF reader'
+        quickFix: 'Use File â†’ Save As â†’ Plain Text (.txt) in your PDF reader'
       };
     }
     
@@ -67,7 +67,7 @@ export function ATSErrorHandler({
           'Try the Professional ATS Scanner for advanced Word processing',
           'Ensure the document is not password protected'
         ],
-        quickFix: 'In Word: File → Save As → Plain Text (*.txt)'
+        quickFix: 'In Word: File â†’ Save As â†’ Plain Text (*.txt)'
       };
     }
     
@@ -275,13 +275,15 @@ export function ATSErrorHandler({
       {/* Help Text */}
       <div className="text-center p-4 bg-gray-50 rounded-lg">
         <p className="text-sm text-gray-600">
-          💡 <strong>Pro Tip:</strong> For best results, save your resume as a .txt file. 
+          ðŸ’¡ <strong>Pro Tip:</strong> For best results, save your resume as a .txt file. 
           This ensures 100% compatibility and fastest processing.
         </p>
       </div>
     </div>
   );
 }
+
+
 
 
 

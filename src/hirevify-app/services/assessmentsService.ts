@@ -1,4 +1,4 @@
-import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+﻿import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 
 export interface SkillAssessment {
   id: string;
@@ -144,3 +144,4 @@ class AssessmentsService {
 }
 
 export const assessmentsService = new AssessmentsService();
+

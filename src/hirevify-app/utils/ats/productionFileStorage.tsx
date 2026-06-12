@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Production File Storage for Enhanced ATS - Phase 1 Integration
  */
 
@@ -49,7 +49,7 @@ class ProductionFileStorageService {
   private async ensureBucketExists(): Promise<void> {
     try {
       // Skip bucket creation on client side - buckets should be pre-created
-      console.log('📁 Checking storage bucket availability:', this.bucketName);
+      console.log('ðŸ“ Checking storage bucket availability:', this.bucketName);
       
       // Simply test if we can list files in the bucket
       // If bucket doesn't exist, the upload will fail gracefully
@@ -58,16 +58,16 @@ class ProductionFileStorageService {
         .list('', { limit: 1 });
 
       if (error && error.message.includes('not found')) {
-        console.warn(`📁 Bucket ${this.bucketName} not found. Server will create it automatically on first upload.`);
+        console.warn(`ðŸ“ Bucket ${this.bucketName} not found. Server will create it automatically on first upload.`);
         // Don't throw error - let the upload attempt handle bucket creation via server
       } else if (error) {
-        console.warn('📁 Bucket check warning:', error.message);
+        console.warn('ðŸ“ Bucket check warning:', error.message);
         // Continue anyway - upload will show the real error
       } else {
-        console.log('✅ Storage bucket is accessible');
+        console.log('âœ… Storage bucket is accessible');
       }
     } catch (error) {
-      console.warn('📁 Bucket check failed, continuing with upload:', error);
+      console.warn('ðŸ“ Bucket check failed, continuing with upload:', error);
       // Don't throw - let upload handle the error
     }
   }
@@ -81,7 +81,7 @@ class ProductionFileStorageService {
     candidateId?: string
   ): Promise<FileUploadResult> {
     try {
-      console.log('📤 Starting file upload:', {
+      console.log('ðŸ“¤ Starting file upload:', {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type,
@@ -100,7 +100,7 @@ class ProductionFileStorageService {
 
       // For ATS uploads, use the server-side endpoint which handles RLS properly
       try {
-        console.log('🔄 Using server-side ATS upload endpoint...');
+        console.log('ðŸ”„ Using server-side ATS upload endpoint...');
         
         const formData = new FormData();
         formData.append('file', file);
@@ -129,7 +129,7 @@ class ProductionFileStorageService {
         const result = await response.json();
         
         if (result.success) {
-          console.log('✅ Server-side upload successful:', result.filePath);
+          console.log('âœ… Server-side upload successful:', result.filePath);
           return {
             success: true,
             filePath: result.filePath,
@@ -139,7 +139,7 @@ class ProductionFileStorageService {
         } else {
           // Server indicated failure but wants local processing
           if (result.isLocalProcessing) {
-            console.log('📋 Server upload failed, continuing with local processing...');
+            console.log('ðŸ“‹ Server upload failed, continuing with local processing...');
           } else {
             throw new Error(result.error || 'Server upload failed');
           }
@@ -149,11 +149,11 @@ class ProductionFileStorageService {
       }
 
       // Fallback to direct client-side upload (original implementation)
-      console.log('🔄 Falling back to direct client-side upload...');
+      console.log('ðŸ”„ Falling back to direct client-side upload...');
 
       // Instead of direct upload, return success with local processing flag
       // This allows the ATS scanner to continue without file upload
-      console.log('📋 Server upload failed, continuing with local file processing only');
+      console.log('ðŸ“‹ Server upload failed, continuing with local file processing only');
       
       return {
         success: false,
@@ -177,7 +177,7 @@ class ProductionFileStorageService {
       // const fileName = `${candidateId || userId}_${timestamp}${fileExtension}`;
       // const filePath = `resumes/${userId}/${fileName}`;
 
-      // console.log('📂 Uploading to path:', filePath);
+      // console.log('ðŸ“‚ Uploading to path:', filePath);
 
       // Upload file to Supabase Storage
       // const { data, error } = await this.supabase.storage
@@ -201,7 +201,7 @@ class ProductionFileStorageService {
       //   };
       // }
 
-      // console.log('✅ File uploaded successfully:', data.path);
+      // console.log('âœ… File uploaded successfully:', data.path);
 
       // Generate signed URL for immediate access
       // const { data: signedUrlData, error: urlError } = await this.supabase.storage
@@ -236,7 +236,7 @@ class ProductionFileStorageService {
    */
   async getFileUrl(filePath: string, expiresIn: number = 3600): Promise<FileDownloadResult> {
     try {
-      console.log('🔗 Getting signed URL for:', filePath);
+      console.log('ðŸ”— Getting signed URL for:', filePath);
 
       const { data, error } = await this.supabase.storage
         .from(this.bucketName)
@@ -270,7 +270,7 @@ class ProductionFileStorageService {
    */
   async downloadFile(filePath: string): Promise<Blob | null> {
     try {
-      console.log('📥 Downloading file:', filePath);
+      console.log('ðŸ“¥ Downloading file:', filePath);
 
       const { data, error } = await this.supabase.storage
         .from(this.bucketName)
@@ -294,7 +294,7 @@ class ProductionFileStorageService {
    */
   async deleteFile(filePath: string): Promise<boolean> {
     try {
-      console.log('🗑️ Deleting file:', filePath);
+      console.log('ðŸ—‘ï¸ Deleting file:', filePath);
 
       const { error } = await this.supabase.storage
         .from(this.bucketName)
@@ -305,7 +305,7 @@ class ProductionFileStorageService {
         return false;
       }
 
-      console.log('✅ File deleted successfully');
+      console.log('âœ… File deleted successfully');
       return true;
 
     } catch (error) {
@@ -408,6 +408,8 @@ class ProductionFileStorageService {
 export const productionFileStorage = new ProductionFileStorageService();
 export default productionFileStorage;
 export type { FileUploadResult, FileDownloadResult };
+
+
 
 
 

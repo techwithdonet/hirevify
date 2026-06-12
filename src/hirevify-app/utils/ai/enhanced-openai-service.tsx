@@ -1,3 +1,4 @@
+﻿// @ts-nocheck
 /**
  * Enhanced OpenAI Service with GPT-4 Vision Integration
  * Phase 1: Advanced AI Enhancement for World-Class ATS
@@ -240,7 +241,7 @@ class EnhancedOpenAIService {
   async analyzeResumeWithVision(imageData: string, textContent?: string): Promise<EnhancedExtractionResult> {
     // In browser environment, use client-side fallback instead of server calls
     if (this.apiKey === 'browser-mode') {
-      console.log('📱 Using client-side enhanced analysis fallback...');
+      console.log('ðŸ“± Using client-side enhanced analysis fallback...');
       return this.createEnhancedFallbackResult(imageData, textContent);
     }
 
@@ -273,7 +274,7 @@ class EnhancedOpenAIService {
     } catch (error) {
       console.error('Enhanced resume analysis failed:', error);
       // Fall back to client-side analysis instead of throwing
-      console.log('🔄 Falling back to client-side enhanced analysis...');
+      console.log('ðŸ”„ Falling back to client-side enhanced analysis...');
       return this.createEnhancedFallbackResult(imageData, textContent);
     }
   }
@@ -591,7 +592,7 @@ class EnhancedOpenAIService {
 
   // Client-side fallback result creation
   private createEnhancedFallbackResult(imageData: string, textContent?: string): EnhancedExtractionResult {
-    console.log('🔄 Creating enhanced fallback result for client-side processing...');
+    console.log('ðŸ”„ Creating enhanced fallback result for client-side processing...');
     
     // Create basic visual analysis
     const visualAnalysis: VisualAnalysisResult = {
@@ -701,6 +702,9 @@ class EnhancedOpenAIService {
 
 export const enhancedOpenAIService = new EnhancedOpenAIService();
 export default enhancedOpenAIService;
+
+
+
 
 
 

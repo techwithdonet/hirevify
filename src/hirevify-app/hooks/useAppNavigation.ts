@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+﻿import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { Screen, Project, Application } from '../types/app';
 import { User } from '../components/AuthProvider';
@@ -252,12 +252,12 @@ export const useAppNavigation = ({
 
   const navigateToAISkillsDevelopment = useCallback(() => {
     if (!requireAuth('access AI skills development', 'candidate')) return;
-    setCurrentScreen('candidate-ai-skills-development');
+    setCurrentScreen('candidate-ai-skills-development' as any);
   }, [requireAuth, setCurrentScreen]);
 
   const navigateToAICareerAdvisor = useCallback(() => {
     if (!requireAuth('access AI career advisor', 'candidate')) return;
-    setCurrentScreen('candidate-ai-career-advisor');
+    setCurrentScreen('candidate-ai-career-advisor' as any);
   }, [requireAuth, setCurrentScreen]);
 
   const navigateToCandidateSearch = useCallback(() => {
@@ -382,6 +382,9 @@ export const useAppNavigation = ({
     navigateToProjectChallengeVideo,
   };
 };
+
+
+
 
 
 

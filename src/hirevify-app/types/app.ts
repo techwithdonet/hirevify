@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Application Types
  * 
  * Centralized type definitions for the HireVify application
@@ -113,6 +113,8 @@ export interface AppState {
 }
 
 export type UserType = 'recruiter' | 'candidate';
+
+
 
 
 

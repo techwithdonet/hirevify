@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI-Powered Resume Builder
  * 
  * Enhanced resume builder with AI optimization, ATS scanning,
@@ -590,7 +590,7 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {gap.suggestions.slice(0, 2).map((suggestion, idx) => (
-                                <p key={idx}>• {suggestion}</p>
+                                <p key={idx}>â€¢ {suggestion}</p>
                               ))}
                             </div>
                           </div>
@@ -860,6 +860,8 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
     </div>
   );
 }
+
+
 
 
 

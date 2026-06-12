@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -159,7 +159,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
         {
           name: user.name,
           email: user.email,
-          contact: user.phone
+          contact: (user as any).phone || ""
         },
         async (response: RazorpayPaymentResponse) => {
           try {
@@ -669,6 +669,9 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
     </div>
   );
 }
+
+
+
 
 
 
