@@ -217,10 +217,23 @@ export default function SupabaseTestPage() {
         const response = await fetch("/api/supabase-test", {
           cache: "no-store",
         });
-        const payload = await response.json();
+                const contentType = response.headers.get("content-type") || "";
+        const bodyText = await response.text();
+
+        if (!contentType.includes("application/json")) {
+          throw new Error(
+            `Server check returned ${response.status} ${contentType || "unknown content type"}: ${bodyText.slice(0, 120)}`
+          );
+        }
+
+        const payload = JSON.parse(bodyText) as ServerResult;
 
         if (!response.ok) {
-          throw new Error(payload?.error || "Server check failed.");
+                    const payloadMessage = (payload as { detail?: string; error?: string; message?: string }).detail
+            || (payload as { detail?: string; error?: string; message?: string }).error
+            || (payload as { detail?: string; error?: string; message?: string }).message
+            || "Server check failed.";
+          throw new Error(payloadMessage);
         }
 
         if (!cancelled) {
