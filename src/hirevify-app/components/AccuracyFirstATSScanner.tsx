@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Accuracy-First ATS Scanner
  * 
  * Two-step process for maximum accuracy:
@@ -233,7 +233,7 @@ export function AccuracyFirstATSScanner() {
     setAnalysisStages(initializeAnalysisStages());
 
     try {
-      console.log('ðŸš€ Starting client-side resume analysis...');
+      console.log('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â€šÂ¬ Starting client-side resume analysis...');
       
       // Use a simplified progress tracking for better UX
       const updateProgress = async (step: string, progress: number) => {
@@ -249,9 +249,9 @@ export function AccuracyFirstATSScanner() {
       await updateProgress('Finalizing results...', 90);
 
       // Call the universal document parser directly (no server calls needed)
-      console.log('ðŸ“„ Calling Universal Document Parser...');
+      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Calling Universal Document Parser...');
       const parsedData = await universalDocumentParser.parseDocument(file);
-      console.log('âœ… Universal parsing completed:', parsedData);
+      console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Universal parsing completed:', parsedData);
       
       if (!parsedData || !parsedData.personalInfo) {
         throw new Error('Failed to extract meaningful data from document');
@@ -266,11 +266,11 @@ export function AccuracyFirstATSScanner() {
       setIsComplete(true);
       setIsAnalyzing(false);
       
-      console.log('ðŸŽ‰ Resume analysis completed successfully!');
+      console.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° Resume analysis completed successfully!');
       toast.success('Resume analysis completed successfully!');
       
     } catch (error) {
-      console.error('âŒ Resume analysis failed:', error);
+      console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Resume analysis failed:', error);
       
       // Create a graceful fallback instead of hard failure
       const fallbackData: EnterpriseResumeData = {
@@ -326,11 +326,11 @@ export function AccuracyFirstATSScanner() {
           parsingErrors: [error instanceof Error ? error.message : 'Unknown processing error'],
           enhancementNotes: [
             'Document processing encountered technical difficulties:',
-            'â€¢ Complex document formatting may require manual review',
-            'â€¢ Consider converting to a simpler format (PDF â†’ Word â†’ Text)',
-            'â€¢ Some documents with image-based content need OCR processing',
-            'â€¢ Password-protected or restricted documents cannot be processed',
-            'â€¢ Try uploading a text-based version of your resume'
+            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Complex document formatting may require manual review',
+            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Consider converting to a simpler format (PDF ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Word ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Text)',
+            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Some documents with image-based content need OCR processing',
+            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Password-protected or restricted documents cannot be processed',
+            'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Try uploading a text-based version of your resume'
           ]
         }
       };
@@ -422,7 +422,7 @@ export function AccuracyFirstATSScanner() {
                   <div className="space-y-2">
                     <p className="font-medium text-gray-900">{uploadState.file?.name}</p>
                     <p className="text-sm text-gray-600">
-                      {uploadState.file && (uploadState.file.size / (1024 * 1024)).toFixed(2)} MB â€¢ {uploadState.file?.type}
+                      {uploadState.file && (uploadState.file.size / (1024 * 1024)).toFixed(2)} MB ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {uploadState.file?.type}
                     </p>
                     <Badge className="bg-green-100 text-green-800 border-green-200">
                       Ready for Analysis

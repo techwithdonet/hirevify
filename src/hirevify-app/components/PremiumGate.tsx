@@ -1,4 +1,4 @@
-﻿import { ReactNode, useCallback } from 'react';
+import { ReactNode, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -110,7 +110,7 @@ export function PremiumGate({
                   </Button>
                   
                   <p className="text-xs text-muted-foreground">
-                    Start your 14-day free trial â€¢ Cancel anytime â€¢ No setup fees
+                    Start your 14-day free trial ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Cancel anytime ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ No setup fees
                   </p>
                 </div>
               </div>

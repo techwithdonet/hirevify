@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI-Powered ATS Scanner
  * 
  * Uses real AI extraction to pull accurate data from resumes
@@ -193,7 +193,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
         setProgress(baseProgress + 10);
         
         // Step 1: Process document to extract text
-        console.log(`ðŸ“„ Processing document: ${file.name}`);
+        console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Processing document: ${file.name}`);
         const processingResult = await simpleDocumentProcessor.processDocument(file);
         
         if (!processingResult.success) {
@@ -206,7 +206,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
         setProgressMessage(`Extracting data with AI...`);
         
         // Step 2: Extract data using AI
-        console.log(`ðŸ¤– Extracting data from: ${file.name}`);
+        console.log(`ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬â€œ Extracting data from: ${file.name}`);
         const extractionResult = await extractResumeData(
           processingResult.text,
           file.name,
@@ -223,7 +223,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
         setProgressMessage(`Calculating ATS scores...`);
         
         // Step 3: Calculate ATS scores
-        console.log(`ðŸ“Š Calculating ATS scores for: ${file.name}`);
+        console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Calculating ATS scores for: ${file.name}`);
         const scoresResult = await calculateATSScores(
           extractionResult.data,
           jobDescription
@@ -258,7 +258,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
         newResults.push(result);
         setProgress(baseProgress + 100 / files.length);
         
-        console.log(`âœ… Successfully processed: ${file.name}`, {
+        console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Successfully processed: ${file.name}`, {
           confidence: result.confidence,
           overallScore: result.scores.overall,
           name: result.extractedData.personalInfo.name,
@@ -425,7 +425,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="sm" onClick={() => setSelectedResult(null)}>
-                  â† Back to Results
+                  ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Results
                 </Button>
                 <div>
                   <h1 className="text-xl font-semibold flex items-center">
@@ -691,14 +691,14 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={onBack}>
-                â† Back to Dashboard
+                ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Dashboard
               </Button>
               <div>
                 <h1 className="text-xl font-semibold flex items-center">
                   <Brain className="w-5 h-5 mr-2 text-primary" />
                   AI ATS Scanner
                 </h1>
-                <p className="text-sm text-gray-500">Real AI extraction with 95%+ accuracy â€¢ Powered by GPT-4</p>
+                <p className="text-sm text-gray-500">Real AI extraction with 95%+ accuracy ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Powered by GPT-4</p>
               </div>
             </div>
             
@@ -877,7 +877,7 @@ export function AIATSScanner({ onBack, jobDescription }: AIATSScannerProps) {
                           <p className="text-xs text-gray-500">AI Confidence</p>
                         </div>
                         <div className="text-gray-400">
-                          â†’
+                          ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
                         </div>
                       </div>
                     </div>

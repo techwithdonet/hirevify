@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Professional ATS Scanner with Third-Party Integration
  * 
  * Integrates with professional document parsing APIs for maximum accuracy
@@ -221,7 +221,7 @@ export function ProfessionalATSScanner() {
 
   // Professional parsing service integration
   const parseWithGoogleDocumentAI = async (file: File): Promise<string> => {
-    console.log('ðŸ” Attempting Google Document AI parsing...');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Attempting Google Document AI parsing...');
     
     // This would integrate with Google Document AI
     // For demo purposes, we'll simulate the API call
@@ -236,7 +236,7 @@ export function ProfessionalATSScanner() {
   };
 
   const parseWithMicrosoftFormRecognizer = async (file: File): Promise<string> => {
-    console.log('ðŸ” Attempting Microsoft Form Recognizer parsing...');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Attempting Microsoft Form Recognizer parsing...');
     
     // This would integrate with Microsoft Form Recognizer
     await new Promise(resolve => setTimeout(resolve, 1800));
@@ -250,7 +250,7 @@ export function ProfessionalATSScanner() {
   };
 
   const parseWithAWSTextract = async (file: File): Promise<string> => {
-    console.log('ðŸ” Attempting AWS Textract parsing...');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Attempting AWS Textract parsing...');
     
     // This would integrate with AWS Textract
     await new Promise(resolve => setTimeout(resolve, 2200));
@@ -264,7 +264,7 @@ export function ProfessionalATSScanner() {
   };
 
   const parseWithAdobePDFServices = async (file: File): Promise<string> => {
-    console.log('ðŸ” Attempting Adobe PDF Services parsing...');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Attempting Adobe PDF Services parsing...');
     
     // This would integrate with Adobe PDF Services API
     await new Promise(resolve => setTimeout(resolve, 2500));
@@ -278,7 +278,7 @@ export function ProfessionalATSScanner() {
   };
 
   const parseWithInternalEnhanced = async (file: File): Promise<string> => {
-    console.log('ðŸ” Using internal enhanced parser as fallback...');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Using internal enhanced parser as fallback...');
     
     // Use our existing enhanced parser
     const reader = new FileReader();
@@ -683,7 +683,7 @@ export function ProfessionalATSScanner() {
                   <div className="space-y-2">
                     <p className="text-xl font-medium text-gray-900">{uploadedFile.name}</p>
                     <p className="text-sm text-gray-600">
-                      {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB â€¢ {uploadedFile.type}
+                      {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {uploadedFile.type}
                     </p>
                     <Badge className="bg-green-100 text-green-800 border-green-200">
                       Ready for Professional Parsing
@@ -954,7 +954,7 @@ export function ProfessionalATSScanner() {
                               <div>
                                 <h4 className="font-semibold text-lg">{exp.position}</h4>
                                 <p className="text-gray-600">{exp.company}</p>
-                                <p className="text-sm text-gray-500">{exp.duration} â€¢ {exp.location}</p>
+                                <p className="text-sm text-gray-500">{exp.duration} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {exp.location}</p>
                               </div>
                               <Badge variant="outline">
                                 {Math.round((exp.confidence || 0) * 100)}% confidence
@@ -967,7 +967,7 @@ export function ProfessionalATSScanner() {
                                 <ul className="text-sm text-gray-700 space-y-1">
                                   {exp.achievements.map((achievement, index) => (
                                     <li key={index} className="flex items-start gap-2">
-                                      <span className="text-primary mt-1">â€¢</span>
+                                      <span className="text-primary mt-1">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                       {achievement}
                                     </li>
                                   ))}
@@ -1004,7 +1004,7 @@ export function ProfessionalATSScanner() {
                                 <h4 className="font-semibold">{edu.degree}</h4>
                                 <p className="text-gray-600">{edu.institution}</p>
                                 <p className="text-sm text-gray-500">
-                                  {edu.field} â€¢ Graduated: {edu.graduationDate}
+                                  {edu.field} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Graduated: {edu.graduationDate}
                                 </p>
                                 {edu.gpa && (
                                   <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>

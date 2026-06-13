@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Career Advisor
  * 
  * Intelligent career guidance system that analyzes market trends, 

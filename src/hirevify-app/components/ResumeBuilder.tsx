@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Check, Download, FileText, User, Briefcase, GraduationCap, Award, Zap, CheckCircle, X, Star, Crown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -569,7 +569,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
                         <Textarea
                           value={exp.description.join('\n')}
                           onChange={(e) => updateExperience(exp.id, 'description', e.target.value.split('\n'))}
-                          placeholder="â€¢ Developed and maintained web applications using React and Node.js&#10;â€¢ Collaborated with cross-functional teams to deliver high-quality software&#10;â€¢ Improved application performance by 30% through optimization"
+                          placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Developed and maintained web applications using React and Node.js&#10;ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Collaborated with cross-functional teams to deliver high-quality software&#10;ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Improved application performance by 30% through optimization"
                           rows={4}
                         />
                       </div>
@@ -894,7 +894,7 @@ function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: Re
                 <ul className="text-sm text-gray-600 space-y-1">
                   {exp.description.slice(0, showFullPreview ? undefined : 2).map((desc, index) => (
                     <li key={index} className="flex items-start">
-                      <span className="mr-2">â€¢</span>
+                      <span className="mr-2">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                       <span>{desc}</span>
                     </li>
                   ))}

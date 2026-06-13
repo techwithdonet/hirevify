@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Smart Notifications System
  * 
  * Intelligent notification system that uses AI to predict optimal timing,
@@ -660,13 +660,13 @@ export function AISmartNotifications({ onBack, onUpgrade, onUpdateUnreadCount }:
                         {/* Metadata */}
                         <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
                           <span>{getRelativeTime(notification.timestamp)}</span>
-                          <span>â€¢</span>
+                          <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                           <span>{notification.category}</span>
-                          <span>â€¢</span>
+                          <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                           <span>Relevance: {notification.relevanceScore}%</span>
                           {notification.metadata.expiresAt && (
                             <>
-                              <span>â€¢</span>
+                              <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                               <span className="text-orange-600">
                                 Expires: {getRelativeTime(notification.metadata.expiresAt)}
                               </span>

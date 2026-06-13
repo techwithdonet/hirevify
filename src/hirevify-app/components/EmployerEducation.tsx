@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, BookOpen, Play, Download, Star, Clock, Users, Award, CheckCircle, TrendingUp, Brain, Target, Lightbulb, BarChart3, Crown, Search, Filter, Eye, ChevronRight, FileText, Video, Monitor, Headphones, ExternalLink, ChevronLeft, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -131,18 +131,18 @@ const generateBiasPreventionChecklist = () => {
 Comprehensive Guide to Fair and Inclusive Recruitment
 
 === JOB POSTING REVIEW ===
-â–¡ Remove unnecessary degree requirements
-â–¡ Use inclusive language throughout
-â–¡ Focus on skills rather than years of experience
-â–¡ Include diversity and inclusion statement
-â–¡ Specify available accommodations
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Remove unnecessary degree requirements
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Use inclusive language throughout
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Focus on skills rather than years of experience
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Include diversity and inclusion statement
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Specify available accommodations
 
 === INTERVIEW PROCESS ===
-â–¡ Use structured interview format
-â–¡ Ask consistent questions to all candidates
-â–¡ Form diverse interview panels
-â–¡ Document decision-making rationale
-â–¡ Provide equal time to all candidates
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Use structured interview format
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Ask consistent questions to all candidates
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Form diverse interview panels
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Document decision-making rationale
+ÃƒÂ¢Ã¢â‚¬â€œÃ‚Â¡ Provide equal time to all candidates
 
 This checklist ensures fair and inclusive hiring practices throughout your recruitment process.`;
 };

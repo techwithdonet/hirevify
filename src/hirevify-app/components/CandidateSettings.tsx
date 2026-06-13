@@ -1,17 +1,28 @@
-﻿import { useState, useEffect } from 'react';
-import { ArrowLeft, User, Shield, Bell, Settings, Download, Trash2, Eye, EyeOff, Save, Edit3, MapPin, Briefcase, DollarSign, Clock, Mail, Phone, Globe, Camera, Check, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Briefcase,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Loader,
+  Plus,
+  Save,
+  User,
+  X
+} from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Separator } from './ui/separator';
 import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from './AuthProvider';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
 
 interface CandidateSettingsProps {
@@ -26,14 +37,14 @@ interface ProfileData {
   phone: string;
   location: string;
   bio: string;
+  currentTitle: string;
+  experience: string;
+  experienceSummary: string;
   website: string;
   Link: string;
   GitBranch: string;
   portfolio: string;
-  currentTitle: string;
-  experience: string;
-  availableForWork: boolean;
-  profilePicture?: string;
+  resumeUrl: string;
 }
 
 interface SkillsPreferences {
@@ -43,1175 +54,930 @@ interface SkillsPreferences {
   salaryMin: number;
   salaryMax: number;
   currency: string;
-  preferredLocations: string[];
-  industries: string[];
-  companySizes: string[];
   noticePeriod: string;
+  timezone: string;
 }
 
-interface PrivacySettings {
-  profileVisibility: 'public' | 'private' | 'verified-only';
-  showEmail: boolean;
-  showPhone: boolean;
-  allowContactFromRecruiters: boolean;
-  showSalaryExpectations: boolean;
-  anonymousApplications: boolean;
-}
+const experienceLevels = ['Entry Level', '1-2 years', '3-5 years', '5-10 years', '10+ years'];
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
+const workArrangements = ['Remote', 'Hybrid', 'On-site'];
+const noticePeriods = ['Immediate', '1 week', '2 weeks', '1 month', '2 months', '3 months'];
+const timezones = ['IST', 'UTC', 'GST', 'EST', 'CST', 'MST', 'PST', 'GMT', 'CET'];
+const currencies = ['USD', 'INR', 'EUR', 'GBP', 'CAD', 'AUD', 'QAR'];
 
-interface NotificationSettings {
-  emailNotifications: {
-    jobMatches: boolean;
-    applicationUpdates: boolean;
-    interviews: boolean;
-    messages: boolean;
-    weeklyDigest: boolean;
-    platformUpdates: boolean;
-  };
-  pushNotifications: {
-    jobMatches: boolean;
-    messages: boolean;
-    interviews: boolean;
-    reminders: boolean;
-  };
-  frequency: 'immediate' | 'daily' | 'weekly';
-}
-
-export function CandidateSettings({ onBack, onUpgrade }: CandidateSettingsProps) {
+export function CandidateSettings({ onBack }: CandidateSettingsProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [newSkill, setNewSkill] = useState('');
 
-  // Profile State
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ')[1] || '',
+    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
     email: user?.email || '',
     phone: '',
     location: '',
     bio: '',
+    currentTitle: '',
+    experience: '',
+    experienceSummary: '',
     website: '',
     Link: '',
     GitBranch: '',
     portfolio: '',
-    currentTitle: '',
-    experience: '',
-    availableForWork: true,
+    resumeUrl: '',
   });
 
-  // Skills & Preferences State
   const [skillsPreferences, setSkillsPreferences] = useState<SkillsPreferences>({
     skills: [],
-    jobTypes: ['Full-time'],
-    workArrangement: ['Remote'],
-    salaryMin: 50000,
-    salaryMax: 100000,
+    jobTypes: [],
+    workArrangement: [],
+    salaryMin: 0,
+    salaryMax: 0,
     currency: 'USD',
-    preferredLocations: [],
-    industries: [],
-    companySizes: [],
-    noticePeriod: '2 weeks'
+    noticePeriod: '',
+    timezone: 'IST',
   });
 
-  // Privacy State
-  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
-    profileVisibility: 'verified-only',
-    showEmail: false,
-    showPhone: false,
-    allowContactFromRecruiters: true,
-    showSalaryExpectations: false,
-    anonymousApplications: false
-  });
+  const steps = [
+    { title: 'Basic Profile', description: 'Your identity and headline', icon: User },
+    { title: 'Skills', description: 'Your core skills and experience', icon: Briefcase },
+    { title: 'Preferences', description: 'Work type, salary and availability', icon: Briefcase },
+    { title: 'Portfolio', description: 'Resume and professional links', icon: FileText },
+    { title: 'Review', description: 'Complete and become visible', icon: CheckCircle2 },
+  ];
 
-  // Notification State
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
-    emailNotifications: {
-      jobMatches: true,
-      applicationUpdates: true,
-      interviews: true,
-      messages: true,
-      weeklyDigest: false,
-      platformUpdates: false
-    },
-    pushNotifications: {
-      jobMatches: true,
-      messages: true,
-      interviews: true,
-      reminders: true
-    },
-    frequency: 'immediate'
-  });
+  const fullName = (profileData.firstName + ' ' + profileData.lastName).trim();
 
-  const [newSkill, setNewSkill] = useState('');
-  const [newLocation, setNewLocation] = useState('');
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
+  const parseCandidateExperienceYears = (experience: string) => {
+    if (experience.includes('10+')) return 10;
+    if (experience.includes('5-10')) return 5;
+    if (experience.includes('3-5')) return 3;
+    if (experience.includes('1-2')) return 1;
+    return 0;
+  };
 
-  // Available options
-  const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
-  const workArrangements = ['Remote', 'Hybrid', 'On-site', 'Flexible'];
-  const experienceLevels = ['Entry Level', '1-2 years', '3-5 years', '5-10 years', '10+ years'];
-  const industries = ['Technology', 'Healthcare', 'Finance', 'Education', 'Retail', 'Manufacturing', 'Consulting', 'Media', 'Non-profit', 'Government'];
-  const companySizes = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
-  const noticePeriods = ['Immediate', '1 week', '2 weeks', '1 month', '2 months', '3 months'];
+  const mapNoticePeriodToAvailability = (noticePeriod: string) => {
+    if (!noticePeriod) return '';
+    if (noticePeriod === 'Immediate') return 'immediate';
+    return noticePeriod.toLowerCase();
+  };
 
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
+  const hasPortfolioOrResume = () => {
+    return Boolean(
+      profileData.resumeUrl.trim() ||
+      profileData.portfolio.trim() ||
+      profileData.website.trim() ||
+      profileData.GitBranch.trim() ||
+      profileData.Link.trim()
+    );
+  };
+
+  const getMissingFields = () => {
+    const missing: string[] = [];
+
+    if (!fullName) missing.push('Full name');
+    if (!profileData.phone.trim()) missing.push('Phone number');
+    if (!profileData.location.trim()) missing.push('Location');
+    if (!profileData.currentTitle.trim()) missing.push('Current title / headline');
+    if (!profileData.experience.trim()) missing.push('Experience level');
+    if (!profileData.bio.trim()) missing.push('Short bio');
+    if (skillsPreferences.skills.length < 3) missing.push('At least 3 skills');
+    if (!profileData.experienceSummary.trim()) missing.push('Experience summary');
+    if (skillsPreferences.workArrangement.length < 1) missing.push('Preferred work arrangement');
+    if (skillsPreferences.jobTypes.length < 1) missing.push('Preferred job type');
+    if (!skillsPreferences.noticePeriod.trim()) missing.push('Availability / notice period');
+    if (!skillsPreferences.timezone.trim()) missing.push('Timezone');
+    if (Number(skillsPreferences.salaryMin) <= 0) missing.push('Salary minimum');
+    if (Number(skillsPreferences.salaryMax) <= 0) missing.push('Salary maximum');
+    if (Number(skillsPreferences.salaryMax) < Number(skillsPreferences.salaryMin)) missing.push('Salary maximum must be greater than minimum');
+    if (!skillsPreferences.currency.trim()) missing.push('Currency');
+    if (!hasPortfolioOrResume()) missing.push('Resume, portfolio, GitHub, LinkedIn, or website');
+
+    return missing;
+  };
+
+  const completion = useMemo(() => {
+    const checks = [
+      Boolean(fullName),
+      Boolean(profileData.phone.trim()),
+      Boolean(profileData.location.trim()),
+      Boolean(profileData.currentTitle.trim()),
+      Boolean(profileData.experience.trim()),
+      Boolean(profileData.bio.trim()),
+      skillsPreferences.skills.length >= 3,
+      Boolean(profileData.experienceSummary.trim()),
+      skillsPreferences.workArrangement.length >= 1,
+      skillsPreferences.jobTypes.length >= 1,
+      Boolean(skillsPreferences.noticePeriod.trim()),
+      Boolean(skillsPreferences.timezone.trim()),
+      Number(skillsPreferences.salaryMin) > 0,
+      Number(skillsPreferences.salaryMax) > 0,
+      Number(skillsPreferences.salaryMax) >= Number(skillsPreferences.salaryMin),
+      Boolean(skillsPreferences.currency.trim()),
+      hasPortfolioOrResume(),
+    ];
+
+    const completed = checks.filter(Boolean).length;
+    const percentage = Math.round((completed / checks.length) * 100);
+    const missing = getMissingFields();
+
+    return {
+      percentage,
+      isComplete: missing.length === 0,
+      missing,
+    };
+  }, [profileData, skillsPreferences]);
+
+  const validateCurrentStep = () => {
+    if (currentStep === 0) {
+      const missing = [];
+      if (!fullName) missing.push('full name');
+      if (!profileData.phone.trim()) missing.push('phone');
+      if (!profileData.location.trim()) missing.push('location');
+      if (!profileData.currentTitle.trim()) missing.push('current title');
+      if (!profileData.experience.trim()) missing.push('experience level');
+      if (!profileData.bio.trim()) missing.push('bio');
+
+      if (missing.length > 0) {
+        toast.error('Complete basic profile fields: ' + missing.join(', '));
+        return false;
+      }
+    }
+
+    if (currentStep === 1) {
+      if (skillsPreferences.skills.length < 3) {
+        toast.error('Add at least 3 skills');
+        return false;
+      }
+
+      if (!profileData.experienceSummary.trim()) {
+        toast.error('Add your experience summary');
+        return false;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (skillsPreferences.workArrangement.length < 1) {
+        toast.error('Select at least one work arrangement');
+        return false;
+      }
+
+      if (skillsPreferences.jobTypes.length < 1) {
+        toast.error('Select at least one job type');
+        return false;
+      }
+
+      if (!skillsPreferences.noticePeriod.trim()) {
+        toast.error('Select your availability / notice period');
+        return false;
+      }
+
+      if (!skillsPreferences.timezone.trim()) {
+        toast.error('Select your timezone');
+        return false;
+      }
+
+      if (Number(skillsPreferences.salaryMin) <= 0 || Number(skillsPreferences.salaryMax) <= 0) {
+        toast.error('Enter valid salary minimum and maximum');
+        return false;
+      }
+
+      if (Number(skillsPreferences.salaryMax) < Number(skillsPreferences.salaryMin)) {
+        toast.error('Salary maximum must be greater than salary minimum');
+        return false;
+      }
+    }
+
+    if (currentStep === 3) {
+      if (!hasPortfolioOrResume()) {
+        toast.error('Add at least one: resume, portfolio, GitHub, LinkedIn, or website');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const loadCandidateProfile = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully');
-      setHasUnsavedChanges(false);
+      setIsLoadingProfile(true);
+
+      const supabase = createSupabaseBrowserClient();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData?.user?.id) {
+        throw new Error('No active Supabase login found.');
+      }
+
+      const { data: profileRow, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('auth_user_id', authData.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        throw new Error(profileError.message);
+      }
+
+      if (!profileRow?.id) {
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      const { data: candidateProfile, error: candidateError } = await supabase
+        .from('candidate_profiles')
+        .select('*')
+        .eq('user_id', profileRow.id)
+        .maybeSingle();
+
+      if (candidateError) {
+        console.error('Candidate profile load error:', candidateError);
+      }
+
+      const nameParts = String(profileRow.full_name || user?.name || '').split(' ').filter(Boolean);
+
+      setProfileData({
+        firstName: candidateProfile?.full_name?.split(' ')[0] || nameParts[0] || '',
+        lastName: candidateProfile?.full_name?.split(' ').slice(1).join(' ') || nameParts.slice(1).join(' ') || '',
+        email: profileRow.email || user?.email || '',
+        phone: candidateProfile?.phone || profileRow.phone || '',
+        location: candidateProfile?.location || profileRow.location || '',
+        bio: candidateProfile?.bio || profileRow.bio || '',
+        currentTitle: candidateProfile?.headline || '',
+        experience: candidateProfile?.experience_summary && experienceLevels.includes(candidateProfile.experience_summary)
+          ? candidateProfile.experience_summary
+          : '',
+        experienceSummary: candidateProfile?.experience_summary || '',
+        website: candidateProfile?.portfolio_url || '',
+        Link: candidateProfile?.linkedin_url || '',
+        GitBranch: candidateProfile?.github_url || '',
+        portfolio: candidateProfile?.portfolio_url || '',
+        resumeUrl: candidateProfile?.resume_url || '',
+      });
+
+      setSkillsPreferences({
+        skills: candidateProfile?.skills || [],
+        jobTypes: candidateProfile?.job_types || [],
+        workArrangement: candidateProfile?.preferred_work_type || [],
+        salaryMin: Number(candidateProfile?.salary_min || 0),
+        salaryMax: Number(candidateProfile?.salary_max || 0),
+        currency: candidateProfile?.salary_currency || 'USD',
+        noticePeriod: candidateProfile?.availability || '',
+        timezone: candidateProfile?.timezone || 'IST',
+      });
     } catch (error) {
-      toast.error('Failed to update profile');
+      console.error('Failed to load candidate profile:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to load candidate profile');
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCandidateProfile();
+  }, [user?.id]);
+
+  const saveCandidateProfileToDatabase = async (markComplete: boolean) => {
+    const supabase = createSupabaseBrowserClient();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !authData?.user?.id) {
+      throw new Error('No active Supabase login found. Please login again.');
+    }
+
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, auth_user_id, email, role')
+      .eq('auth_user_id', authData.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    if (!profileRow?.id) {
+      throw new Error('Main profile row not found. Please login again.');
+    }
+
+    const profileCompleted = markComplete && completion.isComplete;
+    const profileCompleteness = profileCompleted ? 100 : completion.percentage;
+    const now = new Date().toISOString();
+
+    const profileUpdate = {
+      full_name: fullName,
+      phone: profileData.phone.trim(),
+      location: profileData.location.trim(),
+      bio: profileData.bio.trim(),
+      updated_at: now,
+    };
+
+    const { error: updateProfileError } = await supabase
+      .from('profiles')
+      .update(profileUpdate)
+      .eq('id', profileRow.id);
+
+    if (updateProfileError) {
+      throw new Error(updateProfileError.message);
+    }
+
+    const payload = {
+      user_id: profileRow.id,
+      full_name: fullName,
+      phone: profileData.phone.trim(),
+      location: profileData.location.trim(),
+      bio: profileData.bio.trim(),
+      headline: profileData.currentTitle.trim(),
+      skills: skillsPreferences.skills,
+      years_of_experience: parseCandidateExperienceYears(profileData.experience),
+      experience_summary: profileData.experienceSummary.trim(),
+      preferred_work_type: skillsPreferences.workArrangement,
+      availability: mapNoticePeriodToAvailability(skillsPreferences.noticePeriod),
+      salary_min: Number(skillsPreferences.salaryMin || 0),
+      salary_max: Number(skillsPreferences.salaryMax || 0),
+      salary_currency: skillsPreferences.currency,
+      timezone: skillsPreferences.timezone,
+      portfolio_url: profileData.portfolio.trim() || profileData.website.trim() || null,
+      github_url: profileData.GitBranch.trim() || null,
+      linkedin_url: profileData.Link.trim() || null,
+      resume_url: profileData.resumeUrl.trim() || null,
+      profile_completeness: profileCompleteness,
+      profile_completed: profileCompleted,
+      updated_at: now,
+    };
+
+    const { data: existingProfile, error: existingError } = await supabase
+      .from('candidate_profiles')
+      .select('id')
+      .eq('user_id', profileRow.id)
+      .maybeSingle();
+
+    if (existingError) {
+      throw new Error(existingError.message);
+    }
+
+    const result = existingProfile?.id
+      ? await supabase
+          .from('candidate_profiles')
+          .update(payload)
+          .eq('id', existingProfile.id)
+          .select('id, profile_completed, profile_completeness')
+          .single()
+      : await supabase
+          .from('candidate_profiles')
+          .insert(payload)
+          .select('id, profile_completed, profile_completeness')
+          .single();
+
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
+    if (!result.data?.id) {
+      throw new Error('Profile save did not return a saved database row.');
+    }
+
+    return result.data;
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      setIsLoading(true);
+      await saveCandidateProfileToDatabase(false);
+      toast.success('Draft saved to database');
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save draft');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSaveSkillsPreferences = async () => {
-    setIsLoading(true);
+  const handleNext = async () => {
+    if (!validateCurrentStep()) return;
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Preferences updated successfully');
-      setHasUnsavedChanges(false);
+      setIsLoading(true);
+      await saveCandidateProfileToDatabase(false);
+      setCurrentStep((step) => Math.min(step + 1, steps.length - 1));
     } catch (error) {
-      toast.error('Failed to update preferences');
+      console.error('Failed to save step:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save step');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSavePrivacySettings = async () => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Privacy settings updated successfully');
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      toast.error('Failed to update privacy settings');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveNotificationSettings = async () => {
-    setIsLoading(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Notification settings updated successfully');
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      toast.error('Failed to update notification settings');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePasswordChange = async () => {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('New passwords do not match');
+  const handleCompleteProfile = async () => {
+    if (!completion.isComplete) {
+      toast.error('Complete all mandatory fields first');
       return;
     }
-    
-    if (passwordForm.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long');
-      return;
-    }
 
-    setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Password updated successfully');
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setIsLoading(true);
+      await saveCandidateProfileToDatabase(true);
+      toast.success('Profile completed and visible to recruiters');
+      onBack();
     } catch (error) {
-      toast.error('Failed to update password');
+      console.error('Failed to complete profile:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to complete profile');
     } finally {
       setIsLoading(false);
     }
   };
 
   const addSkill = () => {
-    if (newSkill.trim() && !skillsPreferences.skills.includes(newSkill.trim())) {
-      setSkillsPreferences(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()]
-      }));
-      setNewSkill('');
-      setHasUnsavedChanges(true);
+    const cleanSkill = newSkill.trim();
+
+    if (!cleanSkill) return;
+
+    if (skillsPreferences.skills.includes(cleanSkill)) {
+      toast.error('Skill already added');
+      return;
     }
+
+    setSkillsPreferences((prev) => ({
+      ...prev,
+      skills: [...prev.skills, cleanSkill],
+    }));
+    setNewSkill('');
   };
 
   const removeSkill = (skill: string) => {
-    setSkillsPreferences(prev => ({
+    setSkillsPreferences((prev) => ({
       ...prev,
-      skills: prev.skills.filter(s => s !== skill)
+      skills: prev.skills.filter((item) => item !== skill),
     }));
-    setHasUnsavedChanges(true);
   };
 
-  const addLocation = () => {
-    if (newLocation.trim() && !skillsPreferences.preferredLocations.includes(newLocation.trim())) {
-      setSkillsPreferences(prev => ({
+  const toggleArrayValue = (key: 'jobTypes' | 'workArrangement', value: string) => {
+    setSkillsPreferences((prev) => {
+      const exists = prev[key].includes(value);
+      return {
         ...prev,
-        preferredLocations: [...prev.preferredLocations, newLocation.trim()]
-      }));
-      setNewLocation('');
-      setHasUnsavedChanges(true);
+        [key]: exists ? prev[key].filter((item) => item !== value) : [...prev[key], value],
+      };
+    });
+  };
+
+  const renderRequiredBadge = () => (
+    <span className="ml-2 text-xs text-red-600">Required</span>
+  );
+
+  const renderStepContent = () => {
+    if (currentStep === 0) {
+      return (
+        <Card className="border border-emerald-100 shadow-sm">
+          <CardHeader>
+            <CardTitle>Step 1: Basic Profile</CardTitle>
+            <p className="text-sm text-muted-foreground">These fields are required before recruiters can find you.</p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>First Name {renderRequiredBadge()}</Label>
+                <Input value={profileData.firstName} onChange={(event) => setProfileData({ ...profileData, firstName: event.target.value })} />
+              </div>
+              <div>
+                <Label>Last Name {renderRequiredBadge()}</Label>
+                <Input value={profileData.lastName} onChange={(event) => setProfileData({ ...profileData, lastName: event.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={profileData.email} onChange={(event) => setProfileData({ ...profileData, email: event.target.value })} />
+              </div>
+              <div>
+                <Label>Phone {renderRequiredBadge()}</Label>
+                <Input value={profileData.phone} onChange={(event) => setProfileData({ ...profileData, phone: event.target.value })} placeholder="Mobile number" />
+              </div>
+            </div>
+
+            <div>
+              <Label>Location {renderRequiredBadge()}</Label>
+              <Input value={profileData.location} onChange={(event) => setProfileData({ ...profileData, location: event.target.value })} placeholder="Kochi, Kerala / Remote / Bangalore" />
+            </div>
+
+            <div>
+              <Label>Current Title / Headline {renderRequiredBadge()}</Label>
+              <Input value={profileData.currentTitle} onChange={(event) => setProfileData({ ...profileData, currentTitle: event.target.value })} placeholder="Power BI Analyst, React Developer, IT Support Engineer" />
+            </div>
+
+            <div>
+              <Label>Experience Level {renderRequiredBadge()}</Label>
+              <Select value={profileData.experience} onValueChange={(value) => setProfileData({ ...profileData, experience: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {experienceLevels.map((level) => (
+                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Short Bio {renderRequiredBadge()}</Label>
+              <Textarea
+                value={profileData.bio}
+                onChange={(event) => setProfileData({ ...profileData, bio: event.target.value })}
+                placeholder="Tell recruiters who you are and what type of work you are looking for."
+                className="min-h-28"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
     }
+
+    if (currentStep === 1) {
+      return (
+        <Card className="border border-emerald-100 shadow-sm">
+          <CardHeader>
+            <CardTitle>Step 2: Skills</CardTitle>
+            <p className="text-sm text-muted-foreground">Add at least 3 skills. These are used in recruiter filters.</p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <Label>Skills {renderRequiredBadge()}</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={newSkill}
+                  onChange={(event) => setNewSkill(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addSkill();
+                    }
+                  }}
+                  placeholder="Power BI, Excel, React, SQL..."
+                />
+                <Button type="button" onClick={addSkill} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-3">
+                {skillsPreferences.skills.map((skill) => (
+                  <Badge key={skill} variant="secondary" className="gap-1">
+                    {skill}
+                    <button type="button" onClick={() => removeSkill(skill)}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">{skillsPreferences.skills.length}/3 required skills added</p>
+            </div>
+
+            <div>
+              <Label>Experience Summary {renderRequiredBadge()}</Label>
+              <Textarea
+                value={profileData.experienceSummary}
+                onChange={(event) => setProfileData({ ...profileData, experienceSummary: event.target.value })}
+                placeholder="Example: 3 years experience in Power BI dashboards, Excel reporting and business data analysis."
+                className="min-h-32"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (currentStep === 2) {
+      return (
+        <Card className="border border-emerald-100 shadow-sm">
+          <CardHeader>
+            <CardTitle>Step 3: Job Preferences</CardTitle>
+            <p className="text-sm text-muted-foreground">These fields power employer filters.</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label>Preferred Job Types {renderRequiredBadge()}</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                {jobTypes.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => toggleArrayValue('jobTypes', type)}
+                    className={skillsPreferences.jobTypes.includes(type) ? 'rounded-lg border border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-800' : 'rounded-lg border border-border bg-card p-3 text-sm'}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label>Work Arrangement {renderRequiredBadge()}</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                {workArrangements.map((arrangement) => (
+                  <button
+                    key={arrangement}
+                    type="button"
+                    onClick={() => toggleArrayValue('workArrangement', arrangement)}
+                    className={skillsPreferences.workArrangement.includes(arrangement) ? 'rounded-lg border border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-800' : 'rounded-lg border border-border bg-card p-3 text-sm'}
+                  >
+                    {arrangement}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Availability {renderRequiredBadge()}</Label>
+                <Select value={skillsPreferences.noticePeriod} onValueChange={(value) => setSkillsPreferences({ ...skillsPreferences, noticePeriod: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {noticePeriods.map((period) => (
+                      <SelectItem key={period} value={period}>{period}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Timezone {renderRequiredBadge()}</Label>
+                <Select value={skillsPreferences.timezone} onValueChange={(value) => setSkillsPreferences({ ...skillsPreferences, timezone: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timezones.map((timezone) => (
+                      <SelectItem key={timezone} value={timezone}>{timezone}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Currency {renderRequiredBadge()}</Label>
+                <Select value={skillsPreferences.currency} onValueChange={(value) => setSkillsPreferences({ ...skillsPreferences, currency: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Salary Minimum {renderRequiredBadge()}</Label>
+                <Input
+                  type="number"
+                  value={skillsPreferences.salaryMin}
+                  onChange={(event) => setSkillsPreferences({ ...skillsPreferences, salaryMin: Number(event.target.value || 0) })}
+                />
+              </div>
+              <div>
+                <Label>Salary Maximum {renderRequiredBadge()}</Label>
+                <Input
+                  type="number"
+                  value={skillsPreferences.salaryMax}
+                  onChange={(event) => setSkillsPreferences({ ...skillsPreferences, salaryMax: Number(event.target.value || 0) })}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (currentStep === 3) {
+      return (
+        <Card className="border border-emerald-100 shadow-sm">
+          <CardHeader>
+            <CardTitle>Step 4: Resume / Portfolio</CardTitle>
+            <p className="text-sm text-muted-foreground">At least one link is required to become visible to recruiters.</p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <Label>Resume URL</Label>
+              <Input value={profileData.resumeUrl} onChange={(event) => setProfileData({ ...profileData, resumeUrl: event.target.value })} placeholder="https://..." />
+            </div>
+
+            <div>
+              <Label>Portfolio URL</Label>
+              <Input value={profileData.portfolio} onChange={(event) => setProfileData({ ...profileData, portfolio: event.target.value })} placeholder="https://portfolio.com" />
+            </div>
+
+            <div>
+              <Label>GitHub URL</Label>
+              <Input value={profileData.GitBranch} onChange={(event) => setProfileData({ ...profileData, GitBranch: event.target.value })} placeholder="https://github.com/username" />
+            </div>
+
+            <div>
+              <Label>LinkedIn URL</Label>
+              <Input value={profileData.Link} onChange={(event) => setProfileData({ ...profileData, Link: event.target.value })} placeholder="https://linkedin.com/in/username" />
+            </div>
+
+            <div>
+              <Label>Website</Label>
+              <Input value={profileData.website} onChange={(event) => setProfileData({ ...profileData, website: event.target.value })} placeholder="https://yourwebsite.com" />
+            </div>
+
+            {!hasPortfolioOrResume() && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>Add at least one link before continuing.</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="border border-emerald-100 shadow-sm">
+        <CardHeader>
+          <CardTitle>Step 5: Review & Complete</CardTitle>
+          <p className="text-sm text-muted-foreground">Complete your profile to appear in employer search.</p>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-emerald-900">Profile Completion</h3>
+                <p className="text-sm text-emerald-700">{completion.percentage}% complete</p>
+              </div>
+              {completion.isComplete ? (
+                <Badge className="bg-emerald-600 text-white">Ready for employer search</Badge>
+              ) : (
+                <Badge variant="secondary">Not visible yet</Badge>
+              )}
+            </div>
+
+            <div className="mt-4 h-3 w-full rounded-full bg-white">
+              <div className="h-3 rounded-full bg-emerald-600" style={{ width: completion.percentage + '%' }} />
+            </div>
+          </div>
+
+          {completion.missing.length > 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="font-medium mb-2">Missing required fields:</div>
+                <ul className="list-disc pl-5 space-y-1">
+                  {completion.missing.map((field) => (
+                    <li key={field}>{field}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert className="border-emerald-200 bg-emerald-50">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <AlertDescription className="text-emerald-800">
+                All mandatory fields are complete. Click Complete Profile to become visible to recruiters.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Name</p>
+              <p className="text-muted-foreground">{fullName || 'Missing'}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Headline</p>
+              <p className="text-muted-foreground">{profileData.currentTitle || 'Missing'}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Skills</p>
+              <p className="text-muted-foreground">{skillsPreferences.skills.join(', ') || 'Missing'}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Work Type</p>
+              <p className="text-muted-foreground">{skillsPreferences.workArrangement.join(', ') || 'Missing'}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
-  const removeLocation = (location: string) => {
-    setSkillsPreferences(prev => ({
-      ...prev,
-      preferredLocations: prev.preferredLocations.filter(l => l !== location)
-    }));
-    setHasUnsavedChanges(true);
-  };
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-10 h-10 animate-spin text-emerald-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const exportData = () => {
-    const data = {
-      profile: profileData,
-      skillsPreferences,
-      privacySettings,
-      notificationSettings,
-      exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `hirevify-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast.success('Data exported successfully');
-  };
-
-  const handleDeleteAccount = () => {
-    toast.error('Account deletion requires email confirmation. Please contact support.');
-  };
+  const CurrentIcon = steps[currentStep].icon;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border p-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+      <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
+        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={onBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-              <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+              <h1 className="text-2xl font-bold text-gray-900">Complete Candidate Profile</h1>
+              <p className="text-sm text-gray-500">Finish all required fields to appear in employer search.</p>
             </div>
           </div>
-          
-          {hasUnsavedChanges && (
-            <Alert className="w-auto">
-              <AlertDescription className="text-sm">
-                You have unsaved changes
-              </AlertDescription>
-            </Alert>
-          )}
+
+          <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            Save Draft
+          </Button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="preferences">Job Preferences</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-          </TabsList>
+      <main className="max-w-5xl mx-auto px-6 py-8">
+        <div className="mb-8 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CurrentIcon className="w-5 h-5 text-emerald-700" />
+              </div>
+              <div>
+                <p className="text-sm text-emerald-700">Step {currentStep + 1} of {steps.length}</p>
+                <h2 className="text-xl font-semibold text-gray-900">{steps[currentStep].title}</h2>
+                <p className="text-sm text-gray-500">{steps[currentStep].description}</p>
+              </div>
+            </div>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2 text-primary" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={profileData.firstName}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, firstName: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={profileData.lastName}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, lastName: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
+            <div className="text-right min-w-[160px]">
+              <p className="text-sm text-gray-500">Completion</p>
+              <p className="text-2xl font-bold text-emerald-700">{completion.percentage}%</p>
+            </div>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, email: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={profileData.phone}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, phone: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
+          <div className="mt-5 h-3 w-full rounded-full bg-slate-100">
+            <div className="h-3 rounded-full bg-emerald-600 transition-all" style={{ width: ((currentStep + 1) / steps.length) * 100 + '%' }} />
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      placeholder="City, State/Country"
-                      value={profileData.location}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, location: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="currentTitle">Current Title</Label>
-                    <Input
-                      id="currentTitle"
-                      placeholder="e.g. Frontend Developer"
-                      value={profileData.currentTitle}
-                      onChange={(e) => {
-                        setProfileData(prev => ({ ...prev, currentTitle: e.target.value }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
+          <div className="mt-4 grid grid-cols-5 gap-2">
+            {steps.map((step, index) => (
+              <button
+                key={step.title}
+                type="button"
+                onClick={() => setCurrentStep(index)}
+                className={index === currentStep ? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs text-white' : index < currentStep ? 'rounded-lg bg-emerald-100 px-3 py-2 text-xs text-emerald-800' : 'rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600'}
+              >
+                {index + 1}. {step.title}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                <div>
-                  <Label htmlFor="experience">Experience Level</Label>
-                  <Select 
-                    value={profileData.experience} 
-                    onValueChange={(value) => {
-                      setProfileData(prev => ({ ...prev, experience: value }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experienceLevels.map(level => (
-                        <SelectItem key={level} value={level}>{level}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        {renderStepContent()}
 
-                <div>
-                  <Label htmlFor="bio">Professional Bio</Label>
-                  <Textarea
-                    id="bio"
-                    placeholder="Tell employers about yourself, your experience, and what you're looking for..."
-                    value={profileData.bio}
-                    onChange={(e) => {
-                      setProfileData(prev => ({ ...prev, bio: e.target.value }));
-                      setHasUnsavedChanges(true);
-                    }}
-                    className="min-h-24"
-                  />
-                </div>
+        <div className="mt-6 flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
+            disabled={currentStep === 0 || isLoading}
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
 
-                <Separator />
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Draft'}
+            </Button>
 
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Professional Links</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="website">Website</Label>
-                      <Input
-                        id="website"
-                        placeholder="https://yourwebsite.com"
-                        value={profileData.website}
-                        onChange={(e) => {
-                          setProfileData(prev => ({ ...prev, website: e.target.value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="Link">Link</Label>
-                      <Input
-                        id="Link"
-                        placeholder="https://Link.com/in/username"
-                        value={profileData.Link}
-                        onChange={(e) => {
-                          setProfileData(prev => ({ ...prev, Link: e.target.value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="GitBranch">GitBranch</Label>
-                      <Input
-                        id="GitBranch"
-                        placeholder="https://GitBranch.com/username"
-                        value={profileData.GitBranch}
-                        onChange={(e) => {
-                          setProfileData(prev => ({ ...prev, GitBranch: e.target.value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="portfolio">Portfolio</Label>
-                      <Input
-                        id="portfolio"
-                        placeholder="https://portfolio.com"
-                        value={profileData.portfolio}
-                        onChange={(e) => {
-                          setProfileData(prev => ({ ...prev, portfolio: e.target.value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={profileData.availableForWork}
-                    onCheckedChange={(checked) => {
-                      setProfileData(prev => ({ ...prev, availableForWork: checked }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  />
-                  <Label>Available for work opportunities</Label>
-                </div>
-
-                <Button onClick={handleSaveProfile} disabled={isLoading} className="w-full md:w-auto">
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Profile'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Job Preferences Tab */}
-          <TabsContent value="preferences" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Briefcase className="w-5 h-5 mr-2 text-primary" />
-                  Job Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Skills */}
-                <div>
-                  <Label>Skills</Label>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {skillsPreferences.skills.map(skill => (
-                        <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
-                          {skill} <X className="w-3 h-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Add a skill"
-                        value={newSkill}
-                        onChange={(e) => setNewSkill(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                      />
-                      <Button onClick={addSkill} variant="outline">Add</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Job Type & Work Arrangement */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label>Job Types</Label>
-                    <div className="space-y-2 mt-2">
-                      {jobTypes.map(type => (
-                        <label key={type} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={skillsPreferences.jobTypes.includes(type)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  jobTypes: [...prev.jobTypes, type]
-                                }));
-                              } else {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  jobTypes: prev.jobTypes.filter(t => t !== type)
-                                }));
-                              }
-                              setHasUnsavedChanges(true);
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-sm">{type}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Work Arrangement</Label>
-                    <div className="space-y-2 mt-2">
-                      {workArrangements.map(arrangement => (
-                        <label key={arrangement} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={skillsPreferences.workArrangement.includes(arrangement)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  workArrangement: [...prev.workArrangement, arrangement]
-                                }));
-                              } else {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  workArrangement: prev.workArrangement.filter(a => a !== arrangement)
-                                }));
-                              }
-                              setHasUnsavedChanges(true);
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-sm">{arrangement}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Salary Expectations */}
-                <div>
-                  <Label>Salary Expectations</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    <div>
-                      <Label htmlFor="salaryMin" className="text-sm">Minimum</Label>
-                      <Input
-                        id="salaryMin"
-                        type="number"
-                        value={skillsPreferences.salaryMin}
-                        onChange={(e) => {
-                          setSkillsPreferences(prev => ({ ...prev, salaryMin: parseInt(e.target.value) || 0 }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="salaryMax" className="text-sm">Maximum</Label>
-                      <Input
-                        id="salaryMax"
-                        type="number"
-                        value={skillsPreferences.salaryMax}
-                        onChange={(e) => {
-                          setSkillsPreferences(prev => ({ ...prev, salaryMax: parseInt(e.target.value) || 0 }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="currency" className="text-sm">Currency</Label>
-                      <Select 
-                        value={skillsPreferences.currency} 
-                        onValueChange={(value) => {
-                          setSkillsPreferences(prev => ({ ...prev, currency: value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                          <SelectItem value="INR">INR</SelectItem>
-                          <SelectItem value="CAD">CAD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Preferred Locations */}
-                <div>
-                  <Label>Preferred Locations</Label>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {skillsPreferences.preferredLocations.map(location => (
-                        <Badge key={location} variant="secondary" className="cursor-pointer" onClick={() => removeLocation(location)}>
-                          {location} <X className="w-3 h-3 ml-1" />
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Input
-                        placeholder="Add a location"
-                        value={newLocation}
-                        onChange={(e) => setNewLocation(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addLocation()}
-                      />
-                      <Button onClick={addLocation} variant="outline">Add</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label>Preferred Industries</Label>
-                    <div className="space-y-2 mt-2 max-h-48 overflow-y-auto">
-                      {industries.map(industry => (
-                        <label key={industry} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={skillsPreferences.industries.includes(industry)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  industries: [...prev.industries, industry]
-                                }));
-                              } else {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  industries: prev.industries.filter(i => i !== industry)
-                                }));
-                              }
-                              setHasUnsavedChanges(true);
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-sm">{industry}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Company Size Preference</Label>
-                    <div className="space-y-2 mt-2">
-                      {companySizes.map(size => (
-                        <label key={size} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={skillsPreferences.companySizes.includes(size)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  companySizes: [...prev.companySizes, size]
-                                }));
-                              } else {
-                                setSkillsPreferences(prev => ({
-                                  ...prev,
-                                  companySizes: prev.companySizes.filter(s => s !== size)
-                                }));
-                              }
-                              setHasUnsavedChanges(true);
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-sm">{size} employees</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Notice Period</Label>
-                  <Select 
-                    value={skillsPreferences.noticePeriod} 
-                    onValueChange={(value) => {
-                      setSkillsPreferences(prev => ({ ...prev, noticePeriod: value }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  >
-                    <SelectTrigger className="w-full md:w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {noticePeriods.map(period => (
-                        <SelectItem key={period} value={period}>{period}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button onClick={handleSaveSkillsPreferences} disabled={isLoading} className="w-full md:w-auto">
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Preferences'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Privacy Tab */}
-          <TabsContent value="privacy" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="w-5 h-5 mr-2 text-primary" />
-                  Privacy & Visibility
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Profile Visibility</Label>
-                  <Select 
-                    value={privacySettings.profileVisibility} 
-                    onValueChange={(value: any) => {
-                      setPrivacySettings(prev => ({ ...prev, profileVisibility: value }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  >
-                    <SelectTrigger className="w-full md:w-64">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public">Public - Visible to everyone</SelectItem>
-                      <SelectItem value="verified-only">Verified Recruiters Only</SelectItem>
-                      <SelectItem value="private">Private - Not visible in searches</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Contact Information</h4>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Show Email Address</Label>
-                      <p className="text-sm text-muted-foreground">Allow recruiters to see your email</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.showEmail}
-                      onCheckedChange={(checked) => {
-                        setPrivacySettings(prev => ({ ...prev, showEmail: checked }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Show Phone Number</Label>
-                      <p className="text-sm text-muted-foreground">Allow recruiters to see your phone</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.showPhone}
-                      onCheckedChange={(checked) => {
-                        setPrivacySettings(prev => ({ ...prev, showPhone: checked }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Show Salary Expectations</Label>
-                      <p className="text-sm text-muted-foreground">Display your salary range to recruiters</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.showSalaryExpectations}
-                      onCheckedChange={(checked) => {
-                        setPrivacySettings(prev => ({ ...prev, showSalaryExpectations: checked }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Recruiter Communication</h4>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Allow Contact from Recruiters</Label>
-                      <p className="text-sm text-muted-foreground">Receive messages and opportunities from recruiters</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.allowContactFromRecruiters}
-                      onCheckedChange={(checked) => {
-                        setPrivacySettings(prev => ({ ...prev, allowContactFromRecruiters: checked }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Anonymous Applications</Label>
-                      <p className="text-sm text-muted-foreground">Hide your identity in initial applications</p>
-                    </div>
-                    <Switch
-                      checked={privacySettings.anonymousApplications}
-                      onCheckedChange={(checked) => {
-                        setPrivacySettings(prev => ({ ...prev, anonymousApplications: checked }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={handleSavePrivacySettings} disabled={isLoading} className="w-full md:w-auto">
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Privacy Settings'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Bell className="w-5 h-5 mr-2 text-primary" />
-                  Notification Preferences
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Notification Frequency</Label>
-                  <Select 
-                    value={notificationSettings.frequency} 
-                    onValueChange={(value: any) => {
-                      setNotificationSettings(prev => ({ ...prev, frequency: value }));
-                      setHasUnsavedChanges(true);
-                    }}
-                  >
-                    <SelectTrigger className="w-full md:w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="immediate">Immediate</SelectItem>
-                      <SelectItem value="daily">Daily digest</SelectItem>
-                      <SelectItem value="weekly">Weekly digest</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Email Notifications</h4>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Job Matches</Label>
-                      <p className="text-sm text-muted-foreground">When new jobs match your preferences</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications.jobMatches}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, jobMatches: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Application Updates</Label>
-                      <p className="text-sm text-muted-foreground">Status changes on your applications</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications.applicationUpdates}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, applicationUpdates: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Interview Invitations</Label>
-                      <p className="text-sm text-muted-foreground">When you're invited to an interview</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications.interviews}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, interviews: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Messages</Label>
-                      <p className="text-sm text-muted-foreground">Direct messages from recruiters</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications.messages}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, messages: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Weekly Digest</Label>
-                      <p className="text-sm text-muted-foreground">Summary of activity and opportunities</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications.weeklyDigest}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, weeklyDigest: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Push Notifications</h4>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Job Matches</Label>
-                      <p className="text-sm text-muted-foreground">Instant notifications for job matches</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.pushNotifications.jobMatches}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          pushNotifications: { ...prev.pushNotifications, jobMatches: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Messages</Label>
-                      <p className="text-sm text-muted-foreground">New messages from recruiters</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.pushNotifications.messages}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          pushNotifications: { ...prev.pushNotifications, messages: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Interview Reminders</Label>
-                      <p className="text-sm text-muted-foreground">Reminders for upcoming interviews</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.pushNotifications.interviews}
-                      onCheckedChange={(checked) => {
-                        setNotificationSettings(prev => ({
-                          ...prev,
-                          pushNotifications: { ...prev.pushNotifications, interviews: checked }
-                        }));
-                        setHasUnsavedChanges(true);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <Button onClick={handleSaveNotificationSettings} disabled={isLoading} className="w-full md:w-auto">
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? 'Saving...' : 'Save Notification Settings'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Account Tab */}
-          <TabsContent value="account" className="space-y-6">
-            {/* Password Change */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Settings className="w-5 h-5 mr-2 text-primary" />
-                  Account Security
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold">Change Password</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="currentPassword">Current Password</Label>
-                      <Input
-                        id="currentPassword"
-                        type="password"
-                        value={passwordForm.currentPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={passwordForm.newPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={passwordForm.confirmPassword}
-                        onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <Button onClick={handlePasswordChange} disabled={isLoading} variant="outline">
-                    Update Password
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Data Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Management</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Export Your Data</Label>
-                    <p className="text-sm text-muted-foreground">Download a copy of all your data</p>
-                  </div>
-                  <Button onClick={exportData} variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Data
-                  </Button>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-red-600">Delete Account</Label>
-                    <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
-                  </div>
-                  <Button onClick={handleDeleteAccount} variant="destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Account
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Subscription */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Subscription</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Current Plan</Label>
-                    <p className="text-sm text-muted-foreground">Free Plan - Limited features</p>
-                  </div>
-                  <Button onClick={onUpgrade}>
-                    Upgrade to Pro
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            {currentStep < steps.length - 1 ? (
+              <Button onClick={handleNext} disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {isLoading ? 'Saving...' : 'Next'}
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleCompleteProfile}
+                disabled={isLoading || !completion.isComplete}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {isLoading ? 'Completing...' : 'Complete Profile'}
+              </Button>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
 }
-
-
-
-
-
-
-

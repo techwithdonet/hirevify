@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Matching Dashboard
  * 
  * Comprehensive dashboard for AI matching system including real-time metrics,
@@ -452,7 +452,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="font-medium">{match.candidateName}</span>
-                        <span className="text-muted-foreground">â†’</span>
+                        <span className="text-muted-foreground">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</span>
                         <span className="text-sm text-muted-foreground">{match.projectTitle}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">

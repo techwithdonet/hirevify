@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, TrendingUp, TrendingDown, Users, Clock, Target, DollarSign, Calendar, Filter, Download, RefreshCw, Eye, BarChart3, PieChart, LineChart, Activity, Award, Briefcase, UserCheck, AlertTriangle, CheckCircle, Globe, Star, MapPin, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -293,9 +293,9 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
         <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
           <h4 className="font-semibold text-gray-800 mb-2">Data Requirements</h4>
           <ul className="text-sm text-gray-700 space-y-1">
-            <li>â€¢ Hiring funnel data calculated from actual application statuses</li>
-            <li>â€¢ Conversion rates based on real candidate progression</li>
-            <li>â€¢ No fake data - all metrics from actual hiring activity</li>
+            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Hiring funnel data calculated from actual application statuses</li>
+            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Conversion rates based on real candidate progression</li>
+            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ No fake data - all metrics from actual hiring activity</li>
           </ul>
         </div>
       </CardContent>
@@ -390,7 +390,7 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
         </div>
 
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">ðŸ† Top Performer: HireVify Skills Platform</h4>
+          <h4 className="font-semibold text-green-800 mb-2">ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬Â  Top Performer: HireVify Skills Platform</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <div className="font-medium text-green-700">Conversion Rate</div>
@@ -566,21 +566,21 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h4 className="font-semibold text-green-800 mb-2">ðŸŽ¯ Conversion Success</h4>
+                    <h4 className="font-semibold text-green-800 mb-2">ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ Conversion Success</h4>
                     <p className="text-sm text-green-700">
                       Skills-based assessments show 23% higher conversion rates compared to traditional screening methods.
                     </p>
                   </div>
                   
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-800 mb-2">âš¡ Speed Improvement</h4>
+                    <h4 className="font-semibold text-blue-800 mb-2">ÃƒÂ¢Ã…Â¡Ã‚Â¡ Speed Improvement</h4>
                     <p className="text-sm text-blue-700">
                       Time to hire reduced by 35% through automated skills verification and video interviews.
                     </p>
                   </div>
                   
                   <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                    <h4 className="font-semibold text-purple-800 mb-2">ðŸ’Ž Quality Enhancement</h4>
+                    <h4 className="font-semibold text-purple-800 mb-2">ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…Â½ Quality Enhancement</h4>
                     <p className="text-sm text-purple-700">
                       Hire quality score improved by 28% with project-based evaluations over resume screening.
                     </p>

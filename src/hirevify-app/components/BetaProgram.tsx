@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   TestTube, 
   Star, 
@@ -293,7 +293,7 @@ export function BetaProgram({ onBack, isAdmin = false }: BetaProgramProps) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <Button variant="outline" onClick={onBack}>
-              â† Back
+              ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back
             </Button>
             <div>
               <h1 className="text-3xl font-bold flex items-center">
@@ -453,9 +453,9 @@ export function BetaProgram({ onBack, isAdmin = false }: BetaProgramProps) {
                           
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
                             <span>By {item.userName}</span>
-                            <span>â€¢</span>
+                            <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                             <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                            <span>â€¢</span>
+                            <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                             <span className="capitalize">{item.userType}</span>
                           </div>
                         </div>

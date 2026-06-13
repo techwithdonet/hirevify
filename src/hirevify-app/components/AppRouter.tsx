@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App Router Component
  * 
  * Handles screen rendering logic based on current screen state

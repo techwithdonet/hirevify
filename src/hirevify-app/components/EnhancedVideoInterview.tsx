@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Play, Square, Pause, RotateCcw, Video, VideoOff, Mic, MicOff, Monitor, User, Clock, Eye, Download, Share2, Settings, Camera, Volume2, VolumeX, Maximize, Minimize, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';

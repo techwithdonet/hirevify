@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, MessageCircle, Settings, LogOut, Plus, Search, User, FileText, Award, Video, Calendar, Users, Zap, Target, Building, Timer, BookOpen, Star, ExternalLink, ArrowRight, Crown, Lightbulb, CheckCircle, PlayCircle, Brain, Sparkles, Scan, Loader } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -125,6 +125,10 @@ export function CandidateDashboard({
     loadCandidateData();
   }, [user?.id]);
 
+  const candidateProfileCompleteness = Number(candidateProfile?.profile_completeness || 0);
+  const isCandidateProfileComplete =
+    Boolean(candidateProfile?.profile_completed) || candidateProfileCompleteness >= 60;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -167,7 +171,7 @@ export function CandidateDashboard({
               <div className="flex items-center space-x-1">
                 <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg hover:bg-emerald-50">
                   <MessageCircle className="w-5 h-5 text-gray-600" />
-                  {unreadMessages > 0 && (
+                  {false && unreadMessages > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
                       {unreadMessages}
                     </Badge>
@@ -176,7 +180,7 @@ export function CandidateDashboard({
                 
                 <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg hover:bg-emerald-50">
                   <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadNotifications > 0 && (
+                  {false && unreadNotifications > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
                       {unreadNotifications}
                     </Badge>
@@ -208,6 +212,43 @@ export function CandidateDashboard({
 
         {!isLoading && (
         <>
+        {/* Profile Completion Card */}
+        <Card className="mb-8 border border-emerald-100 bg-white shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isCandidateProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                  {isCandidateProfileComplete ? (
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  ) : (
+                    <User className="w-6 h-6 text-amber-600" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {isCandidateProfileComplete ? 'Your profile is ready' : 'Complete your candidate profile'}
+                    </h2>
+                    <Badge className={isCandidateProfileComplete ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}>
+                      {candidateProfileCompleteness}% complete
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {isCandidateProfileComplete
+                      ? 'Recruiters can now discover your profile from candidate search. Keep it updated for better matches.'
+                      : 'Add skills, experience, salary, work type, location, and portfolio details so recruiters can find you.'}
+                  </p>
+                </div>
+              </div>
+
+              <Button onClick={onViewSettings} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">

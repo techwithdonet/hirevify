@@ -1,4 +1,4 @@
-﻿import { Button } from './ui/button';
+import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Crown } from 'lucide-react';

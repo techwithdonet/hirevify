@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -7,6 +7,8 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Plus, X, CheckCircle2, Briefcase } from 'lucide-react';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { toast } from 'sonner';
 
 interface Project {
   id: string;
@@ -31,6 +33,8 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
   const [budget, setBudget] = useState(existingProject?.budget || '');
   const [timeline, setTimeline] = useState(existingProject?.timeline || '');
   const [newSkill, setNewSkill] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedJobId, setSavedJobId] = useState<string | null>(null);
 
   const isEditing = !!existingProject;
 
@@ -45,9 +49,138 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
-  const handleSubmit = () => {
-    if (projectTitle.trim() && projectDescription.trim() && skills.length > 0 && budget.trim() && timeline.trim()) {
+  const parseBudgetRange = (value: string) => {
+    const cleaned = value.replace(/,/g, '');
+    const numbers = cleaned.match(/\d+(?:\.\d+)?/g)?.map(Number) || [];
+    const lowerValue = value.toLowerCase();
+
+    let currency = 'USD';
+    if (lowerValue.includes('inr') || lowerValue.includes('rs')) currency = 'INR';
+    if (lowerValue.includes('eur')) currency = 'EUR';
+    if (lowerValue.includes('gbp')) currency = 'GBP';
+    if (lowerValue.includes('qar')) currency = 'QAR';
+
+    const min = numbers[0] ?? null;
+    const max = numbers[1] ?? min;
+
+    return { min, max, currency };
+  };
+
+  const saveProjectToDatabase = async () => {
+    const supabase = createSupabaseBrowserClient();
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !authData?.user?.id) {
+      throw new Error('No active Supabase login found. Please logout and login again.');
+    }
+
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, role, company_name')
+      .eq('auth_user_id', authData.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      throw new Error(profileError.message || 'Failed to find recruiter profile.');
+    }
+
+    if (!profileRow?.id) {
+      throw new Error('Main profile row not found. Please complete recruiter profile first.');
+    }
+
+    if (profileRow.role !== 'recruiter') {
+      throw new Error('Only recruiter accounts can post projects.');
+    }
+
+    const { data: recruiterProfile } = await supabase
+      .from('recruiter_profiles')
+      .select('id, company_name')
+      .eq('id', profileRow.id)
+      .maybeSingle();
+
+    const { min, max, currency } = parseBudgetRange(budget);
+
+    const payload = {
+      recruiter_id: profileRow.id,
+      title: projectTitle.trim(),
+      company_name: recruiterProfile?.company_name || profileRow.company_name || 'Company',
+      description: projectDescription.trim(),
+      requirements: [`Timeline: ${timeline.trim()}`],
+      skills,
+      location: 'Not specified',
+      job_type: 'freelance',
+      experience_level: 'mid',
+      remote_type: 'remote',
+      salary_min: min,
+      salary_max: max,
+      currency,
+      budget_min: min,
+      budget_max: max,
+      budget_currency: currency,
+      status: 'published',
+      applications_count: 0,
+      views_count: 0,
+      has_assessment: false,
+      has_video_challenge: false,
+      video_challenge_description: null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isEditing && existingProject?.id) {
+      const { data, error } = await supabase
+        .from('jobs')
+        .update(payload)
+        .eq('id', existingProject.id)
+        .select('id, title, status, created_at, updated_at')
+        .single();
+
+      if (error) {
+        throw new Error(error.message || 'Failed to update project.');
+      }
+
+      if (!data?.id) {
+        throw new Error('Project update did not return a saved row.');
+      }
+
+      return data;
+    }
+
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert(payload)
+      .select('id, title, status, created_at, updated_at')
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Failed to post project.');
+    }
+
+    if (!data?.id) {
+      throw new Error('Project post did not return a saved row.');
+    }
+
+    return data;
+  };
+
+  const handleSubmit = async () => {
+    if (!projectTitle.trim() || !projectDescription.trim() || skills.length === 0 || !budget.trim() || !timeline.trim()) {
+      toast.error('Please complete all project fields before posting.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const savedJob = await saveProjectToDatabase();
+      setSavedJobId(savedJob.id);
+      toast.success(isEditing ? 'Project updated in database' : 'Project posted to database');
       setStep('success');
+    } catch (error) {
+      console.error('Failed to save project:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save project');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -187,10 +320,10 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
               <div className="pt-6">
                 <Button 
                   onClick={handleSubmit}
-                  disabled={!projectTitle.trim() || !projectDescription.trim() || skills.length === 0 || !budget.trim() || !timeline.trim()}
+                  disabled={isSubmitting || !projectTitle.trim() || !projectDescription.trim() || skills.length === 0 || !budget.trim() || !timeline.trim()}
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-14 text-lg"
                 >
-                  {isEditing ? 'Update Project' : 'Post Project'}
+                  {isSubmitting ? 'Saving to Database...' : isEditing ? 'Update Project' : 'Post Project'}
                 </Button>
               </div>
             </CardContent>
@@ -220,6 +353,7 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
                 {/* Project Summary */}
                 <div className="bg-muted rounded-xl p-6 text-left max-w-md mx-auto">
                   <h3 className="text-foreground mb-3">{projectTitle}</h3>
+                  {savedJobId && <p className="text-xs text-muted-foreground mb-3">Saved Job ID: {savedJobId}</p>}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Skills:</span>

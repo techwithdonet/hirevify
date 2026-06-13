@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Interview Coach
  * 
  * Personalized interview preparation system that analyzes job requirements,
@@ -808,10 +808,10 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
                       </p>
                       <div className="text-xs">
                         <p className="text-green-600">
-                          âœ“ {response.aiAnalysis?.strengths[0] || 'Good response'}
+                          ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ {response.aiAnalysis?.strengths[0] || 'Good response'}
                         </p>
                         <p className="text-orange-600">
-                          â†’ {response.aiAnalysis?.improvements[0] || 'Keep practicing'}
+                          ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ {response.aiAnalysis?.improvements[0] || 'Keep practicing'}
                         </p>
                       </div>
                     </Card>
@@ -863,7 +863,7 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
                       <ul className="text-sm text-blue-700 space-y-1">
                         {currentSession.questions[currentQuestionIndex].tips.map((tip, index) => (
                           <li key={index} className="flex items-start gap-2">
-                            <span className="text-blue-500 mt-1">â€¢</span>
+                            <span className="text-blue-500 mt-1">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                             {tip}
                           </li>
                         ))}
@@ -973,7 +973,7 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
                             <ul className="text-xs text-muted-foreground space-y-1">
                               {insight.actionItems.map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-1">
-                                  <span className="text-primary mt-1">â€¢</span>
+                                  <span className="text-primary mt-1">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
                                   {item}
                                 </li>
                               ))}

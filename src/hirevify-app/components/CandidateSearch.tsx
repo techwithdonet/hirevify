@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -96,25 +96,11 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
 
-  // Load candidates from Supabase
+  // Load only completed candidate profiles from Supabase
   useEffect(() => {
     async function loadCandidates() {
       try {
         setIsLoadingCandidates(true);
-
-        const { data: profiles, error: profilesError } =
-          await profilesService.searchProfiles('', 'candidate');
-
-        if (profilesError) {
-          console.error('Error loading candidate profiles:', profilesError);
-          setCandidates([]);
-          setFilteredCandidates([]);
-          return;
-        }
-
-        const authUserIds = (profiles || [])
-          .map((profile: any) => profile.auth_user_id)
-          .filter(Boolean);
 
         const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
         const supabase = createSupabaseBrowserClient();
@@ -122,53 +108,114 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
         const { data: candidateDetails, error: detailsError } = await supabase
           .from('candidate_profiles')
           .select('*')
-          .in('user_id', authUserIds);
+          .or('profile_completed.eq.true,profile_completeness.gte.60')
+          .order('updated_at', { ascending: false });
 
         if (detailsError) {
-          console.error('Error loading candidate details:', detailsError);
+          console.error('Error loading completed candidate profiles:', detailsError);
+          setCandidates([]);
+          setFilteredCandidates([]);
+          return;
         }
 
-        const mapped = (profiles || []).map((profile: any, index: number) => {
-          const details = (candidateDetails || []).find(
-            (item: any) => item.user_id === profile.auth_user_id
-          );
+        const completedProfiles = candidateDetails || [];
 
-          return {
-            id: profile.id,
-            name: details?.full_name || profile.full_name || 'Candidate',
-            email: profile.email || '',
-            avatar: profile.avatar_url || '',
-            title: details?.headline || 'Candidate',
-            headline: details?.headline || 'Open to opportunities',
-            location: details?.location || 'Not specified',
-            phone: details?.phone || profile.phone || '',
-            skills: details?.skills || [],
-            experienceSummary: details?.experience_summary || '',
-            resumeUrl: details?.resume_url || '',
+        if (completedProfiles.length === 0) {
+          setCandidates([]);
+          setFilteredCandidates([]);
+          return;
+        }
 
-            matchScore: Math.max(60, 95 - index * 4),
-            responseRate: Math.max(50, 90 - index * 3),
-            workType: 'Remote',
-            experience: 'Not specified',
-            timezone: 'IST',
-            availability: 'immediate' as const,
+        const lookupIds = Array.from(
+          new Set(
+            completedProfiles
+              .map((candidate: any) => candidate.user_id)
+              .filter(Boolean)
+          )
+        );
 
-            salaryRange: {
-              min: 30000,
-              max: 80000,
-              currency: 'USD',
-            },
+        const profileRows: any[] = [];
 
-            lastActive: details?.updated_at || profile.created_at,
-            isVerified: false,
-            hasPortfolio: !!details?.resume_url,
-          };
-        });
+        for (const id of lookupIds) {
+          const { data: profileById } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+
+          if (profileById) {
+            profileRows.push(profileById);
+            continue;
+          }
+
+          const { data: profileByAuthId } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('auth_user_id', id)
+            .maybeSingle();
+
+          if (profileByAuthId) {
+            profileRows.push(profileByAuthId);
+          }
+        }
+
+        const mapped = completedProfiles
+          .map((details: any, index: number) => {
+            const profile = profileRows.find((item: any) =>
+              item.id === details.user_id || item.auth_user_id === details.user_id
+            );
+
+            const yearsOfExperience = Number(details.years_of_experience || 0);
+
+            return {
+              id: profile?.id || details.user_id || details.id,
+              name: details.full_name || profile?.full_name || 'Candidate',
+              email: profile?.email || '',
+              avatar: profile?.avatar_url || '',
+              title: details.headline || 'Candidate',
+              headline: details.headline || 'Open to opportunities',
+              location: details.location || profile?.location || 'Not specified',
+              phone: details.phone || profile?.phone || '',
+              skills: details.skills || [],
+              experienceSummary: details.experience_summary || '',
+              resumeUrl: details.resume_url || '',
+              portfolioUrl: details.portfolio_url || '',
+              GitBranch: details.github_url || '',
+              Link: details.linkedin_url || '',
+
+              matchScore: Math.max(60, 95 - index * 4),
+              responseRate: Number(details.response_rate || Math.max(50, 90 - index * 3)),
+              preferredWorkType: details.preferred_work_type || [],
+              experience: yearsOfExperience > 0 ? `${yearsOfExperience} years` : 'Not specified',
+              yearsOfExperience,
+              timezone: details.timezone || 'IST',
+              availability: details.availability || 'immediate',
+
+              salaryRange: {
+                min: Number(details.salary_min || 0),
+                max: Number(details.salary_max || 0),
+                currency: details.salary_currency || 'USD',
+              },
+
+              lastActive: details.updated_at || profile?.created_at || '',
+              isVerified: Boolean(profile?.is_verified),
+              profileCompleteness: Number(details.profile_completeness || 0),
+              hasPortfolio: Boolean(details.resume_url || details.portfolio_url || details.github_url || details.linkedin_url),
+              bio: details.bio || '',
+              education: details.education || '',
+              certifications: details.certifications || [],
+              portfolioItems: details.portfolio_url ? 1 : 0,
+              previousCompanies: details.previous_companies || [],
+              achievements: details.achievements || [],
+              languages: details.languages || [],
+              hiringSuccessRate: 0,
+            };
+          });
 
         setCandidates(mapped as unknown as Candidate[]);
         setFilteredCandidates(mapped as unknown as Candidate[]);
       } catch (err) {
-        console.error('Unexpected error loading candidates:', err);
+        console.error('Unexpected error loading completed candidates:', err);
         setCandidates([]);
         setFilteredCandidates([]);
       } finally {
@@ -179,7 +226,7 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
     loadCandidates();
   }, []);
 
-        
+
   const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>(candidates);
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);

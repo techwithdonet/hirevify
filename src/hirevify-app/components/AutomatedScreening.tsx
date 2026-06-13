@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Automated Candidate Pre-screening
  * 
  * AI-powered system that automatically screens candidates against job requirements,

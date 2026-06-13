@@ -1,10 +1,12 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ArrowLeft, Link2, CheckCircle2, Briefcase } from 'lucide-react';
+import { createClient } from '../utils/supabase/client';
 
 interface Job {
   id: string;
@@ -24,8 +26,9 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
   const [step, setStep] = useState<'job-details' | 'schedule' | 'success'>('job-details');
   const [jobTitle, setJobTitle] = useState(existingJob?.title || '');
   const [jobDescription, setJobDescription] = useState(existingJob?.description || '');
-  const [candidateEmail, setCandidateEmail] = useState('');
-  const [generatedLink, setGeneratedLink] = useState('');
+  const [candidateEmail, setCandidateEmail] = useState(existingJob?.candidateEmail || '');
+  const [generatedLink, setGeneratedLink] = useState(existingJob?.interviewLink || '');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleJobDetailsSubmit = () => {
     if (jobTitle.trim() && jobDescription.trim()) {
@@ -33,11 +36,62 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
     }
   };
 
-  const handleGenerateLink = () => {
-    if (candidateEmail.trim()) {
-      const mockLink = `https://hirevify.com/interview/${Math.random().toString(36).substr(2, 9)}`;
-      setGeneratedLink(mockLink);
+  const handleGenerateLink = async () => {
+    if (!candidateEmail.trim()) {
+      toast.error('Enter candidate email first.');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+
+      const supabase = createClient();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !userData.user) {
+        toast.error('Please login again to generate interview link.');
+        return;
+      }
+
+      const { data: invite, error: insertError } = await supabase
+        .from('interview_invites')
+        .insert({
+          recruiter_id: userData.user.id,
+          job_id: existingJob?.id || null,
+          job_title: jobTitle.trim(),
+          job_description: jobDescription.trim(),
+          candidate_email: candidateEmail.trim(),
+          status: 'pending',
+        })
+        .select('id')
+        .single();
+
+      if (insertError || !invite?.id) {
+        throw new Error(insertError?.message || 'Failed to create interview invite.');
+      }
+
+      const link = `${window.location.origin}/interview/${invite.id}`;
+
+      const { error: updateError } = await supabase
+        .from('interview_invites')
+        .update({
+          interview_link: link,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', invite.id);
+
+      if (updateError) {
+        throw new Error(updateError.message || 'Failed to save interview link.');
+      }
+
+      setGeneratedLink(link);
       setStep('success');
+      toast.success('Interview invite saved to database.');
+    } catch (error) {
+      console.error('Failed to generate interview link:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate interview link.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -47,7 +101,6 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center space-x-4">
@@ -64,7 +117,6 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-2xl mx-auto px-6 py-8">
         {step === 'job-details' && (
           <Card className="border border-border">
@@ -73,10 +125,9 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                 {existingJob ? 'Schedule Interview' : 'Create New Job'}
               </CardTitle>
               <p className="text-muted-foreground">
-                {existingJob 
-                  ? 'Review job details and proceed to schedule an interview' 
-                  : 'Fill in the job details to get started'
-                }
+                {existingJob
+                  ? 'Review job details and proceed to schedule an interview'
+                  : 'Fill in the job details to get started'}
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -85,19 +136,19 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                 <Input
                   id="job-title"
                   value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
+                  onChange={(event) => setJobTitle(event.target.value)}
                   placeholder="e.g. Senior Frontend Developer"
                   className="bg-input-background border-border text-foreground"
                   disabled={!!existingJob}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="job-description" className="text-foreground">Job Description</Label>
                 <Textarea
                   id="job-description"
                   value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
+                  onChange={(event) => setJobDescription(event.target.value)}
                   placeholder="Describe the role, requirements, and responsibilities..."
                   rows={4}
                   className="bg-input-background border-border text-foreground resize-none"
@@ -105,7 +156,7 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                 />
               </div>
 
-              <Button 
+              <Button
                 onClick={handleJobDetailsSubmit}
                 disabled={!jobTitle.trim() || !jobDescription.trim()}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -121,7 +172,7 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
             <CardHeader>
               <CardTitle className="text-foreground">Schedule Interview</CardTitle>
               <p className="text-muted-foreground">
-                Enter the candidate's email to generate a secure interview link
+                Enter the candidate&apos;s email to create a database-backed interview invite.
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -136,19 +187,19 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                   id="candidate-email"
                   type="email"
                   value={candidateEmail}
-                  onChange={(e) => setCandidateEmail(e.target.value)}
+                  onChange={(event) => setCandidateEmail(event.target.value)}
                   placeholder="candidate@example.com"
                   className="bg-input-background border-border text-foreground"
                 />
               </div>
 
-              <Button 
+              <Button
                 onClick={handleGenerateLink}
-                disabled={!candidateEmail.trim()}
+                disabled={!candidateEmail.trim() || isGenerating}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Link2 className="w-4 h-4 mr-2" />
-                Generate Interview Link
+                {isGenerating ? 'Saving Invite...' : 'Generate Interview Link'}
               </Button>
             </CardContent>
           </Card>
@@ -161,11 +212,11 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-8 h-8 text-green-600" />
                 </div>
-                
+
                 <div>
-                  <h2 className="text-xl text-foreground mb-2">Interview Link Generated!</h2>
+                  <h2 className="text-xl text-foreground mb-2">Interview Invite Created</h2>
                   <p className="text-muted-foreground">
-                    The secure interview link has been created for {candidateEmail}
+                    The interview invite has been saved for {candidateEmail}.
                   </p>
                 </div>
 
@@ -177,14 +228,14 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
                 </div>
 
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={onBack}
                     className="flex-1 border-border text-foreground hover:bg-muted"
                   >
                     Back to Dashboard
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleUseLink}
                     className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
@@ -199,10 +250,3 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
     </div>
   );
 }
-
-
-
-
-
-
-

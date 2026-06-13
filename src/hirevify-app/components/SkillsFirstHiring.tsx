@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Target, Users, TrendingUp, Award, CheckCircle, Play, BookOpen, Lightbulb, BarChart3, Filter, Search, Plus, Crown, Zap, Brain, Eye, Download, Share2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';

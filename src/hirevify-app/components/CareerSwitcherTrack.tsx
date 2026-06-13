@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Target, BookOpen, Award, CheckCircle, Play, Calendar, Users, Clock, Star, Badge as BadgeIcon, TrendingUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -191,7 +191,7 @@ export function CareerSwitcherTrack({ onBack, onUpgrade }: CareerSwitcherTrackPr
                       </div>
 
                       <div className="text-xs text-muted-foreground">
-                        {path.modules} modules â€¢ {path.projects} projects â€¢ Real portfolio pieces
+                        {path.modules} modules ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {path.projects} projects ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Real portfolio pieces
                       </div>
                     </div>
 

@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, X, Sparkles, Target } from 'lucide-react';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -23,10 +23,10 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
   const [showResults, setShowResults] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  console.log('ðŸŽ¯ CANDIDATE ATS Scanner rendered:', { showUploadDialog, isScanning });
+  console.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ CANDIDATE ATS Scanner rendered:', { showUploadDialog, isScanning });
 
   const handleFileUpload = async (files: FileList | null) => {
-    console.log('ðŸ“ CANDIDATE scanner - handleFileUpload called with:', files);
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â CANDIDATE scanner - handleFileUpload called with:', files);
     
     if (!files || files.length === 0) {
       toast.error('No file selected. Please choose a resume file to upload.');
@@ -39,7 +39,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
     }
 
     const file = files[0];
-    console.log('ðŸ“„ Processing file:', { name: file.name, size: file.size, type: file.type });
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Processing file:', { name: file.name, size: file.size, type: file.type });
 
     // Validate file type
     const validExtensions = ['.pdf', '.doc', '.docx'];
@@ -66,7 +66,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
       return;
     }
 
-    console.log('âœ… Starting upload for file:', file.name);
+    console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Starting upload for file:', file.name);
     setIsScanning(true);
     setScanProgress(0);
     toast.success(`Resume "${file.name}" uploaded successfully! Starting ATS analysis...`);
@@ -74,20 +74,20 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
     try {
       // Step 1: Document parsing
       setScanProgress(25);
-      toast.info('ðŸ“„ Parsing document structure...');
+      toast.info('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Parsing document structure...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Step 2: AI content analysis  
       setScanProgress(50);
-      toast.info('ðŸ¤– AI analyzing content with OpenAI GPT-4...');
+      toast.info('ÃƒÂ°Ã…Â¸Ã‚Â¤Ã¢â‚¬â€œ AI analyzing content with OpenAI GPT-4...');
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Step 3: Real ATS processing with OpenAI
       setScanProgress(75);
       let accessToken = user?.accessToken || localStorage.getItem('hirevify_access_token');
       
-      console.log('ðŸš€ Calling real ATS API with OpenAI integration...');
-      console.log('ðŸ‘¤ User info:', { 
+      console.log('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â€šÂ¬ Calling real ATS API with OpenAI integration...');
+      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ User info:', { 
         hasUser: !!user, 
         userId: user?.id, 
         hasToken: !!accessToken, 
@@ -101,11 +101,11 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
       }
       
       // Enhanced authentication flow with multiple fallback strategies
-      console.log('ðŸ” Pre-flight: Enhanced authentication check...');
+      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Pre-flight: Enhanced authentication check...');
       try {
         // Strategy 1: Try current token if available
         if (accessToken) {
-          console.log('ðŸ” Testing current token with auth service...');
+          console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Testing current token with auth service...');
           const authTestResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/verify-token`, {
             method: 'POST',
             headers: {
@@ -116,7 +116,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
           });
           
           const authTestResult = await authTestResponse.json();
-          console.log('ðŸ” Auth verification response:', { 
+          console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Auth verification response:', { 
             status: authTestResponse.status, 
             valid: authTestResult.valid, 
             error: authTestResult.error,
@@ -124,22 +124,22 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
           });
           
           if (authTestResponse.ok && authTestResult.valid) {
-            console.log('âœ… Current token is valid, proceeding with ATS call');
+            console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Current token is valid, proceeding with ATS call');
             // Token is valid, proceed with ATS processing
             setScanProgress(85);
           } else {
-            console.log('âš ï¸ Current token invalid, attempting refresh...');
+            console.log('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Current token invalid, attempting refresh...');
             accessToken = null; // Clear invalid token
           }
         }
         
         // Strategy 2: Generate fresh token if current token is invalid or missing
         if (!accessToken) {
-          console.log('ðŸ”„ Generating fresh authentication token...');
+          console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Generating fresh authentication token...');
           
           // For test accounts, we can auto-refresh
           if (user.email?.includes('@hirevify.com')) {
-            console.log('ðŸ”„ Auto-refreshing test account session...');
+            console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Auto-refreshing test account session...');
             const refreshResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/signin`, {
               method: 'POST',
               headers: {
@@ -155,7 +155,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
             if (refreshResponse.ok) {
               const refreshResult = await refreshResponse.json();
               accessToken = refreshResult.accessToken;
-              console.log('âœ… Fresh token generated successfully');
+              console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fresh token generated successfully');
               
               // Update storage with new token
               if (accessToken) localStorage.setItem('hirevify_access_token', accessToken);
@@ -166,7 +166,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
               
             } else {
               const refreshError = await refreshResponse.json();
-              console.error('âŒ Token refresh failed:', refreshError);
+              console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Token refresh failed:', refreshError);
               throw new Error('Failed to refresh authentication. Please log out and log in again.');
             }
           } else {
@@ -180,7 +180,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
         }
         
         // Final verification
-        console.log('ðŸ” Final token verification before ATS call...');
+        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Final token verification before ATS call...');
         const finalVerifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/verify-token`, {
           method: 'POST',
           headers: {
@@ -192,15 +192,15 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
         
         if (!finalVerifyResponse.ok) {
           const verifyError = await finalVerifyResponse.json();
-          console.error('âŒ Final token verification failed:', verifyError);
+          console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Final token verification failed:', verifyError);
           throw new Error('Authentication token verification failed. Please log out and log in again.');
         }
         
-        console.log('âœ… Authentication fully validated, proceeding with ATS processing');
+        console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Authentication fully validated, proceeding with ATS processing');
         setScanProgress(90);
         
       } catch (authError) {
-        console.error('âŒ Authentication validation failed:', authError);
+        console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Authentication validation failed:', authError);
         throw new Error(`Authentication error: ${authError instanceof Error ? authError.message : 'Unknown authentication error'}`);
       }
       
@@ -211,7 +211,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
         accessToken
       );
 
-      console.log('ðŸ“Š Real ATS analysis completed:', atsResult);
+      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Real ATS analysis completed:', atsResult);
       setAtsResults(atsResult);
 
       // Step 4: Complete
@@ -223,11 +223,11 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
       setShowUploadDialog(false);
       setShowResults(true);
       
-      toast.success(`ðŸŽ‰ AI ATS analysis completed! Overall score: ${atsResult.atsScore?.overall || 'N/A'}% - Your resume has been analyzed with enterprise-grade accuracy.`);
-      console.log('âœ… Real OpenAI-powered analysis completed successfully');
+      toast.success(`ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° AI ATS analysis completed! Overall score: ${atsResult.atsScore?.overall || 'N/A'}% - Your resume has been analyzed with enterprise-grade accuracy.`);
+      console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Real OpenAI-powered analysis completed successfully');
 
     } catch (error) {
-      console.error('âŒ Error during real ATS processing:', error);
+      console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Error during real ATS processing:', error);
       console.error('Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         name: error instanceof Error ? error.name : 'Unknown',
@@ -245,11 +245,11 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
   };
 
   const triggerFileUpload = () => {
-    console.log('ðŸ–±ï¸ Triggering file upload');
+    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬â€œÃ‚Â±ÃƒÂ¯Ã‚Â¸Ã‚Â Triggering file upload');
     if (fileInputRef.current && !isScanning) {
       fileInputRef.current.click();
     } else {
-      console.log('âŒ File input not available or scanning in progress');
+      console.log('ÃƒÂ¢Ã‚ÂÃ…â€™ File input not available or scanning in progress');
       toast.error('File upload not available. Please try again.');
     }
   };
@@ -285,7 +285,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
           <DialogTitle className="flex items-center justify-between text-lg">
             <div className="flex items-center">
               <Target className="w-5 h-5 mr-2 text-blue-600" />
-              ðŸŽ¯ Resume ATS Checker (For Job Seekers)
+              ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ Resume ATS Checker (For Job Seekers)
             </div>
             <Button 
               variant="ghost" 
@@ -320,12 +320,12 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="text-sm font-semibold text-yellow-800 mb-1">ðŸ“‹ Upload Requirements</h4>
+                <h4 className="text-sm font-semibold text-yellow-800 mb-1">ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Upload Requirements</h4>
                 <div className="text-xs text-yellow-700 space-y-1">
-                  <div>â€¢ <strong>Files:</strong> 1 resume per scan</div>
-                  <div>â€¢ <strong>Size:</strong> Maximum 10MB</div>
-                  <div>â€¢ <strong>Formats:</strong> PDF, DOC, DOCX only</div>
-                  <div>â€¢ <strong>Analysis time:</strong> 10-15 seconds</div>
+                  <div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Files:</strong> 1 resume per scan</div>
+                  <div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Size:</strong> Maximum 10MB</div>
+                  <div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Formats:</strong> PDF, DOC, DOCX only</div>
+                  <div>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Analysis time:</strong> 10-15 seconds</div>
                 </div>
               </div>
             </div>
@@ -348,7 +348,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
             <FileText className={`w-16 h-16 mx-auto mb-4 ${isScanning ? 'text-gray-400' : 'text-blue-500'}`} />
             
             <h3 className="text-xl font-semibold mb-2">
-              {isScanning ? 'Analyzing Your Resume...' : 'ðŸ“¤ Upload Your Resume'}
+              {isScanning ? 'Analyzing Your Resume...' : 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¤ Upload Your Resume'}
             </h3>
             
             <p className="text-sm text-muted-foreground mb-6 max-w-sm">
@@ -363,7 +363,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
               type="file"
               accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => {
-                console.log('ðŸ“ File input onChange triggered');
+                console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â File input onChange triggered');
                 if (e.target.files && e.target.files.length > 0) {
                   handleFileUpload(e.target.files);
                 }
@@ -387,7 +387,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
             </Button>
             
             <p className="text-xs text-muted-foreground mt-2">
-              PDF, DOC, DOCX â€¢ Max 10MB
+              PDF, DOC, DOCX ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Max 10MB
             </p>
           </div>
 
@@ -399,9 +399,9 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
                 <span className="text-sm font-medium text-green-800">You'll Get</span>
               </div>
               <ul className="text-xs text-green-700 space-y-1">
-                <li>â€¢ ATS compatibility score</li>
-                <li>â€¢ Keyword recommendations</li>
-                <li>â€¢ Format optimization tips</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ATS compatibility score</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Keyword recommendations</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Format optimization tips</li>
               </ul>
             </div>
 
@@ -411,9 +411,9 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
                 <span className="text-sm font-medium text-purple-800">Benefits</span>
               </div>
               <ul className="text-xs text-purple-700 space-y-1">
-                <li>â€¢ 2-3x more interviews</li>
-                <li>â€¢ Beat ATS filters</li>
-                <li>â€¢ Industry-specific advice</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ 2-3x more interviews</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Beat ATS filters</li>
+                <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Industry-specific advice</li>
               </ul>
             </div>
           </div>
@@ -422,7 +422,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
           {isScanning && (
             <div className="space-y-3 border-t border-border pt-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">ðŸ” Analyzing your resume...</span>
+                <span className="font-medium">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Analyzing your resume...</span>
                 <span className="font-bold text-blue-600">{scanProgress}%</span>
               </div>
               <Progress value={scanProgress} className="h-3 bg-gray-200" />

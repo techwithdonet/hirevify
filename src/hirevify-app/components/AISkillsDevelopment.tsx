@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Skills Development System
  * 
  * Intelligent skills development platform that analyzes candidate profiles,

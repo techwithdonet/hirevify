@@ -1,4 +1,4 @@
-﻿// Professional ATS Dashboard - Show 95% Accuracy Metrics
+// Professional ATS Dashboard - Show 95% Accuracy Metrics
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
@@ -24,7 +24,7 @@ export const ProfessionalATSDashboard: React.FC<ProfessionalATSDashboardProps> =
       const { atsAccuracyBenchmark } = await import('../utils/ats/accuracyBenchmark');
       const results = await atsAccuracyBenchmark.benchmarkAccuracy();
       setBenchmarkData(results);
-      console.log('ðŸŽ¯ ATS Accuracy Benchmark Results:', results);
+      console.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ ATS Accuracy Benchmark Results:', results);
     } catch (error) {
       console.error('Benchmark failed:', error);
       // Set fallback data

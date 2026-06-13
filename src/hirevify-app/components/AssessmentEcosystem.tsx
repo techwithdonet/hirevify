@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Shield, Award, Users, Building, BookOpen, CheckCircle, Eye, Star, Zap, Target, TrendingUp, Globe, Lock, Verified } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';

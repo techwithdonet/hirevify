@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { AuthModal } from './AuthModal';
 import { useAuth } from './AuthProvider';
@@ -330,7 +330,7 @@ const handleTestCandidateLogin = async () => {
           <div className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-full shadow-lg">
             <CheckCircle className="w-4 h-4 mr-2 text-emerald-500" />
             <span className="text-sm text-gray-600">
-              Revolutionary hiring platform â€” Join the{' '}
+              Revolutionary hiring platform ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Join the{' '}
               <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-500">
                 skills-first movement
               </span>
@@ -729,10 +729,10 @@ const handleTestCandidateLogin = async () => {
           {/* Bottom section */}
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 mb-4 md:mb-0">
-              Â© 2024 HireVify. All rights reserved.
+              Ãƒâ€šÃ‚Â© 2024 HireVify. All rights reserved.
             </p>
             <p className="text-gray-400">
-              Made with â¤ï¸ for better hiring
+              Made with ÃƒÂ¢Ã‚ÂÃ‚Â¤ÃƒÂ¯Ã‚Â¸Ã‚Â for better hiring
             </p>
           </div>
         </div>

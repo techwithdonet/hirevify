@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Clock, Calendar, DollarSign, Users, Star, CheckCircle, Play, Building, MapPin, Zap, Award, Target, TrendingUp, Timer, BookOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -274,7 +274,7 @@ export function MicroInternships({ onBack, onUpgrade }: MicroInternshipsProps) {
                           <div>
                             <CardTitle className="text-lg mb-2">{internship.title}</CardTitle>
                             <div className="text-sm text-muted-foreground mb-2">
-                              {internship.company} â€¢ ${internship.payment}
+                              {internship.company} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${internship.payment}
                             </div>
                             <Badge className={statusBadge.className}>
                               {statusBadge.label}

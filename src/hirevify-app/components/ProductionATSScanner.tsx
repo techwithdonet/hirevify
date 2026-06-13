@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Production-Ready ATS Scanner
  * 
  * Focus: ACTUAL FUNCTIONALITY over error suppression
@@ -371,7 +371,7 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-4">
                 <Button variant="ghost" size="sm" onClick={() => setSelectedResult(null)}>
-                  â† Back to Results
+                  ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Results
                 </Button>
                 <div>
                   <h1 className="text-xl font-semibold">{selectedResult.extractedData.name}</h1>
@@ -501,7 +501,7 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={onBack}>
-                â† Back to Dashboard
+                ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back to Dashboard
               </Button>
               <div>
                 <h1 className="text-xl font-semibold flex items-center">

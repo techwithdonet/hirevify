@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Matching Analytics Component
  * 
  * Displays performance metrics, insights, and analytics for the AI matching system

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback } from './ui/avatar';
@@ -262,6 +262,10 @@ export function RecruiterDashboard({
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  const recruiterProfileCompleteness = Number(recruiterProfile?.profile_completeness || 0);
+  const isRecruiterProfileComplete =
+    Boolean(recruiterProfile?.profile_completed) || recruiterProfileCompleteness >= 60;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -304,7 +308,7 @@ export function RecruiterDashboard({
               <div className="flex items-center space-x-1">
                 <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg hover:bg-emerald-50">
                   <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadNotifications > 0 && (
+                  {false && unreadNotifications > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
                       {unreadNotifications > 99 ? '99+' : unreadNotifications}
                     </Badge>
@@ -313,7 +317,7 @@ export function RecruiterDashboard({
                 
                 <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg hover:bg-emerald-50">
                   <MessageSquare className="w-5 h-5 text-gray-600" />
-                  {unreadMessages > 0 && (
+                  {false && unreadMessages > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
                       {unreadMessages}
                     </Badge>
@@ -347,6 +351,48 @@ export function RecruiterDashboard({
         {!isLoading && (
         <>
         {/* Quick Stats */}
+        {/* Company Profile Completion Card */}
+        <Card className="mb-8 border border-emerald-100 bg-white shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isRecruiterProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                  {isRecruiterProfileComplete ? (
+                    <Award className="w-6 h-6 text-emerald-600" />
+                  ) : (
+                    <User className="w-6 h-6 text-amber-600" />
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {isRecruiterProfileComplete ? 'Your company profile is ready' : 'Complete your company profile'}
+                    </h2>
+                    <Badge className={isRecruiterProfileComplete ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}>
+                      {recruiterProfileCompleteness}% complete
+                    </Badge>
+                  </div>
+
+                  <p className="text-sm text-gray-600 mt-1">
+                    {isRecruiterProfileComplete
+                      ? 'Candidates can trust your company details. Keep your profile updated before posting jobs and scheduling interviews.'
+                      : 'Add company name, contact person, industry, location, website, and description before inviting candidates.'}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => onViewSettings?.()}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                {isRecruiterProfileComplete ? 'View / Edit Company Profile' : 'Complete Company Profile'}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewProjects}>
             <div className="flex items-center justify-between">

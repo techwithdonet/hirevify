@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
@@ -51,36 +51,36 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
     try {
       if (activeTab === 'signin') {
-        console.log('ðŸ” Attempting signin for:', email);
+        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Attempting signin for:', email);
 
         const result = await signIn(email, password);
 
         if (result.success) {
-          console.log('âœ… Signin successful');
+          console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Signin successful');
           toast.success(result.message || 'Welcome back!');
           onClose();
           resetForm();
         } else {
-          console.error('âŒ Signin failed:', result.message);
+          console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Signin failed:', result.message);
           toast.error(result.message || 'Sign in failed');
         }
       } else {
-        console.log('ðŸ“ Attempting signup for:', email, userType);
+        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â Attempting signup for:', email, userType);
 
         const result = await signUp(email, password, name, userType);
 
         if (result.success) {
-          console.log('âœ… Signup successful');
+          console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Signup successful');
           toast.success(result.message || 'Account created successfully!');
           onClose();
           resetForm();
         } else {
-          console.error('âŒ Signup failed:', result.message);
+          console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Signup failed:', result.message);
           toast.error(result.message || 'Sign up failed');
         }
       }
     } catch (error) {
-      console.error('âŒ Auth error:', error);
+      console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Auth error:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setFormLoading(false);

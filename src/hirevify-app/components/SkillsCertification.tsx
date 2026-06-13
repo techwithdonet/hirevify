@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Award, Calendar, CheckCircle, Clock, Eye, Play, Shield, Star, Trophy, Users, Zap, Lock, Crown, Target, TrendingUp, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';

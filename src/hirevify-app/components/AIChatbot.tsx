@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -91,7 +91,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
 
     if (!userType) {
       return {
-        content: "ðŸ‘‹ Welcome to HireVify! I'm your AI assistant. I can help you navigate the platform, understand features, and find what you're looking for. What would you like to explore?",
+        content: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹ Welcome to HireVify! I'm your AI assistant. I can help you navigate the platform, understand features, and find what you're looking for. What would you like to explore?",
         quickActions: [
           {
             label: 'For Recruiters',
@@ -207,7 +207,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
     if (message.includes('tour') || message.includes('around') || message.includes('overview')) {
       if (userType === 'recruiter') {
         return {
-          content: "ðŸŽ¯ **HireVify for Recruiters Overview:**\n\n**1. Dashboard** - Your command center for all hiring activities\n**2. Post Projects** - Create detailed project postings with skills matching\n**3. ATS System** - Review candidates with AI-powered match scores\n**4. Skills Assessments** - Test candidates with technical and behavioral assessments\n**5. Analytics** - Track your hiring performance and trends\n**6. Integrations** - Connect with your existing HR tools\n\nWhere would you like to start?",
+          content: "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ **HireVify for Recruiters Overview:**\n\n**1. Dashboard** - Your command center for all hiring activities\n**2. Post Projects** - Create detailed project postings with skills matching\n**3. ATS System** - Review candidates with AI-powered match scores\n**4. Skills Assessments** - Test candidates with technical and behavioral assessments\n**5. Analytics** - Track your hiring performance and trends\n**6. Integrations** - Connect with your existing HR tools\n\nWhere would you like to start?",
           quickActions: [
             { label: 'Post My First Project', action: () => onNavigate('recruiter-post-project'), icon: Zap },
             { label: 'See Candidate Pipeline', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
@@ -216,7 +216,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
         };
       } else {
         return {
-          content: "âœ¨ **HireVify for Candidates Overview:**\n\n**1. Dashboard** - Track your applications and opportunities\n**2. Resume Builder** - Create ATS-optimized resumes\n**3. Portfolio** - Showcase your best work and projects\n**4. Skills Assessment** - Prove your expertise with validated tests\n**5. Video Interviews** - Complete one-way video screenings\n**6. Project Matching** - Get matched to relevant opportunities\n\nWhat would you like to work on first?",
+          content: "ÃƒÂ¢Ã…â€œÃ‚Â¨ **HireVify for Candidates Overview:**\n\n**1. Dashboard** - Track your applications and opportunities\n**2. Resume Builder** - Create ATS-optimized resumes\n**3. Portfolio** - Showcase your best work and projects\n**4. Skills Assessment** - Prove your expertise with validated tests\n**5. Video Interviews** - Complete one-way video screenings\n**6. Project Matching** - Get matched to relevant opportunities\n\nWhat would you like to work on first?",
           quickActions: [
             { label: 'Build My Resume', action: () => onNavigate('candidate-resume-builder'), icon: ArrowRight },
             { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
@@ -228,7 +228,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
 
     if (message.includes('help') && !message.includes('tour')) {
       return {
-        content: "I'm here to help! I can assist you with:\n\nâ€¢ **Navigation** - Finding the right features and tools\nâ€¢ **Feature explanations** - Understanding how everything works\nâ€¢ **Best practices** - Tips for success on the platform\nâ€¢ **Troubleshooting** - Solving common issues\nâ€¢ **Premium features** - Learning about advanced capabilities\n\nWhat specific area would you like help with?",
+        content: "I'm here to help! I can assist you with:\n\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Navigation** - Finding the right features and tools\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Feature explanations** - Understanding how everything works\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Best practices** - Tips for success on the platform\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Troubleshooting** - Solving common issues\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Premium features** - Learning about advanced capabilities\n\nWhat specific area would you like help with?",
         quickActions: [
           { label: 'Feature Questions', action: () => handleQuickAction("How do features work?") },
           { label: 'Best Practices', action: () => handleQuickAction("What are the best practices?") },
@@ -240,7 +240,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
     // Feature-specific help
     if (message.includes('match') || message.includes('score') || message.includes('algorithm')) {
       return {
-        content: "ðŸŽ¯ **HireVify's AI Matching System:**\n\nOur algorithm analyzes:\nâ€¢ **Skills alignment** - Technical and soft skills matching\nâ€¢ **Experience level** - Years and type of relevant experience\nâ€¢ **Project fit** - Industry, scope, and requirements match\nâ€¢ **Availability** - Timeline and commitment compatibility\nâ€¢ **Success indicators** - Past performance and ratings\n\nMatch scores above 85% indicate excellent alignment!",
+        content: "ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ **HireVify's AI Matching System:**\n\nOur algorithm analyzes:\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Skills alignment** - Technical and soft skills matching\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Experience level** - Years and type of relevant experience\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Project fit** - Industry, scope, and requirements match\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Availability** - Timeline and commitment compatibility\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Success indicators** - Past performance and ratings\n\nMatch scores above 85% indicate excellent alignment!",
         quickActions: userType === 'recruiter' ? [
           { label: 'View Match Scores', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
           { label: 'Improve Matching', action: () => handleQuickAction("How to improve matching?") }
@@ -253,11 +253,11 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
 
     if (message.includes('premium') || message.includes('upgrade') || message.includes('pro')) {
       const features = userType === 'recruiter' ? 
-        "â€¢ **Advanced Analytics** - Detailed hiring insights\nâ€¢ **Skills Assessments** - Technical testing platform\nâ€¢ **Priority Support** - Dedicated account management\nâ€¢ **API Access** - Custom integrations\nâ€¢ **Advanced Filters** - Enhanced candidate search" :
-        "â€¢ **Resume Optimization** - ATS keyword analysis\nâ€¢ **Portfolio Builder** - Professional project showcase\nâ€¢ **Priority Applications** - Fast-track submission\nâ€¢ **Interview Prep** - AI-powered practice sessions\nâ€¢ **Skills Certification** - Verified competency badges";
+        "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Advanced Analytics** - Detailed hiring insights\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Skills Assessments** - Technical testing platform\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Priority Support** - Dedicated account management\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **API Access** - Custom integrations\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Advanced Filters** - Enhanced candidate search" :
+        "ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Resume Optimization** - ATS keyword analysis\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Portfolio Builder** - Professional project showcase\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Priority Applications** - Fast-track submission\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Interview Prep** - AI-powered practice sessions\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Skills Certification** - Verified competency badges";
 
       return {
-        content: `ðŸ’Ž **Premium Features for ${userType === 'recruiter' ? 'Recruiters' : 'Candidates'}:**\n\n${features}\n\nUpgrade to unlock advanced capabilities and accelerate your success!`,
+        content: `ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…Â½ **Premium Features for ${userType === 'recruiter' ? 'Recruiters' : 'Candidates'}:**\n\n${features}\n\nUpgrade to unlock advanced capabilities and accelerate your success!`,
         quickActions: [
           { label: 'View Pricing', action: () => onUpgrade(), icon: Sparkles, variant: 'premium' as const },
           { label: 'Compare Plans', action: () => handleQuickAction("Compare premium plans") }
@@ -269,7 +269,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
     if (message.includes('assessment') || message.includes('test') || message.includes('skill')) {
       if (userType === 'recruiter') {
         return {
-          content: "ðŸ§  **Skills Assessment Platform:**\n\nCreate comprehensive evaluations:\nâ€¢ **Technical Assessments** - Code challenges and technical questions\nâ€¢ **Cognitive Tests** - Problem-solving and logical reasoning\nâ€¢ **Behavioral Assessments** - Situational judgment scenarios\nâ€¢ **Custom Evaluations** - Tailored to your specific needs\n\nAssessments help validate candidate skills beyond resumes!",
+          content: "ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Â  **Skills Assessment Platform:**\n\nCreate comprehensive evaluations:\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Technical Assessments** - Code challenges and technical questions\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Cognitive Tests** - Problem-solving and logical reasoning\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Behavioral Assessments** - Situational judgment scenarios\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ **Custom Evaluations** - Tailored to your specific needs\n\nAssessments help validate candidate skills beyond resumes!",
           quickActions: [
             { label: 'Create Assessment', action: () => onNavigate('recruiter-skills-assessment'), icon: Zap },
             { label: 'View Results', action: () => handleQuickAction("Show me assessment results") }
@@ -277,7 +277,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
         };
       } else {
         return {
-          content: "ðŸ“ **Taking Skills Assessments:**\n\n**Tips for success:**\nâ€¢ Read instructions carefully\nâ€¢ Use preparation time wisely\nâ€¢ Stay calm and focused\nâ€¢ Showcase your thought process\nâ€¢ Ask for clarification if needed\n\nAssessments help prove your expertise to employers!",
+          content: "ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â **Taking Skills Assessments:**\n\n**Tips for success:**\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Read instructions carefully\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Use preparation time wisely\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Stay calm and focused\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Showcase your thought process\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Ask for clarification if needed\n\nAssessments help prove your expertise to employers!",
           quickActions: [
             { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
             { label: 'Preparation Tips', action: () => handleQuickAction("Assessment preparation tips") }
@@ -288,7 +288,7 @@ export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AI
 
     // Default response
     return {
-      content: "I understand you're looking for help with that. Could you be more specific about what you'd like to know? I can help with:\n\nâ€¢ Platform navigation\nâ€¢ Feature explanations\nâ€¢ Best practices\nâ€¢ Troubleshooting\nâ€¢ Premium features\n\nJust ask me anything!",
+      content: "I understand you're looking for help with that. Could you be more specific about what you'd like to know? I can help with:\n\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Platform navigation\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Feature explanations\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Best practices\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Troubleshooting\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Premium features\n\nJust ask me anything!",
       quickActions: [
         { label: 'Platform Tour', action: () => handleQuickAction("Give me a platform tour") },
         { label: 'Feature Help', action: () => handleQuickAction("How do features work?") }

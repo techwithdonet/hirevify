@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Calendar, Download, AlertCircle, CheckCircle, Clock, Pause, Play, X, Edit, RotateCcw, ExternalLink, Shield, Users, Crown, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
