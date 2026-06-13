@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -139,21 +139,38 @@ export default function AdminAssessmentsPage() {
     setEditingId(null);
   }
 
-  function startEdit(assessment: Assessment) {
-    const loadedQuestions = (assessment.questions || []).map((question, index) => ({
-      id: question.id,
-      question_text: question.question_text || "",
-      question_type: question.question_type || "multiple_choice",
-      options: question.options && question.options.length > 0 ? question.options : ["", "", "", ""],
-      correct_answer: question.correct_answer || "",
-      points: Number(question.points || 1),
-      sort_order: Number(question.sort_order ?? index),
-    }));
+  async function startEdit(assessment: Assessment) {
+    const assessmentId = assessment.id || null;
 
-    setEditingId(assessment.id || null);
+    let loadedQuestions: AssessmentQuestion[] = [];
+
+    if (assessmentId) {
+      const { data, error } = await supabase
+        .from("assessment_questions")
+        .select("*")
+        .eq("assessment_id", assessmentId)
+        .order("sort_order", { ascending: true });
+
+      if (error) {
+        alert("Failed to load questions: " + error.message);
+      }
+
+      loadedQuestions = (data || []).map((question: any, index: number) => ({
+        id: question.id,
+        question_text: question.question_text || "",
+        question_type: question.question_type || "multiple_choice",
+        options: question.options && question.options.length > 0 ? question.options : ["", "", "", ""],
+        correct_answer: question.correct_answer || "",
+        points: Number(question.points || 1),
+        sort_order: Number(question.sort_order ?? index),
+      }));
+    }
+
+    setEditingId(assessmentId);
     setForm({
       ...emptyForm,
       ...assessment,
+      id: assessmentId || assessment.id,
       questions_count: loadedQuestions.length,
       duration_minutes: Number(assessment.duration_minutes || 45),
       passing_score: Number(assessment.passing_score || 70),
@@ -265,6 +282,10 @@ export default function AdminAssessmentsPage() {
 
     setSaving(true);
 
+    const effectiveEditingId = editingId || form.id || null;
+
+
+
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
@@ -281,8 +302,8 @@ export default function AdminAssessmentsPage() {
       updated_at: new Date().toISOString(),
     };
 
-    const assessmentResult = editingId
-      ? await supabase.from("skills_assessments").update(payload).eq("id", editingId).select("id").single()
+    const assessmentResult = effectiveEditingId
+      ? await supabase.from("skills_assessments").update(payload).eq("id", effectiveEditingId).select("id").single()
       : await supabase.from("skills_assessments").insert(payload).select("id").single();
 
     if (assessmentResult.error || !assessmentResult.data?.id) {
@@ -291,7 +312,7 @@ export default function AdminAssessmentsPage() {
       return;
     }
 
-    const assessmentId = editingId || assessmentResult.data.id;
+    const assessmentId = effectiveEditingId || assessmentResult.data.id;
 
     const deleteOldQuestions = await supabase
       .from("assessment_questions")
@@ -592,7 +613,7 @@ export default function AdminAssessmentsPage() {
                         </div>
 
                         <div className="text-sm text-gray-500">
-                          {assessment.category} • {assessment.duration_minutes} min • Passing {assessment.passing_score}% • Questions {assessment.questions_count}
+                          {assessment.category} â€¢ {assessment.duration_minutes} min â€¢ Passing {assessment.passing_score}% â€¢ Questions {assessment.questions_count}
                         </div>
                       </div>
 

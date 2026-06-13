@@ -434,8 +434,8 @@ export function CandidateDashboard({
                 <div className="space-y-3">
                   {applications.slice(0, 3).map((app: any, idx: number) => (
                     <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.job_id}</p>
-                      <p className="text-xs text-gray-500">Status: {app.status}</p>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.job?.title || app.job_title || app.title || 'Application submitted'}</p>
+                      <p className="text-xs text-gray-500">Status: {app.status || 'applied'}</p>
                     </div>
                   ))}
                 </div>

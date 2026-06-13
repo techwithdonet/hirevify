@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Applications Service
  * Handles all job application operations from Supabase
  */

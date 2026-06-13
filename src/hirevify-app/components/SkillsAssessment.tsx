@@ -191,22 +191,7 @@ const MOCK_ASSESSMENT_RESULTS: AssessmentResult[] = [
 ];
 
 // Sample question for candidate assessment taking
-const SAMPLE_QUESTION: Question = {
-  id: 'sample-1',
-  text: 'What is the main advantage of using React hooks over class components?',
-  type: 'multiple-choice',
-  options: [
-    'Hooks are faster to execute',
-    'Hooks provide better code reusability and easier state logic sharing',
-    'Hooks automatically optimize rendering',
-    'Hooks eliminate the need for props'
-  ],
-  correctAnswer: 1,
-  explanation: 'React hooks allow for better code reusability, easier testing, and more flexible state logic sharing between components without the complexity of higher-order components or render props.',
-  difficulty: 'medium',
-  points: 10,
-  timeLimit: 120
-};
+
 
 export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }: SkillsAssessmentProps) {
   const { user } = useAuth();
@@ -239,7 +224,13 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
       try {
         setIsLoadingAssessments(true);
 
-        const { data, error } = await assessmentsService.getAssessments();
+        const supabase = createSupabaseBrowserClient();
+
+        const { data, error } = await supabase
+          .from('skills_assessments')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
 
         if (error) {
           toast.error('Failed to load assessments');
@@ -247,8 +238,6 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
           return;
         }
 
-        
-        const supabase = createSupabaseBrowserClient();
         const assessmentIds = (data || []).map((item: any) => item.id).filter(Boolean);
 
         let questionRows: any[] = [];
@@ -267,7 +256,7 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
           }
         }
 
-const mappedAssessments: Assessment[] = data.map((item) => ({
+const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
           id: item.id,
           title: item.title,
           description: item.description || '',
@@ -291,7 +280,7 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
             })),
           createdBy: 'HireVify',
           createdAt: item.created_at,
-          isActive: item.is_active,
+          isActive: item.status === 'active',
           assignedCandidates: 0,
           completionRate: 0,
           averageScore: 0,
@@ -352,34 +341,130 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
 
-  const handleStartAssessment = (assessment: Assessment) => {
-    if (userType === 'candidate') {
-      setSelectedAssessment(assessment);
-      setIsAssessmentActive(true);
-      setTimeRemaining(assessment.duration * 60); // Convert to seconds
+  const currentQuestion = selectedAssessment?.questions?.[currentQuestionIndex];
+
+  const isAssessmentCompleted = (assessmentId: string) => {
+    return assessmentResults.some((result: any) => {
+      const resultAssessmentId = result.assessmentId || result.assessment_id;
+      return String(resultAssessmentId) === String(assessmentId);
+    });
+  };
+
+  const handleStartAssessment = async (assessment: Assessment) => {
+    console.log('Starting assessment:', assessment.id, assessment.title, assessment.questions?.length);
+    try {
+      const supabaseClient = createSupabaseBrowserClient();
+
+      const { data: loadedQuestions, error } = await supabaseClient
+        .from('assessment_questions')
+        .select('*')
+        .eq('assessment_id', assessment.id)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Failed to load assessment questions:', error);
+        toast.error('Failed to load questions for this assessment.');
+        alert('Failed to load questions for this assessment.');
+        return;
+      }
+
+      const questions = (loadedQuestions || []).map((question: any, index: number) => ({
+        id: question.id || `${assessment.id}-q-${index}`,
+        text: question.question_text || '',
+        type: question.question_type || 'multiple_choice',
+        options: Array.isArray(question.options) ? question.options : [],
+        correctAnswer: question.correct_answer || '',
+        correct_answer: question.correct_answer || '',
+        points: Number(question.points || 1),
+        difficulty: 'medium' as const,
+      }));
+
+      if (questions.length === 0) {
+        toast.error('No questions added for this assessment yet. Add questions from admin panel first.');
+        alert('No questions added for this assessment yet. Please add questions from admin panel first.');
+        return;
+      }
+
+      const assessmentToStart = {
+        ...assessment,
+        questions,
+      };
+
+      setSelectedAssessment(assessmentToStart);
       setCurrentQuestionIndex(0);
       setAnswers({});
+      setTimeRemaining(Number(assessment.duration || 45) * 60);
       setAssessmentStarted(true);
-      toast.success(`Starting ${assessment.title} assessment`);
+      setIsAssessmentActive(true);
+
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    } catch (error) {
+      console.error('Start assessment failed:', error);
+      toast.error('Failed to start assessment.');
+      alert('Failed to start assessment. Check console.');
     }
   };
   const handleSubmitAssessment = async () => {
-    if (!selectedAssessment || !user?.id) {
-      toast.error('Please login to submit assessment');
+    if (!selectedAssessment || !user) return;
+
+    const totalQuestions = selectedAssessment.questions.length;
+
+    if (totalQuestions === 0) {
+      toast.error('No questions found for this assessment.');
       return;
     }
 
-    const selectedAnswer = answers[SAMPLE_QUESTION.id];
-    const isCorrect = selectedAnswer === String(SAMPLE_QUESTION.correctAnswer);
-    const score = isCorrect ? 100 : 0;
+    const normalizeAnswer = (value: any) =>
+      String(value ?? '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+
+    const correctAnswers = selectedAssessment.questions.reduce((total, question: any) => {
+      const questionId = question.id;
+      const selectedAnswer = normalizeAnswer(answers[questionId]);
+      const correctAnswer = normalizeAnswer(question.correctAnswer || question.correct_answer);
+
+      const optionIndex = Array.isArray(question.options)
+        ? question.options.findIndex((option: any) => normalizeAnswer(option) === selectedAnswer)
+        : -1;
+
+      const correctOptionIndex = Array.isArray(question.options)
+        ? question.options.findIndex((option: any) => normalizeAnswer(option) === correctAnswer)
+        : -1;
+
+      const selectedAsNumber = Number(selectedAnswer);
+
+      const isCorrect =
+        selectedAnswer === correctAnswer ||
+        (optionIndex !== -1 && correctOptionIndex !== -1 && optionIndex === correctOptionIndex) ||
+        (!Number.isNaN(selectedAsNumber) && selectedAsNumber === correctOptionIndex) ||
+        (!Number.isNaN(selectedAsNumber) && selectedAsNumber === correctOptionIndex + 1);
+
+      console.log('Answer check:', {
+        question: question.text,
+        selectedAnswer,
+        correctAnswer,
+        optionIndex,
+        correctOptionIndex,
+        isCorrect,
+      });
+
+      return isCorrect ? total + 1 : total;
+    }, 0);
+
+    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    const timeSpent = Math.max(0, Number(selectedAssessment.duration || 0) * 60 - Number(timeRemaining || 0));
 
     const { data, error } = await assessmentsService.saveResult({
-      userId: user.id,
+      userId: String(user.id),
       assessmentId: selectedAssessment.id,
       score,
-      timeSpent: selectedAssessment.duration * 60 - timeRemaining,
-      answers,
       passed: score >= selectedAssessment.passingScore,
+      answers,
+      timeSpent,
     });
 
     if (error) {
@@ -387,24 +472,35 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
       return;
     }
 
-    const newResult: AssessmentResult = {
-      id: data?.id || crypto.randomUUID(),
+    const savedResult: any = data || {
+      id: crypto.randomUUID(),
+      userId: String(user.id),
       assessmentId: selectedAssessment.id,
-      candidateId: user.id,
-      candidateName: user?.name || 'Candidate',
-      candidateEmail: user?.email || '',
       score,
-      timeSpent: Math.round((selectedAssessment.duration * 60 - timeRemaining) / 60),
+      passed: score >= selectedAssessment.passingScore,
       answers,
+      timeSpent,
       completedAt: new Date().toISOString(),
-      status: 'completed',
+      createdAt: new Date().toISOString(),
     };
 
-    setAssessmentResults((prev) => [newResult, ...prev]);
+    setAssessmentResults(prev => {
+      const filtered = prev.filter((result: any) => {
+        const sameId = result.id && savedResult.id && String(result.id) === String(savedResult.id);
+        const sameAssessment =
+          String(result.assessmentId || result.assessment_id) === String(savedResult.assessmentId || savedResult.assessment_id);
 
-    toast.success(`Assessment completed! Score: ${score}%`);
+        return !sameId && !sameAssessment;
+      });
+
+      return [savedResult, ...filtered].filter(Boolean);
+    });
+    setAssessmentStarted(false);
     setIsAssessmentActive(false);
     setSelectedAssessment(null);
+    setCurrentQuestionIndex(0);
+    setAnswers({});
+    toast.success(score >= selectedAssessment.passingScore ? 'Assessment passed!' : 'Assessment completed');
     setActiveTab('my-results');
   };
   const handleAssignAssessment = (assessment: Assessment) => {
@@ -590,10 +686,10 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
               </Card>
             ) : (
               <div className="space-y-4">
-                {assessmentResults.map((result) => {
+                {assessmentResults.map((result, index) => {
                   const assessment = assessments.find(a => a.id === result.assessmentId);
                   return (
-                    <Card key={result.id}>
+                    <Card key={`${result.id || result.assessmentId || (result as any).assessment_id || "result"}-${index}`}>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
@@ -602,27 +698,27 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                             <p className="text-sm font-medium">{assessment?.title}</p>
                           </div>
                           <div className="text-right space-y-1">
-                            <div className={`text-2xl font-bold ${getScoreColor(result.score)}`}>
-                              {result.score}%
+                            <div className={`text-2xl font-bold ${getScoreColor(Number((result as any).score || 0))}`}>
+                              {Number((result as any).score || 0)}%
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {result.timeSpent} minutes
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {new Date(result.completedAt).toLocaleDateString()}
+                              {new Date((result as any).completedAt || (result as any).completed_at || (result as any).createdAt || (result as any).created_at || Date.now()).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
                         
                         <div className="mt-4 flex items-center space-x-4">
                           <Progress 
-                            value={result.score} 
+                            value={Number((result as any).score || 0)} 
                             className="flex-1 h-2" 
                           />
                           <Badge 
-                            variant={result.score >= (assessment?.passingScore || 70) ? "default" : "destructive"}
+                            variant={Number((result as any).score || 0) >= (assessment?.passingScore || 70) ? "default" : "destructive"}
                           >
-                            {result.score >= (assessment?.passingScore || 70) ? "Passed" : "Failed"}
+                            {Number((result as any).score || 0) >= (assessment?.passingScore || 70) ? "Passed" : "Failed"}
                           </Badge>
                         </div>
                       </CardContent>
@@ -727,21 +823,21 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center space-x-2 mb-4">
-                    <Badge className={getDifficultyColor(SAMPLE_QUESTION.difficulty)}>
-                      {SAMPLE_QUESTION.difficulty}
+                    <Badge className={getDifficultyColor((currentQuestion?.difficulty || 'medium'))}>
+                      {(currentQuestion?.difficulty || 'medium')}
                     </Badge>
                     <Badge variant="outline">
-                      {SAMPLE_QUESTION.points} points
+                      {currentQuestion?.points || 1} points
                     </Badge>
                   </div>
-                  <h3 className="text-xl font-semibold mb-4">{SAMPLE_QUESTION.text}</h3>
+                  <h3 className="text-xl font-semibold mb-4">{(currentQuestion?.text || '')}</h3>
                 </div>
 
                 <RadioGroup 
-                  value={answers[SAMPLE_QUESTION.id] || ''}
-                  onValueChange={(value) => setAnswers(prev => ({ ...prev, [SAMPLE_QUESTION.id]: value }))}
+                  value={answers[(currentQuestion?.id || '')] || ''}
+                  onValueChange={(value) => setAnswers(prev => ({ ...prev, [(currentQuestion?.id || '')]: value }))}
                 >
-                  {SAMPLE_QUESTION.options?.map((option, index) => (
+                  {currentQuestion?.options?.map((option, index) => (
                     <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-accent">
                       <RadioGroupItem value={index.toString()} id={`option-${index}`} />
                       <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
@@ -757,7 +853,7 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                   </Button>
                                    <Button 
                     onClick={handleSubmitAssessment}
-                    disabled={!answers[SAMPLE_QUESTION.id]}
+                    disabled={!answers[(currentQuestion?.id || '')]}
                   >
                     Submit Assessment
                   </Button>
@@ -864,13 +960,24 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                       </div>
                     </div>
 
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleStartAssessment(assessment)}
-                    >
-                      <Play className="w-4 h-4 mr-2" />
-                      Start Assessment
-                    </Button>
+                    {isAssessmentCompleted(assessment.id) ? (
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => setActiveTab('my-results')}
+                      >
+                        <Award className="w-4 h-4 mr-2" />
+                        Completed
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() => handleStartAssessment(assessment)}
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Start Assessment
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -895,13 +1002,13 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {assessmentResults.map((result) => {
+                  {assessmentResults.map((result, index) => {
                     const assessment = assessments.find((a) => a.id === result.assessmentId);
                     const passingScore = assessment?.passingScore || 70;
-                    const passed = result.score >= passingScore;
+                    const passed = Number((result as any).score || 0) >= passingScore;
 
                     return (
-                      <Card key={result.id}>
+                      <Card key={`${result.id || result.assessmentId || (result as any).assessment_id || "result"}-${index}`}>
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between gap-4">
                             <div>
@@ -909,7 +1016,7 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                                 {assessment?.title || 'Assessment'}
                               </h4>
                               <p className="text-sm text-muted-foreground">
-                                Completed on {new Date(result.completedAt).toLocaleDateString()}
+                                Completed on {new Date((result as any).completedAt || (result as any).completed_at || (result as any).createdAt || (result as any).created_at || Date.now()).toLocaleDateString()}
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 Time spent: {result.timeSpent} minutes
@@ -917,8 +1024,8 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                             </div>
 
                             <div className="text-right">
-                              <div className={`text-3xl font-bold ${getScoreColor(result.score)}`}>
-                                {result.score}%
+                              <div className={`text-3xl font-bold ${getScoreColor(Number((result as any).score || 0))}`}>
+                                {Number((result as any).score || 0)}%
                               </div>
                               <Badge variant={passed ? 'default' : 'destructive'}>
                                 {passed ? 'Passed' : 'Failed'}
@@ -927,7 +1034,7 @@ const mappedAssessments: Assessment[] = data.map((item) => ({
                           </div>
 
                           <div className="mt-4">
-                            <Progress value={result.score} className="h-2" />
+                            <Progress value={Number((result as any).score || 0)} className="h-2" />
                           </div>
                         </CardContent>
                       </Card>

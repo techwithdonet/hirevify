@@ -573,8 +573,9 @@ export function RecruiterDashboard({
                 <div className="space-y-3">
                   {applicants.slice(0, 3).map((app: any, idx: number) => (
                     <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.candidate_id}</p>
-                      <p className="text-xs text-gray-500">Status: {app.status || 'pending'}</p>
+                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.candidate_profile?.full_name || app.candidate_profile?.email || app.candidate_name || app.candidate_email || 'Candidate'}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1">Applied for: {app.job?.title || app.job_title || 'Job'}</p>
+                      <p className="text-xs text-gray-500">Status: {app.status || 'applied'}</p>
                     </div>
                   ))}
                 </div>
