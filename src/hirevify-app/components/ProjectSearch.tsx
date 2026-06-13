@@ -26,7 +26,8 @@ interface Project {
   skills: string[];
   requirements?: string[];
   type: string;
-  applications?: any[];
+  applications?: any[] | number;
+  applicationsCount?: number;
   createdAt: string;
   status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
   challengeDescription?: string;
@@ -294,7 +295,7 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
           case 'oldest':
             return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           case 'mostApplied':
-            return (b.applications?.length || 0) - (a.applications?.length || 0);
+            return ((typeof b.applicationsCount === 'number' ? b.applicationsCount : Array.isArray(b.applications) ? b.applications.length : Number(b.applications || 0)) - (typeof a.applicationsCount === 'number' ? a.applicationsCount : Array.isArray(a.applications) ? a.applications.length : Number(a.applications || 0)));
           case 'budget':
             // Simple budget sorting by extracting the upper range
             const getBudgetValue = (budget: string) => {
@@ -406,34 +407,120 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
   };
 
   const applyToProject = async () => {
-    if (!selectedProject || !accessToken) {
-      toast.error('Please sign in to apply to projects');
+    if (!selectedProject) {
+      alert('Please select a project first.');
       return;
     }
 
-    setIsApplying(true);
-    
+    if (!coverLetter.trim()) {
+      alert('Please enter a cover letter before submitting.');
+      return;
+    }
+
     try {
-      // Submit application via real API only
-      const { ApplicationsAPI } = await import('../utils/api/applications');
-      await ApplicationsAPI.submitApplication({
-        projectId: selectedProject.id,
-        coverLetter,
-        resumeData: (user as any)?.resumeData || {},
-        portfolioItems: (user as any)?.portfolioItems || []
-      }, accessToken);
-      
-      toast.success('Application submitted successfully!');
-      setShowApplicationDialog(false);
+      setIsApplying(true);
+
+      const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+      const supabase = createSupabaseBrowserClient();
+
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !authData.user) {
+        alert('Please login as candidate before applying.');
+        return;
+      }
+
+      const { data: candidateProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .eq('auth_user_id', authData.user.id)
+        .single();
+
+      if (profileError || !candidateProfile) {
+        alert('Candidate profile not found. Please complete your profile first.');
+        return;
+      }
+
+      if (candidateProfile.role !== 'candidate') {
+        alert('Only candidates can apply for projects.');
+        return;
+      }
+
+      const { data: jobRow, error: jobError } = await supabase
+        .from('jobs')
+        .select('id, title, recruiter_id, applications_count')
+        .eq('id', selectedProject.id)
+        .single();
+
+      if (jobError || !jobRow) {
+        alert('Project not found. Please refresh and try again.');
+        return;
+      }
+
+      const { data: existingApplication } = await supabase
+        .from('applications')
+        .select('id')
+        .eq('job_id', selectedProject.id)
+        .eq('candidate_id', candidateProfile.id)
+        .maybeSingle();
+
+      if (existingApplication) {
+        alert('You already applied for this project.');
+        setShowApplicationDialog(false);
+        return;
+      }
+
+      const matchScore = calculateMatchScore(selectedProject);
+
+      const { error: applicationError } = await supabase
+        .from('applications')
+        .insert({
+          job_id: selectedProject.id,
+          candidate_id: candidateProfile.id,
+          cover_letter: coverLetter.trim(),
+          status: 'applied',
+          match_score: matchScore,
+          notes: null,
+          recruiter_notes: null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (applicationError) {
+        alert('Application failed: ' + applicationError.message);
+        return;
+      }
+
+      await supabase
+        .from('jobs')
+        .update({
+          applications_count: Number(jobRow.applications_count || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', selectedProject.id);
+
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: jobRow.recruiter_id,
+          type: 'new_application',
+          title: 'New application received',
+          message: `${candidateProfile.full_name || candidateProfile.email || 'A candidate'} applied for ${jobRow.title || selectedProject.title}`,
+          metadata: {
+            job_id: selectedProject.id,
+            candidate_id: candidateProfile.id,
+            candidate_name: candidateProfile.full_name,
+            job_title: jobRow.title || selectedProject.title,
+          },
+          is_read: false,
+        });
+
+      alert('Application submitted successfully.');
       setCoverLetter('');
+      setShowApplicationDialog(false);
       setSelectedProject(null);
-      
-      // Refresh projects to update application status
-      await loadProjects();
-      
     } catch (error) {
-      console.error('Application submission failed:', error);
-      toast.error('Failed to submit application. Please try again.');
+      console.error('Apply project error:', error);
+      alert('Something went wrong while applying.');
     } finally {
       setIsApplying(false);
     }
@@ -445,6 +532,7 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
     'Machine Learning', 'DevOps', 'Cloud Computing', 'Mobile Development',
     'WordPress', 'PHP', 'CSS', 'HTML', 'SEO', 'AWS', 'Docker', 'Kubernetes'
   ];
+
 
   // Project Details Component
   function ProjectDetails({ project, matchScore, onRecordVideo }: {
@@ -568,7 +656,7 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Applications:</span>
-                <span className="font-medium">{project.applications?.length || 0}</span>
+                <span className="font-medium">{project.applicationsCount || project.applications || 0}</span>
               </div>
             </div>
           </div>
@@ -936,7 +1024,7 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
                             View Details
                           </Button>
                           
-                          {project.status === 'available' ? (
+                          {['available', 'published', 'open'].includes(String(project.status || 'available')) ? (
                             <Button 
                               size="sm"
                               onClick={() => {
@@ -986,14 +1074,29 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
             </DialogDescription>
           </DialogHeader>
           {selectedProject && (
-            <ProjectDetails 
-              project={selectedProject} 
-              matchScore={calculateMatchScore(selectedProject)}
-              onRecordVideo={() => {
-                setShowProjectDetailsDialog(false);
-                handleRecordVideo(selectedProject);
-              }}
-            />
+            <>
+              <ProjectDetails
+                project={selectedProject}
+                matchScore={calculateMatchScore(selectedProject)}
+                onRecordVideo={() => {
+                  setShowProjectDetailsDialog(false);
+                  handleRecordVideo(selectedProject);
+                }}
+              />
+
+              {['available', 'published', 'open'].includes(String(selectedProject.status || 'available')) && (
+                <div className="flex justify-end border-t pt-4 mt-4">
+                  <Button
+                    onClick={() => {
+                      setShowProjectDetailsDialog(false);
+                      setShowApplicationDialog(true);
+                    }}
+                  >
+                    Apply Now From Details
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { assessmentsService } from '../services/assessmentsService';
 
 interface SkillsAssessmentProps {
@@ -246,7 +247,27 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
           return;
         }
 
-        const mappedAssessments: Assessment[] = data.map((item) => ({
+        
+        const supabase = createSupabaseBrowserClient();
+        const assessmentIds = (data || []).map((item: any) => item.id).filter(Boolean);
+
+        let questionRows: any[] = [];
+
+        if (assessmentIds.length > 0) {
+          const { data: loadedQuestions, error: questionsError } = await supabase
+            .from('assessment_questions')
+            .select('*')
+            .in('assessment_id', assessmentIds)
+            .order('sort_order', { ascending: true });
+
+          if (questionsError) {
+            console.error('Failed to load assessment questions:', questionsError);
+          } else {
+            questionRows = loadedQuestions || [];
+          }
+        }
+
+const mappedAssessments: Assessment[] = data.map((item) => ({
           id: item.id,
           title: item.title,
           description: item.description || '',
@@ -255,7 +276,19 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
           difficulty: item.level as 'beginner' | 'intermediate' | 'advanced',
           skills: item.skills || [],
           passingScore: item.passing_score,
-          questions: [],
+          questions: questionRows
+            .filter((question: any) => question.assessment_id === item.id)
+            .map((question: any, index: number) => ({
+              id: question.id || `${item.id}-q-${index}`,
+              question: question.question_text || '',
+              text: question.question_text || '',
+              type: question.question_type || 'multiple_choice',
+              options: Array.isArray(question.options) ? question.options : [],
+              correctAnswer: question.correct_answer || '',
+              correct_answer: question.correct_answer || '',
+              points: Number(question.points || 1),
+              difficulty: 'medium' as const,
+            })),
           createdBy: 'HireVify',
           createdAt: item.created_at,
           isActive: item.is_active,
@@ -823,7 +856,7 @@ export function SkillsAssessment({ onBack, userType, onCreateCustomAssessment }:
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <div className="flex justify-between">
                         <span>Questions</span>
-                        <span>{assessment.questions.length || 'Multiple'}</span>
+                        <span>{assessment.questions.length > 0 ? assessment.questions.length : 'No questions'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Passing Score</span>
