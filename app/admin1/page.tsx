@@ -73,7 +73,23 @@ function AdminPanel() {
       </div>
 
       <Toaster />
-    </main>
+    
+      <a
+        href="/admin1/assessments"
+        style={{
+          display: "inline-block",
+          marginTop: "20px",
+          padding: "12px 18px",
+          borderRadius: "10px",
+          background: "#059669",
+          color: "white",
+          fontWeight: 600,
+          textDecoration: "none"
+        }}
+      >
+        Manage Skills Assessments
+      </a>
+</main>
   );
 }
 
