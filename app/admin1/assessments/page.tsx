@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 type AssessmentQuestion = {
   id?: string;
+  assessment_id?: string;
   question_text: string;
   question_type: string;
   options: string[];
@@ -34,6 +35,8 @@ type Assessment = {
   passing_score: number;
   status: string;
   questions?: AssessmentQuestion[];
+  created_at?: string;
+  updated_at?: string;
 };
 
 const emptyQuestion: AssessmentQuestion = {
@@ -65,22 +68,27 @@ export default function AdminAssessmentsPage() {
   const [form, setForm] = useState<Assessment>(emptyForm);
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   const [skillsText, setSkillsText] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const filteredAssessments = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return assessments;
+    const q = search.trim().toLowerCase();
 
-    return assessments.filter((assessment) => (
-      assessment.title?.toLowerCase().includes(q) ||
-      assessment.description?.toLowerCase().includes(q) ||
-      assessment.category?.toLowerCase().includes(q) ||
-      assessment.level?.toLowerCase().includes(q) ||
-      assessment.skills?.some((skill) => skill.toLowerCase().includes(q))
-    ));
+    if (!q) {
+      return assessments;
+    }
+
+    return assessments.filter((assessment) => {
+      return (
+        assessment.title.toLowerCase().includes(q) ||
+        assessment.description.toLowerCase().includes(q) ||
+        assessment.category.toLowerCase().includes(q) ||
+        assessment.level.toLowerCase().includes(q) ||
+        assessment.skills.some((skill) => skill.toLowerCase().includes(q))
+      );
+    });
   }, [assessments, search]);
 
   useEffect(() => {
@@ -102,7 +110,9 @@ export default function AdminAssessmentsPage() {
       return;
     }
 
-    const assessmentIds = (assessmentRows || []).map((item: Assessment) => item.id).filter(Boolean);
+    const assessmentIds = (assessmentRows || [])
+      .map((item: Assessment) => item.id)
+      .filter(Boolean);
 
     let questionRows: AssessmentQuestion[] = [];
 
@@ -113,22 +123,27 @@ export default function AdminAssessmentsPage() {
         .in("assessment_id", assessmentIds)
         .order("sort_order", { ascending: true });
 
-      if (!questionError) {
+      if (questionError) {
+        console.error("Failed to load assessment questions:", questionError);
+      } else {
         questionRows = loadedQuestions || [];
       }
     }
 
     const mapped = (assessmentRows || []).map((assessment: Assessment) => {
-      const relatedQuestions = questionRows.filter((question: any) => question.assessment_id === assessment.id);
+      const relatedQuestions = questionRows.filter(
+        (question: AssessmentQuestion) => question.assessment_id === assessment.id
+      );
 
       return {
         ...assessment,
+        skills: assessment.skills || [],
         questions: relatedQuestions,
-        questions_count: relatedQuestions.length || assessment.questions_count || 0,
+        questions_count: relatedQuestions.length,
       };
     });
 
-    setAssessments(mapped as Assessment[]);
+    setAssessments(mapped);
     setLoading(false);
   }
 
@@ -155,11 +170,15 @@ export default function AdminAssessmentsPage() {
         alert("Failed to load questions: " + error.message);
       }
 
-      loadedQuestions = (data || []).map((question: any, index: number) => ({
+      loadedQuestions = (data || []).map((question: AssessmentQuestion, index: number) => ({
         id: question.id,
+        assessment_id: question.assessment_id,
         question_text: question.question_text || "",
         question_type: question.question_type || "multiple_choice",
-        options: question.options && question.options.length > 0 ? question.options : ["", "", "", ""],
+        options:
+          question.options && question.options.length > 0
+            ? question.options
+            : ["", "", "", ""],
         correct_answer: question.correct_answer || "",
         points: Number(question.points || 1),
         sort_order: Number(question.sort_order ?? index),
@@ -174,6 +193,7 @@ export default function AdminAssessmentsPage() {
       questions_count: loadedQuestions.length,
       duration_minutes: Number(assessment.duration_minutes || 45),
       passing_score: Number(assessment.passing_score || 70),
+      skills: assessment.skills || [],
     });
     setQuestions(loadedQuestions);
     setSkillsText((assessment.skills || []).join(", "));
@@ -196,60 +216,81 @@ export default function AdminAssessmentsPage() {
   }
 
   function updateQuestion(index: number, field: keyof AssessmentQuestion, value: any) {
-    setQuestions((current) => current.map((question, itemIndex) => {
-      if (itemIndex !== index) return question;
+    setQuestions((current) =>
+      current.map((question, itemIndex) => {
+        if (itemIndex !== index) {
+          return question;
+        }
 
-      return {
-        ...question,
-        [field]: value,
-      };
-    }));
+        return {
+          ...question,
+          [field]: value,
+        };
+      })
+    );
   }
 
   function addOption(questionIndex: number) {
-    setQuestions((current) => current.map((question, itemIndex) => {
-      if (itemIndex !== questionIndex) return question;
+    setQuestions((current) =>
+      current.map((question, itemIndex) => {
+        if (itemIndex !== questionIndex) {
+          return question;
+        }
 
-      return {
-        ...question,
-        options: [...(question.options || []), ""],
-      };
-    }));
+        return {
+          ...question,
+          options: [...(question.options || []), ""],
+        };
+      })
+    );
   }
 
   function updateOption(questionIndex: number, optionIndex: number, value: string) {
-    setQuestions((current) => current.map((question, itemIndex) => {
-      if (itemIndex !== questionIndex) return question;
+    setQuestions((current) =>
+      current.map((question, itemIndex) => {
+        if (itemIndex !== questionIndex) {
+          return question;
+        }
 
-      const nextOptions = [...(question.options || [])];
-      nextOptions[optionIndex] = value;
+        const nextOptions = [...(question.options || [])];
+        nextOptions[optionIndex] = value;
 
-      return {
-        ...question,
-        options: nextOptions,
-      };
-    }));
+        return {
+          ...question,
+          options: nextOptions,
+        };
+      })
+    );
   }
 
   function removeOption(questionIndex: number, optionIndex: number) {
-    setQuestions((current) => current.map((question, itemIndex) => {
-      if (itemIndex !== questionIndex) return question;
+    setQuestions((current) =>
+      current.map((question, itemIndex) => {
+        if (itemIndex !== questionIndex) {
+          return question;
+        }
 
-      const removedOption = question.options[optionIndex];
-      const nextOptions = question.options.filter((_, currentOptionIndex) => currentOptionIndex !== optionIndex);
+        const removedOption = question.options[optionIndex];
+        const nextOptions = question.options.filter(
+          (_, currentOptionIndex) => currentOptionIndex !== optionIndex
+        );
 
-      return {
-        ...question,
-        options: nextOptions,
-        correct_answer: question.correct_answer === removedOption ? "" : question.correct_answer,
-      };
-    }));
+        return {
+          ...question,
+          options: nextOptions,
+          correct_answer:
+            question.correct_answer === removedOption ? "" : question.correct_answer,
+        };
+      })
+    );
   }
 
   function validateQuestions() {
     for (let index = 0; index < questions.length; index++) {
       const question = questions[index];
-      const validOptions = (question.options || []).map((option) => option.trim()).filter(Boolean);
+      const validOptions = (question.options || [])
+        .map((option) => option.trim())
+        .filter(Boolean);
 
       if (!question.question_text.trim()) {
         alert(`Question ${index + 1} text is required.`);
@@ -284,13 +325,11 @@ export default function AdminAssessmentsPage() {
 
     const effectiveEditingId = editingId || form.id || null;
 
-
-
     const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
       category: form.category.trim() || "General",
-      level: form.level,
+      level: form.level || "beginner",
       duration_minutes: Number(form.duration_minutes || 45),
       skills: skillsText
         .split(",")
@@ -298,13 +337,22 @@ export default function AdminAssessmentsPage() {
         .filter(Boolean),
       questions_count: questions.length,
       passing_score: Number(form.passing_score || 70),
-      status: form.status,
+      status: form.status || "active",
       updated_at: new Date().toISOString(),
     };
 
     const assessmentResult = effectiveEditingId
-      ? await supabase.from("skills_assessments").update(payload).eq("id", effectiveEditingId).select("id").single()
-      : await supabase.from("skills_assessments").insert(payload).select("id").single();
+      ? await supabase
+          .from("skills_assessments")
+          .update(payload)
+          .eq("id", effectiveEditingId)
+          .select("id")
+          .single()
+      : await supabase
+          .from("skills_assessments")
+          .insert(payload)
+          .select("id")
+          .single();
 
     if (assessmentResult.error || !assessmentResult.data?.id) {
       alert("Save failed: " + assessmentResult.error?.message);
@@ -355,10 +403,15 @@ export default function AdminAssessmentsPage() {
   }
 
   async function deleteAssessment(id?: string) {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     const confirmed = confirm("Delete this assessment and all its questions?");
-    if (!confirmed) return;
+
+    if (!confirmed) {
+      return;
+    }
 
     const { error } = await supabase
       .from("skills_assessments")
@@ -383,7 +436,9 @@ export default function AdminAssessmentsPage() {
               Back to Admin
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Assessment Management</h1>
-            <p className="text-gray-600">Create assessments, add questions, add answer options, and choose the correct answer.</p>
+            <p className="text-gray-600">
+              Create assessments, add questions, add answer options, and choose the correct answer.
+            </p>
           </div>
 
           <Button onClick={resetForm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -458,7 +513,9 @@ export default function AdminAssessmentsPage() {
               <div className="flex items-center justify-between gap-4 mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Questions</h3>
-                  <p className="text-sm text-gray-500">Add any number of questions. Each question can have its own answers and correct answer.</p>
+                  <p className="text-sm text-gray-500">
+                    Add any number of questions. Each question can have its own answers and correct answer.
+                  </p>
                 </div>
 
                 <Button type="button" onClick={addQuestion} className="bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -613,7 +670,7 @@ export default function AdminAssessmentsPage() {
                         </div>
 
                         <div className="text-sm text-gray-500">
-                          {assessment.category} â€¢ {assessment.duration_minutes} min â€¢ Passing {assessment.passing_score}% â€¢ Questions {assessment.questions_count}
+                          {assessment.category} - {assessment.duration_minutes} min - Passing {assessment.passing_score}% - Questions {assessment.questions_count}
                         </div>
                       </div>
 

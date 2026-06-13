@@ -279,7 +279,7 @@ const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
               difficulty: 'medium' as const,
             })),
           createdBy: 'HireVify',
-          createdAt: item.created_at,
+          createdAt: item.createdAt || item.created_at || item.completedAt || item.completed_at || new Date().toISOString(),
           isActive: item.status === 'active',
           assignedCandidates: 0,
           completionRate: 0,
@@ -315,14 +315,14 @@ const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
 
       const mappedResults: AssessmentResult[] = data.map((item: any) => ({
         id: item.id,
-        assessmentId: item.assessment_id,
+        assessmentId: item.assessmentId || item.assessment_id,
         candidateId: item.user_id,
         candidateName: user?.name || 'Candidate',
         candidateEmail: user?.email || '',
         score: item.score || 0,
         timeSpent: Math.round((item.time_spent || 0) / 60),
         answers: item.answers || {},
-        completedAt: item.submitted_at || item.created_at,
+        completedAt: item.completedAt || item.completed_at || item.createdAt || item.created_at || item.submitted_at || new Date().toISOString(),
         status: item.status || 'completed',
       }));
 
