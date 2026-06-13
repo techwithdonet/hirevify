@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, ArrowLeft, Search, User, Circle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -38,7 +38,7 @@ interface MessagingCenterProps {
 }
 
 export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenterProps) {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -173,12 +173,9 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
   useEffect(() => {
     if (!user) return;
     
-    // Load conversations immediately with mock data
-    const mockConversations = generateMockConversations();
-    setConversations(mockConversations);
-    
-    const totalUnread = mockConversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
-    onUpdateUnreadCount(totalUnread);
+    // Load real conversations from Supabase only
+    setConversations([]);
+    onUpdateUnreadCount(0);
     
     setIsLoading(false);
     
@@ -191,12 +188,12 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
   }, [messages]);
 
   const loadConversationsInBackground = async () => {
-    if (!accessToken) return;
+    if (!user) return;
     
     try {
       // Try to import and use the real API
       const { CommunicationsAPI } = await import('../utils/api/communications');
-      const data = await CommunicationsAPI.getConversations(accessToken);
+      const data = await CommunicationsAPI.getConversations();
       
       // Only update if we got valid data
       if (data && Array.isArray(data)) {
@@ -206,7 +203,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
       }
     } catch (error) {
       // Silently fail - we already have mock data loaded
-      console.log('Background API call failed, using mock data:', error);
+      console.error('Failed to load conversations from Supabase:', error);
     }
   };
 
@@ -217,27 +214,26 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
   const selectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     
-    // Load mock messages immediately
-    const mockMessages = generateMockMessages(conversation.otherUser.id);
-    setMessages(mockMessages);
+    // Load real messages from Supabase only
+    setMessages([]);
     
     // Try to load real messages in background
     loadMessagesInBackground(conversation.otherUser.id);
   };
 
   const loadMessagesInBackground = async (otherUserId: string) => {
-    if (!accessToken) return;
+    if (!user) return;
     
     try {
       const { CommunicationsAPI } = await import('../utils/api/communications');
-      const data = await CommunicationsAPI.getConversation(otherUserId, accessToken);
+      const data = await CommunicationsAPI.getConversation(otherUserId);
       
       if (data && Array.isArray(data)) {
         setMessages(data);
       }
     } catch (error) {
       // Silently fail - we already have mock data loaded
-      console.log('Background message loading failed, using mock data:', error);
+      console.error('Failed to load messages from Supabase:', error);
     }
   };
 
@@ -261,7 +257,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
     setNewMessage('');
     
     try {
-      if (accessToken) {
+      if (user) {
         // Try to send via real API
         const { CommunicationsAPI } = await import('../utils/api/communications');
         const messageData = {
@@ -269,7 +265,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
           message: messageText,
         };
         
-        const sentMessage = await CommunicationsAPI.sendMessage(messageData, accessToken);
+        const sentMessage = await CommunicationsAPI.sendMessage(messageData);
         
         // Replace optimistic message with real one
         setMessages(prev => 
@@ -279,11 +275,11 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenter
         toast.success('Message sent');
       } else {
         // No access token, just show success for demo
-        toast.success('Message sent (demo mode)');
+        toast.error('Message was not sent. Please login again.');
       }
     } catch (error) {
       console.log('Message sending failed, but optimistic update shown:', error);
-      toast.success('Message sent (demo mode)');
+      toast.error('Message was not sent. Please login again.');
     } finally {
       setIsSending(false);
     }

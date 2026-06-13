@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Check, X, MessageCircle, Users, Calendar, Award, Briefcase } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -26,7 +26,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ onBack, onUpdateUnreadCount }: NotificationCenterProps) {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -144,12 +144,9 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
   useEffect(() => {
     if (!user) return;
     
-    // Load notifications immediately with mock data
-    const mockNotifications = generateMockNotifications();
-    setNotifications(mockNotifications);
-    
-    const unreadCount = mockNotifications.filter(n => !n.read).length;
-    onUpdateUnreadCount(unreadCount);
+    // Load real notifications from Supabase only
+    setNotifications([]);
+    onUpdateUnreadCount(0);
     
     setIsLoading(false);
     
@@ -158,12 +155,12 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
   }, [user, onUpdateUnreadCount]);
 
   const loadNotificationsInBackground = async () => {
-    if (!accessToken) return;
+    if (!user) return;
     
     try {
       // Try to import and use the real API
       const { CommunicationsAPI } = await import('../utils/api/communications');
-      const data = await CommunicationsAPI.getNotifications(accessToken);
+      const data = await CommunicationsAPI.getNotifications();
       
       // Only update if we got valid data
       if (data && Array.isArray(data)) {
@@ -173,7 +170,7 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
       }
     } catch (error) {
       // Silently fail - we already have mock data loaded
-      console.log('Background API call failed, using mock data:', error);
+      console.error('Failed to load notifications from Supabase:', error);
     }
   };
 
@@ -190,11 +187,11 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
     const newUnreadCount = notifications.filter(n => !n.read && n.id !== notificationId).length;
     onUpdateUnreadCount(newUnreadCount);
     
-    if (accessToken) {
+    if (user) {
       try {
         // Try to update on server in background
         const { CommunicationsAPI } = await import('../utils/api/communications');
-        await CommunicationsAPI.markNotificationAsRead(notificationId, accessToken);
+        await CommunicationsAPI.markNotificationAsRead(notificationId);
       } catch (error) {
         // Silently fail - UI is already updated
         console.log('Background mark as read failed:', error);
@@ -213,13 +210,13 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
     onUpdateUnreadCount(0);
     toast.success('All notifications marked as read');
     
-    if (accessToken) {
+    if (user) {
       try {
         // Try to update on server in background
         const { CommunicationsAPI } = await import('../utils/api/communications');
         await Promise.all(
           unreadNotifications.map(notif => 
-            CommunicationsAPI.markNotificationAsRead(notif.id, accessToken)
+            CommunicationsAPI.markNotificationAsRead(notif.id)
           )
         );
       } catch (error) {
