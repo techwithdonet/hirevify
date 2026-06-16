@@ -625,3 +625,153 @@
   }
 }
 /* HireVify scroll reveal animations END */
+
+/* HireVify Auth Modal Premium Theme START */
+[data-radix-popper-content-wrapper],
+[data-radix-portal] {
+  z-index: 9999 !important;
+}
+
+[role="dialog"] {
+  background: #0b1a0f !important;
+  color: white !important;
+  border: 1px solid rgba(163, 230, 53, 0.22) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48) !important;
+}
+
+[role="dialog"] h1,
+[role="dialog"] h2,
+[role="dialog"] h3,
+[role="dialog"] [class*="DialogTitle"] {
+  color: white !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em !important;
+}
+
+[role="dialog"] p,
+[role="dialog"] label,
+[role="dialog"] [class*="DialogDescription"] {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+[role="dialog"] [class*="Online"],
+[role="dialog"] .bg-teal-500,
+[role="dialog"] .bg-cyan-500,
+[role="dialog"] .bg-emerald-500 {
+  background: #a3e635 !important;
+  color: #0b1a0f !important;
+}
+
+[role="dialog"] input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+[role="dialog"] input::placeholder {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[role="dialog"] input:focus {
+  border-color: #a3e635 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.18) !important;
+}
+
+[role="dialog"] button {
+  border-radius: 0 !important;
+}
+
+[role="dialog"] button[type="submit"],
+[role="dialog"] button[class*="bg-primary"],
+[role="dialog"] button[class*="bg-teal"],
+[role="dialog"] button[class*="bg-emerald"],
+[role="dialog"] button[class*="bg-cyan"] {
+  background: #a3e635 !important;
+  color: #0b1a0f !important;
+  border: 1px solid #a3e635 !important;
+  font-weight: 700 !important;
+}
+
+[role="dialog"] button[type="submit"]:hover,
+[role="dialog"] button[class*="bg-primary"]:hover,
+[role="dialog"] button[class*="bg-teal"]:hover,
+[role="dialog"] button[class*="bg-emerald"]:hover,
+[role="dialog"] button[class*="bg-cyan"]:hover {
+  background: #bef264 !important;
+  border-color: #bef264 !important;
+}
+
+[role="dialog"] [role="tablist"],
+[role="dialog"] [data-slot="tabs-list"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+}
+
+[role="dialog"] [role="tab"] {
+  color: rgba(255, 255, 255, 0.55) !important;
+  border-radius: 0 !important;
+}
+
+[role="dialog"] [role="tab"][data-state="active"] {
+  background: #a3e635 !important;
+  color: #0b1a0f !important;
+}
+
+[role="dialog"] button[aria-label="Close"],
+[role="dialog"] button.absolute {
+  color: rgba(255, 255, 255, 0.55) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+[role="dialog"] button[aria-label="Close"]:hover,
+[role="dialog"] button.absolute:hover {
+  color: #a3e635 !important;
+}
+/* HireVify Auth Modal Premium Theme END */
+
+/* HireVify Auth Modal Header Contrast Fix START */
+[role="dialog"] > div:first-child {
+  background: linear-gradient(135deg, #1f3b28 0%, #102417 100%) !important;
+  border-bottom: 1px solid rgba(163, 230, 53, 0.18) !important;
+}
+
+[role="dialog"] > div:first-child h1,
+[role="dialog"] > div:first-child h2,
+[role="dialog"] > div:first-child h3,
+[role="dialog"] > div:first-child .text-2xl,
+[role="dialog"] > div:first-child .text-xl,
+[role="dialog"] > div:first-child .font-semibold,
+[role="dialog"] > div:first-child .font-bold {
+  color: #ffffff !important;
+}
+
+[role="dialog"] > div:first-child p,
+[role="dialog"] > div:first-child .text-muted-foreground,
+[role="dialog"] > div:first-child .text-gray-500,
+[role="dialog"] > div:first-child .text-gray-600,
+[role="dialog"] > div:first-child .text-slate-500,
+[role="dialog"] > div:first-child .text-slate-600 {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+[role="dialog"] > div:first-child button {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+[role="dialog"] > div:first-child button:hover {
+  color: #a3e635 !important;
+}
+
+[role="dialog"] > div:first-child .bg-teal-500,
+[role="dialog"] > div:first-child .bg-cyan-500,
+[role="dialog"] > div:first-child .bg-emerald-500 {
+  background: #14b8a6 !important;
+  color: white !important;
+}
+/* HireVify Auth Modal Header Contrast Fix END */
