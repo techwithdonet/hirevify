@@ -3,9 +3,14 @@ import { toast } from 'sonner';
 import { Screen, Project, Application } from '../types/app';
 import { User } from '../components/AuthProvider';
 
+interface ScreenNavigationOptions {
+  replace?: boolean;
+  skipScroll?: boolean;
+}
+
 interface UseAppNavigationProps {
   user: User | null;
-  setCurrentScreen: (screen: Screen) => void;
+  setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
   setSelectedProject: (project: Project | null) => void;
   setSelectedApplication: (application: Application | null) => void;
   setProjectChallengeData: (data: {
@@ -45,14 +50,14 @@ export const useAppNavigation = ({
 
   const navigateHome = useCallback(() => {
     console.log('Navigating to homepage');
-    setCurrentScreen('homepage');
+    setCurrentScreen('homepage', { replace: true });
   }, [setCurrentScreen]);
 
   const handleLogout = useCallback(async () => {
     try {
       console.log('Logging out user');
       await signOut();
-      setCurrentScreen('homepage');
+      setCurrentScreen('homepage', { replace: true });
       setSelectedProject(null);
       setSelectedApplication(null);
       toast.success('Logged out successfully');
@@ -230,14 +235,14 @@ export const useAppNavigation = ({
 
   const navigateToRecruiterDashboard = useCallback(() => {
     if (!requireAuth('access the dashboard', 'recruiter')) return;
-    setCurrentScreen('recruiter-dashboard');
+    setCurrentScreen('recruiter-dashboard', { replace: true });
     setSelectedProject(null);
     setSelectedApplication(null);
   }, [requireAuth, setCurrentScreen, setSelectedProject, setSelectedApplication]);
 
   const navigateToCandidateDashboard = useCallback(() => {
     if (!requireAuth('access the dashboard', 'candidate')) return;
-    setCurrentScreen('candidate-dashboard');
+    setCurrentScreen('candidate-dashboard', { replace: true });
   }, [requireAuth, setCurrentScreen]);
 
   const navigateToMessages = useCallback(() => {

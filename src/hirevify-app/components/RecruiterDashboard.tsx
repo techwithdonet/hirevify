@@ -43,6 +43,7 @@ import { jobsService } from '@/src/hirevify-app/services/jobsService';
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsService';
 import { toast } from 'sonner';
+import { DashboardGrid, LoadingState, StatCard } from './layout/AppLayout';
 
 interface Project {
   id: string;
@@ -268,45 +269,43 @@ export function RecruiterDashboard({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
+      <div className="hv-page-shell">
+        <LoadingState label="Loading your dashboard..." className="min-h-screen" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50 flex flex-col">
+    <div className="hv-page-shell flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <header className="hv-dashboard-header">
+        <div className="hv-container py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
               <HireVifyLogo size="md" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Recruiter Dashboard</h1>
-                <p className="text-sm text-gray-500">Manage your hiring pipeline</p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Recruiter workspace</p>
+                <h1 className="truncate text-2xl font-semibold tracking-normal text-slate-950">Recruiter Dashboard</h1>
+                <p className="text-sm text-slate-500">Manage projects, screening, interviews, and hiring analytics.</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               {/* Premium Status */}
               {subscription?.isActive ? (
-                <Badge className="hidden md:flex bg-emerald-100 text-emerald-800 border border-emerald-200 px-4 py-2 font-semibold rounded-full">
+                <Badge className="hidden rounded-full border border-emerald-200 bg-emerald-100 px-4 py-2 font-semibold text-emerald-800 md:flex">
                   <Crown className="w-4 h-4 mr-2 text-emerald-600" />
                   {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
                 </Badge>
               ) : (
-                <Button onClick={onUpgrade} className="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md">
+                <Button onClick={onUpgrade} className="hidden rounded-lg bg-emerald-600 px-5 font-semibold text-white shadow-sm hover:bg-emerald-700 md:flex">
                   <Crown className="w-4 h-4 mr-2" />
                   Upgrade to Pro
                 </Button>
               )}
               
-              <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg hover:bg-emerald-50">
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <Bell className="w-5 h-5 text-gray-600" />
                   {false && unreadNotifications > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
@@ -315,7 +314,7 @@ export function RecruiterDashboard({
                   )}
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg hover:bg-emerald-50">
+                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <MessageSquare className="w-5 h-5 text-gray-600" />
                   {false && unreadMessages > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
@@ -324,11 +323,11 @@ export function RecruiterDashboard({
                   )}
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg hover:bg-emerald-50">
+                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <Settings className="w-5 h-5 text-gray-600" />
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg hover:bg-red-50">
+                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600">
                   <LogOut className="w-5 h-5 text-gray-600" />
                 </Button>
               </div>
@@ -338,7 +337,7 @@ export function RecruiterDashboard({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+      <main className="hv-container flex-1 py-6 sm:py-8">
         {isLoading && (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
@@ -352,11 +351,11 @@ export function RecruiterDashboard({
         <>
         {/* Quick Stats */}
         {/* Company Profile Completion Card */}
-        <Card className="mb-8 border border-emerald-100 bg-white shadow-sm">
+        <Card className="mb-6 border-emerald-100 bg-white/95 shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isRecruiterProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isRecruiterProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
                   {isRecruiterProfileComplete ? (
                     <Award className="w-6 h-6 text-emerald-600" />
                   ) : (
@@ -384,7 +383,7 @@ export function RecruiterDashboard({
 
               <Button
                 onClick={() => onViewSettings?.()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
               >
                 {isRecruiterProfileComplete ? 'View / Edit Company Profile' : 'Complete Company Profile'}
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -393,61 +392,18 @@ export function RecruiterDashboard({
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewProjects}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Active Projects</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{postedJobs.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <FolderOpen className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewATS}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Applications</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{applicants.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewInterviews}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Interviews</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.interviewsScheduled || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer" onClick={onViewAnalytics}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Hire Rate</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.hireRate || 'N/A'}</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <DashboardGrid className="mb-6">
+          <StatCard label="Active Projects" value={postedJobs.length} icon={FolderOpen} tone="emerald" onClick={onViewProjects} />
+          <StatCard label="Applications" value={applicants.length} icon={Users} tone="blue" onClick={onViewATS} />
+          <StatCard label="Interviews" value={stats?.interviewsScheduled || 0} icon={Calendar} tone="violet" onClick={onViewInterviews} />
+          <StatCard label="Hire Rate" value={stats?.hireRate || 'N/A'} icon={BarChart3} tone="amber" onClick={onViewAnalytics} />
+        </DashboardGrid>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 mb-6">
           <Button 
             onClick={() => onPostProject()}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg shadow-md h-auto h-14"
+            className="h-12 rounded-lg bg-emerald-600 px-6 font-semibold text-white shadow-sm hover:bg-emerald-700 sm:h-14"
           >
             <Plus className="w-5 h-5 mr-2" />
             Post New Project
@@ -456,7 +412,7 @@ export function RecruiterDashboard({
           <Button 
             variant="outline"
             onClick={onSearchCandidates}
-            className="border-gray-300 text-gray-900 hover:bg-gray-50 font-semibold px-6 py-3 rounded-lg h-auto h-14"
+            className="h-12 rounded-lg border-slate-300 px-6 font-semibold text-slate-900 hover:bg-slate-50 sm:h-14"
           >
             <Search className="w-5 h-5 mr-2" />
             Search Candidates
@@ -468,11 +424,11 @@ export function RecruiterDashboard({
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-5 sm:p-6 lg:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Hiring Tools</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={onViewAIMatchingDashboard} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onViewAIMatchingDashboard} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Brain className="w-6 h-6 text-emerald-600" />
                     {aiMatchingAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
@@ -481,7 +437,7 @@ export function RecruiterDashboard({
                   <p className="text-sm text-gray-600">Smart candidate matching</p>
                 </button>
 
-                <button onClick={onViewATSScanner} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onViewATSScanner} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Scan className="w-6 h-6 text-blue-600" />
                     {atsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
@@ -490,7 +446,7 @@ export function RecruiterDashboard({
                   <p className="text-sm text-gray-600">Resume screening tool</p>
                 </button>
 
-                <button onClick={onViewSkillsAssessment} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onViewSkillsAssessment} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Award className="w-6 h-6 text-purple-600" />
                     {assessmentsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
@@ -499,7 +455,7 @@ export function RecruiterDashboard({
                   <p className="text-sm text-gray-600">Custom skills tests</p>
                 </button>
 
-                <button onClick={onViewAnalytics} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onViewAnalytics} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <BarChart3 className="w-6 h-6 text-orange-600" />
                     {analyticsAccess && <Badge className="text-xs bg-emerald-100 text-emerald-700">PRO</Badge>}
@@ -511,7 +467,7 @@ export function RecruiterDashboard({
             </div>
 
             {/* Features Overview */}
-            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-5 sm:p-6 lg:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Why Skills-First Hiring?</h2>
               
               <div className="space-y-4">
@@ -546,7 +502,7 @@ export function RecruiterDashboard({
           <div className="space-y-6">
             {/* Premium Status */}
             {!subscription?.isActive ? (
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
                 <div className="text-center">
                   <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
                   <h3 className="font-bold text-gray-900 mb-2">Go Premium</h3>
@@ -557,7 +513,7 @@ export function RecruiterDashboard({
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
                 <div className="text-center">
                   <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
                   <h3 className="font-bold text-gray-900 mb-1">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
@@ -567,7 +523,7 @@ export function RecruiterDashboard({
             )}
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-6">
               <h3 className="font-bold text-gray-900 mb-4">Recent Applications</h3>
               {applicants.length > 0 ? (
                 <div className="space-y-3">
@@ -588,7 +544,7 @@ export function RecruiterDashboard({
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-6">
               <h3 className="font-bold text-gray-900 mb-4">Navigation</h3>
               <div className="space-y-2">
                 <button onClick={onViewProjects} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">

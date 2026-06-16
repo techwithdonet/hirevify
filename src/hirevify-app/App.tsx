@@ -1,15 +1,134 @@
-﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './components/AppRouter';
+import { LoadingState } from './components/layout/AppLayout';
 import { useAppNavigation } from './hooks/useAppNavigation';
-import type { Screen, Project, Application } from './types/app';
+import type { Application, Project, Screen } from './types/app';
 
-// Simplified App State Management Component
+const SCREEN_STORAGE_KEY = 'hirevify_current_screen';
+const HISTORY_SCREEN_KEY = 'hirevifyScreen';
+
+export type ScreenNavigationOptions = {
+  replace?: boolean;
+  skipScroll?: boolean;
+};
+
+const ALL_SCREENS: Screen[] = [
+  'homepage',
+  'recruiter-dashboard',
+  'recruiter-post-project',
+  'recruiter-projects',
+  'recruiter-ats',
+  'recruiter-ats-scanner',
+  'recruiter-functional-ats',
+  'recruiter-accuracy-first-ats',
+  'recruiter-professional-ats',
+  'recruiter-automated-screening',
+  'recruiter-analytics',
+  'recruiter-advanced-analytics',
+  'recruiter-ai-matching-dashboard',
+  'recruiter-market-intelligence',
+  'recruiter-skills-assessment',
+  'recruiter-custom-assessment-builder',
+  'recruiter-integrations',
+  'recruiter-search-candidates',
+  'recruiter-interviews',
+  'recruiter-enhanced-video-interview',
+  'recruiter-settings',
+  'recruiter-skills-first-hiring',
+  'recruiter-employer-education',
+  'candidate-dashboard',
+  'candidate-ai-resume-builder',
+  'candidate-resume-builder',
+  'candidate-ai-interview-coach',
+  'candidate-skills-development-ai',
+  'candidate-market-intelligence',
+  'candidate-portfolio',
+  'candidate-knowledge-assessment',
+  'candidate-video-interview',
+  'candidate-enhanced-video-interview',
+  'candidate-search-projects',
+  'candidate-interviews',
+  'candidate-settings',
+  'candidate-experience-builder',
+  'candidate-micro-internships',
+  'candidate-mentorship-program',
+  'candidate-career-switcher-track',
+  'candidate-project-challenge-video',
+  'candidate-ats-scanner',
+  'candidate-functional-ats',
+  'candidate-accuracy-first-ats',
+  'candidate-professional-ats',
+  'ai-smart-notifications',
+  'ats-diagnostic',
+  'pricing',
+  'subscription-manager',
+  'beta-program',
+  'live-interview',
+  'one-way-interview',
+  'messages',
+  'notifications',
+];
+
+const PUBLIC_SCREENS = new Set<Screen>(['homepage', 'pricing']);
+
+function isScreen(value: unknown): value is Screen {
+  return typeof value === 'string' && ALL_SCREENS.includes(value as Screen);
+}
+
+function getUrlForScreen(screen: Screen) {
+  const url = new URL(window.location.href);
+
+  if (screen === 'homepage') {
+    url.searchParams.delete('screen');
+  } else {
+    url.searchParams.set('screen', screen);
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function readScreenFromLocation() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const screen = new URL(window.location.href).searchParams.get('screen');
+  return isScreen(screen) ? screen : null;
+}
+
+function readInitialScreen(): Screen {
+  if (typeof window === 'undefined') {
+    return 'homepage';
+  }
+
+  const urlScreen = readScreenFromLocation();
+  if (urlScreen) {
+    return urlScreen;
+  }
+
+  const stateScreen = window.history.state?.[HISTORY_SCREEN_KEY];
+  if (isScreen(stateScreen)) {
+    return stateScreen;
+  }
+
+  const storedScreen = window.localStorage.getItem(SCREEN_STORAGE_KEY);
+  return isScreen(storedScreen) ? storedScreen : 'homepage';
+}
+
+function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate') {
+  if (userType === 'recruiter') {
+    return screen.startsWith('candidate-');
+  }
+
+  return screen.startsWith('recruiter-');
+}
+
 function HireVifyApp() {
   const { user, signOut, isLoading, authInitialized } = useAuth();
-  const [currentScreen, setCurrentScreen] = useState<Screen>('homepage');
+  const [currentScreen, setCurrentScreenState] = useState<Screen>(() => readInitialScreen());
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -22,136 +141,111 @@ function HireVifyApp() {
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
   const hadAuthenticatedUser = useRef(false);
 
-  // Route user after login/signup and reset when logged out
+  const navigateScreen = useCallback((screen: Screen, options: ScreenNavigationOptions = {}) => {
+    setCurrentScreenState(screen);
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SCREEN_STORAGE_KEY, screen);
+
+    const state = {
+      ...(window.history.state || {}),
+      [HISTORY_SCREEN_KEY]: screen,
+    };
+    const url = getUrlForScreen(screen);
+    const currentHistoryScreen = window.history.state?.[HISTORY_SCREEN_KEY];
+    const shouldReplace = Boolean(options.replace || currentHistoryScreen === screen);
+
+    if (shouldReplace) {
+      window.history.replaceState(state, '', url);
+    } else {
+      window.history.pushState(state, '', url);
+    }
+
+    if (!options.skipScroll) {
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+    }
+  }, []);
+
   useEffect(() => {
-    // Wait for auth initialization before routing
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    navigateScreen(currentScreen, { replace: true, skipScroll: true });
+
+    const handlePopState = (event: PopStateEvent) => {
+      const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
+      const nextScreen = isScreen(stateScreen) ? stateScreen : readScreenFromLocation();
+
+      if (!nextScreen) {
+        setCurrentScreenState('homepage');
+        window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
+        return;
+      }
+
+      setCurrentScreenState(nextScreen);
+      window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     if (!authInitialized) {
       return;
     }
 
     if (user) {
       hadAuthenticatedUser.current = true;
+      const dashboardScreen: Screen = user.userType === 'recruiter' ? 'recruiter-dashboard' : 'candidate-dashboard';
 
-      if (currentScreen === 'homepage') {
-        if (user.userType === 'recruiter') {
-          setSelectedProject(null);
-          setSelectedApplication(null);
-          setCurrentScreen('recruiter-dashboard');
-        } else {
-          setCurrentScreen('candidate-dashboard');
-        }
+      if (currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)) {
+        setSelectedProject(null);
+        setSelectedApplication(null);
+        navigateScreen(dashboardScreen, { replace: true });
       }
 
       return;
     }
 
-    if (!hadAuthenticatedUser.current) {
-      return;
-    }
-
-    let active = true;
-
-    queueMicrotask(() => {
-      if (!active) {
-        return;
-      }
-
-      setCurrentScreen('homepage');
+    if (!PUBLIC_SCREENS.has(currentScreen)) {
+      navigateScreen('homepage', { replace: true });
       setSelectedProject(null);
       setSelectedApplication(null);
       setProjectChallengeData(null);
       setAssessmentBuilderData(null);
-    });
+    }
+  }, [user, currentScreen, authInitialized, navigateScreen]);
 
-    return () => {
-      active = false;
-    };
-  }, [user, currentScreen, authInitialized]);
-  // Navigation hook with all methods - memoized to prevent re-creation on every render
   const navigation = useAppNavigation({
     user,
-    setCurrentScreen,
+    setCurrentScreen: navigateScreen,
     setSelectedProject,
     setSelectedApplication,
     setProjectChallengeData,
     setAssessmentBuilderData,
-    signOut
+    signOut,
   });
 
-// Handle user type selection from homepage - memoized to prevent re-creation
-const handleUserTypeSelection = useMemo(() => {
-  return (userType: 'recruiter' | 'candidate') => {
-    console.log(`Force opening ${userType} dashboard from homepage test button`);
+  const handleUserTypeSelection = useMemo(() => {
+    return (userType: 'recruiter' | 'candidate') => {
+      console.log(`Force opening ${userType} dashboard from homepage test button`);
 
-    setSelectedProject(null);
-    setSelectedApplication(null);
+      setSelectedProject(null);
+      setSelectedApplication(null);
+      navigateScreen(userType === 'recruiter' ? 'recruiter-dashboard' : 'candidate-dashboard', { replace: true });
+    };
+  }, [navigateScreen]);
 
-    if (userType === 'recruiter') {
-      setCurrentScreen('recruiter-dashboard');
-    } else {
-      setCurrentScreen('candidate-dashboard');
-    }
-  };
-}, [setCurrentScreen, setSelectedProject, setSelectedApplication]);
-
-  // Route user after login/signup and reset when logged out
-useEffect(() => {
-  if (user) {
-    hadAuthenticatedUser.current = true;
-
-    // Open correct dashboard after login/signup
-    if (currentScreen === 'homepage') {
-      if (user.userType === 'recruiter') {
-        setSelectedProject(null);
-        setSelectedApplication(null);
-        setCurrentScreen('recruiter-dashboard');
-      } else {
-        setCurrentScreen('candidate-dashboard');
-      }
-    }
-
-    return;
-  }
-
-  if (!hadAuthenticatedUser.current) {
-    return;
-  }
-
-  let active = true;
-
-  queueMicrotask(() => {
-    if (!active) {
-      return;
-    }
-
-    setCurrentScreen('homepage');
-    setSelectedProject(null);
-    setSelectedApplication(null);
-    setProjectChallengeData(null);
-    setAssessmentBuilderData(null);
-  });
-
-  return () => {
-    active = false;
-  };
-}, [
-  user,
-  currentScreen,
-  setCurrentScreen,
-  setSelectedProject,
-  setSelectedApplication,
-  setProjectChallengeData,
-  setAssessmentBuilderData,
-]);
-
-  // Show full-page loading screen while auth is initializing
-  if (!authInitialized) {
+  if (!authInitialized || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-green-500 rounded-full animate-spin" />
-          <p className="text-slate-600 font-medium">Loading HireVify...</p>
-        </div>
+      <div className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ecfdf5_100%)]">
+        <LoadingState label="Loading HireVify..." className="min-h-screen" />
       </div>
     );
   }
@@ -170,7 +264,7 @@ useEffect(() => {
         navigation={navigation}
         handleLogout={navigation.handleLogout}
         handleUserTypeSelection={handleUserTypeSelection}
-        setCurrentScreen={setCurrentScreen}
+        setCurrentScreen={navigateScreen}
         setUnreadMessages={setUnreadMessages}
         setUnreadNotifications={setUnreadNotifications}
       />
@@ -179,7 +273,6 @@ useEffect(() => {
   );
 }
 
-// Main App with Error Boundary and Auth Provider
 export default function App() {
   return (
     <ErrorBoundary>
@@ -189,8 +282,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-
-
-
-
-

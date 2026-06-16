@@ -293,19 +293,19 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="hv-page-shell">
       {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+      <header className="hv-dashboard-header">
+        <div className="hv-container py-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center space-x-3">
+            <div className="flex min-w-0 items-center gap-3">
               <HireVifyLogo size="lg" className="h-16" />
-              <div>
-                <h1 className="text-xl text-foreground">HireVify Pricing</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="text-xl font-semibold tracking-normal text-slate-950">HireVify Pricing</h1>
+                <p className="text-sm text-slate-600">
                   Choose the right plan for {userType === 'recruiter' ? 'your company' : 'your career'}
                 </p>
               </div>
@@ -314,7 +314,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="hv-container py-10 sm:py-12">
         {/* Development Mode Banner */}
         {developmentMode && (
           <Alert className="mb-8 border-blue-200 bg-blue-50">
@@ -340,11 +340,11 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
         )}
 
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl text-foreground mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="mb-4 text-4xl font-semibold tracking-normal text-slate-950">
             {userType === 'recruiter' ? 'Hiring Plans' : 'Career Plans'}
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="mx-auto mb-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
             {userType === 'recruiter' 
               ? 'Scale your hiring process with advanced tools and analytics'
               : 'Advance your career with premium job search tools'
@@ -352,7 +352,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
           </p>
           
           {/* Pricing Toggle */}
-          <div className="inline-flex items-center bg-muted rounded-lg p-1 mb-8">
+          <div className="mb-8 inline-flex items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
             <Button
               variant={isAnnual ? "ghost" : "default"}
               size="sm"
@@ -375,7 +375,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
           </div>
 
           {/* Trust Indicators */}
-          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600 sm:gap-8">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-primary" />
               <span>Secure Payments</span>
@@ -412,7 +412,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
         )}
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+        <div className="mb-16 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {filteredPlans.map((plan) => {
             const isCurrent = isPlanCurrent(plan);
             const isProcessing = processingPayment && selectedPlan === plan.id;
@@ -423,7 +423,7 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
                 key={plan.id} 
                 className={`border relative ${
                   plan.popular 
-                    ? 'border-primary shadow-lg scale-105' 
+                    ? 'border-primary shadow-lg' 
                     : 'border-border'
                 } ${isCurrent ? 'ring-2 ring-primary' : ''}`}
               >
@@ -546,8 +546,8 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
         </div>
 
         {/* Features Comparison */}
-        <div className="bg-muted/30 rounded-2xl p-8">
-          <h2 className="text-2xl text-foreground text-center mb-8">
+        <div className="rounded-lg border border-slate-200 bg-white/80 p-6 shadow-sm sm:p-8">
+          <h2 className="text-2xl font-semibold tracking-normal text-slate-950 text-center mb-8">
             Why Choose {userType === 'recruiter' ? 'HireVify for Recruiting' : 'HireVify Professional'}?
           </h2>
           

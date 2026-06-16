@@ -14,6 +14,7 @@ import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
 import { usePremiumAccess } from '../utils/premium';
 import { toast } from 'sonner';
+import { DashboardGrid, LoadingState, StatCard } from './layout/AppLayout';
 
 interface CandidateDashboardProps {
   onBuildResume: () => void;
@@ -131,45 +132,43 @@ export function CandidateDashboard({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
+      <div className="hv-page-shell">
+        <LoadingState label="Loading your dashboard..." className="min-h-screen" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+    <div className="hv-page-shell">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <header className="hv-dashboard-header">
+        <div className="hv-container py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
               <HireVifyLogo size="md" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.name?.split(' ')[0] || 'Candidate'}</h1>
-                <p className="text-sm text-gray-500">Your career dashboard</p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Candidate workspace</p>
+                <h1 className="truncate text-2xl font-semibold tracking-normal text-slate-950">Welcome, {user?.name?.split(' ')[0] || 'Candidate'}</h1>
+                <p className="text-sm text-slate-500">Manage resumes, assessments, projects, and interviews.</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               {/* Premium Status / Upgrade Button */}
               {subscription && subscription.isActive ? (
-                <Badge className="hidden md:flex bg-emerald-100 text-emerald-800 border border-emerald-200 px-4 py-2 font-semibold rounded-full">
+                <Badge className="hidden rounded-full border border-emerald-200 bg-emerald-100 px-4 py-2 font-semibold text-emerald-800 md:flex">
                   <Crown className="w-4 h-4 mr-2 text-emerald-600" />
                   {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
                 </Badge>
               ) : (
-                <Button onClick={onUpgrade} className="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg shadow-md">
+                <Button onClick={onUpgrade} className="hidden rounded-lg bg-emerald-600 px-5 font-semibold text-white shadow-sm hover:bg-emerald-700 md:flex">
                   <Crown className="w-4 h-4 mr-2" />
                   Upgrade to Pro
                 </Button>
               )}
               
-              <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg hover:bg-emerald-50">
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <MessageCircle className="w-5 h-5 text-gray-600" />
                   {false && unreadMessages > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
@@ -178,7 +177,7 @@ export function CandidateDashboard({
                   )}
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg hover:bg-emerald-50">
+                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <Bell className="w-5 h-5 text-gray-600" />
                   {false && unreadNotifications > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
@@ -187,11 +186,11 @@ export function CandidateDashboard({
                   )}
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg hover:bg-emerald-50">
+                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <Settings className="w-5 h-5 text-gray-600" />
                 </Button>
                 
-                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg hover:bg-red-50">
+                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600">
                   <LogOut className="w-5 h-5 text-gray-600" />
                 </Button>
               </div>
@@ -200,7 +199,7 @@ export function CandidateDashboard({
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="hv-container py-6 sm:py-8">
         {isLoading && (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
@@ -213,11 +212,11 @@ export function CandidateDashboard({
         {!isLoading && (
         <>
         {/* Profile Completion Card */}
-        <Card className="mb-8 border border-emerald-100 bg-white shadow-sm">
+        <Card className="mb-6 border-emerald-100 bg-white/95 shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isCandidateProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isCandidateProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
                   {isCandidateProfileComplete ? (
                     <CheckCircle className="w-6 h-6 text-emerald-600" />
                   ) : (
@@ -241,7 +240,7 @@ export function CandidateDashboard({
                 </div>
               </div>
 
-              <Button onClick={onViewSettings} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button onClick={onViewSettings} className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto">
                 {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -250,66 +249,23 @@ export function CandidateDashboard({
         </Card>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Applications</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{applications.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-emerald-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Portfolio Items</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{portfolio.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <User className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Saved Jobs</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{savedJobs.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Subscription</p>
-                <p className="text-lg font-bold text-gray-900 mt-2">{subscription?.tier || 'Free'}</p>
-              </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Crown className="w-6 h-6 text-amber-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+        <DashboardGrid className="mb-6">
+          <StatCard label="Applications" value={applications.length} icon={FileText} tone="emerald" />
+          <StatCard label="Portfolio Items" value={portfolio.length} icon={User} tone="blue" />
+          <StatCard label="Saved Jobs" value={savedJobs.length} icon={BookOpen} tone="violet" />
+          <StatCard label="Subscription" value={subscription?.tier || 'Free'} icon={Crown} tone="amber" />
+        </DashboardGrid>
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Tools */}
           <div className="lg:col-span-2 space-y-6">
             {/* Essential Tools */}
-            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-5 sm:p-6 lg:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Get Started</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={onTakeKnowledgeAssessment} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onTakeKnowledgeAssessment} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Award className="w-6 h-6 text-emerald-600" />
                     <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
@@ -318,7 +274,7 @@ export function CandidateDashboard({
                   <p className="text-sm text-gray-600">Verify your skills</p>
                 </button>
 
-                <button onClick={onBuildResume} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onBuildResume} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Brain className="w-6 h-6 text-blue-600" />
                     <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
@@ -327,7 +283,7 @@ export function CandidateDashboard({
                   <p className="text-sm text-gray-600">Create your resume</p>
                 </button>
 
-                <button onClick={onViewPortfolio} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onViewPortfolio} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Sparkles className="w-6 h-6 text-purple-600" />
                     <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
@@ -336,7 +292,7 @@ export function CandidateDashboard({
                   <p className="text-sm text-gray-600">Showcase your work</p>
                 </button>
 
-                <button onClick={onSearchProjects} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left group">
+                <button onClick={onSearchProjects} className="hv-action-card group">
                   <div className="flex items-center justify-between mb-3">
                     <Search className="w-6 h-6 text-orange-600" />
                     <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
@@ -348,11 +304,11 @@ export function CandidateDashboard({
             </div>
 
             {/* Career Growth */}
-            <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-5 sm:p-6 lg:p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Career Growth Paths</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={onExperienceBuilder} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left">
+                <button onClick={onExperienceBuilder} className="hv-action-card">
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
                       <Target className="w-5 h-5 text-emerald-600" />
@@ -364,7 +320,7 @@ export function CandidateDashboard({
                   </div>
                 </button>
 
-                <button onClick={onMicroInternships} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left">
+                <button onClick={onMicroInternships} className="hv-action-card">
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
                       <Timer className="w-5 h-5 text-blue-600" />
@@ -376,7 +332,7 @@ export function CandidateDashboard({
                   </div>
                 </button>
 
-                <button onClick={onMentorshipProgram} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left">
+                <button onClick={onMentorshipProgram} className="hv-action-card">
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
                       <Users className="w-5 h-5 text-orange-600" />
@@ -388,7 +344,7 @@ export function CandidateDashboard({
                   </div>
                 </button>
 
-                <button onClick={onCareerSwitcherTrack} className="p-6 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left">
+                <button onClick={onCareerSwitcherTrack} className="hv-action-card">
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
                       <BookOpen className="w-5 h-5 text-purple-600" />
@@ -407,7 +363,7 @@ export function CandidateDashboard({
           <div className="space-y-6">
             {/* Premium Status / Upgrade - Mobile Version */}
             {!subscription?.isActive ? (
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
                 <div className="text-center">
                   <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
                   <h3 className="font-bold text-gray-900 mb-2">Go Premium</h3>
@@ -418,7 +374,7 @@ export function CandidateDashboard({
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
                 <div className="text-center">
                   <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
                   <h3 className="font-bold text-gray-900 mb-1">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
@@ -428,7 +384,7 @@ export function CandidateDashboard({
             )}
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-6">
               <h3 className="font-bold text-gray-900 mb-4">Recent Applications</h3>
               {applications.length > 0 ? (
                 <div className="space-y-3">
@@ -448,7 +404,7 @@ export function CandidateDashboard({
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+            <div className="hv-surface p-6">
               <h3 className="font-bold text-gray-900 mb-4">Quick Links</h3>
               <div className="space-y-2">
                 <button onClick={onATSScanner} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">

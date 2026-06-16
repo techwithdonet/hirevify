@@ -1,4 +1,4 @@
-import hireVifyLogo from "../../assets/72df3ccfbe017c123913042081b5bfd9b1099c73.png";
+﻿import hireVifyLogo from "../../assets/hirevify-logo-transparent.png";
 
 interface HireVifyLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -21,4 +21,5 @@ export function HireVifyLogo({ size = "md", className = "" }: HireVifyLogoProps)
     />
   );
 }
+
 

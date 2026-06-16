@@ -51,36 +51,36 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
     try {
       if (activeTab === 'signin') {
-        console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Attempting signin for:', email);
+        console.log('Attempting signin for:', email);
 
         const result = await signIn(email, password);
 
         if (result.success) {
-          console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Signin successful');
+          console.log('Signin successful');
           toast.success(result.message || 'Welcome back!');
           onClose();
           resetForm();
         } else {
-          console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Signin failed:', result.message);
+          console.error('Signin failed:', result.message);
           toast.error(result.message || 'Sign in failed');
         }
       } else {
-        console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€šÃ‚ Attempting signup for:', email, userType);
+        console.log('Attempting signup for:', email, userType);
 
         const result = await signUp(email, password, name, userType);
 
         if (result.success) {
-          console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Signup successful');
+          console.log('Signup successful');
           toast.success(result.message || 'Account created successfully!');
           onClose();
           resetForm();
         } else {
-          console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Signup failed:', result.message);
+          console.error('Signup failed:', result.message);
           toast.error(result.message || 'Sign up failed');
         }
       }
     } catch (error) {
-      console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Auth error:', error);
+      console.error('Auth error:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setFormLoading(false);
@@ -89,8 +89,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="overflow-hidden border-slate-200 bg-white p-0 shadow-xl sm:max-w-md">
+        <DialogHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5">
           <DialogTitle className="flex items-center gap-2">
             Welcome to HireVify
             <Badge
@@ -110,13 +110,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="px-6 py-5">
+          <TabsList className="grid w-full grid-cols-2 rounded-lg bg-slate-100">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <TabsContent value="signin" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signin-email">Email</Label>

@@ -96,6 +96,11 @@ interface NavigationMethods {
   handleLogout: () => Promise<void>;
 }
 
+interface ScreenNavigationOptions {
+  replace?: boolean;
+  skipScroll?: boolean;
+}
+
 interface User {
   id: string;
   email: string;
@@ -119,7 +124,7 @@ interface AppRouterProps {
   navigation: NavigationMethods;
   handleLogout: () => Promise<void>;
   handleUserTypeSelection: (userType: UserType) => void;
-  setCurrentScreen: (screen: Screen) => void;
+  setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
   setUnreadMessages: (count: number) => void;
   setUnreadNotifications: (count: number) => void;
 }
@@ -237,7 +242,10 @@ export function AppRouter({
 
     case 'recruiter-ats-scanner':
       return (
-        <ReliableATSScanner />
+        <ReliableATSScanner
+          onBack={navigation.navigateToRecruiterDashboard}
+          userType="recruiter"
+        />
       );
 
     case 'recruiter-functional-ats':
@@ -307,12 +315,12 @@ export function AppRouter({
     case 'recruiter-custom-assessment-builder':
       return (
         <CustomAssessmentBuilder 
-          onBack={() => setCurrentScreen('recruiter-skills-assessment')}
+          onBack={() => setCurrentScreen('recruiter-skills-assessment', { replace: true })}
           existingAssessment={assessmentBuilderData}
           onSave={(assessment) => {
             console.log('Assessment saved:', assessment);
             toast.success('Assessment saved successfully');
-            setCurrentScreen('recruiter-skills-assessment');
+            setCurrentScreen('recruiter-skills-assessment', { replace: true });
           }}
         />
       );
@@ -540,7 +548,10 @@ export function AppRouter({
     
     case 'candidate-ats-scanner':
       return (
-        <ReliableATSScanner />
+        <ReliableATSScanner
+          onBack={navigation.navigateToCandidateDashboard}
+          userType="candidate"
+        />
       ); 
 
     case 'candidate-functional-ats':

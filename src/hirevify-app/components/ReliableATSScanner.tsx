@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Separator } from './ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
+  ArrowLeft,
   Upload, 
   FileText, 
   User, 
@@ -36,6 +37,11 @@ import {
 import { toast } from 'sonner';
 import { ReliableDocumentParser, type ReliableResumeData } from '../utils/ats/reliableDocumentParser';
 
+interface ReliableATSScannerProps {
+  onBack?: () => void;
+  userType?: 'recruiter' | 'candidate';
+}
+
 interface ScanResult {
   fileName: string;
   data: ReliableResumeData;
@@ -43,7 +49,7 @@ interface ScanResult {
   rawText: string;
 }
 
-export function ReliableATSScanner() {
+export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableATSScannerProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -104,7 +110,7 @@ export function ReliableATSScanner() {
     const startTime = Date.now();
 
     try {
-      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚¡Ãƒ¢Ã¢â‚¬Å¡Ã‚¬ Starting resume processing for:', uploadedFile.name);
+      console.log('Starting resume processing for:', uploadedFile.name);
       
       // Show progress - File validation
       setProgress(10);
@@ -116,11 +122,11 @@ export function ReliableATSScanner() {
       
       // Parse document
       setProgress(30);
-      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã…¾ Parsing document...');
+      console.log('Parsing document...');
       const result = await parser.parseDocument(uploadedFile);
       
       setProgress(70);
-      console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Document parsed successfully');
+      console.log('Document parsed successfully');
 
       // Get raw text for display (optional, don't fail if this doesn't work)
       setProgress(80);
@@ -160,11 +166,11 @@ export function ReliableATSScanner() {
       setScanResult(scanResult);
       setProgress(100);
       
-      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒ¢Ã¢â€š¬Ã‚° Resume processing completed in', processingTime, 'ms');
+      console.log('Resume processing completed in', processingTime, 'ms');
       toast.success(`Resume processed successfully in ${processingTime}ms!`);
       
     } catch (error: any) {
-      console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Resume processing error:', error);
+      console.error('Resume processing error:', error);
       
       let errorMessage = error.message || 'Failed to process resume';
       
@@ -238,22 +244,41 @@ export function ReliableATSScanner() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ecfdf5_100%)] px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
-      <Card>
+      <Card className="border-slate-200/80 bg-white/95 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-6 w-6 text-primary" />
-            Reliable ATS Scanner
-          </CardTitle>
-          <p className="text-muted-foreground">
-            Simple, fast, and reliable resume parsing. Upload your resume to extract structured data with high accuracy.
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              {onBack && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  aria-label="Back to dashboard"
+                  className="mt-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              )}
+              <div>
+                <CardTitle className="flex items-center gap-2 text-2xl text-slate-950">
+                  <Target className="h-6 w-6 text-emerald-600" />
+                  {userType === 'recruiter' ? 'Recruiter ATS Scanner' : 'Resume ATS Scanner'}
+                </CardTitle>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  Upload a real resume to extract structured data, inspect confidence, and export the scan results.
+                </p>
+              </div>
+            </div>
+          </div>
         </CardHeader>
       </Card>
 
       {/* Upload Section */}
-      <Card>
+      <Card className="border-slate-200/80 bg-white/95 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
@@ -262,20 +287,20 @@ export function ReliableATSScanner() {
         </CardHeader>
         <CardContent>
           <div
-            className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+            className="cursor-pointer rounded-lg border-2 border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-center transition-colors hover:border-emerald-400 hover:bg-emerald-50 sm:p-8"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <Upload className="mx-auto mb-4 h-12 w-12 text-emerald-600" />
             <p className="text-lg font-medium mb-2">
               {uploadedFile ? uploadedFile.name : 'Drop your resume here or click to browse'}
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Best with .TXT files ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Also tries .PDF, .DOC, .DOCX ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Max 10MB
+              Best with .TXT files. Also tries .PDF, .DOC, and .DOCX. Max 10MB.
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ For best results: Copy your resume text and save as .txt file
+              For best results, copy your resume text and save it as a .txt file.
             </p>
             
             <input
@@ -286,7 +311,7 @@ export function ReliableATSScanner() {
               className="hidden"
             />
             
-            <div className="flex gap-2 justify-center">
+            <div className="flex flex-col justify-center gap-2 sm:flex-row">
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
@@ -352,14 +377,14 @@ export function ReliableATSScanner() {
 
       {/* Results Section */}
       {scanResult && (
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95 shadow-sm">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 Extraction Results
               </CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge className={getConfidenceBadge(scanResult.data.extractionMetadata.confidence)}>
                   {scanResult.data.extractionMetadata.confidence}% Confidence
                 </Badge>
@@ -370,12 +395,12 @@ export function ReliableATSScanner() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Processed in {scanResult.processingTime}ms ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {scanResult.data.extractionMetadata.processingMethod}
+              Processed in {scanResult.processingTime}ms using {scanResult.data.extractionMetadata.processingMethod}.
             </p>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4">
                 <TabsTrigger value="personal">Personal Info</TabsTrigger>
                 <TabsTrigger value="experience">Experience</TabsTrigger>
                 <TabsTrigger value="education">Education</TabsTrigger>
@@ -383,7 +408,7 @@ export function ReliableATSScanner() {
               </TabsList>
 
               <TabsContent value="personal" className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
@@ -471,7 +496,7 @@ export function ReliableATSScanner() {
               <TabsContent value="experience" className="space-y-4">
                 {scanResult.data.experience.length > 0 ? (
                   scanResult.data.experience.map((exp, index) => (
-                    <Card key={exp.id} className="border-l-4 border-l-primary">
+                    <Card key={exp.id} className="border-l-4 border-l-emerald-500">
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
@@ -582,7 +607,7 @@ export function ReliableATSScanner() {
       )}
       
       {/* Tips Section */}
-      <Card>
+      <Card className="border-slate-200/80 bg-white/95 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-yellow-600" />
@@ -591,15 +616,16 @@ export function ReliableATSScanner() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Best format:</strong> Copy your resume content and save as .txt file</li>
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>File size:</strong> Keep under 10MB for optimal performance</li>
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Structure:</strong> Use clear section headers (Experience, Education, Skills)</li>
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Dates:</strong> Include years in YYYY format (e.g., 2020-2023)</li>
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Contact info:</strong> Include email, phone, and location clearly</li>
-            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support</li>
+            <li><strong>Best format:</strong> Copy your resume content and save it as a .txt file.</li>
+            <li><strong>File size:</strong> Keep files under 10MB for optimal performance.</li>
+            <li><strong>Structure:</strong> Use clear section headers such as Experience, Education, and Skills.</li>
+            <li><strong>Dates:</strong> Include years in YYYY format, for example 2020-2023.</li>
+            <li><strong>Contact info:</strong> Include email, phone, and location clearly.</li>
+            <li><strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support.</li>
           </ul>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

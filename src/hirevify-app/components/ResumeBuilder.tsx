@@ -557,7 +557,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
     ).join('');
 
     const sectionTitle = (title: string) =>
-      `<div style="font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:6px;margin-bottom:14px;">${title}</div>`;
+      `<div style="font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:6px;margin-bottom:14px;">${title}</div>`;
 
     let html = '';
 
@@ -570,14 +570,14 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
 
             ${skills.length ? `
               <div style="margin-bottom:34px;">
-                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Skills</div>
+                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:0;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Skills</div>
                 ${skillsPlain}
               </div>
             ` : ''}
 
             ${education.length ? `
               <div>
-                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Education</div>
+                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:0;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Education</div>
                 ${education.map((edu) => `
                   <div style="margin-bottom:16px;color:#ffffff;">
                     <div style="font-size:16px;font-weight:700;color:#ffffff;">${escapeHtml(edu.degree || 'Degree')}</div>
@@ -610,7 +610,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
       html = `
         <div style="width:794px;min-height:950px;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;border:1px solid #e5e7eb;padding:42px;">
           <header style="margin-bottom:34px;">
-            <div style="font-size:42px;font-weight:300;letter-spacing:-1px;color:#0f172a;">${fullName}</div>
+            <div style="font-size:42px;font-weight:300;letter-spacing:0;color:#0f172a;">${fullName}</div>
             <div style="font-size:15px;color:#475569;margin-top:8px;">${contactLine}</div>
           </header>
 
@@ -1574,11 +1574,11 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
 
   if (currentStep === 'welcome') {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border p-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={onBack}>
+      <div className="hv-page-shell">
+        <header className="hv-dashboard-header">
+          <div className="hv-container flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Dashboard
               </Button>
@@ -1586,7 +1586,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
             </div>
           </div>
         </header>
-        <main className="p-6">
+        <main className="px-4 py-8 sm:px-6 lg:px-8">
           {renderStepContent()}
         </main>
       </div>
@@ -1595,11 +1595,11 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
 
   if (currentStep === 'ats-report') {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-card border-b border-border p-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => setCurrentStep('review')}>
+      <div className="hv-page-shell">
+        <header className="hv-dashboard-header">
+          <div className="hv-container flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => setCurrentStep('review')} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Review
               </Button>
@@ -1607,7 +1607,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
             </div>
           </div>
         </header>
-        <main className="p-6">
+        <main className="px-4 py-8 sm:px-6 lg:px-8">
           {renderStepContent()}
         </main>
       </div>
@@ -1615,51 +1615,75 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="hv-page-shell pb-24">
       {/* Header with Progress */}
-      <header className="bg-card border-b border-border p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={currentStep === 'template' ? onBack : prevStep}>
+      <header className="hv-dashboard-header">
+        <div className="hv-container py-4">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={currentStep === 'template' ? onBack : prevStep} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {currentStep === 'template' ? 'Back to Dashboard' : 'Previous'}
               </Button>
               <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="h-12" />
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
                 Step {getCurrentStepIndex() + 1} of {steps.length}
               </span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Resume Builder Progress</span>
-              <span>{Math.round(progress)}%</span>
+            <div className="flex justify-between text-sm text-slate-600">
+              <span className="font-medium text-slate-800">Resume Builder Progress</span>
+              <span className="font-semibold text-emerald-700">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
+            <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pt-2">
+              {steps.map((step, index) => {
+                const isActive = step.id === currentStep;
+                const isComplete = index < getCurrentStepIndex();
+
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onClick={() => setCurrentStep(step.id)}
+                    className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                      isActive
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                        : isComplete
+                          ? 'border-slate-200 bg-white text-slate-700'
+                          : 'border-slate-200 bg-white/70 text-slate-500'
+                    }`}
+                  >
+                    <step.icon className="h-3.5 w-3.5" />
+                    {step.title}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="p-6">
-        <div className="max-w-7xl mx-auto">
+      <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           {renderStepContent()}
         </div>
       </main>
 
       {/* Footer Navigation */}
       {!['welcome', 'ats-report'].includes(currentStep as string) && (
-        <footer className="bg-card border-t border-border p-6">
-          <div className="max-w-7xl mx-auto flex justify-between">
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur sm:p-4">
+          <div className="mx-auto flex max-w-7xl justify-between gap-3">
             <Button variant="outline" onClick={prevStep} disabled={currentStep === 'template'}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Previous
             </Button>
-            <Button onClick={nextStep}>
+            <Button onClick={nextStep} className="bg-emerald-600 text-white hover:bg-emerald-700">
               {currentStep === 'review' ? 'Complete Resume' : 'Save & Continue'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -1712,7 +1736,7 @@ function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: Re
   const contactItems = [email, phone, location].filter(Boolean);
 
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-3">
+    <h3 className="text-sm font-bold uppercase tracking-normal text-slate-900 border-b border-slate-300 pb-1 mb-3">
       {children}
     </h3>
   );
@@ -1797,7 +1821,7 @@ function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: Re
 
             {skills.length > 0 && (
               <section className="mb-8">
-                <h3 className="text-xs font-bold uppercase tracking-widest border-b border-slate-500 pb-2 mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-normal border-b border-slate-500 pb-2 mb-3">
                   Skills
                 </h3>
                 <div className="space-y-2">
@@ -1812,7 +1836,7 @@ function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: Re
 
             {education.length > 0 && (
               <section>
-                <h3 className="text-xs font-bold uppercase tracking-widest border-b border-slate-500 pb-2 mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-normal border-b border-slate-500 pb-2 mb-3">
                   Education
                 </h3>
                 {education.map((edu, index) => (
@@ -1850,7 +1874,7 @@ function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: Re
     return (
       <div className="bg-white text-slate-900 border border-slate-200 max-w-4xl mx-auto p-10">
         <header className="mb-8">
-          <h1 className="text-4xl font-light tracking-tight">{fullName}</h1>
+          <h1 className="text-4xl font-light tracking-normal">{fullName}</h1>
           <p className="text-sm text-slate-600 mt-2">{contactItems.join(' | ')}</p>
         </header>
 
