@@ -21,11 +21,11 @@ export function HiringFunnel() {
             in your recruiting pipeline.
           </p>
           <ul className="text-green-700 text-sm space-y-1">
-            <li>â€¢ Applications: Total submitted applications</li>
-            <li>â€¢ Screening: Applications that passed initial review</li>
-            <li>â€¢ Interview: Candidates invited to interview</li>
-            <li>â€¢ Offer: Candidates who received job offers</li>
-            <li>â€¢ Hired: Successfully hired candidates</li>
+            <li> Applications: Total submitted applications</li>
+            <li> Screening: Applications that passed initial review</li>
+            <li> Interview: Candidates invited to interview</li>
+            <li> Offer: Candidates who received job offers</li>
+            <li> Hired: Successfully hired candidates</li>
           </ul>
           <p className="text-green-700 text-sm mt-3 font-medium">
             All metrics calculated from real data - no fake numbers.
@@ -35,6 +35,7 @@ export function HiringFunnel() {
     </Card>
   );
 }
+
 
 
 

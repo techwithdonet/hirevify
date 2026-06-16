@@ -430,7 +430,7 @@ export class EnhancedDocumentParser {
       /^\s*[A-Z][a-z]+(\s+[A-Z][a-z]+)*\s*$/.test(line) // Title Case headers
     );
 
-    const hasBulletPoints = text.includes('â€¢') || text.includes('â—¦') || text.includes('-');
+    const hasBulletPoints = text.includes('') || text.includes('â—¦') || text.includes('-');
     
     // Font consistency (simplified - would need more complex analysis)
     const fontConsistency = hasHeaders && hasBulletPoints ? 0.8 : 0.6;
@@ -448,6 +448,7 @@ export class EnhancedDocumentParser {
 }
 
 export const enhancedDocumentParser = new EnhancedDocumentParser();
+
 
 
 

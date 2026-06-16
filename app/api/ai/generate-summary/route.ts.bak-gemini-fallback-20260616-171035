@@ -1,0 +1,182 @@
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+export const runtime = 'nodejs';
+
+function extractTextFromGemini(json: any) {
+  return json?.candidates?.[0]?.content?.parts
+    ?.map((part: { text?: string }) => part.text || '')
+    .join('\n')
+    .trim();
+}
+
+async function callGemini(prompt: string) {
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (!geminiApiKey) {
+    throw new Error('GEMINI_API_KEY is missing. Add it to .env.local.');
+  }
+
+  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.35,
+          maxOutputTokens: 350
+        }
+      })
+    }
+  );
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json?.error?.message || 'Gemini summary generation failed.');
+  }
+
+  const text = extractTextFromGemini(json);
+
+  if (!text) {
+    throw new Error('Gemini returned an empty summary.');
+  }
+
+  return text;
+}
+
+async function callAnthropic(prompt: string) {
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!anthropicApiKey) {
+    throw new Error('ANTHROPIC_API_KEY is missing. Add it to .env.local.');
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': anthropicApiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022',
+      max_tokens: 350,
+      temperature: 0.35,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json?.error?.message || 'Anthropic summary generation failed.');
+  }
+
+  const text = json?.content?.[0]?.text?.trim();
+
+  if (!text) {
+    throw new Error('Anthropic returned an empty summary.');
+  }
+
+  return text;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.json(
+        { error: 'Supabase environment variables are missing.' },
+        { status: 503 }
+      );
+    }
+
+    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+
+    if (!bearerToken) {
+      return NextResponse.json(
+        { error: 'No active Supabase session found. Please login again.' },
+        { status: 401 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${bearerToken}`
+        }
+      }
+    });
+
+    const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
+
+    if (userError || !userData.user) {
+      return NextResponse.json(
+        { error: 'Invalid Supabase session. Please logout and login again.' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    const name = String(body.name || 'the candidate');
+    const headline = String(body.headline || '');
+    const skills = Array.isArray(body.skills) ? body.skills.filter(Boolean) : [];
+    const experience = Array.isArray(body.experience) ? body.experience : [];
+
+    const prompt = `
+Write a professional resume summary for ${name}.
+
+Return only the final summary text. No bullet points. No markdown. No fake experience. Do not invent employers, degrees, certifications, or years of experience.
+
+Candidate headline/current summary:
+${headline || 'Not provided'}
+
+Skills:
+${skills.length ? skills.join(', ') : 'Not provided'}
+
+Experience titles:
+${experience.length ? experience.map((item: any) => `${item.title || ''} ${item.company ? 'at ' + item.company : ''}`.trim()).filter(Boolean).join('; ') : 'Not provided'}
+
+Requirements:
+- 2 to 3 sentences only.
+- ATS-friendly.
+- Clear, confident, recruiter-friendly.
+- Use only provided facts.
+`;
+
+    const provider = (process.env.AI_PROVIDER || '').toLowerCase();
+
+    let summary = '';
+
+    if (provider === 'anthropic') {
+      summary = await callAnthropic(prompt);
+    } else if (provider === 'gemini') {
+      summary = await callGemini(prompt);
+    } else if (process.env.GEMINI_API_KEY) {
+      summary = await callGemini(prompt);
+    } else {
+      summary = await callAnthropic(prompt);
+    }
+
+    return NextResponse.json({ summary });
+  } catch (error) {
+    console.error('Generate summary route failed:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'AI summary generation failed.' },
+      { status: 500 }
+    );
+  }
+}

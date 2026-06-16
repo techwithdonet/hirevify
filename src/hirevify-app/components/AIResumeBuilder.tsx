@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI-Powered Resume Builder
  * 
  * Enhanced resume builder with AI optimization, ATS scanning,
@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 
 import type { 
   ResumeData, 
@@ -49,7 +50,7 @@ import type {
   ResumeOptimizationSuggestion, 
   SkillsAnalysis,
   JobDescription
-} from '../utils/ai/resumeOptimizer';
+} from '../types/resume';
 
 interface AIResumeBuilderProps {
   onBack: () => void;
@@ -136,6 +137,9 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [targetJob, setTargetJob] = useState<JobDescription | null>(null);
   const [showJobTargeting, setShowJobTargeting] = useState(false);
+  const [jobTargetTitle, setJobTargetTitle] = useState('');
+  const [jobTargetCompany, setJobTargetCompany] = useState('');
+  const [jobTargetDescription, setJobTargetDescription] = useState('');
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [appliedSuggestions, setAppliedSuggestions] = useState<Set<string>>(new Set());
 
@@ -169,12 +173,10 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
     }
   }, [user]);
 
+  // AI analysis is now manual only. Do not auto-call paid AI when entering a step.
   useEffect(() => {
-    // Generate AI insights when resume data changes
-    if (currentStep === 'ai-optimization') {
-      generateAIInsights();
-    }
-  }, [currentStep, resumeData]);
+    return;
+  }, [currentStep]);
 
   const nextStep = () => {
     const currentIndex = getCurrentStepIndex();
@@ -190,88 +192,102 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
     }
   };
 
-  const generateAIInsights = async () => {
-    try {
-      // Import AI resume optimizer
-      const { aiResumeOptimizer } = await import('../utils/ai/resumeOptimizer');
-      
-      // Generate optimization suggestions
-      const suggestions = aiResumeOptimizer.generateOptimizationSuggestions(resumeData, targetJob || undefined);
-      setOptimizationSuggestions(suggestions);
-      
-      // Calculate ATS score
-      const score = aiResumeOptimizer.calculateATSScore(resumeData, targetJob || undefined);
-      setAtsScore(score);
-      
-      // Analyze skills if target job is set
-      if (targetJob) {
-        const analysis = aiResumeOptimizer.analyzeSkillsGap(resumeData, targetJob);
-        setSkillsAnalysis(analysis);
-      }
-      
-      // Generate insights
-      const insights: AIInsight[] = [];
-      
-      if (score.overall < 70) {
-        insights.push({
-          type: 'warning',
-          title: 'ATS Compatibility Needs Improvement',
-          description: `Your current ATS score is ${score.overall}%. Consider following the optimization suggestions to improve compatibility.`,
-          priority: 'high'
-        });
-      }
-      
-      if (suggestions.filter(s => s.priority === 'high').length > 0) {
-        insights.push({
-          type: 'suggestion',
-          title: 'High-Priority Optimizations Available',
-          description: `${suggestions.filter(s => s.priority === 'high').length} high-priority improvements can significantly boost your resume.`,
-          action: 'Review suggestions below',
-          priority: 'high'
-        });
-      }
-      
-      if (resumeData.summary.length < 100) {
-        insights.push({
-          type: 'improvement',
-          title: 'Professional Summary Too Brief',
-          description: 'A compelling 2-3 sentence summary can significantly improve recruiter engagement.',
-          priority: 'medium'
-        });
-      }
-      
-      setAiInsights(insights);
-      
-    } catch (error) {
-      console.error('AI analysis failed:', error);
-      toast.error('AI analysis temporarily unavailable');
-    }
-  };
-
-  const runATSAnalysis = async () => {
+  const runResumeAIAnalysis = async () => {
     setIsAnalyzing(true);
-    
+
     try {
-      const { aiResumeOptimizer } = await import('../utils/ai/resumeOptimizer');
-      
-      // Simulate analysis delay for UX
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const score = aiResumeOptimizer.calculateATSScore(resumeData, targetJob || undefined);
-      setAtsScore(score);
-      
-      setCurrentStep('ats-analysis');
-      
-      toast.success(`ATS analysis complete! Your score: ${score.overall}%`);
-      
+      const supabase = createSupabaseBrowserClient();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session?.access_token) {
+        throw new Error('No active Supabase login found. Please login again.');
+      }
+
+      const response = await fetch('/api/ai/resume-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({
+          resumeData,
+          targetJob
+        })
+      });
+
+      const rawResponse = await response.text();
+      let data: any = {};
+
+      try {
+        data = rawResponse ? JSON.parse(rawResponse) : {};
+      } catch {
+        throw new Error(
+          response.status === 404
+            ? 'Resume AI API route not found. Check app/api/ai/resume-analysis/route.ts.'
+            : 'Resume AI API returned an invalid response.'
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'AI resume analysis failed.');
+      }
+
+      setOptimizationSuggestions(data.optimizationSuggestions || []);
+      setAtsScore(data.atsScore || null);
+      setSkillsAnalysis(data.skillsAnalysis || null);
+      setAiInsights(data.aiInsights || []);
+
+      return data;
     } catch (error) {
-      console.error('ATS analysis failed:', error);
-      toast.error('ATS analysis failed. Please try again.');
+      console.error('AI resume analysis failed:', error);
+      setOptimizationSuggestions([]);
+      setAtsScore(null);
+      setSkillsAnalysis(null);
+      setAiInsights([]);
+      toast.error(error instanceof Error ? error.message : 'AI resume analysis failed.');
+      return null;
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  const generateAIInsights = async () => {
+    await runResumeAIAnalysis();
+  };
+
+  const runATSAnalysis = async () => {
+    const result = await runResumeAIAnalysis();
+
+    if (!result?.atsScore) {
+      return;
+    }
+
+    setCurrentStep('ats-analysis');
+    toast.success(`ATS analysis complete! Your score: ${result.atsScore.overall}%`);
+  };
+
+  const handleSetJobTargetFromDialog = () => {
+    const title = jobTargetTitle.trim();
+    const company = jobTargetCompany.trim();
+    const description = jobTargetDescription.trim();
+
+    if (!title || !description) {
+      toast.error('Please enter at least job title and job description.');
+      return;
+    }
+
+    setJobTarget({
+      title,
+      company,
+      description,
+      requirements: [],
+      preferredSkills: [],
+      responsibilities: [],
+      experienceLevel: 'mid',
+      industry: 'technology',
+      remote: /remote|work from home|wfh/i.test(description)
+    });
+  };
   const applySuggestion = (suggestion: ResumeOptimizationSuggestion) => {
     // Apply the suggestion to resume data
     switch (suggestion.section) {
@@ -305,11 +321,11 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
     
     setTargetJob(fullJob);
     setShowJobTargeting(false);
+    setJobTargetTitle('');
+    setJobTargetCompany('');
+    setJobTargetDescription('');
     toast.success('Job target set! AI will optimize your resume for this role.');
-    
-    // Trigger re-analysis
-    setTimeout(generateAIInsights, 500);
-  };
+};
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -590,7 +606,7 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {gap.suggestions.slice(0, 2).map((suggestion, idx) => (
-                                <p key={idx}>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {suggestion}</p>
+                                <p key={idx}>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {suggestion}</p>
                               ))}
                             </div>
                           </div>
@@ -820,39 +836,24 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Job Title</label>
-                <Input placeholder="e.g. Senior Software Engineer" />
+                <Input value={jobTargetTitle} onChange={(event) => setJobTargetTitle(event.target.value)} placeholder="e.g. Senior Software Engineer" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Company</label>
-                <Input placeholder="e.g. Google" />
+                <Input value={jobTargetCompany} onChange={(event) => setJobTargetCompany(event.target.value)} placeholder="e.g. Google" />
               </div>
             </div>
             
             <div>
               <label className="block text-sm font-medium mb-2">Job Description</label>
-              <Textarea 
-                placeholder="Paste the job description here..."
-                rows={6}
-              />
+              <Textarea value={jobTargetDescription} onChange={(event) => setJobTargetDescription(event.target.value)} placeholder="Paste the job description here..." rows={6} />
             </div>
             
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowJobTargeting(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => setJobTarget({
-                title: "Senior Software Engineer",
-                company: "Tech Company",
-                description: "Sample job description",
-                requirements: ["React", "TypeScript", "Node.js"],
-                preferredSkills: ["AWS", "Docker"],
-                responsibilities: ["Develop applications"],
-                experienceLevel: "senior",
-                industry: "technology",
-                remote: true
-              })}>
-                Set Target
-              </Button>
+              <Button onClick={handleSetJobTargetFromDialog}>Set Target</Button>
             </div>
           </div>
         </DialogContent>
@@ -860,6 +861,11 @@ export function AIResumeBuilder({ onBack, onUpgrade }: AIResumeBuilderProps) {
     </div>
   );
 }
+
+
+
+
+
 
 
 

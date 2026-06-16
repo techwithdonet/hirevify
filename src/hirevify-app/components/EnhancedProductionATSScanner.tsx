@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
  * Enhanced Production ATS Scanner - Phase 1 Implementation
  * World-class AI-powered resume analysis with GPT-4 Vision, Ensemble OCR,
@@ -157,7 +157,7 @@ export function EnhancedProductionATSScanner() {
       updateStage(0, { status: 'processing', progress: 25, details: 'Validating file...' });
       
       // Skip server upload entirely - process client-side only for better reliability
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Processing resume client-side without server upload for maximum reliability');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã‚¹ Processing resume client-side without server upload for maximum reliability');
       
       updateStage(0, { status: 'completed', progress: 100, details: 'File validated (processing locally)' });
       setCurrentStage(1);
@@ -220,7 +220,7 @@ export function EnhancedProductionATSScanner() {
         // If we got parsedContent from document parsing, use it
         if (parsedContent && !realExtractedText) {
           realExtractedText = parsedContent.rawText;
-          console.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ Successfully extracted real text from document:', realExtractedText.substring(0, 200) + '...');
+          console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒâ€šÃ‚¯ Successfully extracted real text from document:', realExtractedText.substring(0, 200) + '...');
           
           ocrResults = {
             finalText: realExtractedText,
@@ -549,7 +549,7 @@ export function EnhancedProductionATSScanner() {
                 <div className="space-y-2">
                   <p className="font-medium text-gray-900">{uploadedFile.name}</p>
                   <p className="text-sm text-gray-600">
-                    {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {uploadedFile.type}
+                    {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {uploadedFile.type}
                   </p>
                   <div className="flex justify-center">
                     <CheckCircle className="w-5 h-5 text-green-600" />
@@ -898,6 +898,7 @@ export function EnhancedProductionATSScanner() {
     </div>
   );
 }
+
 
 
 

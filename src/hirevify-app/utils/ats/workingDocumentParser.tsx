@@ -519,7 +519,7 @@ class WorkingDocumentParser {
           }
           
           // Add lines that look like summary content
-          if (nextLine.length > 20 && !nextLine.includes('â€¢') && !nextLine.includes('http')) {
+          if (nextLine.length > 20 && !nextLine.includes('') && !nextLine.includes('http')) {
             summaryLines.push(nextLine);
           }
         }
@@ -646,16 +646,16 @@ class WorkingDocumentParser {
     // Strategy 1: Look for job title and company patterns
     const jobPatterns = [
       // "Job Title at Company Name (2020-2023)"
-      /(.+?)\s+at\s+(.+?)\s*[\(,]?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
+      /(.+?)\s+at\s+(.+?)\s*[\(,]?\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi,
       
       // "Job Title, Company Name, 2020-2023"
-      /([^,]+),\s*([^,]+),\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
+      /([^,]+),\s*([^,]+),\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi,
       
       // "Company Name - Job Title (2020-2023)"
-      /(.+?)\s*[-â€“]\s*(.+?)\s*[\(,]?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi,
+      /(.+?)\s*[--]\s*(.+?)\s*[\(,]?\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi,
       
       // "Job Title | Company Name | 2020-2023"
-      /([^|]+)\s*\|\s*([^|]+)\s*\|\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi
+      /([^|]+)\s*\|\s*([^|]+)\s*\|\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi
     ];
     
     const experienceText = experienceLines.join('\n');
@@ -687,8 +687,8 @@ class WorkingDocumentParser {
         }
         
         // Clean up the extracted data
-        position = position.replace(/[â€¢\-\*]/g, '').trim();
-        company = company.replace(/[â€¢\-\*]/g, '').trim();
+        position = position.replace(/[\-\*]/g, '').trim();
+        company = company.replace(/[\-\*]/g, '').trim();
         
         const isCurrent = endDate && endDate.toLowerCase().includes('present');
         
@@ -720,20 +720,20 @@ class WorkingDocumentParser {
         const line = experienceLines[i];
         
         // Look for date patterns that indicate a job entry
-        const datePattern = /(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
+        const datePattern = /(\d{4})\s*[--]\s*(\d{4}|present)/gi;
         const dateMatch = line.match(datePattern);
         
         if (dateMatch) {
           // This line contains dates, try to find job title and company
           const beforeDate = line.substring(0, line.indexOf(dateMatch[0])).trim();
-          const parts = beforeDate.split(/[-â€“,|]/);
+          const parts = beforeDate.split(/[-,|]/);
           
           if (parts.length >= 2) {
-            const position = parts[0].trim().replace(/[â€¢\-\*]/g, '').trim();
-            const company = parts[1].trim().replace(/[â€¢\-\*]/g, '').trim();
+            const position = parts[0].trim().replace(/[\-\*]/g, '').trim();
+            const company = parts[1].trim().replace(/[\-\*]/g, '').trim();
             
             if (position.length > 2 && company.length > 2) {
-              const [startDate, endDate] = dateMatch[0].split(/[-â€“]/).map(d => d.trim());
+              const [startDate, endDate] = dateMatch[0].split(/[--]/).map(d => d.trim());
               const isCurrent = endDate.toLowerCase().includes('present');
               
               experiences.push({
@@ -808,7 +808,7 @@ class WorkingDocumentParser {
       /(Bachelor|Master|PhD|Doctorate|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA|BSc|MSc|BA|MA)\s*(?:of\s+)?([^,\n]*),?\s*([^,\n]*(?:University|College|Institute|School)[^,\n]*),?\s*(\d{4})?/gi,
       
       // "Stanford University - Computer Science (B.S.) - 2020"
-      /([^-\n]*(?:University|College|Institute|School)[^-\n]*)\s*[-â€“]\s*([^-\n]*)\s*[\(\[]?(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA)[\)\]]?\s*[-â€“]?\s*(\d{4})?/gi,
+      /([^-\n]*(?:University|College|Institute|School)[^-\n]*)\s*[--]\s*([^-\n]*)\s*[\(\[]?(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|MBA)[\)\]]?\s*[--]?\s*(\d{4})?/gi,
       
       // "Computer Science | Stanford University | 2020"
       /([^|\n]+)\s*\|\s*([^|\n]*(?:University|College|Institute|School)[^|\n]*)\s*\|\s*(\d{4})?/gi,
@@ -850,9 +850,9 @@ class WorkingDocumentParser {
         }
         
         // Clean up extracted data
-        degree = degree.trim().replace(/[â€¢\-\*]/g, '').trim();
-        field = field.trim().replace(/[â€¢\-\*]/g, '').trim();
-        institution = institution.trim().replace(/[â€¢\-\*]/g, '').trim();
+        degree = degree.trim().replace(/[\-\*]/g, '').trim();
+        field = field.trim().replace(/[\-\*]/g, '').trim();
+        institution = institution.trim().replace(/[\-\*]/g, '').trim();
         graduationDate = graduationDate.trim();
         
         // Only add if we have meaningful data
@@ -1001,6 +1001,8 @@ class WorkingDocumentParser {
 
 // Export the class so it can be imported
 export { WorkingDocumentParser };
+
+
 
 
 

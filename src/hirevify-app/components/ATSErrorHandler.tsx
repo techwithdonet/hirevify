@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ATS Error Handler Component
  * 
  * Provides user-friendly error messages and helpful suggestions
@@ -52,7 +52,7 @@ export function ATSErrorHandler({
           'Try the Professional ATS Scanner for advanced PDF processing',
           'Ensure your PDF contains selectable text (not just images)'
         ],
-        quickFix: 'Use File ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Save As ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Plain Text (.txt) in your PDF reader'
+        quickFix: 'Use File ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒ¢Ã¢â€š¬Ã¢â€ž¢ Save As ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒ¢Ã¢â€š¬Ã¢â€ž¢ Plain Text (.txt) in your PDF reader'
       };
     }
     
@@ -67,7 +67,7 @@ export function ATSErrorHandler({
           'Try the Professional ATS Scanner for advanced Word processing',
           'Ensure the document is not password protected'
         ],
-        quickFix: 'In Word: File ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Save As ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Plain Text (*.txt)'
+        quickFix: 'In Word: File ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒ¢Ã¢â€š¬Ã¢â€ž¢ Save As ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒ¢Ã¢â€š¬Ã¢â€ž¢ Plain Text (*.txt)'
       };
     }
     
@@ -275,13 +275,14 @@ export function ATSErrorHandler({
       {/* Help Text */}
       <div className="text-center p-4 bg-gray-50 rounded-lg">
         <p className="text-sm text-gray-600">
-          ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ <strong>Pro Tip:</strong> For best results, save your resume as a .txt file. 
+          ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ <strong>Pro Tip:</strong> For best results, save your resume as a .txt file. 
           This ensures 100% compatibility and fastest processing.
         </p>
       </div>
     </div>
   );
 }
+
 
 
 

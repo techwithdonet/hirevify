@@ -19,10 +19,10 @@ export function DiversityMetrics() {
               This ensures privacy compliance and accurate representation.
             </p>
             <ul className="text-yellow-700 text-sm space-y-1">
-              <li>â€¢ Gender: Self-identification required</li>
-              <li>â€¢ Experience Level: Calculated from actual application data</li>
-              <li>â€¢ All data anonymized and aggregated</li>
-              <li>â€¢ No fake or estimated data displayed</li>
+              <li> Gender: Self-identification required</li>
+              <li> Experience Level: Calculated from actual application data</li>
+              <li> All data anonymized and aggregated</li>
+              <li> No fake or estimated data displayed</li>
             </ul>
           </div>
         </CardContent>
@@ -46,10 +46,10 @@ export function DiversityMetrics() {
               and status changes in your hiring pipeline.
             </p>
             <ul className="text-blue-700 text-sm space-y-1">
-              <li>â€¢ Application to Screening: Calculated from real data</li>
-              <li>â€¢ Screening to Interview: Based on actual transitions</li>
-              <li>â€¢ Interview to Offer: Real timeline tracking</li>
-              <li>â€¢ Offer to Acceptance: Actual response times</li>
+              <li> Application to Screening: Calculated from real data</li>
+              <li> Screening to Interview: Based on actual transitions</li>
+              <li> Interview to Offer: Real timeline tracking</li>
+              <li> Offer to Acceptance: Actual response times</li>
             </ul>
           </div>
         </CardContent>
@@ -57,6 +57,7 @@ export function DiversityMetrics() {
     </div>
   );
 }
+
 
 
 

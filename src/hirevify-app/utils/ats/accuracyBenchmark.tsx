@@ -318,7 +318,7 @@ export class ATSAccuracyBenchmark {
       },
       {
         name: 'Bullet Point Recognition',
-        input: 'â€¢ Developed web applications',
+        input: ' Developed web applications',
         expected: 'bullet_point',
         category: 'format',
         weight: 0.05
@@ -657,6 +657,7 @@ export class ATSAccuracyBenchmark {
 }
 
 export const atsAccuracyBenchmark = new ATSAccuracyBenchmark();
+
 
 
 

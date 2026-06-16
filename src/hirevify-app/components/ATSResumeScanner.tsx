@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Professional ATS Resume Scanner
  * 
  * Enterprise-grade resume analysis with advanced document parsing,
@@ -222,14 +222,14 @@ export function ATSResumeScanner({ onBack }: ATSResumesScannerProps) {
     setScanProgress(10);
 
     try {
-      console.log('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â€šÂ¬ Starting ATS processing for', selectedFiles.length, 'files...');
-      toast.info(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Processing ${selectedFiles.length} resume(s)...`);
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚¡Ãƒ¢Ã¢â‚¬Å¡Ã‚¬ Starting ATS processing for', selectedFiles.length, 'files...');
+      toast.info(`ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€¦Ã‚  Processing ${selectedFiles.length} resume(s)...`);
 
       const newResumes: CandidateResume[] = [];
 
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
-        console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Processing file ${i + 1}/${selectedFiles.length}: ${file.name}`);
+        console.log(`ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã…¾ Processing file ${i + 1}/${selectedFiles.length}: ${file.name}`);
         
         // Update progress
         const fileProgress = (i / selectedFiles.length) * 80;
@@ -242,7 +242,7 @@ export function ATSResumeScanner({ onBack }: ATSResumesScannerProps) {
         const hashArray = Array.from(new Uint8Array(fileHash));
         const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 8);
         
-        console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Content identifier generated: ${hashHex}`);
+        console.log(`ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Content identifier generated: ${hashHex}`);
 
         // Simple text extraction
         const extractedText = await extractTextFromFile(file);
@@ -357,7 +357,7 @@ export function ATSResumeScanner({ onBack }: ATSResumesScannerProps) {
       }, 1000);
       
     } catch (error) {
-      console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Resume processing failed:', error);
+      console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Resume processing failed:', error);
       toast.error(`Processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsScanning(false);
@@ -630,7 +630,7 @@ export function ATSResumeScanner({ onBack }: ATSResumesScannerProps) {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
-                          {resume.candidateEmail} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {resume.fileName} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {resume.fileSize}
+                          {resume.candidateEmail} ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {resume.fileName} ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {resume.fileSize}
                         </p>
                         <div className="flex items-center space-x-2 mt-2">
                           {resume.tags.map((tag, index) => (
@@ -721,6 +721,7 @@ export function ATSResumeScanner({ onBack }: ATSResumesScannerProps) {
     </div>
   );
 }
+
 
 
 

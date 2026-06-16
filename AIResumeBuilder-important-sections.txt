@@ -1,0 +1,232 @@
+===== IMPORT AREA 1-80 =====
+/**
+ * AI-Powered Resume Builder
+ * 
+ * Enhanced resume builder with AI optimization, ATS scanning,
+ * and intelligent content suggestions for candidates.
+ */
+
+import { useState, useEffect } from 'react';
+import { 
+  ArrowLeft, 
+  ArrowRight, 
+  Check, 
+  Download, 
+  FileText, 
+  User, 
+  Briefcase, 
+  GraduationCap, 
+  Award, 
+  Zap, 
+  CheckCircle, 
+  X, 
+  Star, 
+  Crown,
+  Brain,
+  Target,
+  TrendingUp,
+  AlertCircle,
+  RefreshCw,
+ Sparkles,
+BarChart3,
+Eye
+} from 'lucide-react';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { Separator } from './ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { toast } from 'sonner';
+import { useAuth } from './AuthProvider';
+
+import type { 
+  ResumeData, 
+  ATSScore, 
+  ResumeOptimizationSuggestion, 
+  SkillsAnalysis,
+  JobDescription
+} from '../utils/ai/resumeOptimizer';
+
+interface AIResumeBuilderProps {
+  onBack: () => void;
+  onUpgrade: () => void;
+}
+
+type Step = 
+  | 'welcome' 
+  | 'template' 
+  | 'contact' 
+  | 'summary' 
+  | 'experience' 
+  | 'skills' 
+  | 'education' 
+  | 'ai-optimization'
+  | 'ats-analysis'
+  | 'review' 
+  | 'download';
+
+interface AIInsight {
+  type: 'suggestion' | 'warning' | 'improvement';
+  title: string;
+  description: string;
+  action?: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+const templates = [
+
+===== AI LOGIC AREA 180-275 =====
+    const currentIndex = getCurrentStepIndex();
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1].id);
+    }
+  };
+
+  const prevStep = () => {
+    const currentIndex = getCurrentStepIndex();
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1].id);
+    }
+  };
+
+  const generateAIInsights = async () => {
+    try {
+      // Import AI resume optimizer
+      const { aiResumeOptimizer } = await import('../utils/ai/resumeOptimizer');
+      
+      // Generate optimization suggestions
+      const suggestions = aiResumeOptimizer.generateOptimizationSuggestions(resumeData, targetJob || undefined);
+      setOptimizationSuggestions(suggestions);
+      
+      // Calculate ATS score
+      const score = aiResumeOptimizer.calculateATSScore(resumeData, targetJob || undefined);
+      setAtsScore(score);
+      
+      // Analyze skills if target job is set
+      if (targetJob) {
+        const analysis = aiResumeOptimizer.analyzeSkillsGap(resumeData, targetJob);
+        setSkillsAnalysis(analysis);
+      }
+      
+      // Generate insights
+      const insights: AIInsight[] = [];
+      
+      if (score.overall < 70) {
+        insights.push({
+          type: 'warning',
+          title: 'ATS Compatibility Needs Improvement',
+          description: `Your current ATS score is ${score.overall}%. Consider following the optimization suggestions to improve compatibility.`,
+          priority: 'high'
+        });
+      }
+      
+      if (suggestions.filter(s => s.priority === 'high').length > 0) {
+        insights.push({
+          type: 'suggestion',
+          title: 'High-Priority Optimizations Available',
+          description: `${suggestions.filter(s => s.priority === 'high').length} high-priority improvements can significantly boost your resume.`,
+          action: 'Review suggestions below',
+          priority: 'high'
+        });
+      }
+      
+      if (resumeData.summary.length < 100) {
+        insights.push({
+          type: 'improvement',
+          title: 'Professional Summary Too Brief',
+          description: 'A compelling 2-3 sentence summary can significantly improve recruiter engagement.',
+          priority: 'medium'
+        });
+      }
+      
+      setAiInsights(insights);
+      
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+      toast.error('AI analysis temporarily unavailable');
+    }
+  };
+
+  const runATSAnalysis = async () => {
+    setIsAnalyzing(true);
+    
+    try {
+      const { aiResumeOptimizer } = await import('../utils/ai/resumeOptimizer');
+      
+      // Simulate analysis delay for UX
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const score = aiResumeOptimizer.calculateATSScore(resumeData, targetJob || undefined);
+      setAtsScore(score);
+      
+      setCurrentStep('ats-analysis');
+      
+      toast.success(`ATS analysis complete! Your score: ${score.overall}%`);
+      
+    } catch (error) {
+      console.error('ATS analysis failed:', error);
+      toast.error('ATS analysis failed. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const applySuggestion = (suggestion: ResumeOptimizationSuggestion) => {
+
+===== JOB DESCRIPTION AREA 810-860 =====
+            <DialogTitle className="flex items-center">
+              <Target className="w-5 h-5 mr-2" />
+              Target a Specific Job
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Add details about a job you're applying for to get personalized optimization suggestions.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Job Title</label>
+                <Input placeholder="e.g. Senior Software Engineer" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Company</label>
+                <Input placeholder="e.g. Google" />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Job Description</label>
+              <Textarea 
+                placeholder="Paste the job description here..."
+                rows={6}
+              />
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowJobTargeting(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setJobTarget({
+                title: "Senior Software Engineer",
+                company: "Tech Company",
+                description: "Sample job description",
+                requirements: ["React", "TypeScript", "Node.js"],
+                preferredSkills: ["AWS", "Docker"],
+                responsibilities: ["Develop applications"],
+                experienceLevel: "senior",
+                industry: "technology",
+                remote: true
+              })}>
+                Set Target
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>

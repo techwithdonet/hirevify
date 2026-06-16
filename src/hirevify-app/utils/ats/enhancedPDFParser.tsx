@@ -1111,9 +1111,9 @@ export class EnhancedPDFParser {
 
   private extractDateRange(text: string): { start: string; end: string } {
     const patterns = [
-      /(\d{4}|\w+\s+\d{4})\s*[-â€“â€”]\s*(\d{4}|\w+\s+\d{4}|present|current)/i,
-      /(\w+\s+\d{4})\s*[-â€“â€”]\s*(\w+\s+\d{4}|present|current)/i,
-      /(\d{1,2}\/\d{4})\s*[-â€“â€”]\s*(\d{1,2}\/\d{4}|present|current)/i
+      /(\d{4}|\w+\s+\d{4})\s*[---]\s*(\d{4}|\w+\s+\d{4}|present|current)/i,
+      /(\w+\s+\d{4})\s*[---]\s*(\w+\s+\d{4}|present|current)/i,
+      /(\d{1,2}\/\d{4})\s*[---]\s*(\d{1,2}\/\d{4}|present|current)/i
     ];
 
     for (const pattern of patterns) {
@@ -1329,6 +1329,7 @@ export class EnhancedPDFParser {
 }
 
 export const enhancedPDFParser = new EnhancedPDFParser();
+
 
 
 

@@ -507,7 +507,7 @@ export class ReliableDocumentParser {
       const experienceText = lines.slice(startIndex, endIndex).join('\n');
       
       // Pattern for "Position at Company (2020-2023)"
-      const jobPattern = /(.+?)\s+at\s+(.+?)\s*(?:\(|\,)?\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
+      const jobPattern = /(.+?)\s+at\s+(.+?)\s*(?:\(|\,)?\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi;
       let match;
       let expId = 1;
       
@@ -535,7 +535,7 @@ export class ReliableDocumentParser {
       
       // Alternative pattern for comma-separated format
       if (experiences.length === 0) {
-        const altPattern = /([^,\n]+),\s*([^,\n]+),\s*(\d{4})\s*[-â€“]\s*(\d{4}|present)/gi;
+        const altPattern = /([^,\n]+),\s*([^,\n]+),\s*(\d{4})\s*[--]\s*(\d{4}|present)/gi;
         
         while ((match = altPattern.exec(experienceText)) !== null) {
           const position = match[1].trim();
@@ -760,6 +760,7 @@ export class ReliableDocumentParser {
     return Math.min(score, 100);
   }
 }
+
 
 
 

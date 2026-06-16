@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Market Intelligence Dashboard
  * 
  * Real-time market analysis providing salary benchmarks, hiring trends,
@@ -152,7 +152,7 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
     setIsLoading(true);
     
     try {
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Market Intelligence: Loading real market data...');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€¦Ã‚  Market Intelligence: Loading real market data...');
       
       // Note: This component previously used fake demo data which was misleading.
       // Market intelligence requires integration with external data providers like:
@@ -172,7 +172,7 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
       setHiringTrends(emptyTrends);
       setCompetitorAnalysis(null);
       
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â  Market Intelligence: Data providers not configured');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€¦Ã‚  Market Intelligence: Data providers not configured');
       toast.info('Market intelligence requires integration with external data providers. Contact support for setup.');
 
     } catch (error) {
@@ -562,7 +562,7 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {skill.jobOpenings.toLocaleString()} open positions ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ +{skill.growthRate}% growth
+                        {skill.jobOpenings.toLocaleString()} open positions ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ +{skill.growthRate}% growth
                       </p>
                     </div>
                     
@@ -846,6 +846,7 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
     }
   }
 }
+
 
 
 

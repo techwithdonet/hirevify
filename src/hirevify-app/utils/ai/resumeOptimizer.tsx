@@ -173,7 +173,7 @@ export class AIResumeOptimizer {
     formatting: [
       'Use standard section headers (Experience, Education, Skills)',
       'Avoid headers and footers',
-      'Use simple bullet points (â€¢ or -)',
+      'Use simple bullet points ( or -)',
       'Stick to standard fonts (Arial, Calibri, Times New Roman)',
       'Avoid tables, text boxes, and graphics',
       'Use consistent date formats',
@@ -494,7 +494,7 @@ suggestions.push(...this.optimizeAchievementSuggestions(resume));
     
     // Penalize for special characters and formatting
     if (/[^\x00-\x7F]/.test(resumeText)) score -= 10; // Non-ASCII characters
-    if (resumeText.includes('|') || resumeText.includes('â€¢')) score -= 5; // Special bullets
+    if (resumeText.includes('|') || resumeText.includes('')) score -= 5; // Special bullets
     
     // Check for standard section names
     const standardSections = ['experience', 'education', 'skills', 'summary'];
@@ -1188,6 +1188,7 @@ Focus on:
 
 // Singleton instance for the application
 export const aiResumeOptimizer = new AIResumeOptimizer();
+
 
 
 

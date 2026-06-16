@@ -418,7 +418,7 @@ class DemoEnhancedService {
   }
 
   private extractDateRange(text: string): { start: string; end: string } {
-    const dateMatch = text.match(/(\d{4}|\w+\s+\d{4})\s*[-â€“â€”]\s*(\d{4}|\w+\s+\d{4}|present|current)/i);
+    const dateMatch = text.match(/(\d{4}|\w+\s+\d{4})\s*[---]\s*(\d{4}|\w+\s+\d{4}|present|current)/i);
     if (dateMatch) {
       return { start: dateMatch[1], end: dateMatch[2] };
     }
@@ -593,6 +593,7 @@ class DemoEnhancedService {
 
 export const demoEnhancedService = new DemoEnhancedService();
 export default demoEnhancedService;
+
 
 
 

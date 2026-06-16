@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { 
   TestTube, 
   Star, 
@@ -293,7 +293,7 @@ export function BetaProgram({ onBack, isAdmin = false }: BetaProgramProps) {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <Button variant="outline" onClick={onBack}>
-              ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Back
+              ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒâ€šÃ‚ Back
             </Button>
             <div>
               <h1 className="text-3xl font-bold flex items-center">
@@ -453,9 +453,9 @@ export function BetaProgram({ onBack, isAdmin = false }: BetaProgramProps) {
                           
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
                             <span>By {item.userName}</span>
-                            <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                            <span>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢</span>
                             <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                            <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                            <span>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢</span>
                             <span className="capitalize">{item.userType}</span>
                           </div>
                         </div>
@@ -694,6 +694,7 @@ export function BetaProgram({ onBack, isAdmin = false }: BetaProgramProps) {
     </div>
   );
 }
+
 
 
 

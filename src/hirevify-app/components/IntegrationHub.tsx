@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -104,12 +104,12 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
   }, [user]);
 
   const loadUserIntegrations = async () => {
-    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Starting integration hub initialization...', { hasUser: !!user, hasToken: !!user?.accessToken });
+    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã…¾ Starting integration hub initialization...', { hasUser: !!user, hasToken: !!user?.accessToken });
     setLoading(true);
     
     try {
       // First, test basic service connectivity with public health endpoint
-      console.log('ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¥ Testing basic integration service connectivity...');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€šÃ‚Ãƒâ€šÃ‚¥ Testing basic integration service connectivity...');
       try {
         // Try multiple endpoints in order of reliability
         const endpoints = [
@@ -151,7 +151,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
         
         for (const endpoint of endpoints) {
           try {
-            console.log(`ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Trying ${endpoint.name}: ${endpoint.description}...`);
+            console.log(`ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã…¾ Trying ${endpoint.name}: ${endpoint.description}...`);
             healthResponse = await fetch(endpoint.url, {
               method: 'GET',
               headers: {
@@ -164,7 +164,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
                 // Try to parse as JSON first
                 healthData = await healthResponse.json();
                 successfulEndpoint = endpoint.name;
-                console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ ${endpoint.name} health check passed:`, healthData.status || healthData.message || healthData);
+                console.log(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ ${endpoint.name} health check passed:`, healthData.status || healthData.message || healthData);
                 break;
               } catch (jsonError) {
                 // If JSON parsing fails, treat as text response (for raw-test endpoint)
@@ -172,26 +172,26 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
                 if (textData.includes('RAW_TEST_SUCCESS')) {
                   healthData = { status: 'success', message: textData };
                   successfulEndpoint = endpoint.name;
-                  console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ ${endpoint.name} health check passed (text):`, textData);
+                  console.log(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ ${endpoint.name} health check passed (text):`, textData);
                   break;
                 } else {
-                  console.log(`ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ${endpoint.name} returned unexpected text:`, textData);
+                  console.log(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã‚¡Ãƒâ€šÃ‚ ÃƒÆ’Ã‚¯Ãƒâ€šÃ‚¸Ãƒâ€šÃ‚ ${endpoint.name} returned unexpected text:`, textData);
                 }
               }
             } else {
-              console.log(`ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ${endpoint.name} failed with status ${healthResponse.status}`);
+              console.log(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã‚¡Ãƒâ€šÃ‚ ÃƒÆ’Ã‚¯Ãƒâ€šÃ‚¸Ãƒâ€šÃ‚ ${endpoint.name} failed with status ${healthResponse.status}`);
             }
           } catch (endpointError) {
-            console.log(`ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â ${endpoint.name} failed with error:`, getErrorMessage(endpointError));
+            console.log(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã‚¡Ãƒâ€šÃ‚ ÃƒÆ’Ã‚¯Ãƒâ€šÃ‚¸Ãƒâ€šÃ‚ ${endpoint.name} failed with error:`, getErrorMessage(endpointError));
           }
         }
         
         if (!healthResponse || !healthResponse.ok) {
-          console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ All health check endpoints failed. Checking for complete backend failure...');
+          console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ All health check endpoints failed. Checking for complete backend failure...');
           
           // Test the ultra-simple endpoint as a last resort
           try {
-            console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Testing ultra-simple endpoint as last resort...');
+            console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã…¾ Testing ultra-simple endpoint as last resort...');
             const ultraResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/ultra-ping`, {
               method: 'GET',
               headers: {
@@ -201,7 +201,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
             
             if (ultraResponse.ok) {
               const ultraData = await ultraResponse.json();
-              console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Ultra-simple endpoint works:', ultraData);
+              console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Ultra-simple endpoint works:', ultraData);
               
               // Backend is working but integration endpoints are broken
               toast.warning('Integration service endpoints are not accessible', {
@@ -214,17 +214,17 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
               return; // Continue with demo mode
               
             } else {
-              console.log('ÃƒÂ¢Ã‚ÂÃ…â€™ Even ultra-simple endpoint failed:', ultraResponse.status);
+              console.log('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Even ultra-simple endpoint failed:', ultraResponse.status);
             }
           } catch (ultraError) {
-            console.log('ÃƒÂ¢Ã‚ÂÃ…â€™ Ultra-simple endpoint error:', getErrorMessage(ultraError));
+            console.log('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Ultra-simple endpoint error:', getErrorMessage(ultraError));
           }
           
           throw new Error(`Complete backend failure. All endpoints failed. Last status: ${healthResponse?.status || 'No response'}`);
         }
         
       } catch (healthError) {
-        console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Integration service health check failed:', healthError);
+        console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Integration service health check failed:', healthError);
         setConnectedIntegrations([]);
         setServiceStatus('unhealthy');
         toast.error('Integration service is unavailable', {
@@ -234,14 +234,14 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       }
 
       if (!user?.accessToken) {
-        console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â No access token available - service is healthy but user not authenticated');
+        console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ No access token available - service is healthy but user not authenticated');
         setConnectedIntegrations([]);
         setServiceStatus('unknown');
         return;
       }
 
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€ Loading user integrations from backend...');
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€ User details:', { 
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã¢â‚¬ Loading user integrations from backend...');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã¢â‚¬ User details:', { 
         id: user.id, 
         email: user.email, 
         userType: user.userType,
@@ -252,15 +252,15 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       const result = await getUserIntegrations(user.accessToken);
       
       if (result.success) {
-        console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Successfully loaded integrations from backend service');
+        console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Successfully loaded integrations from backend service');
         setConnectedIntegrations(result.integrations || []);
         setServiceStatus('healthy');
       } else {
-        console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Failed to load integrations:', result.error);
+        console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Failed to load integrations:', result.error);
         
         // Handle specific error cases
         if (result.error?.includes('Invalid JWT') || result.error?.includes('Authentication') || result.error?.includes('401')) {
-          console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Authentication issue detected:', {
+          console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Authentication issue detected:', {
             error: result.error,
             tokenType: user.accessToken?.includes('.') ? 'JWT-like' : 'session-token',
             tokenLength: user.accessToken?.length
@@ -285,7 +285,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       }
       
     } catch (error) {
-      console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¥ Critical error during integration loading:', error);
+      console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¥ Critical error during integration loading:', error);
       
       // Show empty state with error message
       setConnectedIntegrations([]);
@@ -309,7 +309,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Slack',
       description: 'Get real-time notifications about new applications, interview updates, and hiring milestones.',
       category: 'communication',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¬',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¬',
       status: 'available',
       isPremium: false,
       features: ['Application alerts', 'Interview reminders', 'Team notifications', 'Custom channels'],
@@ -321,7 +321,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Calendly',
       description: 'Automatically schedule interviews and send calendar invites to candidates and interviewers.',
       category: 'scheduling',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¦',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã‚¦',
       status: 'available',
       isPremium: false,
       features: ['Auto-scheduling', 'Calendar sync', 'Timezone handling', 'Reminder emails'],
@@ -333,7 +333,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Google Workspace',
       description: 'Integrate with Gmail, Calendar, and Drive for comprehensive workflow management.',
       category: 'productivity',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â§',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€šÃ‚§',
       status: 'available',
       isPremium: false,
       features: ['Email integration', 'Calendar sync', 'Document sharing', 'Drive storage'],
@@ -345,7 +345,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Workday',
       description: 'Sync candidate data with Workday HCM for seamless workforce management and reporting.',
       category: 'ats',
-      icon: 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€šÃ‚Ãƒâ€šÃ‚¢',
       status: 'available',
       isPremium: true,
       features: ['Candidate sync', 'Job posting sync', 'Reporting integration', 'SSO authentication'],
@@ -357,7 +357,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Greenhouse',
       description: 'Two-way sync with Greenhouse ATS for unified candidate tracking and workflow management.',
       category: 'ats',
-      icon: 'ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â±',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã¢â‚¬â„¢Ãƒâ€šÃ‚±',
       status: 'available',
       isPremium: true,
       features: ['Candidate sync', 'Interview scheduling', 'Scorecard integration', 'Pipeline sync'],
@@ -369,7 +369,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Microsoft Teams',
       description: 'Conduct interviews and collaborate with your team directly through Microsoft Teams.',
       category: 'communication',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‹Å“Ãƒâ€šÃ‚¥',
       status: 'available',
       isPremium: false,
       features: ['Video interviews', 'Team collaboration', 'File sharing', 'Meeting recordings'],
@@ -381,7 +381,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Checkr',
       description: 'Streamline background checks with automated screening and compliance reporting.',
       category: 'background-check',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚',
       status: 'available',
       isPremium: true,
       features: ['Background screening', 'Compliance tracking', 'Status updates', 'Report generation'],
@@ -393,7 +393,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
       name: 'Tableau',
       description: 'Advanced hiring analytics and custom dashboards for data-driven recruitment insights.',
       category: 'analytics',
-      icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ',
+      icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€¦Ã‚ ',
       status: 'coming-soon',
       isPremium: true,
       features: ['Custom dashboards', 'Advanced analytics', 'Data visualization', 'Report automation'],
@@ -476,7 +476,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
     }
 
     try {
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€ Attempting to connect integration:', connectingIntegration);
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã¢â‚¬ Attempting to connect integration:', connectingIntegration);
       
       const result = await connectIntegration(user.accessToken, connectingIntegration, credentials);
       
@@ -487,12 +487,12 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
         setCredentials({});
         loadUserIntegrations(); // Refresh the list
       } else {
-        console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Integration connection failed:', result.error);
+        console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Integration connection failed:', result.error);
         const errorMsg = result.error || 'Failed to connect integration. Please check your credentials and try again.';
         toast.error(errorMsg);
       }
     } catch (error) {
-      console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¥ Error connecting integration:', error);
+      console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¥ Error connecting integration:', error);
       toast.error('Connection failed due to an unexpected error. Please try again.');
     }
   };
@@ -599,7 +599,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
               <Button 
                 variant="outline" 
                 onClick={async () => {
-                  console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬Å¾ Testing backend connectivity and authentication...');
+                  console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã…¾ Testing backend connectivity and authentication...');
                   toast.info('Running comprehensive 5-step integration test...');
                   
                   if (!user?.accessToken) {
@@ -608,11 +608,11 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
                   }
 
                   try {
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Running comprehensive auth and service test...');
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â User token (first 30 chars):', user.accessToken.substring(0, 30) + '...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Running comprehensive auth and service test...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ User token (first 30 chars):', user.accessToken.substring(0, 30) + '...');
                     
                     // Step 1: Test session debug in auth service
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Step 1: Testing session in auth service...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Step 1: Testing session in auth service...');
                     const sessionDebugResponse = await fetch(`${projectId ? `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44` : ''}/auth/debug-session`, {
                       method: 'POST',
                       headers: {
@@ -625,110 +625,110 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
                     });
 
                     const sessionDebugData = await sessionDebugResponse.json();
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Session debug result:', sessionDebugData);
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Session debug result:', sessionDebugData);
 
                     if (!sessionDebugResponse.ok || !sessionDebugData.exists) {
-                      toast.error(`ÃƒÂ¢Ã‚ÂÃ…â€™ Step 1 Failed: Session not found in auth service`, {
+                      toast.error(`ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Step 1 Failed: Session not found in auth service`, {
                         description: sessionDebugData.message || 'Session lookup failed'
                       });
-                      console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Session debug failed:', sessionDebugData);
+                      console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Session debug failed:', sessionDebugData);
                       return;
                     }
 
                     if (sessionDebugData.session?.isExpired) {
-                      toast.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Step 1 Failed: Session has expired. Please sign in again.');
+                      toast.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Step 1 Failed: Session has expired. Please sign in again.');
                       return;
                     }
 
-                    console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 1 Passed: Session exists and is valid in auth service');
-                    toast.success('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 1: Auth service session check passed');
+                    console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 1 Passed: Session exists and is valid in auth service');
+                    toast.success('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 1: Auth service session check passed');
                     
                     // Step 2: Test integration routes
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Step 2: Testing integration routes...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Step 2: Testing integration routes...');
                     const { testIntegrationKV, debugIntegrationAuth, testIntegrationRoutes } = await import('../utils/api/integrations');
                     
                     let routeTest;
                     try {
                       routeTest = await testIntegrationRoutes();
-                      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Route test result:', routeTest);
+                      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã‚¹ Route test result:', routeTest);
                     } catch (routeError) {
-                      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ Route test error:', routeError);
+                      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã‚¹ Route test error:', routeError);
                       routeTest = { success: false, error: routeError.message };
                     }
                     
                     if (!routeTest.success) {
-                      toast.error(`ÃƒÂ¢Ã‚ÂÃ…â€™ Step 2 Failed: Route test failed`, {
+                      toast.error(`ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Step 2 Failed: Route test failed`, {
                         description: routeTest.error || 'Integration routes not accessible'
                       });
                       return;
                     }
                     
-                    console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 2 Passed: Integration routes are accessible');
-                    toast.success('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 2: Integration routes test passed');
+                    console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 2 Passed: Integration routes are accessible');
+                    toast.success('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 2: Integration routes test passed');
                     
                     // Step 3: Test integration service KV access
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Step 3: Testing integration service KV access...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Step 3: Testing integration service KV access...');
                     
                     let kvTest;
                     try {
                       kvTest = await testIntegrationKV();
-                      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â KV test result:', kvTest);
+                      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ KV test result:', kvTest);
                     } catch (kvError) {
-                      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â KV test error:', kvError);
+                      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ KV test error:', kvError);
                       kvTest = { success: false, error: kvError.message };
                     }
                     
                     if (!kvTest.success) {
-                      toast.warning(`ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Step 3: KV access issue detected`, {
+                      toast.warning(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã‚¡Ãƒâ€šÃ‚ ÃƒÆ’Ã‚¯Ãƒâ€šÃ‚¸Ãƒâ€šÃ‚ Step 3: KV access issue detected`, {
                         description: `${kvTest.error || 'KV store may not be accessible'} - Continuing with auth test...`
                       });
-                      console.warn('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â KV test failed but continuing:', kvTest);
+                      console.warn('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ KV test failed but continuing:', kvTest);
                     } else {
-                      console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 3 Passed: Integration service can access KV store');
-                      toast.success(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 3: KV access passed (${kvTest.data?.tests?.sessionCount || 0} sessions found)`);
+                      console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 3 Passed: Integration service can access KV store');
+                      toast.success(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 3: KV access passed (${kvTest.data?.tests?.sessionCount || 0} sessions found)`);
                     }
                     
                     // Step 4: Test integration auth debug
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Step 4: Testing integration authentication...');
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Step 4: Testing integration authentication...');
                     const authTest = await debugIntegrationAuth(user.accessToken);
-                    console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Integration auth test result:', authTest);
+                    console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Integration auth test result:', authTest);
                     
                     if (authTest.success) {
-                      console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 4 Passed: Integration authentication successful');
-                      toast.success(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Step 4: Integration auth passed for ${authTest.user.email}`);
+                      console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 4 Passed: Integration authentication successful');
+                      toast.success(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Step 4: Integration auth passed for ${authTest.user.email}`);
                       
                       // Step 5: Test the full integration loading
-                      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Step 5: Testing full integration list loading...');
+                      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Step 5: Testing full integration list loading...');
                       await loadUserIntegrations();
                       
                       if (serviceStatus === 'healthy') {
-                        toast.success('ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° All 5 steps passed! Integration Hub is fully functional.');
+                        toast.success('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒ¢Ã¢â€š¬Ã‚° All 5 steps passed! Integration Hub is fully functional.');
                       } else {
-                        toast.warning('ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Steps 1-4 passed but integration loading has issues');
+                        toast.warning('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã‚¡Ãƒâ€šÃ‚ ÃƒÆ’Ã‚¯Ãƒâ€šÃ‚¸Ãƒâ€šÃ‚ Steps 1-4 passed but integration loading has issues');
                       }
                     } else {
-                      toast.error(`ÃƒÂ¢Ã‚ÂÃ…â€™ Step 4 Failed: Integration authentication failed`, {
+                      toast.error(`ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Step 4 Failed: Integration authentication failed`, {
                         description: authTest.error || 'Unknown authentication error'
                       });
-                      console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â Integration auth debug details:', authTest.debug);
+                      console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚ Integration auth debug details:', authTest.debug);
                       
                       // Provide specific guidance
                       if (authTest.error?.includes('Session not found')) {
-                        toast.info('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Diagnosis: Session exists in auth service but not accessible in integration service');
+                        toast.info('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ Diagnosis: Session exists in auth service but not accessible in integration service');
                       } else if (authTest.error?.includes('expired')) {
-                        toast.info('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Suggestion: Your session has expired, please sign in again');
+                        toast.info('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ Suggestion: Your session has expired, please sign in again');
                       } else if (authTest.error?.includes('KV')) {
-                        toast.info('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Diagnosis: Database access issue in integration service');
+                        toast.info('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ Diagnosis: Database access issue in integration service');
                       }
                     }
                   } catch (error) {
-                    console.error('ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¥ Test failed:', error);
+                    console.error('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¥ Test failed:', error);
                     toast.error(`Test failed: ${error.message}`);
                   }
                 }}
                 className="text-sm"
               >
-                ÃƒÂ°Ã…Â¸Ã‚Â§Ã‚Âª Test Service
+                ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€šÃ‚§Ãƒâ€šÃ‚ª Test Service
               </Button>
               <Button className="bg-primary hover:bg-primary-hover text-primary-foreground">
                 <Plus className="w-4 h-4 mr-2" />
@@ -1081,6 +1081,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
     </div>
   );
 }
+
 
 
 

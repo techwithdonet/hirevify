@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Check, Download, FileText, User, Briefcase, GraduationCap, Award, Zap, CheckCircle, X, Star, Crown } from 'lucide-react';
+﻿import { useState, useEffect, useRef } from 'react';
+import {
+  ArrowLeft, ArrowRight, Check, Download, FileText, User, Briefcase,
+  GraduationCap, Award, Zap, CheckCircle, X, Star, Crown, Sparkles, Loader2
+} from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -11,6 +14,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import { profilesService } from '../services/profilesService';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+
+const cleanBrokenText = (value: string) => {
+  return String(value || '')
+    .replace(/<pad>/gi, '')
+    .replace(/<\/?pad>/gi, '')
+    .replace(/(<pad>\s*)+/gi, '')
+    .replace(/\u00e2\u20ac\u00a2/g, '')
+    .replace(/\u00e2\u20ac\u00a6/g, '...')
+    .replace(/\u00e2\u20ac\u201c/g, '-')
+    .replace(/\u00e2\u20ac\u201d/g, '-')
+    .replace(/\u00e2\u20ac\u02dc/g, "'")
+    .replace(/\u00e2\u20ac\u2122/g, "'")
+    .replace(/\u00e2\u20ac\u0153/g, '"')
+    .replace(/\u00e2\u20ac\u009d/g, '"')
+    .replace(/\u00c2\u00a0/g, ' ')
+    .replace(/\u00c2/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
+const cleanDomTextNodes = (root: HTMLElement) => {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+
+  while (walker.nextNode()) {
+    nodes.push(walker.currentNode as Text);
+  }
+
+  nodes.forEach((node) => {
+    node.nodeValue = cleanBrokenText(node.nodeValue || '');
+  });
+};
 
 interface ResumeBuilderProps {
   onBack: () => void;
@@ -100,6 +138,13 @@ const templates = [
 export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<Step>('welcome');
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isFixingResumeWithAI, setIsFixingResumeWithAI] = useState(false);
+  const [isRewritingResume, setIsRewritingResume] = useState(false);
+  const resumePreviewRef = useRef<HTMLDivElement>(null);
+
   const [resumeData, setResumeData] = useState<ResumeData>({
     template: 'professional',
     contactInfo: {
@@ -132,18 +177,82 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   const getCurrentStepIndex = () => steps.findIndex(step => step.id === currentStep);
   const progress = ((getCurrentStepIndex() + 1) / steps.length) * 100;
 
+  // Auto-clean corrupted AI summary text like <pad><pad>
   useEffect(() => {
-    // Initialize with user data if available
-    if (user) {
-      setResumeData(prev => ({
-        ...prev,
-        contactInfo: {
-          ...prev.contactInfo,
-          fullName: user.name || '',
-          email: user.email || ''
-        }
-      }));
+    const cleanedSummary = cleanBrokenText(resumeData.summary);
+    if (resumeData.summary !== cleanedSummary) {
+      setResumeData(prev => ({ ...prev, summary: cleanedSummary }));
     }
+  }, [resumeData.summary]);
+
+  // â”€â”€â”€ Load real Supabase profile data on mount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    if (!user) return;
+
+    const loadProfileData = async () => {
+      setIsLoadingProfile(true);
+      try {
+        // 1. Get base profile by auth user ID
+        const { data: profile, error: profileError } = await profilesService.getProfileByAuthId(user.id);
+
+        if (profileError || !profile) {
+          // Fallback to basic auth data
+          setResumeData(prev => ({
+            ...prev,
+            contactInfo: {
+              ...prev.contactInfo,
+              fullName: user.name || '',
+              email: user.email || ''
+            }
+          }));
+          return;
+        }
+
+        // 2. Get candidate profile using the profile's primary ID
+        const { data: candidateProfile } = await profilesService.getCandidateProfile(profile.id);
+
+        // 3. Map skills: string[] â†’ Skill[]
+        const mappedSkills: Skill[] = (candidateProfile?.skills || []).map((name: string) => ({
+          name: cleanBrokenText(name),
+          category: 'technical' as const,
+          proficiency: 'intermediate' as const
+        }));
+
+        // 4. Update resume data with all real profile fields
+        setResumeData(prev => ({
+          ...prev,
+          contactInfo: {
+            fullName: profile.full_name || user.name || '',
+            email: profile.email || user.email || '',
+            phone: profile.phone || '',
+            location: profile.location || '',
+            linkedinUrl: candidateProfile?.linkedin_url || '',
+            portfolioUrl: candidateProfile?.portfolio_url || ''
+          },
+          summary: candidateProfile?.headline || '',
+          skills: mappedSkills
+          // Note: experience left empty - no structured work history in DB schema.
+          //       User fills this in manually per session.
+        }));
+
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        toast.error('Could not load your profile data. Please fill in manually.');
+        // Still populate with auth data as fallback
+        setResumeData(prev => ({
+          ...prev,
+          contactInfo: {
+            ...prev.contactInfo,
+            fullName: user.name || '',
+            email: user.email || ''
+          }
+        }));
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadProfileData();
   }, [user]);
 
   const nextStep = () => {
@@ -163,83 +272,739 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   };
 
   const runATSCheck = () => {
-    // Simulate ATS checking
+    const clean = (value?: string) => (value || '').trim();
+
+    const contact = resumeData.contactInfo;
+    const hasContact =
+      clean(contact.fullName).length > 0 &&
+      clean(contact.email).length > 0 &&
+      clean(contact.phone).length > 0;
+
+    const validExperienceEntries = resumeData.experience.filter((exp) => {
+      const hasMainFields =
+        clean(exp.jobTitle).length > 0 &&
+        clean(exp.companyName).length > 0 &&
+        clean(exp.startDate).length > 0 &&
+        (exp.isCurrentJob || clean(exp.endDate).length > 0);
+
+      const hasBullets = exp.description.some((line) => clean(line).length >= 10);
+
+      return hasMainFields && hasBullets;
+    });
+
+    const partialExperienceEntries = resumeData.experience.filter((exp) => {
+      return (
+        clean(exp.jobTitle).length > 0 ||
+        clean(exp.companyName).length > 0 ||
+        clean(exp.startDate).length > 0 ||
+        exp.description.some((line) => clean(line).length > 0)
+      );
+    });
+
+    const validEducationEntries = resumeData.education.filter((edu) => {
+      return (
+        clean(edu.degree).length > 0 &&
+        clean(edu.university).length > 0 &&
+        clean(edu.graduationDate).length > 0
+      );
+    });
+
+    const skillNames = resumeData.skills
+      .map((skill) => clean(skill.name).toLowerCase())
+      .filter(Boolean);
+
+    const summaryText = clean(resumeData.summary);
+    const experienceText = resumeData.experience
+      .flatMap((exp) => exp.description)
+      .join(' ')
+      .toLowerCase();
+
+    const resumeText = `${summaryText} ${experienceText}`.toLowerCase();
+
+    const matchedSkillKeywords = skillNames.filter((skill) =>
+      resumeText.includes(skill)
+    );
+
     const checks: ATSCheck[] = [
       {
         id: '1',
         name: 'Contact Information Present',
-        status: resumeData.contactInfo.fullName && resumeData.contactInfo.email && resumeData.contactInfo.phone ? 'pass' : 'fail',
-        description: 'All essential contact information is included',
-        recommendation: 'Ensure name, email, and phone number are clearly stated'
+        status: hasContact ? 'pass' : 'fail',
+        description: hasContact
+          ? `Name, email, and phone are present for ${contact.fullName || 'this candidate'}.`
+          : 'Name, email, and phone are required for ATS and recruiter contact.',
+        recommendation: hasContact
+          ? ''
+          : 'Add full name, email address, and phone number.'
       },
       {
         id: '2',
         name: 'Standard Section Headers',
         status: 'pass',
-        description: 'Using standard resume section headers (Experience, Education, Skills)',
+        description: 'This builder uses standard ATS-readable sections: Summary, Experience, Education, and Skills.',
         recommendation: ''
       },
       {
         id: '3',
         name: 'Work Experience Format',
-        status: resumeData.experience.length > 0 ? 'pass' : 'fail',
-        description: 'Work experience follows proper chronological format',
-        recommendation: 'Add at least one work experience entry with dates and descriptions'
+        status:
+          validExperienceEntries.length > 0
+            ? 'pass'
+            : partialExperienceEntries.length > 0
+              ? 'warning'
+              : 'fail',
+        description:
+          validExperienceEntries.length > 0
+            ? `${validExperienceEntries.length} complete work experience entr${validExperienceEntries.length === 1 ? 'y' : 'ies'} found with title, company, dates, and description.`
+            : partialExperienceEntries.length > 0
+              ? 'Work experience exists, but some required fields or bullet descriptions are incomplete.'
+              : 'No complete work experience entry found.',
+        recommendation:
+          validExperienceEntries.length > 0
+            ? ''
+            : 'Add job title, company, start/end date, and at least one clear responsibility or achievement.'
       },
       {
         id: '4',
         name: 'Skills Section',
-        status: resumeData.skills.length >= 5 ? 'pass' : 'warning',
-        description: 'Adequate number of relevant skills listed',
-        recommendation: 'Include at least 5-8 relevant skills for better keyword matching'
+        status:
+          resumeData.skills.length >= 5
+            ? 'pass'
+            : resumeData.skills.length >= 3
+              ? 'warning'
+              : 'fail',
+        description: `${resumeData.skills.length} skill${resumeData.skills.length === 1 ? '' : 's'} listed.`,
+        recommendation:
+          resumeData.skills.length >= 5
+            ? ''
+            : 'Add at least 5-8 relevant technical or job-specific skills.'
       },
       {
         id: '5',
         name: 'Education Information',
-        status: resumeData.education.length > 0 ? 'pass' : 'warning',
-        description: 'Educational background is included',
-        recommendation: 'Add your highest level of education'
+        status:
+          validEducationEntries.length > 0
+            ? 'pass'
+            : resumeData.education.length > 0
+              ? 'warning'
+              : 'fail',
+        description:
+          validEducationEntries.length > 0
+            ? `${validEducationEntries.length} complete education entr${validEducationEntries.length === 1 ? 'y' : 'ies'} found.`
+            : resumeData.education.length > 0
+              ? 'Education exists, but degree, institution, or graduation date is incomplete.'
+              : 'No education entry found.',
+        recommendation:
+          validEducationEntries.length > 0
+            ? ''
+            : 'Add degree, university/institution, and graduation date.'
       },
       {
         id: '6',
         name: 'Professional Summary',
-        status: resumeData.summary.length >= 100 ? 'pass' : 'warning',
-        description: 'Includes a compelling professional summary',
-        recommendation: 'Write a 2-3 sentence summary highlighting your key qualifications'
+        status:
+          summaryText.length >= 100
+            ? 'pass'
+            : summaryText.length >= 50
+              ? 'warning'
+              : 'fail',
+        description: `Summary length: ${summaryText.length} characters.`,
+        recommendation:
+          summaryText.length >= 100
+            ? ''
+            : 'Write a 2-3 sentence summary with role, key skills, and value.'
       },
       {
         id: '7',
         name: 'Keyword Optimization',
-        status: 'warning',
-        description: 'Resume contains industry-relevant keywords',
-        recommendation: 'Consider upgrading for AI-powered keyword optimization'
+        status:
+          matchedSkillKeywords.length >= 3
+            ? 'pass'
+            : matchedSkillKeywords.length >= 1
+              ? 'warning'
+              : 'fail',
+        description: `${matchedSkillKeywords.length} listed skill keyword${matchedSkillKeywords.length === 1 ? '' : 's'} found in your summary or experience descriptions.`,
+        recommendation:
+          matchedSkillKeywords.length >= 3
+            ? ''
+            : 'Use your important skills naturally inside your summary and work experience descriptions.'
       },
       {
         id: '8',
         name: 'Formatting Consistency',
         status: 'pass',
-        description: 'Consistent formatting and clean layout',
+        description: `The selected ${resumeData.template} template uses consistent builder-controlled formatting.`,
         recommendation: ''
       }
     ];
 
-    const passCount = checks.filter(check => check.status === 'pass').length;
-    const score = Math.round((passCount / checks.length) * 100);
+    const score = Math.round(
+      (checks.reduce((total, check) => {
+        if (check.status === 'pass') return total + 1;
+        if (check.status === 'warning') return total + 0.5;
+        return total;
+      }, 0) / checks.length) * 100
+    );
+
+    console.info('ATS check used current resume data:', {
+      contact,
+      summaryLength: summaryText.length,
+      experienceCount: resumeData.experience.length,
+      validExperienceCount: validExperienceEntries.length,
+      educationCount: resumeData.education.length,
+      validEducationCount: validEducationEntries.length,
+      skillsCount: resumeData.skills.length,
+      matchedSkillKeywords,
+      score
+    });
 
     setAtsChecks(checks);
     setAtsScore(score);
     setCurrentStep('ats-report');
   };
 
-  const downloadResume = () => {
-    toast.success('Resume downloaded successfully!');
-    // In a real implementation, this would generate and download a PDF
+  // â”€â”€â”€ Real PDF download using html2canvas + jsPDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const createPdfSafeResumeClone = () => {
+    const escapeHtml = (value: string) =>
+      cleanBrokenText(String(value || ''))
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    const contactInfo = resumeData.contactInfo as any;
+
+    const fullName = escapeHtml(
+      [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
+    ) || 'Your Name';
+
+    const email = escapeHtml(contactInfo.email || '');
+    const phone = escapeHtml(contactInfo.phone || '');
+    const location = escapeHtml(
+      contactInfo.location ||
+      [contactInfo.city, contactInfo.state, contactInfo.country].filter(Boolean).join(', ')
+    );
+
+    const contactLine = [email, phone, location].filter(Boolean).join(' | ');
+    const summary = escapeHtml(resumeData.summary || '');
+
+    const experience = Array.isArray(resumeData.experience)
+      ? resumeData.experience.filter((exp) =>
+          exp.jobTitle || exp.companyName || exp.startDate || exp.endDate || exp.description?.length
+        )
+      : [];
+
+    const education = Array.isArray(resumeData.education)
+      ? resumeData.education.filter((edu) =>
+          edu.degree || edu.university || edu.graduationDate
+        )
+      : [];
+
+    const skills = Array.isArray(resumeData.skills)
+      ? resumeData.skills.filter((skill) => skill.name)
+      : [];
+
+    const dateRange = (startDate?: string, endDate?: string, isCurrentJob?: boolean) => {
+      const start = escapeHtml(startDate || '');
+      const endText = isCurrentJob ? 'Present' : escapeHtml(endDate || '');
+      return [start, endText].filter(Boolean).join(' - ');
+    };
+
+    const experienceHtml = experience.map((exp, index) => {
+      const bullets = Array.isArray(exp.description)
+        ? exp.description
+            .filter(Boolean)
+            .map((item) => `<li style="margin:0 0 5px 0;">${escapeHtml(item)}</li>`)
+            .join('')
+        : '';
+
+      const place = [exp.city, exp.state].filter(Boolean).map((item) => escapeHtml(item)).join(', ');
+
+      return `
+        <div style="margin-bottom:22px;">
+          <div style="display:flex;justify-content:space-between;gap:20px;">
+            <div>
+              <div style="font-size:18px;font-weight:700;color:#0f172a;">${escapeHtml(exp.jobTitle || 'Role Title')}</div>
+              <div style="font-size:16px;font-weight:600;color:#334155;">${escapeHtml(exp.companyName || 'Company')}${place ? ` - ${place}` : ''}</div>
+            </div>
+            <div style="font-size:15px;color:#475569;white-space:nowrap;">${dateRange(exp.startDate, exp.endDate, exp.isCurrentJob)}</div>
+          </div>
+          ${bullets ? `<ul style="margin:8px 0 0 18px;padding:0;font-size:16px;line-height:1.75;color:#334155;">${bullets}</ul>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const educationHtml = education.map((edu) => {
+      const meta = [edu.city, edu.state, edu.graduationDate].filter(Boolean).map((item) => escapeHtml(item)).join(' - ');
+
+      return `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:17px;font-weight:700;color:#0f172a;">${escapeHtml(edu.degree || 'Degree')}</div>
+          <div style="font-size:16px;color:#334155;">${escapeHtml(edu.university || 'Institution')}</div>
+          ${meta ? `<div style="font-size:15px;color:#64748b;">${meta}</div>` : ''}
+          ${edu.gpa ? `<div style="font-size:15px;color:#64748b;">GPA: ${escapeHtml(edu.gpa)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const skillsPills = skills.map((skill) =>
+      `<span style="display:inline-block;border:1px solid #cbd5e1;border-radius:999px;padding:5px 10px;margin:0 6px 6px 0;font-size:15px;color:#0f172a;background:#f8fafc;">${escapeHtml(skill.name)}</span>`
+    ).join('');
+
+    const skillsPlain = skills.map((skill) =>
+      `<div style="font-size:16px;color:#ffffff;margin-bottom:8px;">${escapeHtml(skill.name)}</div>`
+    ).join('');
+
+    const sectionTitle = (title: string) =>
+      `<div style="font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#0f172a;border-bottom:1px solid #cbd5e1;padding-bottom:6px;margin-bottom:14px;">${title}</div>`;
+
+    let html = '';
+
+    if (resumeData.template === 'modern') {
+      html = `
+        <div style="width:794px;min-height:950px;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;border:1px solid #e5e7eb;display:grid;grid-template-columns:260px 534px;">
+          <aside style="background:#0f172a;color:#ffffff;padding:34px;min-height:950px;">
+            <div style="font-size:34px;font-weight:800;line-height:1.15;margin-bottom:14px;color:#ffffff;">${fullName}</div>
+            <div style="font-size:15px;line-height:1.75;color:#e2e8f0;margin-bottom:34px;">${[email, phone, location].filter(Boolean).join('<br />')}</div>
+
+            ${skills.length ? `
+              <div style="margin-bottom:34px;">
+                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Skills</div>
+                ${skillsPlain}
+              </div>
+            ` : ''}
+
+            ${education.length ? `
+              <div>
+                <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#ffffff;border-bottom:1px solid #64748b;padding-bottom:8px;margin-bottom:14px;">Education</div>
+                ${education.map((edu) => `
+                  <div style="margin-bottom:16px;color:#ffffff;">
+                    <div style="font-size:16px;font-weight:700;color:#ffffff;">${escapeHtml(edu.degree || 'Degree')}</div>
+                    <div style="font-size:15px;color:#e2e8f0;">${escapeHtml(edu.university || 'Institution')}</div>
+                    <div style="font-size:13px;color:#cbd5e1;">${escapeHtml(edu.graduationDate || '')}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </aside>
+
+          <main style="padding:34px;background:#ffffff;color:#0f172a;">
+            ${summary ? `
+              <section style="margin-bottom:32px;">
+                ${sectionTitle('Professional Summary')}
+                <p style="font-size:16px;line-height:1.75;color:#334155;margin:0;">${summary}</p>
+              </section>
+            ` : ''}
+
+            ${experience.length ? `
+              <section>
+                ${sectionTitle('Work Experience')}
+                ${experienceHtml}
+              </section>
+            ` : ''}
+          </main>
+        </div>
+      `;
+    } else if (resumeData.template === 'minimalist') {
+      html = `
+        <div style="width:794px;min-height:950px;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;border:1px solid #e5e7eb;padding:42px;">
+          <header style="margin-bottom:34px;">
+            <div style="font-size:42px;font-weight:300;letter-spacing:-1px;color:#0f172a;">${fullName}</div>
+            <div style="font-size:15px;color:#475569;margin-top:8px;">${contactLine}</div>
+          </header>
+
+          ${summary ? `<section style="margin-bottom:30px;"><div style="font-size:19px;font-weight:700;margin-bottom:8px;color:#0f172a;">Summary</div><p style="font-size:16px;line-height:1.75;color:#334155;margin:0;">${summary}</p></section>` : ''}
+          ${experience.length ? `<section style="margin-bottom:30px;border-top:1px solid #e2e8f0;padding-top:18px;"><div style="font-size:19px;font-weight:700;margin-bottom:18px;color:#0f172a;">Experience</div>${experienceHtml}</section>` : ''}
+          ${education.length ? `<section style="margin-bottom:30px;border-top:1px solid #e2e8f0;padding-top:18px;"><div style="font-size:19px;font-weight:700;margin-bottom:18px;color:#0f172a;">Education</div>${educationHtml}</section>` : ''}
+          ${skills.length ? `<section style="border-top:1px solid #e2e8f0;padding-top:18px;"><div style="font-size:19px;font-weight:700;margin-bottom:14px;color:#0f172a;">Skills</div>${skillsPills}</section>` : ''}
+        </div>
+      `;
+    } else {
+      html = `
+        <div style="width:794px;min-height:950px;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;border:1px solid #e5e7eb;padding:42px;">
+          <header style="text-align:center;margin-bottom:34px;">
+            <div style="font-size:36px;font-weight:800;color:#0f172a;">${fullName}</div>
+            <div style="font-size:15px;color:#475569;margin-top:8px;">${contactLine}</div>
+          </header>
+
+          ${summary ? `<section style="margin-bottom:30px;">${sectionTitle('Professional Summary')}<p style="font-size:16px;line-height:1.75;color:#334155;margin:0;">${summary}</p></section>` : ''}
+          ${experience.length ? `<section style="margin-bottom:30px;">${sectionTitle('Work Experience')}${experienceHtml}</section>` : ''}
+          ${education.length ? `<section style="margin-bottom:30px;">${sectionTitle('Education')}${educationHtml}</section>` : ''}
+          ${skills.length ? `<section>${sectionTitle('Skills')}${skillsPills}</section>` : ''}
+        </div>
+      `;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.setAttribute('data-pdf-safe-clone', 'true');
+    wrapper.setAttribute('data-selected-template', resumeData.template);
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '-10000px';
+    wrapper.style.top = '0';
+    wrapper.style.background = '#ffffff';
+    wrapper.style.color = '#0f172a';
+    wrapper.style.fontFamily = 'Arial, sans-serif';
+    wrapper.innerHTML = html;
+
+    document.body.appendChild(wrapper);
+    return wrapper;
+  };
+  const downloadResume = async () => {
+    if (!resumePreviewRef.current) {
+      toast.error('Resume preview not available. Please go to the Review step first.');
+      return;
+    }
+
+    setIsDownloading(true);
+    const toastId = toast.loading('Generating your PDF...');
+
+    try {
+      // Dynamically import to avoid bundle bloat
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+
+      const pdfTarget = createPdfSafeResumeClone();
+      if (!pdfTarget) {
+        throw new Error('Resume preview not available.');
+      }
+
+      const canvas = await html2canvas(pdfTarget, {
+        scale: 3,           // High-res for crisp text
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        foreignObjectRendering: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+      const canvasRatio = canvas.height / canvas.width;
+      const imgHeight = pdfWidth * canvasRatio;
+
+      // If content exceeds one page, split across pages
+      if (imgHeight <= pdfHeight) {
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+      } else {
+        let yOffset = 0;
+        while (yOffset < imgHeight) {
+          pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, imgHeight);
+          yOffset += pdfHeight;
+          if (yOffset < imgHeight) pdf.addPage();
+        }
+      }
+
+      const fileName = resumeData.contactInfo.fullName
+        ? `${resumeData.contactInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`
+        : 'resume.pdf';
+
+      pdf.save(`hirevify-${resumeData.template}-resume.pdf`);
+      document.querySelectorAll('[data-pdf-safe-clone="true"]').forEach((node) => node.remove());
+      toast.success('Resume downloaded!', { id: toastId });
+
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      toast.error('PDF download failed. Please try again.', { id: toastId });
+    } finally {
+      document.querySelectorAll('[data-pdf-safe-clone="true"]').forEach((node) => node.remove());
+      setIsDownloading(false);
+    }
+  };
+
+  // AI summary generation via Next.js API route
+  const generateSummary = async () => {
+    setIsGeneratingSummary(true);
+    const toastId = toast.loading('Generating your professional summary...');
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session?.access_token) {
+        throw new Error('No active Supabase login found. Please login again.');
+      }
+
+      const payload = {
+        name: resumeData.contactInfo.fullName || 'the candidate',
+        headline: resumeData.summary || '',
+        skills: resumeData.skills.map(s => s.name),
+        experience: resumeData.experience.map(e => ({
+          title: e.jobTitle,
+          company: e.companyName
+        }))
+      };
+
+      const response = await fetch('/api/ai/generate-summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const rawResponse = await response.text();
+      let data: any = {};
+
+      try {
+        data = rawResponse ? JSON.parse(rawResponse) : {};
+      } catch {
+        throw new Error('AI summary API returned an invalid response.');
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'AI summary generation failed.');
+      }
+
+      if (data?.summary) {
+        setResumeData(prev => ({ ...prev, summary: cleanBrokenText(String(data.summary)) }));
+        toast.success('Summary generated!', { id: toastId });
+      } else {
+        throw new Error('No summary returned from AI');
+      }
+
+    } catch (err: any) {
+      console.error('AI summary generation failed:', err);
+      toast.error(
+        err instanceof Error ? err.message : 'AI generation failed. Please write your summary manually.',
+        { id: toastId }
+      );
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const rewriteResumeWithAI = async () => {
+    setIsRewritingResume(true);
+    const toastId = toast.loading('Rewriting your resume with AI...');
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session?.access_token) {
+        throw new Error('No active Supabase login found. Please login again.');
+      }
+
+      const response = await fetch('/api/ai/rewrite-resume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({
+          resumeData,
+          atsScore,
+          atsChecks
+        })
+      });
+
+      const rawResponse = await response.text();
+      let data: any = {};
+
+      try {
+        data = rawResponse ? JSON.parse(rawResponse) : {};
+      } catch {
+        throw new Error('AI rewrite API returned an invalid response.');
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'AI resume rewrite failed.');
+      }
+
+      const rewritten = data?.resumeData || {};
+
+      const rewrittenExperience: WorkExperience[] = Array.isArray(rewritten.experience)
+        ? rewritten.experience.map((exp: any, index: number) => {
+            const oldExp = resumeData.experience[index];
+
+            const description = Array.isArray(exp.description)
+              ? exp.description
+                  .map((line: any) => cleanBrokenText(String(line || '')))
+                  .filter(Boolean)
+              : oldExp?.description || [];
+
+            return {
+              id: String(exp.id || oldExp?.id || `${Date.now()}-${index}`),
+              jobTitle: cleanBrokenText(String(exp.jobTitle || oldExp?.jobTitle || '')),
+              companyName: cleanBrokenText(String(exp.companyName || oldExp?.companyName || '')),
+              city: cleanBrokenText(String(exp.city || oldExp?.city || '')),
+              state: cleanBrokenText(String(exp.state || oldExp?.state || '')),
+              startDate: cleanBrokenText(String(exp.startDate || oldExp?.startDate || '')),
+              endDate: cleanBrokenText(String(exp.endDate || oldExp?.endDate || '')),
+              isCurrentJob: Boolean(exp.isCurrentJob ?? oldExp?.isCurrentJob ?? false),
+              description
+            };
+          })
+        : resumeData.experience;
+
+      const rewrittenEducation: Education[] = Array.isArray(rewritten.education)
+        ? rewritten.education.map((edu: any, index: number) => {
+            const oldEdu = resumeData.education[index];
+
+            return {
+              id: String(edu.id || oldEdu?.id || `${Date.now()}-edu-${index}`),
+              degree: cleanBrokenText(String(edu.degree || oldEdu?.degree || '')),
+              university: cleanBrokenText(String(edu.university || oldEdu?.university || '')),
+              city: cleanBrokenText(String(edu.city || oldEdu?.city || '')),
+              state: cleanBrokenText(String(edu.state || oldEdu?.state || '')),
+              graduationDate: cleanBrokenText(String(edu.graduationDate || oldEdu?.graduationDate || '')),
+              gpa: cleanBrokenText(String(edu.gpa || oldEdu?.gpa || ''))
+            };
+          })
+        : resumeData.education;
+
+      const rewrittenSkills: Skill[] = Array.isArray(rewritten.skills)
+        ? rewritten.skills
+            .map((skill: any) => ({
+              name: cleanBrokenText(String(skill.name || '')),
+              category: ['technical', 'soft', 'language'].includes(skill.category)
+                ? skill.category
+                : 'technical',
+              proficiency: ['beginner', 'intermediate', 'advanced', 'expert'].includes(skill.proficiency)
+                ? skill.proficiency
+                : 'intermediate'
+            }))
+            .filter((skill: Skill) => skill.name.length > 0)
+        : resumeData.skills;
+
+      setResumeData(prev => ({
+        ...prev,
+        summary: cleanBrokenText(String(rewritten.summary || prev.summary || '')),
+        experience: rewrittenExperience,
+        education: rewrittenEducation,
+        skills: rewrittenSkills
+      }));
+
+      toast.success('Resume rewritten with AI. Review it, then download the new version.', { id: toastId });
+      setCurrentStep('review');
+    } catch (err: any) {
+      console.error('AI resume rewrite failed:', err);
+      toast.error(err instanceof Error ? err.message : 'AI resume rewrite failed.', { id: toastId });
+    } finally {
+      setIsRewritingResume(false);
+    }
+  };
+
+  const fixResumeWithHireVify = async () => {
+    setIsFixingResumeWithAI(true);
+    const toastId = toast.loading('HireVify is analyzing and fixing your resume...');
+
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session?.access_token) {
+        throw new Error('No active Supabase login found. Please login again.');
+      }
+
+      const response = await fetch('/api/ai/rewrite-resume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify({
+          resumeData,
+          atsScore,
+          atsChecks
+        })
+      });
+
+      const rawResponse = await response.text();
+      let data: any = {};
+
+      try {
+        data = rawResponse ? JSON.parse(rawResponse) : {};
+      } catch {
+        throw new Error('HireVify AI returned an invalid response.');
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'HireVify AI failed to fix the resume.');
+      }
+
+      const fixed = data?.fixedResume || {};
+
+      const fixedSummary = cleanBrokenText(String(fixed.summary || resumeData.summary || ''));
+
+      const fixedExperience: WorkExperience[] = Array.isArray(fixed.experience)
+        ? fixed.experience.map((exp: any, index: number) => {
+            const oldExp = resumeData.experience[index];
+
+            return {
+              id: String(exp.id || oldExp?.id || `${Date.now()}-${index}`),
+              jobTitle: cleanBrokenText(String(exp.jobTitle || oldExp?.jobTitle || '')),
+              companyName: cleanBrokenText(String(exp.companyName || oldExp?.companyName || '')),
+              city: cleanBrokenText(String(exp.city || oldExp?.city || '')),
+              state: cleanBrokenText(String(exp.state || oldExp?.state || '')),
+              startDate: cleanBrokenText(String(exp.startDate || oldExp?.startDate || '')),
+              endDate: cleanBrokenText(String(exp.endDate || oldExp?.endDate || '')),
+              isCurrentJob: Boolean(exp.isCurrentJob ?? oldExp?.isCurrentJob ?? false),
+              description: Array.isArray(exp.description)
+                ? exp.description.map((line: any) => cleanBrokenText(String(line || ''))).filter(Boolean)
+                : oldExp?.description || []
+            };
+          })
+        : resumeData.experience;
+
+      const fixedEducation: Education[] = Array.isArray(fixed.education)
+        ? fixed.education.map((edu: any, index: number) => {
+            const oldEdu = resumeData.education[index];
+
+            return {
+              id: String(edu.id || oldEdu?.id || `${Date.now()}-edu-${index}`),
+              degree: cleanBrokenText(String(edu.degree || oldEdu?.degree || '')),
+              university: cleanBrokenText(String(edu.university || oldEdu?.university || '')),
+              city: cleanBrokenText(String(edu.city || oldEdu?.city || '')),
+              state: cleanBrokenText(String(edu.state || oldEdu?.state || '')),
+              graduationDate: cleanBrokenText(String(edu.graduationDate || oldEdu?.graduationDate || '')),
+              gpa: cleanBrokenText(String(edu.gpa || oldEdu?.gpa || ''))
+            };
+          })
+        : resumeData.education;
+
+      const fixedSkills: Skill[] = Array.isArray(fixed.skills)
+        ? fixed.skills
+            .map((skill: any) => ({
+              name: cleanBrokenText(String(skill.name || '')),
+              category: ['technical', 'soft', 'language'].includes(skill.category) ? skill.category : 'technical',
+              proficiency: ['beginner', 'intermediate', 'advanced', 'expert'].includes(skill.proficiency) ? skill.proficiency : 'intermediate'
+            }))
+            .filter((skill: Skill) => skill.name.length > 0)
+        : resumeData.skills;
+
+      setResumeData(prev => ({
+        ...prev,
+        summary: fixedSummary || prev.summary,
+        experience: fixedExperience,
+        education: fixedEducation,
+        skills: fixedSkills
+      }));
+
+      toast.success('HireVify fixed your resume. Review and download the new version.', { id: toastId });
+      setCurrentStep('review');
+    } catch (err: any) {
+      console.error('HireVify resume fix failed:', err);
+      toast.error(err instanceof Error ? err.message : 'HireVify AI failed to fix the resume.', { id: toastId });
+    } finally {
+      setIsFixingResumeWithAI(false);
+    }
   };
 
   const updateContactInfo = (field: keyof ContactInfo, value: string) => {
     setResumeData(prev => ({
       ...prev,
-      contactInfo: { ...prev.contactInfo, [field]: value }
+      contactInfo: { ...prev.contactInfo, [field]: cleanBrokenText(value) }
     }));
   };
 
@@ -264,8 +1029,8 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   const updateExperience = (id: string, field: keyof WorkExperience, value: any) => {
     setResumeData(prev => ({
       ...prev,
-      experience: prev.experience.map(exp => 
-        exp.id === id ? { ...exp, [field]: value } : exp
+      experience: prev.experience.map(exp =>
+        exp.id === id ? { ...exp, [field]: typeof value === 'string' ? cleanBrokenText(value) : value } : exp
       )
     }));
   };
@@ -295,8 +1060,8 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   const updateEducation = (id: string, field: keyof Education, value: string) => {
     setResumeData(prev => ({
       ...prev,
-      education: prev.education.map(edu => 
-        edu.id === id ? { ...edu, [field]: value } : edu
+      education: prev.education.map(edu =>
+        edu.id === id ? { ...edu, [field]: typeof value === 'string' ? cleanBrokenText(value) : value } : edu
       )
     }));
   };
@@ -310,7 +1075,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
 
   const addSkill = (name: string, category: 'technical' | 'soft' | 'language') => {
     const newSkill: Skill = {
-      name,
+      name: cleanBrokenText(name),
       category,
       proficiency: 'intermediate'
     };
@@ -328,6 +1093,17 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   };
 
   const renderStepContent = () => {
+    // Show profile loading overlay while fetching from Supabase
+    if (isLoadingProfile && ['contact', 'summary', 'skills'].includes(currentStep)) {
+      return (
+        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+          <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
+          <p className="text-lg font-medium">Loading your profile...</p>
+          <p className="text-sm mt-1">Fetching your saved data from HireVify</p>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 'welcome':
         return (
@@ -387,8 +1163,8 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {templates.map((template) => (
-                <Card 
-                  key={template.id} 
+                <Card
+                  key={template.id}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
                     resumeData.template === template.id ? 'ring-2 ring-primary border-primary' : ''
                   }`}
@@ -479,6 +1255,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
           </div>
         );
 
+      // â”€â”€â”€ SUMMARY STEP - now with AI Generate button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       case 'summary':
         return (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -486,11 +1263,32 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
               <h2 className="text-2xl font-bold text-foreground mb-6">Professional Summary</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Summary</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Summary</label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={generateSummary}
+                      disabled={isGeneratingSummary}
+                      className="text-primary border-primary/30 hover:bg-primary/5"
+                    >
+                      {isGeneratingSummary ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                          Generate with AI
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea
                     value={resumeData.summary}
                     onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
-                    placeholder="Write a compelling 2-3 sentence summary highlighting your key qualifications and career objectives..."
+                    placeholder="Write a compelling 2-3 sentence summary highlighting your key qualifications and career objectives, or click Generate with AI above..."
                     rows={6}
                   />
                   <p className="text-sm text-muted-foreground mt-2">
@@ -514,7 +1312,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
                 <Button onClick={addExperience}>Add Experience</Button>
               </div>
               <div className="space-y-6">
-                {resumeData.experience.map((exp, index) => (
+                {resumeData.experience.map((exp) => (
                   <Card key={exp.id}>
                     <CardContent className="p-4">
                       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -569,7 +1367,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
                         <Textarea
                           value={exp.description.join('\n')}
                           onChange={(e) => updateExperience(exp.id, 'description', e.target.value.split('\n'))}
-                          placeholder="ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Developed and maintained web applications using React and Node.js&#10;ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Collaborated with cross-functional teams to deliver high-quality software&#10;ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Improved application performance by 30% through optimization"
+                          placeholder=" Developed and maintained web applications&#10; Collaborated with cross-functional teams&#10; Improved performance by 30%"
                           rows={4}
                         />
                       </div>
@@ -605,10 +1403,10 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-6">Skills</h2>
               <div className="space-y-6">
-                <SkillsInput 
-                  skills={resumeData.skills} 
-                  onAddSkill={addSkill} 
-                  onRemoveSkill={removeSkill} 
+                <SkillsInput
+                  skills={resumeData.skills}
+                  onAddSkill={addSkill}
+                  onRemoveSkill={removeSkill}
                 />
               </div>
             </div>
@@ -690,6 +1488,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
           </div>
         );
 
+      // â”€â”€â”€ REVIEW STEP - ref on preview div for PDF capture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       case 'review':
         return (
           <div className="max-w-4xl mx-auto">
@@ -701,7 +1500,8 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
+              {/* ref captures this div for PDF export */}
+              <div className="lg:col-span-2" ref={resumePreviewRef}>
                 <ResumePreview resumeData={resumeData} showFullPreview />
               </div>
               <div className="space-y-4">
@@ -713,9 +1513,18 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button onClick={downloadResume} className="w-full" size="lg">
-                      <Download className="w-5 h-5 mr-2" />
-                      Download Resume
+                    <Button
+                      onClick={downloadResume}
+                      className="w-full"
+                      size="lg"
+                      disabled={isDownloading}
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-5 h-5 mr-2" />
+                      )}
+                      {isDownloading ? 'Generating PDF...' : 'Download Resume'}
                     </Button>
                     <Button onClick={runATSCheck} variant="outline" className="w-full" size="lg">
                       <Zap className="w-5 h-5 mr-2" />
@@ -753,7 +1562,10 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
         );
 
       case 'ats-report':
-        return <ATSReport atsScore={atsScore} atsChecks={atsChecks} onDownload={downloadResume} onUpgrade={onUpgrade} />;
+        return <ATSReport atsScore={atsScore} atsChecks={atsChecks} onDownload={downloadResume}
+                onEditResume={() => setCurrentStep('review')}
+                onFixResumeWithHireVify={fixResumeWithHireVify}
+                isFixingResumeWithAI={isFixingResumeWithAI} onUpgrade={onUpgrade} />;
 
       default:
         return null;
@@ -821,7 +1633,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
               </span>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium">Resume Builder Progress</span>
@@ -840,7 +1652,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
       </main>
 
       {/* Footer Navigation */}
-      {!["welcome", "ats-report"].includes(currentStep as string) && (
+      {!['welcome', 'ats-report'].includes(currentStep as string) && (
         <footer className="bg-card border-t border-border p-6">
           <div className="max-w-7xl mx-auto flex justify-between">
             <Button variant="outline" onClick={prevStep} disabled={currentStep === 'template'}>
@@ -858,91 +1670,263 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
   );
 }
 
-// Resume Preview Component
+// â”€â”€â”€ Resume Preview Component (unchanged) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: ResumeData; showFullPreview?: boolean }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{resumeData.contactInfo.fullName || 'Your Name'}</h2>
-        <div className="text-sm text-gray-600 mt-2 space-y-1">
-          {resumeData.contactInfo.email && <div>{resumeData.contactInfo.email}</div>}
-          {resumeData.contactInfo.phone && <div>{resumeData.contactInfo.phone}</div>}
-          {resumeData.contactInfo.location && <div>{resumeData.contactInfo.location}</div>}
+  const contactInfo = resumeData.contactInfo as any;
+
+  const fullName = cleanBrokenText(
+    [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
+  ) || 'Your Name';
+
+  const email = cleanBrokenText(contactInfo.email || '');
+  const phone = cleanBrokenText(contactInfo.phone || '');
+  const location = cleanBrokenText(
+    contactInfo.location ||
+    [contactInfo.city, contactInfo.state, contactInfo.country].filter(Boolean).join(', ')
+  );
+
+  const summary = cleanBrokenText(resumeData.summary || '');
+
+  const experience = Array.isArray(resumeData.experience)
+    ? resumeData.experience.filter((exp) =>
+        exp.jobTitle || exp.companyName || exp.startDate || exp.endDate || exp.description?.length
+      )
+    : [];
+
+  const education = Array.isArray(resumeData.education)
+    ? resumeData.education.filter((edu) =>
+        edu.degree || edu.university || edu.graduationDate
+      )
+    : [];
+
+  const skills = Array.isArray(resumeData.skills)
+    ? resumeData.skills.filter((skill) => skill.name)
+    : [];
+
+  const formatDateRange = (startDate?: string, endDate?: string, isCurrentJob?: boolean) => {
+    const start = cleanBrokenText(startDate || '');
+    const end = isCurrentJob ? 'Present' : cleanBrokenText(endDate || '');
+    return [start, end].filter(Boolean).join(' - ');
+  };
+
+  const contactItems = [email, phone, location].filter(Boolean);
+
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-1 mb-3">
+      {children}
+    </h3>
+  );
+
+  const ExperienceList = () => (
+    <>
+      {experience.map((exp, index) => (
+        <div key={exp.id || index} className="mb-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h4 className="font-bold text-slate-900">
+                {cleanBrokenText(exp.jobTitle || 'Role Title')}
+              </h4>
+              <p className="text-sm font-medium text-slate-700">
+                {cleanBrokenText(exp.companyName || 'Company')}
+                {[exp.city, exp.state].filter(Boolean).length > 0
+                  ? ` - ${[exp.city, exp.state].filter(Boolean).map((item) => cleanBrokenText(item)).join(', ')}`
+                  : ''}
+              </p>
+            </div>
+            <p className="text-xs text-slate-600 whitespace-nowrap">
+              {formatDateRange(exp.startDate, exp.endDate, exp.isCurrentJob)}
+            </p>
+          </div>
+
+          {Array.isArray(exp.description) && exp.description.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm text-slate-700">
+              {exp.description.map((item, itemIndex) => (
+                <li key={itemIndex} className="flex gap-2">
+                  <span>-</span>
+                  <span>{cleanBrokenText(item)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </>
+  );
+
+  const EducationList = () => (
+    <>
+      {education.map((edu, index) => (
+        <div key={edu.id || index} className="mb-4">
+          <h4 className="font-bold text-slate-900">{cleanBrokenText(edu.degree || 'Degree')}</h4>
+          <p className="text-sm text-slate-700">{cleanBrokenText(edu.university || 'Institution')}</p>
+          <p className="text-xs text-slate-600">
+            {[edu.city, edu.state, edu.graduationDate].filter(Boolean).map((item) => cleanBrokenText(item)).join(' - ')}
+          </p>
+          {edu.gpa && <p className="text-xs text-slate-600">GPA: {cleanBrokenText(edu.gpa)}</p>}
+        </div>
+      ))}
+    </>
+  );
+
+  const SkillsList = ({ compact = false }: { compact?: boolean }) => (
+    <div className={compact ? 'flex flex-wrap gap-1.5' : 'flex flex-wrap gap-2'}>
+      {skills.map((skill, index) => (
+        <span
+          key={`${skill.name}-${index}`}
+          className={compact
+            ? 'text-xs border border-slate-300 px-2 py-1 rounded'
+            : 'text-sm bg-slate-100 border border-slate-200 px-3 py-1 rounded-full'}
+        >
+          {cleanBrokenText(skill.name)}
+        </span>
+      ))}
+    </div>
+  );
+
+  if (resumeData.template === 'modern') {
+    return (
+      <div data-resume-template="modern" className="bg-white text-slate-900 shadow-sm border border-slate-200 max-w-4xl mx-auto">
+        <div className="grid grid-cols-12 min-h-[900px]">
+          <aside className="col-span-4 bg-slate-900 text-white p-8">
+            <h1 className="text-3xl font-bold leading-tight mb-3">{fullName}</h1>
+            <div className="space-y-1 text-sm text-slate-200 mb-8">
+              {contactItems.map((item, index) => (
+                <p key={index}>{item}</p>
+              ))}
+            </div>
+
+            {skills.length > 0 && (
+              <section className="mb-8">
+                <h3 className="text-xs font-bold uppercase tracking-widest border-b border-slate-500 pb-2 mb-3">
+                  Skills
+                </h3>
+                <div className="space-y-2">
+                  {skills.map((skill, index) => (
+                    <p key={`${skill.name}-${index}`} className="text-sm text-slate-100">
+                      {cleanBrokenText(skill.name)}
+                    </p>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {education.length > 0 && (
+              <section>
+                <h3 className="text-xs font-bold uppercase tracking-widest border-b border-slate-500 pb-2 mb-3">
+                  Education
+                </h3>
+                {education.map((edu, index) => (
+                  <div key={edu.id || index} className="mb-4">
+                    <p className="text-sm font-bold">{cleanBrokenText(edu.degree || 'Degree')}</p>
+                    <p className="text-xs text-slate-200">{cleanBrokenText(edu.university || 'Institution')}</p>
+                    <p className="text-xs text-slate-300">{cleanBrokenText(edu.graduationDate || '')}</p>
+                  </div>
+                ))}
+              </section>
+            )}
+          </aside>
+
+          <main className="col-span-8 p-8">
+            {summary && (
+              <section className="mb-8">
+                <SectionTitle>Professional Summary</SectionTitle>
+                <p className="text-sm leading-7 text-slate-700">{summary}</p>
+              </section>
+            )}
+
+            {experience.length > 0 && (
+              <section>
+                <SectionTitle>Work Experience</SectionTitle>
+                <ExperienceList />
+              </section>
+            )}
+          </main>
         </div>
       </div>
+    );
+  }
 
-      {resumeData.summary && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-3">Professional Summary</h3>
-          <p className="text-sm text-gray-700 leading-relaxed">{resumeData.summary}</p>
-        </div>
+  if (resumeData.template === 'minimalist') {
+    return (
+      <div className="bg-white text-slate-900 border border-slate-200 max-w-4xl mx-auto p-10">
+        <header className="mb-8">
+          <h1 className="text-4xl font-light tracking-tight">{fullName}</h1>
+          <p className="text-sm text-slate-600 mt-2">{contactItems.join(' | ')}</p>
+        </header>
+
+        {summary && (
+          <section className="mb-7">
+            <h3 className="text-base font-semibold mb-2">Summary</h3>
+            <p className="text-sm leading-7 text-slate-700">{summary}</p>
+          </section>
+        )}
+
+        {experience.length > 0 && (
+          <section className="mb-7">
+            <h3 className="text-base font-semibold border-t border-slate-200 pt-4 mb-4">Experience</h3>
+            <ExperienceList />
+          </section>
+        )}
+
+        {education.length > 0 && (
+          <section className="mb-7">
+            <h3 className="text-base font-semibold border-t border-slate-200 pt-4 mb-4">Education</h3>
+            <EducationList />
+          </section>
+        )}
+
+        {skills.length > 0 && (
+          <section>
+            <h3 className="text-base font-semibold border-t border-slate-200 pt-4 mb-4">Skills</h3>
+            <SkillsList compact />
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white text-slate-900 border border-slate-200 max-w-4xl mx-auto p-10">
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold">{fullName}</h1>
+        <p className="text-sm text-slate-600 mt-2">{contactItems.join(' | ')}</p>
+      </header>
+
+      {summary && (
+        <section className="mb-7">
+          <SectionTitle>Professional Summary</SectionTitle>
+          <p className="text-sm leading-7 text-slate-700">{summary}</p>
+        </section>
       )}
 
-      {resumeData.experience.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-3">Work Experience</h3>
-          {resumeData.experience.slice(0, showFullPreview ? undefined : 2).map((exp) => (
-            <div key={exp.id} className="mb-4">
-              <div className="flex justify-between items-start mb-1">
-                <h4 className="font-semibold text-gray-900">{exp.jobTitle}</h4>
-                <span className="text-sm text-gray-600">
-                  {exp.startDate} - {exp.isCurrentJob ? 'Present' : exp.endDate}
-                </span>
-              </div>
-              <p className="text-gray-700 font-medium mb-2">{exp.companyName}</p>
-              {exp.description.length > 0 && (
-                <ul className="text-sm text-gray-600 space-y-1">
-                  {exp.description.slice(0, showFullPreview ? undefined : 2).map((desc, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="mr-2">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
-                      <span>{desc}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </div>
+      {experience.length > 0 && (
+        <section className="mb-7">
+          <SectionTitle>Work Experience</SectionTitle>
+          <ExperienceList />
+        </section>
       )}
 
-      {resumeData.skills.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-3">Skills</h3>
-          <div className="flex flex-wrap gap-2">
-            {resumeData.skills.slice(0, showFullPreview ? undefined : 8).map((skill, index) => (
-              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-                {skill.name}
-              </span>
-            ))}
-          </div>
-        </div>
+      {education.length > 0 && (
+        <section className="mb-7">
+          <SectionTitle>Education</SectionTitle>
+          <EducationList />
+        </section>
       )}
 
-      {resumeData.education.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-1 mb-3">Education</h3>
-          {resumeData.education.map((edu) => (
-            <div key={edu.id} className="mb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
-                  <p className="text-gray-700">{edu.university}</p>
-                </div>
-                <span className="text-sm text-gray-600">{edu.graduationDate}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+      {skills.length > 0 && (
+        <section>
+          <SectionTitle>Skills</SectionTitle>
+          <SkillsList />
+        </section>
       )}
     </div>
   );
 }
 
-// Skills Input Component
-function SkillsInput({ 
-  skills, 
-  onAddSkill, 
-  onRemoveSkill 
+function SkillsInput({
+  skills,
+  onAddSkill,
+  onRemoveSkill
 }: {
   skills: Skill[];
   onAddSkill: (name: string, category: 'technical' | 'soft' | 'language') => void;
@@ -953,7 +1937,7 @@ function SkillsInput({
 
   const handleAddSkill = () => {
     if (newSkillName.trim()) {
-      onAddSkill(newSkillName.trim(), newSkillCategory);
+      onAddSkill(cleanBrokenText(newSkillName), newSkillCategory);
       setNewSkillName('');
     }
   };
@@ -1020,16 +2004,22 @@ function SkillsInput({
   );
 }
 
-// ATS Report Component
-function ATSReport({ 
-  atsScore, 
-  atsChecks, 
+// â”€â”€â”€ ATS Report Component (unchanged) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function ATSReport({
+  atsScore,
+  atsChecks,
   onDownload,
+  onEditResume,
+  onFixResumeWithHireVify,
+  isFixingResumeWithAI,
   onUpgrade
 }: {
   atsScore: number;
   atsChecks: ATSCheck[];
   onDownload: () => void;
+  onEditResume: () => void;
+  onFixResumeWithHireVify: () => void;
+  isFixingResumeWithAI: boolean;
   onUpgrade: () => void;
 }) {
   const getScoreColor = (score: number) => {
@@ -1046,12 +2036,9 @@ function ATSReport({
 
   const getStatusIcon = (status: 'pass' | 'fail' | 'warning') => {
     switch (status) {
-      case 'pass':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'fail':
-        return <X className="w-5 h-5 text-red-600" />;
-      case 'warning':
-        return <Zap className="w-5 h-5 text-yellow-600" />;
+      case 'pass':  return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'fail':  return <X className="w-5 h-5 text-red-600" />;
+      case 'warning': return <Zap className="w-5 h-5 text-yellow-600" />;
     }
   };
 
@@ -1066,7 +2053,6 @@ function ATSReport({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          {/* Overall Score */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -1086,7 +2072,6 @@ function ATSReport({
             </CardContent>
           </Card>
 
-          {/* Detailed Checks */}
           <Card>
             <CardHeader>
               <CardTitle>Detailed Analysis</CardTitle>
@@ -1094,9 +2079,7 @@ function ATSReport({
             <CardContent className="space-y-4">
               {atsChecks.map((check) => (
                 <div key={check.id} className="flex items-start gap-4 p-4 border border-border rounded-lg">
-                  <div className="flex-shrink-0">
-                    {getStatusIcon(check.status)}
-                  </div>
+                  <div className="flex-shrink-0">{getStatusIcon(check.status)}</div>
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground mb-1">{check.name}</h4>
                     <p className="text-sm text-muted-foreground mb-2">{check.description}</p>
@@ -1113,11 +2096,8 @@ function ATSReport({
         </div>
 
         <div className="space-y-6">
-          {/* Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Next Steps</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Next Steps</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <Button onClick={onDownload} className="w-full" size="lg">
                 <Download className="w-5 h-5 mr-2" />
@@ -1127,10 +2107,22 @@ function ATSReport({
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Edit Resume
               </Button>
+                  <Button
+                    onClick={onFixResumeWithHireVify}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                    size="lg"
+                    disabled={isFixingResumeWithAI}
+                  >
+                    {isFixingResumeWithAI ? (
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-5 h-5 mr-2" />
+                    )}
+                    {isFixingResumeWithAI ? 'Analyzing and fixing...' : 'Fix Your Resume with HireVify'}
+                  </Button>
             </CardContent>
           </Card>
 
-          {/* Premium Upgrade */}
           <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
             <CardHeader>
               <CardTitle className="flex items-center text-yellow-800">
@@ -1140,22 +2132,10 @@ function ATSReport({
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-yellow-700 mb-4">
-                <li className="flex items-center">
-                  <Check className="w-4 h-4 mr-2" />
-                  AI-Powered Keyword Optimization
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-4 h-4 mr-2" />
-                  Industry-Specific Templates
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-4 h-4 mr-2" />
-                  Advanced ATS Analysis
-                </li>
-                <li className="flex items-center">
-                  <Check className="w-4 h-4 mr-2" />
-                  Custom Formatting Options
-                </li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2" />AI-Powered Keyword Optimization</li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2" />Industry-Specific Templates</li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2" />Advanced ATS Analysis</li>
+                <li className="flex items-center"><Check className="w-4 h-4 mr-2" />Custom Formatting Options</li>
               </ul>
               <Button onClick={onUpgrade} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
                 Upgrade Now
@@ -1163,36 +2143,25 @@ function ATSReport({
             </CardContent>
           </Card>
 
-          {/* Summary Stats */}
           <Card>
-            <CardHeader>
-              <CardTitle>Summary</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Passed Checks:</span>
-                <span className="font-medium text-green-600">
-                  {atsChecks.filter(c => c.status === 'pass').length}
-                </span>
+                <span className="font-medium text-green-600">{atsChecks.filter(c => c.status === 'pass').length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Warnings:</span>
-                <span className="font-medium text-yellow-600">
-                  {atsChecks.filter(c => c.status === 'warning').length}
-                </span>
+                <span className="font-medium text-yellow-600">{atsChecks.filter(c => c.status === 'warning').length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Failed Checks:</span>
-                <span className="font-medium text-red-600">
-                  {atsChecks.filter(c => c.status === 'fail').length}
-                </span>
+                <span className="font-medium text-red-600">{atsChecks.filter(c => c.status === 'fail').length}</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Overall Score:</span>
-                <span className={`font-bold ${getScoreColor(atsScore)}`}>
-                  {atsScore}%
-                </span>
+                <span className={`font-bold ${getScoreColor(atsScore)}`}>{atsScore}%</span>
               </div>
             </CardContent>
           </Card>
@@ -1201,6 +2170,25 @@ function ATSReport({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

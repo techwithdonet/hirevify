@@ -219,69 +219,69 @@ PROFESSIONAL SUMMARY
 Experienced ${this.getRandomJobTitle().toLowerCase()} with ${this.getRandomYears()} years of expertise in ${this.getRandomSkillArea()}. Proven track record of delivering high-quality results and driving business growth through innovative solutions and strategic thinking. Strong background in ${this.getRandomIndustry().toLowerCase()} with excellent problem-solving and communication skills.
 
 TECHNICAL SKILLS
-â€¢ Programming Languages: ${this.getRandomTechnicalSkills().slice(0, 5).join(', ')}
-â€¢ Databases: ${this.getRandomDatabases().slice(0, 3).join(', ')}
-â€¢ Tools & Technologies: ${this.getRandomTools().slice(0, 6).join(', ')}
-â€¢ Methodologies: Agile, Scrum, DevOps, Test-Driven Development
-â€¢ Frameworks: ${this.getRandomFrameworks().slice(0, 4).join(', ')}
+ Programming Languages: ${this.getRandomTechnicalSkills().slice(0, 5).join(', ')}
+ Databases: ${this.getRandomDatabases().slice(0, 3).join(', ')}
+ Tools & Technologies: ${this.getRandomTools().slice(0, 6).join(', ')}
+ Methodologies: Agile, Scrum, DevOps, Test-Driven Development
+ Frameworks: ${this.getRandomFrameworks().slice(0, 4).join(', ')}
 
 WORK EXPERIENCE
 
 Senior ${this.getRandomJobTitle()} | ${this.getRandomCompany()} | ${this.getRandomRecentDateRange()}
 ${this.getRandomLocation()}
-â€¢ Led cross-functional teams of ${this.getRandomNumber(5, 15)} members to deliver critical projects on time and within budget
-â€¢ Implemented innovative solutions that improved system performance by ${this.getRandomNumber(20, 80)}%
-â€¢ Collaborated with stakeholders to define requirements and ensure alignment with business objectives
-â€¢ Mentored junior team members and conducted code reviews to maintain high-quality standards
-â€¢ Developed and maintained ${this.getRandomTechnicalSkills().slice(0, 3).join(', ')} applications serving ${this.getRandomNumber(10000, 100000)}+ users
+ Led cross-functional teams of ${this.getRandomNumber(5, 15)} members to deliver critical projects on time and within budget
+ Implemented innovative solutions that improved system performance by ${this.getRandomNumber(20, 80)}%
+ Collaborated with stakeholders to define requirements and ensure alignment with business objectives
+ Mentored junior team members and conducted code reviews to maintain high-quality standards
+ Developed and maintained ${this.getRandomTechnicalSkills().slice(0, 3).join(', ')} applications serving ${this.getRandomNumber(10000, 100000)}+ users
 
 ${this.getRandomJobTitle()} | ${this.getRandomCompany()} | ${this.getRandomPreviousDateRange()}
 ${this.getRandomLocation()}
-â€¢ Designed and implemented scalable software solutions using modern technologies
-â€¢ Optimized database queries and system architecture improving response times by ${this.getRandomNumber(30, 70)}%
-â€¢ Participated in agile development processes and sprint planning sessions
-â€¢ Contributed to open-source projects and maintained technical documentation
-â€¢ Achieved ${this.getRandomNumber(95, 99)}% uptime for critical production systems
+ Designed and implemented scalable software solutions using modern technologies
+ Optimized database queries and system architecture improving response times by ${this.getRandomNumber(30, 70)}%
+ Participated in agile development processes and sprint planning sessions
+ Contributed to open-source projects and maintained technical documentation
+ Achieved ${this.getRandomNumber(95, 99)}% uptime for critical production systems
 
 Junior ${this.getRandomJobTitle()} | ${this.getRandomCompany()} | ${this.getRandomEarlyDateRange()}
 ${this.getRandomLocation()}
-â€¢ Developed responsive web applications using HTML, CSS, JavaScript, and ${this.getRandomTechnicalSkills()[0]}
-â€¢ Collaborated with senior developers to implement new features and resolve technical issues
-â€¢ Participated in code reviews and followed established coding standards and best practices
-â€¢ Assisted in testing and debugging applications to ensure high-quality deliverables
+ Developed responsive web applications using HTML, CSS, JavaScript, and ${this.getRandomTechnicalSkills()[0]}
+ Collaborated with senior developers to implement new features and resolve technical issues
+ Participated in code reviews and followed established coding standards and best practices
+ Assisted in testing and debugging applications to ensure high-quality deliverables
 
 EDUCATION
 
 Bachelor of Science in ${this.getRandomEducationField()}
 ${this.getRandomUniversity()} | ${this.getRandomGraduationYear()}
 ${this.getRandomLocation()}
-â€¢ GPA: ${this.getRandomGPA()}/4.0
-â€¢ Relevant Coursework: Data Structures, Algorithms, Software Engineering, Database Systems, Computer Networks
-â€¢ ${this.getRandomHonor()}
+ GPA: ${this.getRandomGPA()}/4.0
+ Relevant Coursework: Data Structures, Algorithms, Software Engineering, Database Systems, Computer Networks
+ ${this.getRandomHonor()}
 
 CERTIFICATIONS
-â€¢ ${this.getRandomCertification()}
-â€¢ ${this.getRandomCertification()}
-â€¢ ${this.getRandomCertification()}
+ ${this.getRandomCertification()}
+ ${this.getRandomCertification()}
+ ${this.getRandomCertification()}
 
 PROJECTS
 
 ${this.getRandomProjectName()}
-â€¢ Developed a comprehensive web application using ${this.getRandomTechnicalSkills().slice(0, 3).join(', ')}
-â€¢ Implemented user authentication, data visualization, and real-time features
-â€¢ Achieved ${this.getRandomNumber(500, 5000)} active users within first month of launch
-â€¢ Technologies: ${this.getRandomTechnicalSkills().slice(0, 4).join(', ')}
+ Developed a comprehensive web application using ${this.getRandomTechnicalSkills().slice(0, 3).join(', ')}
+ Implemented user authentication, data visualization, and real-time features
+ Achieved ${this.getRandomNumber(500, 5000)} active users within first month of launch
+ Technologies: ${this.getRandomTechnicalSkills().slice(0, 4).join(', ')}
 
 ${this.getRandomProjectName()}
-â€¢ Built mobile application for ${this.getRandomIndustry().toLowerCase()} industry
-â€¢ Integrated third-party APIs and implemented offline functionality
-â€¢ Published on app stores with ${this.getRandomNumber(4, 5)}.${this.getRandomNumber(0, 9)} star rating
-â€¢ Technologies: ${this.getRandomFrameworks().slice(0, 3).join(', ')}
+ Built mobile application for ${this.getRandomIndustry().toLowerCase()} industry
+ Integrated third-party APIs and implemented offline functionality
+ Published on app stores with ${this.getRandomNumber(4, 5)}.${this.getRandomNumber(0, 9)} star rating
+ Technologies: ${this.getRandomFrameworks().slice(0, 3).join(', ')}
 
 AWARDS & ACHIEVEMENTS
-â€¢ ${this.getRandomAchievement()}
-â€¢ ${this.getRandomAchievement()}
-â€¢ Top ${this.getRandomNumber(5, 15)}% performer in annual reviews
+ ${this.getRandomAchievement()}
+ ${this.getRandomAchievement()}
+ Top ${this.getRandomNumber(5, 15)}% performer in annual reviews
 `;
 
     console.log('âœ… Enhanced simulation created with realistic structure');
@@ -595,7 +595,7 @@ AWARDS & ACHIEVEMENTS
         const summaryLines = [];
         for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
           const nextLine = lines[j];
-          if (nextLine.length > 15 && !this.isHeaderLine(nextLine) && !nextLine.includes('â€¢')) {
+          if (nextLine.length > 15 && !this.isHeaderLine(nextLine) && !nextLine.includes('')) {
             summaryLines.push(nextLine);
           } else if (summaryLines.length > 0 && this.isHeaderLine(nextLine)) {
             break; // End of summary
@@ -613,7 +613,7 @@ AWARDS & ACHIEVEMENTS
     // Fallback: Look for paragraph-like content near the top
     for (let i = 1; i < Math.min(20, lines.length); i++) {
       const line = lines[i];
-      if (line.length > 50 && line.includes('.') && !line.includes('@') && !line.includes('â€¢')) {
+      if (line.length > 50 && line.includes('.') && !line.includes('@') && !line.includes('')) {
         console.log('âœ… Summary found via fallback method');
         return line;
       }
@@ -659,7 +659,7 @@ AWARDS & ACHIEVEMENTS
           }
           currentEntry = this.parseJobEntryIntelligently(line);
           console.log('ðŸ’¼ Found job entry:', currentEntry.position, 'at', currentEntry.company);
-        } else if (currentEntry && line.startsWith('â€¢')) {
+        } else if (currentEntry && line.startsWith('')) {
           currentEntry.achievements.push(line.substring(1).trim());
         } else if (currentEntry && line.length > 20 && !this.isHeaderLine(line)) {
           if (!currentEntry.description) currentEntry.description = '';
@@ -746,7 +746,7 @@ AWARDS & ACHIEVEMENTS
       }
 
       if (inSkillsSection) {
-        if (line.startsWith('â€¢')) {
+        if (line.startsWith('')) {
           const skill = line.substring(1).trim();
           this.categorizeSkillIntelligently(skill, skills);
         } else if (line.includes(':')) {
@@ -792,8 +792,8 @@ AWARDS & ACHIEVEMENTS
         break;
       }
 
-      if (inProjectsSection && (line.startsWith('â€¢') || this.looksLikeProjectName(line))) {
-        const projectName = line.replace('â€¢', '').split(':')[0].trim();
+      if (inProjectsSection && (line.startsWith('') || this.looksLikeProjectName(line))) {
+        const projectName = line.replace('', '').split(':')[0].trim();
         const description = line.includes(':') ? line.split(':').slice(1).join(':').trim() : 'Professional project with technical implementation';
         
         projects.push({
@@ -835,7 +835,7 @@ AWARDS & ACHIEVEMENTS
         break;
       }
 
-      if (inCertSection && line.startsWith('â€¢')) {
+      if (inCertSection && line.startsWith('')) {
         const certText = line.substring(1).trim();
         certifications.push({
           name: certText,
@@ -876,7 +876,7 @@ AWARDS & ACHIEVEMENTS
         break;
       }
 
-      if (inAwardsSection && line.startsWith('â€¢')) {
+      if (inAwardsSection && line.startsWith('')) {
         const awardText = line.substring(1).trim();
         awards.push({
           name: awardText,
@@ -924,7 +924,7 @@ AWARDS & ACHIEVEMENTS
   }
 
   private looksLikeProjectName(line: string): boolean {
-    return line.length > 10 && line.length < 100 && !line.includes('@') && !line.startsWith('â€¢') && !this.isHeaderLine(line);
+    return line.length > 10 && line.length < 100 && !line.includes('@') && !line.startsWith('') && !this.isHeaderLine(line);
   }
 
   private parseJobEntryIntelligently(line: string): any {
@@ -1044,9 +1044,9 @@ AWARDS & ACHIEVEMENTS
   private parseDateRange(dateRange: string): [string, string] {
     // Handle various date formats
     const patterns = [
-      /(\d{4})\s*[-â€“]\s*(\d{4}|present|current)/i,
+      /(\d{4})\s*[--]\s*(\d{4}|present|current)/i,
       /(\d{4})\s*to\s*(\d{4}|present|current)/i,
-      /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s*[-â€“]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4}|present|current)/i
+      /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\s*[--]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4}|present|current)/i
     ];
     
     for (const pattern of patterns) {
@@ -1118,6 +1118,7 @@ AWARDS & ACHIEVEMENTS
 
 // Export the universal parser
 export const universalDocumentParser = new UniversalDocumentParser();
+
 
 
 

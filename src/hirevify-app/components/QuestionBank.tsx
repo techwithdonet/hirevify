@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Search, Filter, Edit, Trash2, Copy, Eye, BookOpen, Tag, Clock, Target, AlertCircle , CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -310,9 +310,9 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'single-choice': return 'ÃƒÂ¢Ã¢â‚¬â€Ã¢â‚¬Â°';
-      case 'multiple-choice': return 'ÃƒÂ¢Ã‹Å“Ã‚Â';
-      case 'true-false': return 'ÃƒÂ¢Ã¢â‚¬â€Ã‚Â¯';
+      case 'single-choice': return 'ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã¢â‚¬Ãƒ¢Ã¢â€š¬Ã‚°';
+      case 'multiple-choice': return 'ÃƒÆ’Ã‚¢Ãƒâ€¹Ã…"Ãƒâ€šÃ‚';
+      case 'true-false': return 'ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã¢â‚¬Ãƒâ€šÃ‚¯';
       default: return '?';
     }
   };
@@ -783,7 +783,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
                   {selectedQuestion.options.map((option, index) => (
                     <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/50">
                       <span className="text-sm font-mono w-6 text-center">
-                        {selectedQuestion.type === 'multiple-choice' ? 'ÃƒÂ¢Ã‹Å“Ã‚Â' : 'ÃƒÂ¢Ã¢â‚¬â€Ã¢â‚¬Â¹'}
+                        {selectedQuestion.type === 'multiple-choice' ? 'ÃƒÆ’Ã‚¢Ãƒâ€¹Ã…"Ãƒâ€šÃ‚' : 'ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã¢â‚¬Ãƒ¢Ã¢â€š¬Ã‚¹'}
                       </span>
                       <span className="text-sm">{option}</span>
                       {(Array.isArray(selectedQuestion.correctAnswer) 
@@ -826,6 +826,7 @@ export function QuestionBank({ onBack }: QuestionBankProps) {
     </div>
   );
 }
+
 
 
 

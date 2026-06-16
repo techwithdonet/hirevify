@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { 
@@ -191,7 +191,7 @@ export function MediaPermissionHelper({
             
           case 'TypeError':
             userFriendlyMessage = 'Browser compatibility issue';
-            technicalDetails = 'Your browser doesn\'t support the required media features.\n\nPlease update your browser or try:\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Chrome (recommended)\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Firefox\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Safari\nÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Edge\n\nOlder browsers and some mobile browsers may not work properly.';
+            technicalDetails = 'Your browser doesn\'t support the required media features.\n\nPlease update your browser or try:\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Chrome (recommended)\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Firefox\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Safari\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Edge\n\nOlder browsers and some mobile browsers may not work properly.';
             setPermissionState('error');
             break;
             
@@ -405,6 +405,7 @@ export function useMediaPermissions() {
     cleanup
   };
 }
+
 
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Reliable ATS Scanner - Simple, Fast, and Effective
  * 
  * This component focuses on delivering consistent results with real resumes.
@@ -104,7 +104,7 @@ export function ReliableATSScanner() {
     const startTime = Date.now();
 
     try {
-      console.log('ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â€šÂ¬ Starting resume processing for:', uploadedFile.name);
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚¡Ãƒ¢Ã¢â‚¬Å¡Ã‚¬ Starting resume processing for:', uploadedFile.name);
       
       // Show progress - File validation
       setProgress(10);
@@ -116,11 +116,11 @@ export function ReliableATSScanner() {
       
       // Parse document
       setProgress(30);
-      console.log('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Å¾ Parsing document...');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒ¢Ã¢â€š¬Ã…¾ Parsing document...');
       const result = await parser.parseDocument(uploadedFile);
       
       setProgress(70);
-      console.log('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Document parsed successfully');
+      console.log('ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Document parsed successfully');
 
       // Get raw text for display (optional, don't fail if this doesn't work)
       setProgress(80);
@@ -160,11 +160,11 @@ export function ReliableATSScanner() {
       setScanResult(scanResult);
       setProgress(100);
       
-      console.log('ÃƒÂ°Ã…Â¸Ã…Â½Ã¢â‚¬Â° Resume processing completed in', processingTime, 'ms');
+      console.log('ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒ¢Ã¢â€š¬Ã‚° Resume processing completed in', processingTime, 'ms');
       toast.success(`Resume processed successfully in ${processingTime}ms!`);
       
     } catch (error: any) {
-      console.error('ÃƒÂ¢Ã‚ÂÃ…â€™ Resume processing error:', error);
+      console.error('ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒâ€¦Ã¢â‚¬â„¢ Resume processing error:', error);
       
       let errorMessage = error.message || 'Failed to process resume';
       
@@ -272,10 +272,10 @@ export function ReliableATSScanner() {
               {uploadedFile ? uploadedFile.name : 'Drop your resume here or click to browse'}
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Best with .TXT files ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Also tries .PDF, .DOC, .DOCX ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Max 10MB
+              Best with .TXT files ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Also tries .PDF, .DOC, .DOCX ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Max 10MB
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ For best results: Copy your resume text and save as .txt file
+              ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€šÃ‚¡ For best results: Copy your resume text and save as .txt file
             </p>
             
             <input
@@ -370,7 +370,7 @@ export function ReliableATSScanner() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Processed in {scanResult.processingTime}ms ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {scanResult.data.extractionMetadata.processingMethod}
+              Processed in {scanResult.processingTime}ms ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {scanResult.data.extractionMetadata.processingMethod}
             </p>
           </CardHeader>
           <CardContent>
@@ -591,18 +591,19 @@ export function ReliableATSScanner() {
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Best format:</strong> Copy your resume content and save as .txt file</li>
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>File size:</strong> Keep under 10MB for optimal performance</li>
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Structure:</strong> Use clear section headers (Experience, Education, Skills)</li>
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Dates:</strong> Include years in YYYY format (e.g., 2020-2023)</li>
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Contact info:</strong> Include email, phone, and location clearly</li>
-            <li>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Best format:</strong> Copy your resume content and save as .txt file</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>File size:</strong> Keep under 10MB for optimal performance</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Structure:</strong> Use clear section headers (Experience, Education, Skills)</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Dates:</strong> Include years in YYYY format (e.g., 2020-2023)</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Contact info:</strong> Include email, phone, and location clearly</li>
+            <li>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ <strong>Having issues?</strong> Try the Professional ATS Scanner for advanced file support</li>
           </ul>
         </CardContent>
       </Card>
     </div>
   );
 }
+
 
 
 

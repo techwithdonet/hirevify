@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Save, Eye, Play, Trash2, Edit3, Copy, Settings, Brain, Clock, Target, Users, CheckCircle, AlertCircle, ChevronDown, ChevronUp, GripVertical, BarChart3 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -129,12 +129,12 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
   ];
 
   const questionTypes = [
-    { value: 'multiple-choice', label: 'Multiple Choice', icon: 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“' },
+    { value: 'multiple-choice', label: 'Multiple Choice', icon: 'ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã…"' },
     { value: 'code', label: 'Coding Challenge', icon: '</>' },
-    { value: 'essay', label: 'Essay/Long Answer', icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â' },
-    { value: 'true-false', label: 'True/False', icon: 'ÃƒÂ¢Ã‚ÂÃ¢â‚¬Å“' },
-    { value: 'ranking', label: 'Ranking/Ordering', icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ' },
-    { value: 'matching', label: 'Matching', icon: 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â€' }
+    { value: 'essay', label: 'Essay/Long Answer', icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€šÃ‚' },
+    { value: 'true-false', label: 'True/False', icon: 'ÃƒÆ’Ã‚¢Ãƒâ€šÃ‚Ãƒ¢Ã¢â€š¬Ã…"' },
+    { value: 'ranking', label: 'Ranking/Ordering', icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã…"Ãƒâ€¦Ã‚ ' },
+    { value: 'matching', label: 'Matching', icon: 'ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒ¢Ã¢â€š¬Ã¢â‚¬' }
   ];
 
   const updateAssessment = (updates: Partial<Assessment>) => {
@@ -303,7 +303,7 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
             {editingQuestionIndex !== null ? 'Edit Question' : 'Add New Question'}
           </CardTitle>
           <Button variant="ghost" onClick={() => setShowQuestionForm(false)}>
-            ÃƒÆ’Ã¢â‚¬â€
+            ÃƒÆ’Ã†'Ãƒ¢Ã¢â€š¬Ã¢â‚¬
           </Button>
         </div>
       </CardHeader>
@@ -743,7 +743,7 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
                         <div className="flex flex-wrap gap-2">
                           {assessment.skills.map(skill => (
                             <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
-                              {skill} ÃƒÆ’Ã¢â‚¬â€
+                              {skill} ÃƒÆ’Ã†'Ãƒ¢Ã¢â€š¬Ã¢â‚¬
                             </Badge>
                           ))}
                         </div>
@@ -1056,6 +1056,7 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
     </div>
   );
 }
+
 
 
 

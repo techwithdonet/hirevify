@@ -191,11 +191,11 @@ export function formatDiagnosisReport(report: DiagnosisReport): string {
   let output = 'ðŸ” Endpoint Diagnosis Report\n\n';
   
   output += `ðŸ“Š Summary:\n`;
-  output += `  â€¢ Total Endpoints: ${report.totalEndpoints}\n`;
-  output += `  â€¢ Successful: ${report.successfulEndpoints}\n`;
-  output += `  â€¢ Failed: ${report.failedEndpoints}\n`;
-  output += `  â€¢ Success Rate: ${Math.round((report.successfulEndpoints / report.totalEndpoints) * 100)}%\n`;
-  output += `  â€¢ Timestamp: ${report.timestamp}\n\n`;
+  output += `   Total Endpoints: ${report.totalEndpoints}\n`;
+  output += `   Successful: ${report.successfulEndpoints}\n`;
+  output += `   Failed: ${report.failedEndpoints}\n`;
+  output += `   Success Rate: ${Math.round((report.successfulEndpoints / report.totalEndpoints) * 100)}%\n`;
+  output += `   Timestamp: ${report.timestamp}\n\n`;
   
   output += `ðŸ“‹ Detailed Results:\n`;
   for (const result of report.results) {
@@ -215,7 +215,7 @@ export function formatDiagnosisReport(report: DiagnosisReport): string {
   if (report.recommendations.length > 0) {
     output += `\nðŸ’¡ Recommendations:\n`;
     for (const recommendation of report.recommendations) {
-      output += `  â€¢ ${recommendation}\n`;
+      output += `   ${recommendation}\n`;
     }
   }
   
@@ -252,6 +252,7 @@ export async function quickHealthCheck(): Promise<{ working: string[]; failing: 
   
   return { working, failing };
 }
+
 
 
 

@@ -959,14 +959,14 @@ CRITICAL REQUIREMENTS:
 
     EXPERIENCE
     Senior Software Engineer | TechCorp Inc | 2020 - Present
-    â€¢ Developed and maintained React-based web applications serving 100K+ users
-    â€¢ Implemented RESTful APIs using Node.js and Express
-    â€¢ Collaborated with cross-functional teams to deliver features on time
+     Developed and maintained React-based web applications serving 100K+ users
+     Implemented RESTful APIs using Node.js and Express
+     Collaborated with cross-functional teams to deliver features on time
 
     Software Engineer | StartupXYZ | 2018 - 2020
-    â€¢ Built responsive web interfaces using HTML, CSS, and JavaScript
-    â€¢ Worked with PostgreSQL databases and Redis caching
-    â€¢ Participated in agile development processes
+     Built responsive web interfaces using HTML, CSS, and JavaScript
+     Worked with PostgreSQL databases and Redis caching
+     Participated in agile development processes
 
     EDUCATION
     Bachelor of Science in Computer Science
@@ -1113,6 +1113,7 @@ CRITICAL REQUIREMENTS:
 }
 
 export const enterpriseDocumentParser = new EnterpriseDocumentParser();
+
 
 
 

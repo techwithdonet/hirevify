@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Enhanced ATS Resume Scanner - Bulletproof Edition
  * 
  * Zero syntax errors, comprehensive functionality
@@ -135,7 +135,7 @@ export function EnhancedATSScanner({
     setProcessingProgress(0);
     
     try {
-      toast.info(`ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¬ Analyzing ${validFiles.length} resume(s) with AI...`);
+      toast.info(`ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‚Ãƒâ€šÃ‚¬ Analyzing ${validFiles.length} resume(s) with AI...`);
 
       const newCandidates: ATSCandidate[] = [];
 
@@ -186,7 +186,7 @@ export function EnhancedATSScanner({
       }
 
       setCandidates(prev => [...newCandidates, ...prev]);
-      toast.success(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Successfully analyzed ${newCandidates.length} resume(s)!`);
+      toast.success(`ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒ¢Ã¢â€š¬Ã‚¦ Successfully analyzed ${newCandidates.length} resume(s)!`);
       
     } catch (error) {
       console.error('ATS processing error:', error);
@@ -516,7 +516,7 @@ export function EnhancedATSScanner({
                             {new Date(candidate.uploadedAt).toLocaleDateString()}
                           </div>
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">{candidate.fileName} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {candidate.fileSize}</p>
+                        <p className="text-xs text-gray-400 mt-1">{candidate.fileName} ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {candidate.fileSize}</p>
                       </div>
                     </div>
                     
@@ -602,6 +602,7 @@ export function EnhancedATSScanner({
     </div>
   );
 }
+
 
 
 

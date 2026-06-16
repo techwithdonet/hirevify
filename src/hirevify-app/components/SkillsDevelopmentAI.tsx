@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Skills Development AI
  * 
  * Intelligent system that analyzes market trends, skill gaps, and career goals
@@ -627,7 +627,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Market demand: {gap.marketDemand}% ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {gap.timeToLearn.estimated}
+                        Market demand: {gap.marketDemand}% ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ {gap.timeToLearn.estimated}
                       </p>
                     </div>
                     <Button size="sm">
@@ -669,7 +669,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Current: {gap.currentLevel} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Target: {gap.targetLevel}
+                        Current: {gap.currentLevel} ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â€š¬Ã‚ Ãƒ¢Ã¢â€š¬Ã¢â€ž¢ Target: {gap.targetLevel}
                       </p>
                     </div>
                     
@@ -723,9 +723,9 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
                               <p className="font-medium text-sm">{resource.title}</p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <span>{resource.provider}</span>
-                                <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                <span>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢</span>
                                 <span>{resource.duration}</span>
-                                <span>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
+                                <span>ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢</span>
                                 <Badge className={resource.cost === 'free' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} style={{ fontSize: '10px', padding: '1px 4px' }}>
                                   {resource.cost}
                                 </Badge>
@@ -973,6 +973,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
     </div>
   );
 }
+
 
 
 

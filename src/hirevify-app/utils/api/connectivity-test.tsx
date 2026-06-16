@@ -247,10 +247,10 @@ export function formatConnectivityTestResults(result: ConnectivityTestResult): s
   
   // Environment Info
   report += 'ðŸ“Š Environment:\n';
-  report += `  â€¢ Project ID: ${result.environment.projectId}\n`;
-  report += `  â€¢ API Base: ${result.environment.apiBase}\n`;
-  report += `  â€¢ Has Public Key: ${result.environment.hasPublicKey ? 'âœ…' : 'âŒ'}\n`;
-  report += `  â€¢ Has User Token: ${result.environment.hasUserToken ? 'âœ…' : 'âŒ'}\n\n`;
+  report += `   Project ID: ${result.environment.projectId}\n`;
+  report += `   API Base: ${result.environment.apiBase}\n`;
+  report += `   Has Public Key: ${result.environment.hasPublicKey ? 'âœ…' : 'âŒ'}\n`;
+  report += `   Has User Token: ${result.environment.hasUserToken ? 'âœ…' : 'âŒ'}\n\n`;
   
   // Test Results
   report += 'ðŸ§ª Test Results:\n';
@@ -282,6 +282,7 @@ export function formatConnectivityTestResults(result: ConnectivityTestResult): s
   
   return report;
 }
+
 
 
 
