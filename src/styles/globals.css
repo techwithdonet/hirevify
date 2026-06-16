@@ -775,3 +775,145 @@
   color: white !important;
 }
 /* HireVify Auth Modal Header Contrast Fix END */
+
+
+/* HireVify Candidate Dashboard Premium Redesign START */
+@layer components {
+  .hv-candidate-shell {
+    @apply relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_top_right,rgba(20,184,166,0.13),transparent_30%),linear-gradient(135deg,#f8fafc_0%,#f6fffb_48%,#edfdf7_100%)];
+  }
+
+  .hv-candidate-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 72%);
+  }
+
+  .hv-candidate-header {
+    @apply sticky top-0 z-40 border-b border-white/70 bg-white/75 shadow-sm shadow-slate-950/5 backdrop-blur-2xl;
+  }
+
+  .candidate-profile-hero,
+  .candidate-panel,
+  .candidate-stat-card {
+    @apply relative border-white/70 bg-white/80 backdrop-blur-xl;
+  }
+
+  .candidate-panel {
+    @apply rounded-[2rem] p-5 shadow-xl shadow-slate-950/5 sm:p-6 lg:p-7;
+  }
+
+  .candidate-stat-card {
+    @apply rounded-3xl border-slate-200/70 shadow-lg shadow-slate-950/5 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-xl;
+  }
+
+  .candidate-stat-icon {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ring-black/5;
+  }
+
+  .candidate-action-card {
+    @apply relative overflow-hidden rounded-3xl border border-slate-200/75 bg-white/80 p-5 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:bg-white hover:shadow-xl hover:shadow-emerald-950/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+  }
+
+  .candidate-action-card::after {
+    content: "";
+    position: absolute;
+    inset: auto -40px -58px auto;
+    width: 128px;
+    height: 128px;
+    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.08);
+    transition: transform 220ms ease, opacity 220ms ease;
+    opacity: 0;
+  }
+
+  .candidate-action-card:hover::after {
+    transform: translate(-16px, -16px);
+    opacity: 1;
+  }
+
+  .candidate-action-icon,
+  .candidate-path-icon {
+    @apply flex shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ring-black/5;
+  }
+
+  .candidate-action-icon {
+    @apply h-12 w-12;
+  }
+
+  .candidate-path-card {
+    @apply flex items-center gap-4 rounded-3xl border border-slate-200/75 bg-white/75 p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-white hover:shadow-lg hover:shadow-emerald-950/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+  }
+
+  .candidate-path-icon {
+    @apply h-11 w-11;
+  }
+
+  .candidate-premium-card {
+    @apply relative overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_34%),linear-gradient(135deg,#064e3b_0%,#047857_58%,#0f766e_100%)] p-6 shadow-xl shadow-emerald-950/20;
+  }
+
+  .candidate-premium-card::before {
+    content: "";
+    position: absolute;
+    right: -64px;
+    top: -64px;
+    width: 170px;
+    height: 170px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .candidate-premium-card::after {
+    content: "";
+    position: absolute;
+    left: -72px;
+    bottom: -90px;
+    width: 190px;
+    height: 190px;
+    border-radius: 9999px;
+    background: rgba(167, 243, 208, 0.16);
+  }
+
+  .candidate-quick-link {
+    @apply flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition duration-200 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+  }
+}
+
+@media (max-width: 640px) {
+  .candidate-profile-hero,
+  .candidate-panel,
+  .candidate-premium-card {
+    border-radius: 1.5rem;
+  }
+
+  .candidate-action-card,
+  .candidate-path-card,
+  .candidate-stat-card {
+    border-radius: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candidate-action-card,
+  .candidate-path-card,
+  .candidate-stat-card,
+  .candidate-quick-link,
+  .candidate-action-card::after {
+    transition: none !important;
+  }
+
+  .candidate-action-card:hover,
+  .candidate-path-card:hover,
+  .candidate-stat-card:hover {
+    transform: none !important;
+  }
+}
+/* HireVify Candidate Dashboard Premium Redesign END */
+

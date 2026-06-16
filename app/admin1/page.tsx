@@ -1,8 +1,15 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
-import { AuthProvider, useAuth } from "@/src/hirevify-app/components/AuthProvider";
+import { useAuth } from "@/src/hirevify-app/components/AuthProvider";
 import { Button } from "@/src/hirevify-app/components/ui/button";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  ClipboardList,
+  GraduationCap,
+  LayoutDashboard,
+  ShieldCheck,
+} from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 function AdminPanel() {
@@ -56,47 +63,98 @@ function AdminPanel() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 p-10">
-      <div className="max-w-3xl mx-auto bg-white border rounded-2xl p-8">
-        <h1 className="text-3xl font-bold mb-4">HireVify Admin Panel</h1>
-        <h2 className="text-xl font-semibold mb-2">Authentication Testing</h2>
-        <p className="text-gray-600 mb-6">
-          Use these buttons for testing recruiter and candidate login.
-        </p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ecfdf5_0%,#f8fafc_38%,#eef2f7_100%)] px-4 py-8 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+        <section className="mb-8 overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-xl shadow-slate-200/60">
+          <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="p-8 sm:p-10">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                <ShieldCheck className="h-4 w-4" />
+                Secure admin workspace
+              </div>
 
-        <div className="flex gap-4">
-          <Button onClick={handleRecruiter}>Test Recruiter Login</Button>
-          <Button variant="outline" onClick={handleCandidate}>
-            Test Candidate Login
-          </Button>
+              <h1 className="max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+                HireVify Admin Panel
+              </h1>
+
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                Manage testing access, skills assessments, and admin tools from one clean workspace.
+              </p>
+
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button
+                  onClick={handleRecruiter}
+                  className="h-12 rounded-2xl bg-emerald-600 px-5 font-bold text-white shadow-lg shadow-emerald-900/15 hover:bg-emerald-700"
+                >
+                  <BriefcaseBusiness className="mr-2 h-5 w-5" />
+                  Open Recruiter
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleCandidate}
+                  className="h-12 rounded-2xl border-slate-200 bg-white px-5 font-bold text-slate-800 hover:bg-slate-50"
+                >
+                  <GraduationCap className="mr-2 h-5 w-5" />
+                  Open Candidate
+                </Button>
+              </div>
+            </div>
+
+            <div className="border-t border-emerald-100 bg-gradient-to-br from-emerald-600 to-teal-700 p-8 text-white lg:border-l lg:border-t-0 sm:p-10">
+              <div className="flex h-full flex-col justify-between gap-10">
+                <div>
+                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
+                    <LayoutDashboard className="h-7 w-7" />
+                  </div>
+                  <h2 className="text-2xl font-black">Admin control center</h2>
+                  <p className="mt-3 text-sm leading-6 text-emerald-50/90">
+                    Use this area only for admin-side testing and content management.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-white/12 p-4 ring-1 ring-white/15">
+                    <p className="text-2xl font-black">2</p>
+                    <p className="text-xs font-semibold text-emerald-50/80">Test logins</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/12 p-4 ring-1 ring-white/15">
+                    <p className="text-2xl font-black">1</p>
+                    <p className="text-xs font-semibold text-emerald-50/80">Manage module</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <a
+            href="/admin1/assessments"
+            className="group flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-slate-200/70"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+              <ClipboardList className="h-7 w-7" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3 className="font-black text-slate-950">Skills Assessments</h3>
+              <p className="mt-1 text-sm text-slate-500">Manage questions and assessments</p>
+              <p className="mt-2 text-xs font-bold text-violet-700">
+                Manage assessments
+              </p>
+            </div>
+
+            <ArrowRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-violet-600" />
+          </a>
         </div>
       </div>
 
       <Toaster />
-    
-      <a
-        href="/admin1/assessments"
-        style={{
-          display: "inline-block",
-          marginTop: "20px",
-          padding: "12px 18px",
-          borderRadius: "10px",
-          background: "#059669",
-          color: "white",
-          fontWeight: 600,
-          textDecoration: "none"
-        }}
-      >
-        Manage Skills Assessments
-      </a>
-</main>
+    </main>
   );
 }
 
 export default function Admin1Page() {
-  return (
-    <AuthProvider>
-      <AdminPanel />
-    </AuthProvider>
-  );
+  return <AdminPanel />;
 }

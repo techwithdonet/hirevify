@@ -1,9 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Bell, MessageCircle, Settings, LogOut, Plus, Search, User, FileText, Award, Video, Calendar, Users, Zap, Target, Building, Timer, BookOpen, Star, ExternalLink, ArrowRight, Crown, Lightbulb, CheckCircle, PlayCircle, Brain, Sparkles, Scan, Loader } from 'lucide-react';
+import {
+  Bell,
+  MessageCircle,
+  Settings,
+  LogOut,
+  Search,
+  User,
+  FileText,
+  Award,
+  Users,
+  Target,
+  Timer,
+  BookOpen,
+  ArrowRight,
+  Crown,
+  CheckCircle,
+  Brain,
+  Sparkles,
+  Loader
+} from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
 import { useAuth } from './AuthProvider';
 import { HireVifyLogo } from './HireVifyLogo';
 import { CandidateATSScanner } from './CandidateATSScanner';
@@ -14,7 +32,7 @@ import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
 import { usePremiumAccess } from '../utils/premium';
 import { toast } from 'sonner';
-import { DashboardGrid, LoadingState, StatCard } from './layout/AppLayout';
+import { LoadingState } from './layout/AppLayout';
 
 interface CandidateDashboardProps {
   onBuildResume: () => void;
@@ -67,6 +85,11 @@ export function CandidateDashboard({
 }: CandidateDashboardProps) {
   const { user } = useAuth();
   const { checkAccess } = usePremiumAccess();
+  void checkAccess;
+  void onVideoInterview;
+  void onViewInterviews;
+  void onProjectChallengeVideo;
+  void onMarketIntelligence;
   const [subscription, setSubscription] = useState<any>(null);
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
@@ -132,66 +155,74 @@ export function CandidateDashboard({
 
   if (isLoading) {
     return (
-      <div className="hv-page-shell">
+      <div className="hv-candidate-shell">
         <LoadingState label="Loading your dashboard..." className="min-h-screen" />
       </div>
     );
   }
 
   return (
-    <div className="hv-page-shell">
+    <div className="hv-candidate-shell">
       {/* Header */}
-      <header className="hv-dashboard-header">
-        <div className="hv-container py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-4">
-              <HireVifyLogo size="md" />
+      <header className="hv-candidate-header">
+        <div className="hv-container">
+          <div className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="shrink-0 rounded-2xl bg-white/85 p-2 shadow-sm ring-1 ring-slate-200/70 backdrop-blur">
+                <HireVifyLogo size="md" />
+              </div>
+
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Candidate workspace</p>
-                <h1 className="truncate text-2xl font-semibold tracking-normal text-slate-950">Welcome, {user?.name?.split(' ')[0] || 'Candidate'}</h1>
-                <p className="text-sm text-slate-500">Manage resumes, assessments, projects, and interviews.</p>
+                <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">
+                  Candidate workspace
+                </div>
+                <h1 className="truncate text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">
+                  Welcome, {user?.name?.split(' ')[0] || 'Candidate'}
+                </h1>
+                <p className="mt-1 text-sm text-slate-600">
+                  Manage resumes, assessments, projects, and interviews from one clean workspace.
+                </p>
               </div>
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              {/* Premium Status / Upgrade Button */}
               {subscription && subscription.isActive ? (
-                <Badge className="hidden rounded-full border border-emerald-200 bg-emerald-100 px-4 py-2 font-semibold text-emerald-800 md:flex">
-                  <Crown className="w-4 h-4 mr-2 text-emerald-600" />
+                <Badge className="hidden rounded-full border border-emerald-200 bg-white px-4 py-2 font-semibold text-emerald-700 shadow-sm md:flex">
+                  <Crown className="mr-2 h-4 w-4 text-emerald-600" />
                   {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
                 </Badge>
               ) : (
-                <Button onClick={onUpgrade} className="hidden rounded-lg bg-emerald-600 px-5 font-semibold text-white shadow-sm hover:bg-emerald-700 md:flex">
-                  <Crown className="w-4 h-4 mr-2" />
+                <Button onClick={onUpgrade} className="hidden rounded-full bg-slate-950 px-5 font-semibold text-white shadow-sm hover:bg-slate-800 md:flex">
+                  <Crown className="mr-2 h-4 w-4" />
                   Upgrade to Pro
                 </Button>
               )}
-              
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
+
+              <div className="flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/80 p-1 shadow-sm backdrop-blur">
+                <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-full text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
+                  <MessageCircle className="h-5 w-5" />
                   {false && unreadMessages > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
+                    <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
                       {unreadMessages}
                     </Badge>
                   )}
                 </Button>
-                
-                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
-                  <Bell className="w-5 h-5 text-gray-600" />
+
+                <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-full text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
+                  <Bell className="h-5 w-5" />
                   {false && unreadNotifications > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
+                    <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
                       {unreadNotifications}
                     </Badge>
                   )}
                 </Button>
-                
-                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
-                  <Settings className="w-5 h-5 text-gray-600" />
+
+                <Button variant="ghost" size="icon" onClick={onViewSettings} className="rounded-full text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
+                  <Settings className="h-5 w-5" />
                 </Button>
-                
-                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600">
-                  <LogOut className="w-5 h-5 text-gray-600" />
+
+                <Button variant="ghost" size="icon" onClick={onLogout} className="rounded-full text-slate-600 hover:bg-red-50 hover:text-red-600">
+                  <LogOut className="h-5 w-5" />
                 </Button>
               </div>
             </div>
@@ -199,242 +230,338 @@ export function CandidateDashboard({
         </div>
       </header>
 
-      <main className="hv-container py-6 sm:py-8">
+      <main className="hv-container py-6 sm:py-8 lg:py-10">
         {isLoading && (
           <div className="flex items-center justify-center py-24">
             <div className="flex flex-col items-center gap-4">
-              <Loader className="w-12 h-12 animate-spin text-emerald-600" />
-              <p className="text-gray-600">Loading your dashboard...</p>
+              <Loader className="h-12 w-12 animate-spin text-emerald-600" />
+              <p className="text-slate-600">Loading your dashboard...</p>
             </div>
           </div>
         )}
 
         {!isLoading && (
-        <>
-        {/* Profile Completion Card */}
-        <Card className="mb-6 border-emerald-100 bg-white/95 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isCandidateProfileComplete ? 'bg-emerald-100' : 'bg-amber-100'}`}>
-                  {isCandidateProfileComplete ? (
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
-                  ) : (
-                    <User className="w-6 h-6 text-amber-600" />
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-lg font-bold text-gray-900">
+          <>
+            {/* Profile Completion Hero */}
+            <section className="candidate-profile-hero mb-6 overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 shadow-xl shadow-emerald-950/5 backdrop-blur">
+              <div className="relative grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.4fr_0.6fr] lg:p-8">
+                <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-emerald-200/35 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-24 left-24 h-56 w-56 rounded-full bg-cyan-200/30 blur-3xl" />
+
+                <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
+                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-sm ${isCandidateProfileComplete ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {isCandidateProfileComplete ? (
+                      <CheckCircle className="h-7 w-7" />
+                    ) : (
+                      <User className="h-7 w-7" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <Badge className={isCandidateProfileComplete ? 'rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700' : 'rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700'}>
+                        {candidateProfileCompleteness}% complete
+                      </Badge>
+                      <Badge className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-600">
+                        Recruiter visibility
+                      </Badge>
+                    </div>
+
+                    <h2 className="text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-3xl">
                       {isCandidateProfileComplete ? 'Your profile is ready' : 'Complete your candidate profile'}
                     </h2>
-                    <Badge className={isCandidateProfileComplete ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}>
-                      {candidateProfileCompleteness}% complete
-                    </Badge>
+
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
+                      {isCandidateProfileComplete
+                        ? 'Recruiters can now discover your profile from candidate search. Keep it updated for better matches.'
+                        : 'Add skills, experience, salary, work type, location, and portfolio details so recruiters can find you.'}
+                    </p>
+
+                    <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                        style={{ width: `${Math.min(candidateProfileCompleteness, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {isCandidateProfileComplete
-                      ? 'Recruiters can now discover your profile from candidate search. Keep it updated for better matches.'
-                      : 'Add skills, experience, salary, work type, location, and portfolio details so recruiters can find you.'}
-                  </p>
                 </div>
-              </div>
 
-              <Button onClick={onViewSettings} className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto">
-                {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats */}
-        <DashboardGrid className="mb-6">
-          <StatCard label="Applications" value={applications.length} icon={FileText} tone="emerald" />
-          <StatCard label="Portfolio Items" value={portfolio.length} icon={User} tone="blue" />
-          <StatCard label="Saved Jobs" value={savedJobs.length} icon={BookOpen} tone="violet" />
-          <StatCard label="Subscription" value={subscription?.tier || 'Free'} icon={Crown} tone="amber" />
-        </DashboardGrid>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Tools */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Essential Tools */}
-            <div className="hv-surface p-5 sm:p-6 lg:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Get Started</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={onTakeKnowledgeAssessment} className="hv-action-card group">
-                  <div className="flex items-center justify-between mb-3">
-                    <Award className="w-6 h-6 text-emerald-600" />
-                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Knowledge Assessment</h3>
-                  <p className="text-sm text-gray-600">Verify your skills</p>
-                </button>
-
-                <button onClick={onBuildResume} className="hv-action-card group">
-                  <div className="flex items-center justify-between mb-3">
-                    <Brain className="w-6 h-6 text-blue-600" />
-                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">AI Resume Builder</h3>
-                  <p className="text-sm text-gray-600">Create your resume</p>
-                </button>
-
-                <button onClick={onViewPortfolio} className="hv-action-card group">
-                  <div className="flex items-center justify-between mb-3">
-                    <Sparkles className="w-6 h-6 text-purple-600" />
-                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Portfolio</h3>
-                  <p className="text-sm text-gray-600">Showcase your work</p>
-                </button>
-
-                <button onClick={onSearchProjects} className="hv-action-card group">
-                  <div className="flex items-center justify-between mb-3">
-                    <Search className="w-6 h-6 text-orange-600" />
-                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Find Projects</h3>
-                  <p className="text-sm text-gray-600">Explore opportunities</p>
-                </button>
-              </div>
-            </div>
-
-            {/* Career Growth */}
-            <div className="hv-surface p-5 sm:p-6 lg:p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Career Growth Paths</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onClick={onExperienceBuilder} className="hv-action-card">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                      <Target className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Experience Builder</h4>
-                      <p className="text-xs text-gray-500">1-2 week projects</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button onClick={onMicroInternships} className="hv-action-card">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                      <Timer className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Micro-Internships</h4>
-                      <p className="text-xs text-gray-500">1-5 day projects</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button onClick={onMentorshipProgram} className="hv-action-card">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                      <Users className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Mentorship</h4>
-                      <p className="text-xs text-gray-500">Expert guidance</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button onClick={onCareerSwitcherTrack} className="hv-action-card">
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                      <BookOpen className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Career Switch</h4>
-                      <p className="text-xs text-gray-500">Structured learning</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            {/* Premium Status / Upgrade - Mobile Version */}
-            {!subscription?.isActive ? (
-              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
-                <div className="text-center">
-                  <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
-                  <h3 className="font-bold text-gray-900 mb-2">Go Premium</h3>
-                  <p className="text-sm text-gray-600 mb-4">Unlock advanced tools and features</p>
-                  <Button onClick={onUpgrade} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg">
-                    Upgrade Now
+                <div className="relative flex flex-col justify-center rounded-3xl border border-slate-200/70 bg-white/75 p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-950">Next best action</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    {isCandidateProfileComplete
+                      ? 'Review your latest details before applying to new projects.'
+                      : 'Finish the missing fields to improve matching quality.'}
+                  </p>
+                  <Button onClick={onViewSettings} className="mt-4 w-full rounded-full bg-slate-950 text-white shadow-sm hover:bg-slate-800">
+                    {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-lg border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm">
-                <div className="text-center">
-                  <Crown className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
-                  <h3 className="font-bold text-gray-900 mb-1">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
-                  <p className="text-sm text-gray-600">Premium features enabled</p>
-                </div>
-              </div>
-            )}
+            </section>
 
-            {/* Recent Activity */}
-            <div className="hv-surface p-6">
-              <h3 className="font-bold text-gray-900 mb-4">Recent Applications</h3>
-              {applications.length > 0 ? (
-                <div className="space-y-3">
-                  {applications.slice(0, 3).map((app: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{app.job?.title || app.job_title || app.title || 'Application submitted'}</p>
-                      <p className="text-xs text-gray-500">Status: {app.status || 'applied'}</p>
+            {/* Quick Stats */}
+            <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <Card className="candidate-stat-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Applications</p>
+                      <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{applications.length}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No applications yet</p>
-                </div>
-              )}
-            </div>
+                    <div className="candidate-stat-icon bg-emerald-50 text-emerald-700">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Quick Links */}
-            <div className="hv-surface p-6">
-              <h3 className="font-bold text-gray-900 mb-4">Quick Links</h3>
-              <div className="space-y-2">
-                <button onClick={onATSScanner} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">
-                  ATS Resume Scanner
-                </button>
-                <button onClick={onAIInterviewCoach} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">
-                  Interview Coach
-                </button>
-                <button onClick={onSkillsDevelopmentAI} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 rounded-lg font-medium transition-colors">
-                  Skills Development
-                </button>
+              <Card className="candidate-stat-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Portfolio Items</p>
+                      <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{portfolio.length}</p>
+                    </div>
+                    <div className="candidate-stat-icon bg-blue-50 text-blue-700">
+                      <User className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="candidate-stat-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Saved Jobs</p>
+                      <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{savedJobs.length}</p>
+                    </div>
+                    <div className="candidate-stat-icon bg-violet-50 text-violet-700">
+                      <BookOpen className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="candidate-stat-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Subscription</p>
+                      <p className="mt-2 text-3xl font-bold capitalize tracking-[-0.04em] text-slate-950">{subscription?.tier || 'free'}</p>
+                    </div>
+                    <div className="candidate-stat-icon bg-amber-50 text-amber-700">
+                      <Crown className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
+            {/* Main Grid */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+              {/* Left Column - Main Tools */}
+              <div className="space-y-6">
+                {/* Essential Tools */}
+                <section className="candidate-panel">
+                  <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Start here</p>
+                      <h2 className="mt-1 text-2xl font-bold tracking-[-0.035em] text-slate-950">Get Started</h2>
+                    </div>
+                    <p className="max-w-md text-sm text-slate-500">Build credibility, prepare better, and find matching opportunities.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <button onClick={onTakeKnowledgeAssessment} className="candidate-action-card group">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="candidate-action-icon bg-emerald-50 text-emerald-700">
+                          <Award className="h-6 w-6" />
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-950">Knowledge Assessment</h3>
+                      <p className="mt-1 text-sm text-slate-500">Verify your skills</p>
+                    </button>
+
+                    <button onClick={onBuildResume} className="candidate-action-card group">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="candidate-action-icon bg-blue-50 text-blue-700">
+                          <Brain className="h-6 w-6" />
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-950">AI Resume Builder</h3>
+                      <p className="mt-1 text-sm text-slate-500">Create your resume</p>
+                    </button>
+
+                    <button onClick={onViewPortfolio} className="candidate-action-card group">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="candidate-action-icon bg-violet-50 text-violet-700">
+                          <Sparkles className="h-6 w-6" />
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-950">Portfolio</h3>
+                      <p className="mt-1 text-sm text-slate-500">Showcase your work</p>
+                    </button>
+
+                    <button onClick={onSearchProjects} className="candidate-action-card group">
+                      <div className="mb-5 flex items-start justify-between gap-4">
+                        <div className="candidate-action-icon bg-orange-50 text-orange-700">
+                          <Search className="h-6 w-6" />
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-950">Find Projects</h3>
+                      <p className="mt-1 text-sm text-slate-500">Explore opportunities</p>
+                    </button>
+                  </div>
+                </section>
+
+                {/* Career Growth */}
+                <section className="candidate-panel">
+                  <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Growth plan</p>
+                      <h2 className="mt-1 text-2xl font-bold tracking-[-0.035em] text-slate-950">Career Growth Paths</h2>
+                    </div>
+                    <p className="max-w-md text-sm text-slate-500">Choose a guided path to build real experience.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <button onClick={onExperienceBuilder} className="candidate-path-card group">
+                      <div className="candidate-path-icon bg-emerald-50 text-emerald-700">
+                        <Target className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-950">Experience Builder</h4>
+                        <p className="text-sm text-slate-500">1-2 week projects</p>
+                      </div>
+                      <ArrowRight className="ml-auto h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+
+                    <button onClick={onMicroInternships} className="candidate-path-card group">
+                      <div className="candidate-path-icon bg-blue-50 text-blue-700">
+                        <Timer className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-950">Micro-Internships</h4>
+                        <p className="text-sm text-slate-500">1-5 day projects</p>
+                      </div>
+                      <ArrowRight className="ml-auto h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+
+                    <button onClick={onMentorshipProgram} className="candidate-path-card group">
+                      <div className="candidate-path-icon bg-orange-50 text-orange-700">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-950">Mentorship</h4>
+                        <p className="text-sm text-slate-500">Expert guidance</p>
+                      </div>
+                      <ArrowRight className="ml-auto h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+
+                    <button onClick={onCareerSwitcherTrack} className="candidate-path-card group">
+                      <div className="candidate-path-icon bg-violet-50 text-violet-700">
+                        <BookOpen className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-950">Career Switch</h4>
+                        <p className="text-sm text-slate-500">Structured learning</p>
+                      </div>
+                      <ArrowRight className="ml-auto h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+                  </div>
+                </section>
               </div>
+
+              {/* Right Column - Sidebar */}
+              <aside className="space-y-6">
+                {!subscription?.isActive ? (
+                  <section className="candidate-premium-card">
+                    <div className="relative">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20">
+                        <Crown className="h-6 w-6" />
+                      </div>
+                      <h3 className="mt-4 text-center text-xl font-bold tracking-[-0.03em] text-white">Go Premium</h3>
+                      <p className="mt-2 text-center text-sm leading-6 text-emerald-50/80">Unlock advanced tools and features</p>
+                      <Button onClick={onUpgrade} className="mt-5 w-full rounded-full bg-white font-bold text-emerald-900 shadow-sm hover:bg-emerald-50">
+                        Upgrade Now
+                      </Button>
+                    </div>
+                  </section>
+                ) : (
+                  <section className="candidate-premium-card">
+                    <div className="relative text-center">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20">
+                        <Crown className="h-6 w-6" />
+                      </div>
+                      <h3 className="mt-4 text-xl font-bold tracking-[-0.03em] text-white">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
+                      <p className="mt-2 text-sm text-emerald-50/80">Premium features enabled</p>
+                    </div>
+                  </section>
+                )}
+
+                {/* Recent Activity */}
+                <section className="candidate-panel p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-950">Recent Applications</h3>
+                    <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-500">{applications.length}</Badge>
+                  </div>
+
+                  {applications.length > 0 ? (
+                    <div className="space-y-3">
+                      {applications.slice(0, 3).map((app: any, idx: number) => (
+                        <div key={idx} className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 transition hover:border-emerald-200 hover:bg-emerald-50/40">
+                          <p className="line-clamp-1 text-sm font-bold text-slate-950">{app.job?.title || app.job_title || app.title || 'Application submitted'}</p>
+                          <p className="mt-1 text-xs font-medium capitalize text-slate-500">Status: {app.status || 'applied'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-8 text-center">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-slate-600">No applications yet</p>
+                      <p className="mt-1 text-xs text-slate-500">Apply to a project to see progress here.</p>
+                    </div>
+                  )}
+                </section>
+
+                {/* Quick Links */}
+                <section className="candidate-panel p-5">
+                  <h3 className="mb-4 font-bold text-slate-950">Quick Links</h3>
+                  <div className="space-y-2">
+                    <button onClick={onATSScanner} className="candidate-quick-link group">
+                      <span>ATS Resume Scanner</span>
+                      <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+                    <button onClick={onAIInterviewCoach} className="candidate-quick-link group">
+                      <span>Interview Coach</span>
+                      <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+                    <button onClick={onSkillsDevelopmentAI} className="candidate-quick-link group">
+                      <span>Skills Development</span>
+                      <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
+                    </button>
+                  </div>
+                </section>
+              </aside>
             </div>
-          </div>
-        </div>
-        </>
+          </>
         )}
       </main>
-      
+
       {/* ATS Scanner Dialog */}
-      <CandidateATSScanner 
+      <CandidateATSScanner
         showUploadDialog={showATSDialog}
         setShowUploadDialog={setShowATSDialog}
       />
     </div>
   );
 }
-
-
-
-
-
-
