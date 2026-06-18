@@ -10,30 +10,30 @@ export const TESTING_MODE = true;
  * Testing version of premium access that always grants access when testing mode is enabled
  */
 export const getTestingPremiumAccess = () => {
-  const alwaysTrue = () => true;
-  
-  const getTestingSubscription = (): SubscriptionStatus => ({
-    isActive: true,
-    tier: 'enterprise',
-    expiresAt: null,
-    trialEndsAt: null
-  });
+ const alwaysTrue = () => true;
+ 
+ const getTestingSubscription = (): SubscriptionStatus => ({
+ isActive: true,
+ tier: 'enterprise',
+ expiresAt: null,
+ trialEndsAt: null
+ });
 
-  const getFeatureInfo = (featureKey: PremiumFeatureKey) => {
-    return PREMIUM_FEATURES[featureKey];
-  };
+ const getFeatureInfo = (featureKey: PremiumFeatureKey) => {
+ return PREMIUM_FEATURES[featureKey];
+ };
 
-  if (TESTING_MODE) {
-    return {
-      checkAccess: alwaysTrue,
-      getSubscription: getTestingSubscription,
-      getFeatureInfo,
-      isTestAccount: true
-    };
-  }
+ if (TESTING_MODE) {
+ return {
+ checkAccess: alwaysTrue,
+ getSubscription: getTestingSubscription,
+ getFeatureInfo,
+ isTestAccount: true
+ };
+ }
 
-  // If not in testing mode, fallback to original implementation
-  return null;
+ // If not in testing mode, fallback to original implementation
+ return null;
 };
 
 /**
@@ -45,11 +45,11 @@ export const isTestingMode = () => TESTING_MODE;
  * Log testing mode status for debugging
  */
 export const logTestingStatus = () => {
-  if (TESTING_MODE) {
-    console.log('ðŸ§ª TESTING MODE: Premium features are unlocked for testing');
-  } else {
-    console.log('ðŸ”’ PRODUCTION MODE: Premium access controls are active');
-  }
+ if (TESTING_MODE) {
+ console.log(' TESTING MODE: Premium features are unlocked for testing');
+ } else {
+ console.log(' PRODUCTION MODE: Premium access controls are active');
+ }
 };
 
 

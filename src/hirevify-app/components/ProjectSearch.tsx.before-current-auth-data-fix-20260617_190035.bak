@@ -1,0 +1,1289 @@
+﻿import { useState, useEffect } from 'react';
+import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, ArrowLeft, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Checkbox } from './ui/checkbox';
+import { Slider } from './ui/slider';
+import { ScrollArea } from './ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
+import { Textarea } from './ui/textarea';
+import { useAuth } from './AuthProvider';
+import { toast } from 'sonner';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+
+// Local types to avoid API dependency issues
+interface Project {
+  id: string;
+  
+  recruiter_id?: string | null;title: string;
+  description: string;
+  company: string;
+  location: string;
+  budget: string;
+  timeline: string;
+  skills: string[];
+  requirements?: string[];
+  type: string;
+  applications?: any[] | number;
+  applicationsCount?: number;
+  createdAt: string;
+  status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
+  challengeDescription?: string;
+  hasVideoSubmission?: boolean;
+}
+
+interface ProjectFilters {
+  page?: number;
+  limit?: number;
+  type?: string;
+  location?: string;
+  skills?: string[];
+  sortBy?: string;
+}
+
+interface ProjectSearchProps {
+  onBack: () => void;
+  onUpgrade: () => void;
+  onProjectChallengeVideo?: (projectId: string, projectTitle: string, challengeDescription?: string) => void;
+}
+
+export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+  const { user, accessToken } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  
+  const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
+const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<ProjectFilters>({
+    page: 1,
+    limit: 20,
+    sortBy: 'newest'
+  });
+  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+
+  // AI-powered recommendations
+  const [recommendations, setRecommendations] = useState<Project[]>([]);
+  const [showRecommendations, setShowRecommendations] = useState(true);
+  const [aiMatches, setAiMatches] = useState<Map<string, number>>(new Map());
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+
+  // Note: All mock data generation removed - using real API data only
+
+  useEffect(() => {
+    // Load real projects data only - no fake data fallback
+    loadProjects();
+  }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+
+  const loadProjects = async () => {
+    if (!accessToken) {
+      setIsLoading(false);
+      console.log('ProjectSearch loaded');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Load real recruiter-posted projects from public.jobs
+      const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+      const supabase = createSupabaseBrowserClient();
+
+      const { data: jobs, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load published jobs:', error);
+        setProjects([]);
+        setFilteredProjects([]);
+        return;
+      }
+
+      const mappedProjects = (jobs || []).map((job: any) => ({
+        id: job.id,
+        title: job.title || 'Untitled Project',
+        description: job.description || '',
+        company: job.company_name || 'Company',
+        companyName: job.company_name || 'Company',
+        skills: job.skills || [],
+        budget: job.budget_min || job.budget_max
+          ? `${job.budget_currency || job.currency || 'USD'} ${job.budget_min || job.salary_min || 0} - ${job.budget_max || job.salary_max || job.budget_min || job.salary_min || 0}`
+          : 'Not specified',
+        budgetMin: Number(job.budget_min || job.salary_min || 0),
+        budgetMax: Number(job.budget_max || job.salary_max || 0),
+        currency: job.budget_currency || job.currency || 'USD',
+        location: job.location || 'Not specified',
+        type: job.job_type || 'freelance',
+        jobType: job.job_type || 'freelance',
+        remoteType: job.remote_type || 'remote',
+        experienceLevel: job.experience_level || 'mid',
+        status: job.status || 'published',
+        applications: job.applications_count || 0,
+        applicationsCount: job.applications_count || 0,
+        views: job.views_count || 0,
+        viewsCount: job.views_count || 0,
+        postedDate: job.created_at,
+        createdAt: job.created_at,
+        timeline: Array.isArray(job.requirements)
+          ? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, '')
+          : '',
+        requirements: job.requirements || [],
+        matchScore: 85,
+      }));
+
+      setProjects(mappedProjects as any);
+      setFilteredProjects(mappedProjects as any);
+
+      // AI recommendations disabled for MVP until real AI backend is connected.
+      // This prevents old Supabase Edge Function fetch errors.
+console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      setProjects([]);
+      setFilteredProjects([]);
+      toast.error('Failed to load projects. Please check your connection and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateAIRecommendations = async (projectList: Project[]) => {
+    if (!user?.id || projectList.length === 0) {
+      // No recommendations without user or projects
+      setRecommendations([]);
+      return;
+    }
+
+    setIsLoadingAI(true);
+    
+    try {
+      // Import AI matching service
+      const { aiMatchingService } = await import('../utils/ai/matchingService');
+      
+      // Check if we have a test user before trying AI matching
+      const isTestUser = user.email && (user.email === 'candidate@hirevify.com' || user.email === 'recruiter@hirevify.com');
+      
+      if (!isTestUser) {
+        console.log('ProjectSearch loaded');
+        generateSkillBasedRecommendations(projectList);
+        return;
+      }
+      
+      // Get AI-powered project recommendations
+      const result = await aiMatchingService.findProjectsForCandidate(
+        user.id,
+        10, // Get top 10 matches
+        false // Use cache if available
+      );
+      
+      // Store match scores for all projects
+      const matchScores = new Map<string, number>();
+      result.matches.forEach(match => {
+        matchScores.set(match.projectId, match.score);
+      });
+      setAiMatches(matchScores);
+      
+      // Set top 3 as recommendations
+      const topRecommendations = result.matches
+        .slice(0, 3)
+        .map(match => projectList.find(p => p.id === match.projectId))
+        .filter(Boolean) as Project[];
+      
+      if (topRecommendations.length > 0) {
+        setRecommendations(topRecommendations);
+        console.log('ProjectSearch loaded');
+      } else {
+        // Fallback to skill-based matching
+        console.log('No AI matches found, falling back to skill-based matching');
+        generateSkillBasedRecommendations(projectList);
+      }
+      
+    } catch (error) {
+      console.warn('AI matching failed, falling back to skill-based matching:', error.message || error);
+      generateSkillBasedRecommendations(projectList);
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const generateSkillBasedRecommendations = (projectList: Project[]) => {
+    if (!projectList || projectList.length === 0) {
+      setRecommendations([]);
+      return;
+    }
+
+    if ((user as any)?.skills && (user as any).skills.length > 0) {
+      const userSkills = (user as any).skills.map((s: string) => s.toLowerCase());
+      const recommendedProjects = projectList
+        .filter(project => 
+          project.skills.some(skill => 
+            userSkills.some((userSkill: string) => 
+              skill.toLowerCase().includes(userSkill) || userSkill.includes(skill.toLowerCase())
+            )
+          )
+        )
+        .slice(0, 3);
+      setRecommendations(recommendedProjects);
+    } else {
+      // No skill-based filtering without user skills - no default recommendations
+      setRecommendations([]);
+    }
+  };
+
+  useEffect(() => {
+    // Real-time search with debouncing
+    const debounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, projects, filters]);
+
+
+
+  const applyFilters = () => {
+    let filtered = projects;
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(project =>
+        project.title.toLowerCase().includes(query) ||
+        project.description.toLowerCase().includes(query) ||
+        project.company.toLowerCase().includes(query) ||
+        project.skills.some(skill => skill.toLowerCase().includes(query))
+      );
+    }
+
+    // Type filter
+    if (filters.type && filters.type !== 'all') {
+      filtered = filtered.filter(project => project.type === filters.type);
+    }
+
+    // Location filter
+    if (filters.location) {
+      filtered = filtered.filter(project => 
+        project.location.toLowerCase().includes(filters.location!.toLowerCase())
+      );
+    }
+
+    // Skills filter
+    if (filters.skills && filters.skills.length > 0) {
+      filtered = filtered.filter(project =>
+        filters.skills!.some(skill =>
+          project.skills.some(pSkill => 
+            pSkill.toLowerCase().includes(skill.toLowerCase())
+          )
+        )
+      );
+    }
+
+    // Sort
+    if (filters.sortBy) {
+      filtered = [...filtered].sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'newest':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          case 'oldest':
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          case 'mostApplied':
+            return ((typeof b.applicationsCount === 'number' ? b.applicationsCount : Array.isArray(b.applications) ? b.applications.length : Number(b.applications || 0)) - (typeof a.applicationsCount === 'number' ? a.applicationsCount : Array.isArray(a.applications) ? a.applications.length : Number(a.applications || 0)));
+          case 'budget':
+            // Simple budget sorting by extracting the upper range
+            const getBudgetValue = (budget: string) => {
+              const match = budget.match(/\$[\d,]+\s*-\s*\$?([\d,]+)/);
+              return match ? parseInt(match[1].replace(/,/g, '')) : 0;
+            };
+            return getBudgetValue(b.budget) - getBudgetValue(a.budget);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    setFilteredProjects(filtered);
+  };
+
+  const updateFilter = (key: keyof ProjectFilters, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      page: 1 // Reset to first page when filters change
+    }));
+  };
+
+  const toggleBookmark = (projectId: string) => {
+    setBookmarkedProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+        toast.success('Removed from bookmarks');
+      
+      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+} else {
+        newSet.add(projectId);
+        toast.success('Added to bookmarks');
+      
+      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+}
+      return newSet;
+    });
+  };
+
+  const calculateMatchScore = (project: Project): number => {
+    // Check if we have AI-generated match score
+    const aiScore = aiMatches.get(project.id);
+    if (aiScore !== undefined) {
+      return Math.round(aiScore * 100); // AI engine returns 0-1, we need 0-100
+    }
+    
+    // Skill-based matching calculation - no random fallback
+    if (!(user as any)?.skills || (user as any).skills.length === 0) {
+      return 50; // Default neutral score when no skills available
+    }
+    
+    const userSkills = (user as any).skills.map((skill: string) => skill.toLowerCase());
+    const projectSkills = project.skills.map((skill: string) => skill.toLowerCase());
+    
+    if (projectSkills.length === 0) {
+      return 50; // Default neutral score when project has no skills listed
+    }
+    
+    const matchedSkills = userSkills.filter((skill: string) => 
+      projectSkills.some(pSkill => pSkill.includes(skill) || skill.includes(pSkill))
+    );
+    
+    // Calculate percentage based on overlap
+    const matchPercentage = (matchedSkills.length / projectSkills.length) * 100;
+    
+    // Ensure score is between 0-100
+    return Math.min(100, Math.max(0, Math.round(matchPercentage)));
+  };
+
+  const getMatchScoreColor = (score: number) => {
+    if (score >= 80) return 'match-excellent';
+    if (score >= 60) return 'match-good';
+    if (score >= 40) return 'match-fair';
+    return 'match-poor';
+  };
+
+  const getMatchScoreText = (score: number) => {
+    if (score >= 80) return 'Excellent match';
+    if (score >= 60) return 'Good match';
+    if (score >= 40) return 'Fair match';
+    return 'Skills needed';
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status?: string) => {
+    switch (status) {
+      case 'applied': return 'Applied';
+      case 'selected': return 'Selected';
+      case 'in-progress': return 'In Progress';
+      case 'completed': return 'Completed';
+      case 'submitted': return 'Video Submitted';
+      default: return 'Available';
+    }
+  };
+
+  const handleRecordVideo = (project: Project) => {
+    if (onProjectChallengeVideo) {
+      onProjectChallengeVideo(project.id, project.title, project.challengeDescription);
+    }
+  };
+
+const applyToProject = async () => {
+  if (!selectedProject) {
+    toast.error('Please select a project first.');
+    return;
+  }
+
+  if (!coverLetter.trim()) {
+    toast.error('Please enter a cover letter before submitting.');
+    return;
+  }
+
+  if (!user?.id) {
+    toast.error('Please login to apply.');
+    return;
+  }
+
+  try {
+    setIsApplying(true);
+
+    const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+    const supabase = createSupabaseBrowserClient();
+
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) {
+      toast.error('Authentication failed.');
+      return;
+    }
+
+    const { data: candidateProfile } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role')
+      .eq('auth_user_id', authData.user.id)
+      .single();
+
+    if (!candidateProfile || candidateProfile.role !== 'candidate') {
+      toast.error('Only candidates can apply.');
+      return;
+    }
+
+    // Check existing application    const { data: currentAuthData, error: currentAuthError } = await supabase.auth.getUser();
+    const currentAuthUserId = currentAuthData?.user?.id;
+
+    if (currentAuthError || !currentAuthUserId) {
+      toast.error('Please login again before applying.');
+      return;
+    }
+
+    const { data: applicationProfileRow, error: applicationProfileError } = await supabase
+      .from('profiles')
+      .select('id, auth_user_id, full_name')
+      .eq('auth_user_id', currentAuthUserId)
+      .maybeSingle();
+
+    if (applicationProfileError || !applicationProfileRow?.id) {
+      toast.error(applicationProfileError?.message || 'Candidate profile not found. Please complete your profile first.');
+      return;
+    }
+
+    const candidateOwnerProfileId = applicationProfileRow.id;
+
+    const { data: existing } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('job_id', selectedProject.id)
+      .eq('candidate_id', candidateOwnerProfileId)
+      .maybeSingle();
+
+    if (existing) {
+      toast.error('You have already applied to this project.');
+      const markSelectedProjectApplied = () => {
+        if (!selectedProject?.id) return;
+
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            project.id === selectedProject.id
+              ? {
+                  ...project,
+                  status: 'applied' as const,
+                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+                }
+              : project
+          )
+        );
+
+        setSelectedProject((current) =>
+          current
+            ? {
+                ...current,
+                status: 'applied' as const,
+                applicationsCount: Number(current.applicationsCount || 0) + 1,
+              }
+            : current
+        );
+      };
+
+      markSelectedProjectApplied();
+
+      setShowApplicationDialog(false);
+      return;
+    }
+
+    const matchScore = calculateMatchScore(selectedProject);
+const { error: appError } = await supabase
+      .from('applications')
+      .insert({
+        job_id: selectedProject.id,
+        candidate_id: candidateOwnerProfileId,
+        cover_letter: coverLetter.trim(),
+        status: 'applied',
+        match_score: matchScore,
+      });
+
+    if (appError) {
+      toast.error('Failed to submit: ' + appError.message);
+      return;
+    }
+
+    // Update job count
+    await supabase
+      .from('jobs')
+      .update({ applications_count: (selectedProject.applicationsCount || 0) + 1 })
+      .eq('id', selectedProject.id);
+
+    // Create Notification for Recruiter
+    if (selectedProject.recruiter_id) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: selectedProject.recruiter_id,
+          type: 'new_application',
+          title: 'New Application Received',
+          message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
+          metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+          is_read: false,
+        });
+    }
+
+    toast.success('Application submitted successfully! ðŸŽ‰');
+
+    
+      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+// Refresh projects
+    await loadProjects();
+
+    // Close dialog
+    setCoverLetter('');
+      const markSelectedProjectApplied = () => {
+        if (!selectedProject?.id) return;
+
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            project.id === selectedProject.id
+              ? {
+                  ...project,
+                  status: 'applied' as const,
+                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+                }
+              : project
+          )
+        );
+
+        setSelectedProject((current) =>
+          current
+            ? {
+                ...current,
+                status: 'applied' as const,
+                applicationsCount: Number(current.applicationsCount || 0) + 1,
+              }
+            : current
+        );
+      };
+
+      markSelectedProjectApplied();
+
+    setShowApplicationDialog(false);
+    setSelectedProject(null);
+
+  } catch (error) {
+    console.error(error);
+    toast.error('Something went wrong.');
+  } finally {
+    setIsApplying(false);
+  }
+};
+
+  useEffect(() => {
+    const syncAppliedProjectsFromDatabase = async () => {
+      try {
+        if (!projects.length) return;
+
+        const supabaseForAppliedState = createSupabaseBrowserClient();
+        const { data: authData } = await supabaseForAppliedState.auth.getUser();
+        const authUserId = authData?.user?.id;
+
+        if (!authUserId) return;
+
+        const { data: ownerProfile } = await supabaseForAppliedState
+          .from('profiles')
+          .select('id, auth_user_id')
+          .eq('auth_user_id', authUserId)
+          .maybeSingle();
+
+        const candidateIds = [ownerProfile?.id, authUserId].filter(Boolean) as string[];
+        const projectIds = projects.map((project) => project.id).filter(Boolean);
+
+        if (!candidateIds.length || !projectIds.length) return;
+
+        const { data: applicationRows, error } = await supabaseForAppliedState
+          .from('applications')
+          .select('job_id')
+          .in('job_id', projectIds)
+          .in('candidate_id', candidateIds);
+
+        if (error) {
+          console.error('Failed to sync applied project state:', error);
+          return;
+        }
+
+        const nextAppliedIds = new Set<string>((applicationRows || []).map((row: any) => String(row.job_id)));
+
+        setAppliedProjectIds(nextAppliedIds);
+
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            nextAppliedIds.has(String(project.id))
+              ? { ...project, status: 'applied' as const }
+              : project
+          )
+        );
+      } catch (error) {
+        console.error('Failed to sync applied project state:', error);
+      }
+    };
+
+    void syncAppliedProjectsFromDatabase();
+  }, [projects.length]);
+
+  const skillsOptions = [
+    'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java', 'C++',
+    'UI/UX Design', 'Graphic Design', 'Product Management', 'Data Science',
+    'Machine Learning', 'DevOps', 'Cloud Computing', 'Mobile Development',
+    'WordPress', 'PHP', 'CSS', 'HTML', 'SEO', 'AWS', 'Docker', 'Kubernetes'
+  ];
+
+
+  // Project Details Component
+  function ProjectDetails({ project, matchScore, onRecordVideo }: {
+    project: Project;
+    matchScore: number;
+    onRecordVideo?: () => void;
+  }) {
+    const getMatchScoreColor = (score: number) => {
+      if (score >= 80) return 'match-excellent';
+      if (score >= 60) return 'match-good';
+      if (score >= 40) return 'match-fair';
+      return 'match-poor';
+    };
+
+    const getStatusColor = (status?: string) => {
+      switch (status) {
+        case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+        case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+        case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+    };
+
+    const getStatusText = (status?: string) => {
+      switch (status) {
+        case 'applied': return 'Applied';
+        case 'selected': return 'Selected';
+        case 'in-progress': return 'In Progress';
+        case 'completed': return 'Completed';
+        case 'submitted': return 'Video Submitted';
+        default: return 'Available';
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Project Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge 
+                variant="outline" 
+                className={getStatusColor(project.status)}
+              >
+                {getStatusText(project.status)}
+              </Badge>
+              <Badge 
+                variant="outline" 
+                className={`${getMatchScoreColor(matchScore)} border-current`}
+              >
+                <Star className="w-3 h-3 mr-1" />
+                {matchScore}% match
+              </Badge>
+            </div>
+            <h3 className="text-xl font-bold mb-1">{project.company}</h3>
+            <p className="text-muted-foreground">{project.type} - {project.location}</p>
+          </div>
+        </div>
+
+        {/* Project Description */}
+        <div>
+          <h4 className="font-semibold mb-2">Project Description</h4>
+          <p className="text-muted-foreground">{project.description}</p>
+        </div>
+
+        {/* Challenge Description for Assigned Projects */}
+        {project.status && ['selected', 'in-progress', 'completed'].includes(project.status) && project.challengeDescription && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="font-semibold text-blue-800 mb-2">AI Match Summary</h4>
+            <p className="text-blue-700 mb-3">{project.challengeDescription}</p>
+            
+            {/* Video Recording Section */}
+            {(project.status === 'in-progress' || project.status === 'completed') && (
+              <div className="mt-4 p-3 bg-white rounded-lg border border-blue-300">
+                <h5 className="font-medium text-blue-800 mb-2 flex items-center">
+                  <Video className="w-4 h-4 mr-2" />
+                  Project Explanation Video
+                </h5>
+                <p className="text-sm text-blue-600 mb-3">
+                  Record a 3-minute video explaining your project approach, tool choices, and challenges faced. 
+                  This helps verify your work and showcases your problem-solving process.
+                </p>
+                
+                {project.hasVideoSubmission ? (
+                  <div className="flex items-center text-green-700">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    <span className="text-sm font-medium">Video submitted successfully</span>
+                  </div>
+                ) : onRecordVideo ? (
+                  <Button 
+                    onClick={onRecordVideo}
+                    className="bg-red-600 hover:bg-red-700 text-slate-900"
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Record Project Explanation
+                  </Button>
+                ) : (
+                  <div className="text-sm text-orange-600">
+                    Complete your project to unlock video recording
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Project Details */}
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-semibold mb-2">Project Details</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Budget:</span>
+                <span className="font-medium">{project.budget}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Timeline:</span>
+                <span className="font-medium">{project.timeline}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Applications:</span>
+                <span className="font-medium">{project.applicationsCount || project.applications || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">Required Skills</h4>
+            <div className="flex flex-wrap gap-2">
+              {project.skills.map((skill) => (
+                <Badge key={skill} variant="secondary" className="text-xs">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Requirements */}
+        {project.requirements && project.requirements.length > 0 && (
+          <div>
+            <h4 className="font-semibold mb-2">Requirements</h4>
+            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+              {project.requirements.map((req, index) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Filter Content Component
+  function FilterContent({ filters, updateFilter, skillsOptions }: {
+    filters: ProjectFilters;
+    updateFilter: (key: keyof ProjectFilters, value: any) => void;
+    skillsOptions: string[];
+  }) {
+    return (
+      <div className="space-y-6">
+        {/* Sort */}
+        <Card className="p-4">
+          <h3 className="font-medium mb-3">Sort by</h3>
+          <Select value={filters.sortBy} onValueChange={(value) => updateFilter('sortBy', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="budget">Highest budget</SelectItem>
+              <SelectItem value="mostApplied">Most applied</SelectItem>
+            </SelectContent>
+          </Select>
+        </Card>
+
+        {/* Project Type */}
+        <Card className="p-4">
+          <h3 className="font-medium mb-3">Project Type</h3>
+          <Select value={filters.type || 'all'} onValueChange={(value) => updateFilter('type', value === 'all' ? undefined : value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="contract">Contract</SelectItem>
+              <SelectItem value="freelance">Freelance</SelectItem>
+              <SelectItem value="part-time">Part-time</SelectItem>
+              <SelectItem value="full-time">Full-time</SelectItem>
+            </SelectContent>
+          </Select>
+        </Card>
+
+        {/* Location */}
+        <Card className="p-4">
+          <h3 className="font-medium mb-3">Location</h3>
+          <Input
+            placeholder="Enter location..."
+            value={filters.location || ''}
+            onChange={(e) => updateFilter('location', e.target.value || undefined)}
+          />
+        </Card>
+
+        {/* Skills */}
+        <Card className="p-4">
+          <h3 className="font-medium mb-3">Skills</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {skillsOptions.map((skill) => (
+              <div key={skill} className="flex items-center space-x-2">
+                <Checkbox
+                  id={skill}
+                  checked={filters.skills?.includes(skill) || false}
+                  onCheckedChange={(checked) => {
+                    const currentSkills = filters.skills || [];
+                    if (checked) {
+                      updateFilter('skills', [...currentSkills, skill]);
+                    } else {
+                      updateFilter('skills', currentSkills.filter(s => s !== skill));
+                    }
+                  }}
+                />
+                <label htmlFor={skill} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  {skill}
+                </label>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-semibold">Discover Projects</h1>
+                <p className="text-sm text-muted-foreground">
+                  Find your next opportunity with AI-powered matching
+                </p>
+              </div>
+            </div>
+            
+            <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+              <Zap className="w-4 h-4 mr-2" />
+              Upgrade for Premium Search
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
+        {/* Sidebar Filters */}
+        <div className="w-80 space-y-6">
+          {/* Search */}
+          <Card className="p-4">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Input
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </Card>
+
+          {/* AI Recommendations */}
+          {showRecommendations && recommendations.length > 0 && (
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-4 h-4 text-amber-500" />
+                <h3 className="font-medium">AI Recommendations</h3>
+              </div>
+              <div className="space-y-2">
+                {recommendations.map((project) => (
+                  <div
+                    key={project.id}
+                    className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
+                    onClick={() => {
+                      setSelectedProject(selectedProject);
+                      setShowProjectDetailsDialog(true);
+                    }}
+                  >
+                    <h4 className="font-medium text-sm">{project.title}</h4>
+                    <p className="text-xs text-muted-foreground">{project.company}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {calculateMatchScore(project)}% match
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Mobile Filter Sheet */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="w-full lg:hidden">
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80">
+              <SheetHeader>
+                <SheetTitle>Filter Projects</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <FilterContent 
+                  filters={filters}
+                  updateFilter={updateFilter}
+                  skillsOptions={skillsOptions}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop Filters */}
+          <div className="hidden lg:block">
+            <FilterContent 
+              filters={filters}
+              updateFilter={updateFilter}
+              skillsOptions={skillsOptions}
+            />
+          </div>
+        </div>
+
+        {/* Projects List */}
+        <div className="flex-1">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="p-6">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded"></div>
+                      <div className="h-3 bg-muted rounded w-5/6"></div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="max-w-md mx-auto">
+                <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No projects available</h3>
+                <p className="text-muted-foreground mb-4">
+                  {!accessToken 
+                    ? 'Please sign in to view available projects.' 
+                    : searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)
+                      ? 'Try adjusting your search criteria or filters to find more projects.'
+                      : 'No projects are currently available. Check back later for new opportunities.'
+                  }
+                </p>
+                {(searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)) && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilters({ page: 1, limit: 20, sortBy: 'newest' });
+                    }}
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    {filteredProjects.length} projects found
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Showing personalized matches based on your skills
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredProjects.map((project) => {
+                  const matchScore = calculateMatchScore(project);
+                  return (
+                    <Card key={project.id} className="p-6 hover:shadow-md transition-shadow cursor-pointer">
+                      <div className="space-y-4">
+                        {/* Project Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge 
+                                variant="outline" 
+                                className={getStatusColor(project.status)}
+                              >
+                                {getStatusText(project.status)}
+                              </Badge>
+                              <Badge 
+                                variant="outline" 
+                                className={`${getMatchScoreColor(matchScore)} border-current`}
+                              >
+                                <Star className="w-3 h-3 mr-1" />
+                                {matchScore}%
+                              </Badge>
+                            </div>
+                            <h3 
+                              className="font-semibold text-lg hover:text-primary cursor-pointer"
+                              onClick={() => {
+                                setSelectedProject(selectedProject);
+                                setShowProjectDetailsDialog(true);
+                              }}
+                            >
+                              {project.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">{project.company}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleBookmark(project.id)}
+                          >
+                            {bookmarkedProjects.has(project.id) ? (
+                              <BookmarkCheck className="w-4 h-4 text-amber-500" />
+                            ) : (
+                              <Bookmark className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Project Description */}
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {project.description}
+                        </p>
+
+                        {/* Project Details */}
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{project.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{project.budget}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{project.timeline}</span>
+                          </div>
+                        </div>
+
+                        {/* Skills */}
+                        <div className="flex flex-wrap gap-1">
+                          {project.skills.slice(0, 3).map((skill) => (
+                            <Badge key={skill} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {project.skills.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{project.skills.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProject(selectedProject);
+                              setShowProjectDetailsDialog(true);
+                            }}
+                          >
+                            View Details
+                          </Button>
+                          
+                          {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) ? (
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProject(selectedProject);
+                                setShowApplicationDialog(true);
+                              }}
+                            >
+                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+                            </Button>
+                          ) : selectedProject?.status && ['in-progress', 'completed'].includes(selectedProject?.status) && !project.hasVideoSubmission ? (
+                            <Button 
+                              size="sm"
+                              className="bg-red-600 hover:bg-red-700"
+                              onClick={() => handleRecordVideo(project)}
+                            >
+                              <Video className="w-3 h-3 mr-1" />
+                              Record Video
+                            </Button>
+                          ) : project.hasVideoSubmission ? (
+                            <div className="flex items-center text-green-600 text-sm">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Video Submitted
+                            </div>
+                          ) : (
+                            <Badge variant="secondary">
+                              {getStatusText(selectedProject?.status)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Project Details Dialog */}
+      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedProject?.title}</DialogTitle>
+            <DialogDescription>
+              Project details and requirements for {selectedProject?.company}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <>
+              <ProjectDetails
+                project={selectedProject}
+                matchScore={calculateMatchScore(selectedProject)}
+                onRecordVideo={() => {
+                  setShowProjectDetailsDialog(false);
+                  handleRecordVideo(selectedProject);
+                }}
+              />
+
+              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) && !appliedProjectIds.has(selectedProject.id) ? (
+  <Button 
+    size="sm"
+    onClick={() => {
+      setSelectedProject(selectedProject);
+                                setShowApplicationDialog(true);
+    }}
+  >
+                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+                            </Button>
+) : (
+  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+    âœ“ Applied
+  </Badge>
+)}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Application Dialog */}
+      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+            <DialogDescription>
+              Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Cover Letter</label>
+              <Textarea
+                placeholder="Tell us why you're perfect for this project..."
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                rows={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowApplicationDialog(false)}
+                disabled={isApplying}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={applyToProject}
+                disabled={isApplying || !coverLetter.trim()}
+              >
+                {isApplying ? 'Submitting...' : 'Submit Application'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

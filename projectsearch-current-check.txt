@@ -1,0 +1,1020 @@
+================ TOP / IMPORTS / STATE ================
+
+================ TOP_IMPORTS_STATE (1-90) ================
+
+1: import { useState, useEffect } from 'react';
+2: import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, ArrowLeft, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
+3: import { Button } from './ui/button';
+4: import { Card } from './ui/card';
+5: import { Input } from './ui/input';
+6: import { Badge } from './ui/badge';
+7: import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+8: import { Checkbox } from './ui/checkbox';
+9: import { Slider } from './ui/slider';
+10: import { ScrollArea } from './ui/scroll-area';
+11: import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+12: import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
+13: import { Textarea } from './ui/textarea';
+14: import { useAuth } from './AuthProvider';
+15: import { toast } from 'sonner';
+16: 
+17: import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+18: 
+19: // Local types to avoid API dependency issues
+20: interface Project {
+21:   id: string;
+22:   
+23:   recruiter_id?: string | null;title: string;
+24:   description: string;
+25:   company: string;
+26:   location: string;
+27:   budget: string;
+28:   timeline: string;
+29:   skills: string[];
+30:   requirements?: string[];
+31:   type: string;
+32:   applications?: any[] | number;
+33:   applicationsCount?: number;
+34:   createdAt: string;
+35:   status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
+36:   challengeDescription?: string;
+37:   hasVideoSubmission?: boolean;
+38: }
+39: 
+40: interface ProjectFilters {
+41:   page?: number;
+42:   limit?: number;
+43:   type?: string;
+44:   location?: string;
+45:   skills?: string[];
+46:   sortBy?: string;
+47: }
+48: 
+49: interface ProjectSearchProps {
+50:   onBack: () => void;
+51:   onUpgrade: () => void;
+52:   onProjectChallengeVideo?: (projectId: string, projectTitle: string, challengeDescription?: string) => void;
+53: }
+54: 
+55: export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+56:   const { user, accessToken } = useAuth();
+57:   const [projects, setProjects] = useState<Project[]>([]);
+58:   
+59:   const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
+60: const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+61:   const [isLoading, setIsLoading] = useState(true);
+62:   const [searchQuery, setSearchQuery] = useState('');
+63:   const [filters, setFilters] = useState<ProjectFilters>({
+64:     page: 1,
+65:     limit: 20,
+66:     sortBy: 'newest'
+67:   });
+68:   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+69:   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+70:   const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+71:   const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+72:   const [coverLetter, setCoverLetter] = useState('');
+73:   const [isApplying, setIsApplying] = useState(false);
+74: 
+75:   
+76:   const openApplicationDialog = (projectToApply: Project | null) => {
+77:     if (!projectToApply?.id) {
+78:       toast.error('Please select a project first.');
+79:       return;
+80:     }
+81: 
+82:     setSelectedProject(projectToApply);
+83:     setCoverLetter('');
+84:     setShowApplicationDialog(true);
+85:   };
+86: // AI-powered recommendations
+87:   const [recommendations, setRecommendations] = useState<Project[]>([]);
+88:   const [showRecommendations, setShowRecommendations] = useState(true);
+89:   const [aiMatches, setAiMatches] = useState<Map<string, number>>(new Map());
+90:   const [isLoadingAI, setIsLoadingAI] = useState(false);
+
+================ LOAD_PROJECTS_MAPPING (90-180) ================
+
+90:   const [isLoadingAI, setIsLoadingAI] = useState(false);
+91: 
+92:   // Note: All mock data generation removed - using real API data only
+93: 
+94:   useEffect(() => {
+95:     // Load real projects data only - no fake data fallback
+96:     loadProjects();
+97:   }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+98: 
+99:   const loadProjects = async () => {
+100:     if (!accessToken) {
+101:       setIsLoading(false);
+102:       console.log('ProjectSearch loaded');
+103:       return;
+104:     }
+105:     
+106:     setIsLoading(true);
+107:     
+108:     try {
+109:       // Load real recruiter-posted projects from public.jobs
+110:       const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+111:       const supabase = createSupabaseBrowserClient();
+112: 
+113:       const { data: jobs, error } = await supabase
+114:         .from('jobs')
+115:         .select('*')
+116:         .eq('status', 'published')
+117:         .order('created_at', { ascending: false });
+118: 
+119:       if (error) {
+120:         console.error('Failed to load published jobs:', error);
+121:         setProjects([]);
+122:         setFilteredProjects([]);
+123:         return;
+124:       }
+125: 
+126:       const mappedProjects = (jobs || []).map((job: any) => ({
+127:         id: job.id,
+128:         title: job.title || 'Untitled Project',
+129:         description: job.description || '',
+130:         company: job.company_name || 'Company',
+131:         companyName: job.company_name || 'Company',
+132:         skills: job.skills || [],
+133:         budget: job.budget_min || job.budget_max
+134:           ? `${job.budget_currency || job.currency || 'USD'} ${job.budget_min || job.salary_min || 0} - ${job.budget_max || job.salary_max || job.budget_min || job.salary_min || 0}`
+135:           : 'Not specified',
+136:         budgetMin: Number(job.budget_min || job.salary_min || 0),
+137:         budgetMax: Number(job.budget_max || job.salary_max || 0),
+138:         currency: job.budget_currency || job.currency || 'USD',
+139:         location: job.location || 'Not specified',
+140:         type: job.job_type || 'freelance',
+141:         jobType: job.job_type || 'freelance',
+142:         remoteType: job.remote_type || 'remote',
+143:         experienceLevel: job.experience_level || 'mid',
+144:         status: job.status || 'published',
+145:         applications: job.applications_count || 0,
+146:         applicationsCount: job.applications_count || 0,
+147:         views: job.views_count || 0,
+148:         viewsCount: job.views_count || 0,
+149:         postedDate: job.created_at,
+150:         createdAt: job.created_at,
+151:         timeline: Array.isArray(job.requirements)
+152:           ? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, '')
+153:           : '',
+154:         requirements: job.requirements || [],
+155:         matchScore: 85,
+156:       }));
+157: 
+158:       setProjects(mappedProjects as any);
+159:       setFilteredProjects(mappedProjects as any);
+160: 
+161:       // AI recommendations disabled for MVP until real AI backend is connected.
+162:       // This prevents old Supabase Edge Function fetch errors.
+163: console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+164:     } catch (error) {
+165:       console.error('Failed to load projects:', error);
+166:       setProjects([]);
+167:       setFilteredProjects([]);
+168:       toast.error('Failed to load projects. Please check your connection and try again.');
+169:     } finally {
+170:       setIsLoading(false);
+171:     }
+172:   };
+173: 
+174:   const generateAIRecommendations = async (projectList: Project[]) => {
+175:     if (!user?.id || projectList.length === 0) {
+176:       // No recommendations without user or projects
+177:       setRecommendations([]);
+178:       return;
+179:     }
+180: 
+
+================ APPLY_SUBMIT_FUNCTION (420-540) ================
+
+420:     }
+421:   };
+422: 
+423:   const handleRecordVideo = (project: Project) => {
+424:     if (onProjectChallengeVideo) {
+425:       onProjectChallengeVideo(project.id, project.title, project.challengeDescription);
+426:     }
+427:   };
+428: 
+429: const applyToProject = async () => {
+430:   if (!selectedProject) {
+431:     toast.error('Please select a project first.');
+432:     return;
+433:   }
+434: 
+435:   if (!coverLetter.trim()) {
+436:     toast.error('Please enter a cover letter before submitting.');
+437:     return;
+438:   }
+439: 
+440:   if (!user?.id) {
+441:     toast.error('Please login to apply.');
+442:     return;
+443:   }
+444: 
+445:   try {
+446:     setIsApplying(true);
+447: 
+448:     const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+449:     const supabase = createSupabaseBrowserClient();
+450: 
+451:     const { data: authData } = await supabase.auth.getUser();
+452:     if (!authData.user) {
+453:       toast.error('Authentication failed.');
+454:       return;
+455:     }
+456: 
+457:     const { data: candidateProfile } = await supabase
+458:       .from('profiles')
+459:       .select('id, full_name, email, role')
+460:       .eq('auth_user_id', authData.user.id)
+461:       .single();
+462: 
+463:     if (!candidateProfile || candidateProfile.role !== 'candidate') {
+464:       toast.error('Only candidates can apply.');
+465:       return;
+466:     }
+467: 
+468:     // Check existing application    const { data: currentAuthData, error: currentAuthError } = await supabase.auth.getUser();
+469:     const { data: currentAuthData, error: currentAuthError } = await supabase.auth.getUser();
+470:     const currentAuthUserId = currentAuthData?.user?.id;
+471: 
+472:     if (currentAuthError || !currentAuthUserId) {
+473:       toast.error('Please login again before applying.');
+474:       return;
+475:     }
+476: 
+477:     const { data: applicationProfileRow, error: applicationProfileError } = await supabase
+478:       .from('profiles')
+479:       .select('id, auth_user_id, full_name')
+480:       .eq('auth_user_id', currentAuthUserId)
+481:       .maybeSingle();
+482: 
+483:     if (applicationProfileError || !applicationProfileRow?.id) {
+484:       toast.error(applicationProfileError?.message || 'Candidate profile not found. Please complete your profile first.');
+485:       return;
+486:     }
+487: 
+488:     const candidateOwnerProfileId = applicationProfileRow.id;
+489: 
+490:     const { data: existing } = await supabase
+491:       .from('applications')
+492:       .select('id')
+493:       .eq('job_id', selectedProject.id)
+494:       .eq('candidate_id', candidateOwnerProfileId)
+495:       .maybeSingle();
+496: 
+497:     if (existing) {
+498:       toast.error('You have already applied to this project.');
+499:       const markSelectedProjectApplied = () => {
+500:         if (!selectedProject?.id) return;
+501: 
+502:         setProjects((prevProjects) =>
+503:           prevProjects.map((project) =>
+504:             project.id === selectedProject.id
+505:               ? {
+506:                   ...project,
+507:                   status: 'applied' as const,
+508:                   applicationsCount: Number(project.applicationsCount || 0) + 1,
+509:                 }
+510:               : project
+511:           )
+512:         );
+513: 
+514:         setSelectedProject((current) =>
+515:           current
+516:             ? {
+517:                 ...current,
+518:                 status: 'applied' as const,
+519:                 applicationsCount: Number(current.applicationsCount || 0) + 1,
+520:               }
+521:             : current
+522:         );
+523:       };
+524: 
+525:       markSelectedProjectApplied();
+526: 
+527:       setShowApplicationDialog(false);
+528:       return;
+529:     }
+530: 
+531:     const matchScore = calculateMatchScore(selectedProject);
+532: const { error: appError } = await supabase
+533:       .from('applications')
+534:       .insert({
+535:         job_id: selectedProject.id,
+536:         candidate_id: candidateOwnerProfileId,
+537:         cover_letter: coverLetter.trim(),
+538:         status: 'applied',
+539:         match_score: matchScore,
+540:       });
+
+================ SYNC_APPLIED_REFRESH_EFFECT (560-680) ================
+
+560:           title: 'New Application Received',
+561:           message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
+562:           metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+563:           is_read: false,
+564:         });
+565:     }
+566: 
+567:     toast.success('Application submitted successfully! 🎉');
+568: 
+569:     
+570:       setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+571: // Refresh projects
+572:     await loadProjects();
+573: 
+574:     // Close dialog
+575:     setCoverLetter('');
+576:       const markSelectedProjectApplied = () => {
+577:         if (!selectedProject?.id) return;
+578: 
+579:         setProjects((prevProjects) =>
+580:           prevProjects.map((project) =>
+581:             project.id === selectedProject.id
+582:               ? {
+583:                   ...project,
+584:                   status: 'applied' as const,
+585:                   applicationsCount: Number(project.applicationsCount || 0) + 1,
+586:                 }
+587:               : project
+588:           )
+589:         );
+590: 
+591:         setSelectedProject((current) =>
+592:           current
+593:             ? {
+594:                 ...current,
+595:                 status: 'applied' as const,
+596:                 applicationsCount: Number(current.applicationsCount || 0) + 1,
+597:               }
+598:             : current
+599:         );
+600:       };
+601: 
+602:       markSelectedProjectApplied();
+603: 
+604:     setShowApplicationDialog(false);
+605:     setSelectedProject(null);
+606: 
+607:   } catch (error) {
+608:     console.error(error);
+609:     toast.error('Something went wrong.');
+610:   } finally {
+611:     setIsApplying(false);
+612:   }
+613: };
+614: 
+615:   useEffect(() => {
+616:     const syncAppliedProjectsFromDatabase = async () => {
+617:       try {
+618:         if (!projects.length) return;
+619: 
+620:         const supabaseForAppliedState = createSupabaseBrowserClient();
+621:         const { data: authData } = await supabaseForAppliedState.auth.getUser();
+622:         const authUserId = authData?.user?.id;
+623: 
+624:         if (!authUserId) return;
+625: 
+626:         const { data: ownerProfile } = await supabaseForAppliedState
+627:           .from('profiles')
+628:           .select('id, auth_user_id')
+629:           .eq('auth_user_id', authUserId)
+630:           .maybeSingle();
+631: 
+632:         const candidateIds = [ownerProfile?.id, authUserId].filter(Boolean) as string[];
+633:         const projectIds = projects.map((project) => project.id).filter(Boolean);
+634: 
+635:         if (!candidateIds.length || !projectIds.length) return;
+636: 
+637:         const { data: applicationRows, error } = await supabaseForAppliedState
+638:           .from('applications')
+639:           .select('job_id')
+640:           .in('job_id', projectIds)
+641:           .in('candidate_id', candidateIds);
+642: 
+643:         if (error) {
+644:           console.error('Failed to sync applied project state:', error);
+645:           return;
+646:         }
+647: 
+648:         const nextAppliedIds = new Set<string>((applicationRows || []).map((row: any) => String(row.job_id)));
+649: 
+650:         setAppliedProjectIds(nextAppliedIds);
+651: 
+652:         setProjects((prevProjects) =>
+653:           prevProjects.map((project) =>
+654:             nextAppliedIds.has(String(project.id))
+655:               ? { ...project, status: 'applied' as const }
+656:               : project
+657:           )
+658:         );
+659:       } catch (error) {
+660:         console.error('Failed to sync applied project state:', error);
+661:       }
+662:     };
+663: 
+664:     void syncAppliedProjectsFromDatabase();
+665:   }, [projects.length]);
+666: 
+667:   useEffect(() => {
+668:     const syncAppliedStatusAfterRefresh = async () => {
+669:       try {
+670:         if (!projects.length) return;
+671: 
+672:         const supabase = createSupabaseBrowserClient();
+673:         const { data: authData } = await supabase.auth.getUser();
+674:         const authUserId = authData?.user?.id;
+675: 
+676:         if (!authUserId) return;
+677: 
+678:         const { data: profileRow } = await supabase
+679:           .from('profiles')
+680:           .select('id, auth_user_id')
+
+================ PROJECT_CARD_BUTTONS (1240-1335) ================
+
+1240:                           {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) ? (
+1241:                             <Button 
+1242:                               size="sm"
+1243:                               onClick={() => {
+1244: 
+1245:                                 openApplicationDialog(project);
+1246:                               }}
+1247:                             >
+1248:                               {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+1249:                             </Button>
+1250:                           ) : selectedProject?.status && ['in-progress', 'completed'].includes(selectedProject?.status) && !project.hasVideoSubmission ? (
+1251:                             <Button 
+1252:                               size="sm"
+1253:                               className="bg-red-600 hover:bg-red-700"
+1254:                               onClick={() => handleRecordVideo(project)}
+1255:                             >
+1256:                               <Video className="w-3 h-3 mr-1" />
+1257:                               Record Video
+1258:                             </Button>
+1259:                           ) : project.hasVideoSubmission ? (
+1260:                             <div className="flex items-center text-green-600 text-sm">
+1261:                               <CheckCircle className="w-3 h-3 mr-1" />
+1262:                               Video Submitted
+1263:                             </div>
+1264:                           ) : (
+1265:                             <Badge variant="secondary">
+1266:                               {getStatusText(selectedProject?.status)}
+1267:                             </Badge>
+1268:                           )}
+1269:                         </div>
+1270:                       </div>
+1271:                     </Card>
+1272:                   );
+1273:                 })}
+1274:               </div>
+1275:             </>
+1276:           )}
+1277:         </div>
+1278:       </div>
+1279: 
+1280:       {/* Project Details Dialog */}
+1281:       <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
+1282:         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+1283:           <DialogHeader>
+1284:             <DialogTitle>{selectedProject?.title}</DialogTitle>
+1285:             <DialogDescription>
+1286:               Project details and requirements for {selectedProject?.company}
+1287:             </DialogDescription>
+1288:           </DialogHeader>
+1289:           {selectedProject && (
+1290:             <>
+1291:               <ProjectDetails
+1292:                 project={selectedProject}
+1293:                 matchScore={calculateMatchScore(selectedProject)}
+1294:                 onRecordVideo={() => {
+1295:                   setShowProjectDetailsDialog(false);
+1296:                   handleRecordVideo(selectedProject);
+1297:                 }}
+1298:               />
+1299: 
+1300:               {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) && !appliedProjectIds.has(selectedProject.id) ? (
+1301:   <Button 
+1302:     size="sm"
+1303:     onClick={() => {
+1304: 
+1305:                                 openApplicationDialog(selectedProject);
+1306:     }}
+1307:   >
+1308:                               {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+1309:                             </Button>
+1310: ) : (
+1311:   <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+1312:     ✓ Applied
+1313:   </Badge>
+1314: )}
+1315:             </>
+1316:           )}
+1317:         </DialogContent>
+1318:       </Dialog>
+1319: 
+1320:       {/* Application Dialog */}
+1321:       <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+1322:         <DialogContent>
+1323:           <DialogHeader>
+1324:             <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+1325:             <DialogDescription>
+1326:               Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
+1327:             </DialogDescription>
+1328:           </DialogHeader>
+1329:           <div className="space-y-4">
+1330:             <div>
+1331:               <label className="text-sm font-medium mb-2 block">Cover Letter</label>
+1332:               <Textarea
+1333:                 placeholder="Tell us why you're perfect for this project..."
+1334:                 value={coverLetter}
+1335:                 onChange={(e) => setCoverLetter(e.target.value)}
+
+================ KEYWORD SEARCH ================
+
+
+  src\hirevify-app\components\ProjectSearch.tsx:29:  skills: string[];
+  src\hirevify-app\components\ProjectSearch.tsx:30:  requirements?: string[];
+  src\hirevify-app\components\ProjectSearch.tsx:31:  type: string;
+> src\hirevify-app\components\ProjectSearch.tsx:32:  applications?: any[] | number;
+> src\hirevify-app\components\ProjectSearch.tsx:33:  applicationsCount?: number;
+  src\hirevify-app\components\ProjectSearch.tsx:34:  createdAt: string;
+  src\hirevify-app\components\ProjectSearch.tsx:35:  status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
+  src\hirevify-app\components\ProjectSearch.tsx:36:  challengeDescription?: string;
+  src\hirevify-app\components\ProjectSearch.tsx:37:  hasVideoSubmission?: boolean;
+  src\hirevify-app\components\ProjectSearch.tsx:38:}
+  src\hirevify-app\components\ProjectSearch.tsx:54:
+  src\hirevify-app\components\ProjectSearch.tsx:55:export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+  src\hirevify-app\components\ProjectSearch.tsx:56:  const { user, accessToken } = useAuth();
+> src\hirevify-app\components\ProjectSearch.tsx:57:  const [projects, setProjects] = useState<Project[]>([]);
+  src\hirevify-app\components\ProjectSearch.tsx:58:  
+> src\hirevify-app\components\ProjectSearch.tsx:59:  const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
+  src\hirevify-app\components\ProjectSearch.tsx:60:const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  src\hirevify-app\components\ProjectSearch.tsx:61:  const [isLoading, setIsLoading] = useState(true);
+  src\hirevify-app\components\ProjectSearch.tsx:62:  const [searchQuery, setSearchQuery] = useState('');
+  src\hirevify-app\components\ProjectSearch.tsx:63:  const [filters, setFilters] = useState<ProjectFilters>({
+  src\hirevify-app\components\ProjectSearch.tsx:64:    page: 1,
+  src\hirevify-app\components\ProjectSearch.tsx:66:    sortBy: 'newest'
+  src\hirevify-app\components\ProjectSearch.tsx:67:  });
+  src\hirevify-app\components\ProjectSearch.tsx:68:  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+> src\hirevify-app\components\ProjectSearch.tsx:69:  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  src\hirevify-app\components\ProjectSearch.tsx:70:  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  src\hirevify-app\components\ProjectSearch.tsx:71:  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+  src\hirevify-app\components\ProjectSearch.tsx:72:  const [coverLetter, setCoverLetter] = useState('');
+  src\hirevify-app\components\ProjectSearch.tsx:73:  const [isApplying, setIsApplying] = useState(false);
+  src\hirevify-app\components\ProjectSearch.tsx:74:
+  src\hirevify-app\components\ProjectSearch.tsx:75:  
+> src\hirevify-app\components\ProjectSearch.tsx:76:  const openApplicationDialog = (projectToApply: Project | null) => {
+  src\hirevify-app\components\ProjectSearch.tsx:77:    if (!projectToApply?.id) {
+  src\hirevify-app\components\ProjectSearch.tsx:78:      toast.error('Please select a project first.');
+  src\hirevify-app\components\ProjectSearch.tsx:79:      return;
+  src\hirevify-app\components\ProjectSearch.tsx:80:    }
+  src\hirevify-app\components\ProjectSearch.tsx:81:
+> src\hirevify-app\components\ProjectSearch.tsx:82:    setSelectedProject(projectToApply);
+  src\hirevify-app\components\ProjectSearch.tsx:83:    setCoverLetter('');
+  src\hirevify-app\components\ProjectSearch.tsx:84:    setShowApplicationDialog(true);
+  src\hirevify-app\components\ProjectSearch.tsx:85:  };
+  src\hirevify-app\components\ProjectSearch.tsx:86:// AI-powered recommendations
+  src\hirevify-app\components\ProjectSearch.tsx:87:  const [recommendations, setRecommendations] = useState<Project[]>([]);
+  src\hirevify-app\components\ProjectSearch.tsx:93:
+  src\hirevify-app\components\ProjectSearch.tsx:94:  useEffect(() => {
+  src\hirevify-app\components\ProjectSearch.tsx:95:    // Load real projects data only - no fake data fallback
+> src\hirevify-app\components\ProjectSearch.tsx:96:    loadProjects();
+  src\hirevify-app\components\ProjectSearch.tsx:97:  }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+  src\hirevify-app\components\ProjectSearch.tsx:98:
+> src\hirevify-app\components\ProjectSearch.tsx:99:  const loadProjects = async () => {
+  src\hirevify-app\components\ProjectSearch.tsx:100:    if (!accessToken) {
+  src\hirevify-app\components\ProjectSearch.tsx:101:      setIsLoading(false);
+  src\hirevify-app\components\ProjectSearch.tsx:102:      console.log('ProjectSearch loaded');
+  src\hirevify-app\components\ProjectSearch.tsx:103:      return;
+  src\hirevify-app\components\ProjectSearch.tsx:104:    }
+  src\hirevify-app\components\ProjectSearch.tsx:118:
+  src\hirevify-app\components\ProjectSearch.tsx:119:      if (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:120:        console.error('Failed to load published jobs:', error);
+> src\hirevify-app\components\ProjectSearch.tsx:121:        setProjects([]);
+  src\hirevify-app\components\ProjectSearch.tsx:122:        setFilteredProjects([]);
+  src\hirevify-app\components\ProjectSearch.tsx:123:        return;
+  src\hirevify-app\components\ProjectSearch.tsx:124:      }
+  src\hirevify-app\components\ProjectSearch.tsx:125:
+  src\hirevify-app\components\ProjectSearch.tsx:126:      const mappedProjects = (jobs || []).map((job: any) => ({
+  src\hirevify-app\components\ProjectSearch.tsx:141:        jobType: job.job_type || 'freelance',
+  src\hirevify-app\components\ProjectSearch.tsx:142:        remoteType: job.remote_type || 'remote',
+  src\hirevify-app\components\ProjectSearch.tsx:143:        experienceLevel: job.experience_level || 'mid',
+> src\hirevify-app\components\ProjectSearch.tsx:144:        status: job.status || 'published',
+> src\hirevify-app\components\ProjectSearch.tsx:145:        applications: job.applications_count || 0,
+> src\hirevify-app\components\ProjectSearch.tsx:146:        applicationsCount: job.applications_count || 0,
+  src\hirevify-app\components\ProjectSearch.tsx:147:        views: job.views_count || 0,
+  src\hirevify-app\components\ProjectSearch.tsx:148:        viewsCount: job.views_count || 0,
+  src\hirevify-app\components\ProjectSearch.tsx:149:        postedDate: job.created_at,
+  src\hirevify-app\components\ProjectSearch.tsx:150:        createdAt: job.created_at,
+  src\hirevify-app\components\ProjectSearch.tsx:151:        timeline: Array.isArray(job.requirements)
+  src\hirevify-app\components\ProjectSearch.tsx:155:        matchScore: 85,
+  src\hirevify-app\components\ProjectSearch.tsx:156:      }));
+  src\hirevify-app\components\ProjectSearch.tsx:157:
+> src\hirevify-app\components\ProjectSearch.tsx:158:      setProjects(mappedProjects as any);
+  src\hirevify-app\components\ProjectSearch.tsx:159:      setFilteredProjects(mappedProjects as any);
+  src\hirevify-app\components\ProjectSearch.tsx:160:
+  src\hirevify-app\components\ProjectSearch.tsx:161:      // AI recommendations disabled for MVP until real AI backend is connected.
+  src\hirevify-app\components\ProjectSearch.tsx:162:      // This prevents old Supabase Edge Function fetch errors.
+  src\hirevify-app\components\ProjectSearch.tsx:163:console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+  src\hirevify-app\components\ProjectSearch.tsx:164:    } catch (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:165:      console.error('Failed to load projects:', error);
+> src\hirevify-app\components\ProjectSearch.tsx:166:      setProjects([]);
+  src\hirevify-app\components\ProjectSearch.tsx:167:      setFilteredProjects([]);
+  src\hirevify-app\components\ProjectSearch.tsx:168:      toast.error('Failed to load projects. Please check your connection and try again.');
+  src\hirevify-app\components\ProjectSearch.tsx:169:    } finally {
+  src\hirevify-app\components\ProjectSearch.tsx:170:      setIsLoading(false);
+  src\hirevify-app\components\ProjectSearch.tsx:171:    }
+  src\hirevify-app\components\ProjectSearch.tsx:311:          case 'oldest':
+  src\hirevify-app\components\ProjectSearch.tsx:312:            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  src\hirevify-app\components\ProjectSearch.tsx:313:          case 'mostApplied':
+> src\hirevify-app\components\ProjectSearch.tsx:314:            return ((typeof b.applicationsCount === 'number' ? b.applicationsCount : Array.isArray(b.applications) ? b.applications.length : Number(b.applications || 0)) - (typeof a.applicationsCount === 'number' ? a.applicationsCount : Array.isArray(a.applications) ? a.applications.length : Number(a.applications || 0)));
+  src\hirevify-app\components\ProjectSearch.tsx:315:          case 'budget':
+  src\hirevify-app\components\ProjectSearch.tsx:316:            // Simple budget sorting by extracting the upper range
+  src\hirevify-app\components\ProjectSearch.tsx:317:            const getBudgetValue = (budget: string) => {
+  src\hirevify-app\components\ProjectSearch.tsx:318:              const match = budget.match(/\$[\d,]+\s*-\s*\$?([\d,]+)/);
+  src\hirevify-app\components\ProjectSearch.tsx:319:              return match ? parseInt(match[1].replace(/,/g, '')) : 0;
+  src\hirevify-app\components\ProjectSearch.tsx:343:        newSet.delete(projectId);
+  src\hirevify-app\components\ProjectSearch.tsx:344:        toast.success('Removed from bookmarks');
+  src\hirevify-app\components\ProjectSearch.tsx:345:      
+> src\hirevify-app\components\ProjectSearch.tsx:346:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  src\hirevify-app\components\ProjectSearch.tsx:347:} else {
+  src\hirevify-app\components\ProjectSearch.tsx:348:        newSet.add(projectId);
+  src\hirevify-app\components\ProjectSearch.tsx:349:        toast.success('Added to bookmarks');
+  src\hirevify-app\components\ProjectSearch.tsx:350:      
+> src\hirevify-app\components\ProjectSearch.tsx:351:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  src\hirevify-app\components\ProjectSearch.tsx:352:}
+  src\hirevify-app\components\ProjectSearch.tsx:353:      return newSet;
+  src\hirevify-app\components\ProjectSearch.tsx:354:    });
+  src\hirevify-app\components\ProjectSearch.tsx:355:  };
+  src\hirevify-app\components\ProjectSearch.tsx:356:
+  src\hirevify-app\components\ProjectSearch.tsx:427:  };
+  src\hirevify-app\components\ProjectSearch.tsx:428:
+  src\hirevify-app\components\ProjectSearch.tsx:429:const applyToProject = async () => {
+> src\hirevify-app\components\ProjectSearch.tsx:430:  if (!selectedProject) {
+  src\hirevify-app\components\ProjectSearch.tsx:431:    toast.error('Please select a project first.');
+  src\hirevify-app\components\ProjectSearch.tsx:432:    return;
+  src\hirevify-app\components\ProjectSearch.tsx:433:  }
+  src\hirevify-app\components\ProjectSearch.tsx:434:
+  src\hirevify-app\components\ProjectSearch.tsx:435:  if (!coverLetter.trim()) {
+  src\hirevify-app\components\ProjectSearch.tsx:474:      return;
+  src\hirevify-app\components\ProjectSearch.tsx:475:    }
+  src\hirevify-app\components\ProjectSearch.tsx:476:
+> src\hirevify-app\components\ProjectSearch.tsx:477:    const { data: applicationProfileRow, error: applicationProfileError } = await supabase
+  src\hirevify-app\components\ProjectSearch.tsx:478:      .from('profiles')
+  src\hirevify-app\components\ProjectSearch.tsx:479:      .select('id, auth_user_id, full_name')
+  src\hirevify-app\components\ProjectSearch.tsx:480:      .eq('auth_user_id', currentAuthUserId)
+  src\hirevify-app\components\ProjectSearch.tsx:481:      .maybeSingle();
+  src\hirevify-app\components\ProjectSearch.tsx:482:
+> src\hirevify-app\components\ProjectSearch.tsx:483:    if (applicationProfileError || !applicationProfileRow?.id) {
+  src\hirevify-app\components\ProjectSearch.tsx:484:      toast.error(applicationProfileError?.message || 'Candidate profile not found. Please complete your profile first.');
+  src\hirevify-app\components\ProjectSearch.tsx:485:      return;
+  src\hirevify-app\components\ProjectSearch.tsx:486:    }
+  src\hirevify-app\components\ProjectSearch.tsx:487:
+> src\hirevify-app\components\ProjectSearch.tsx:488:    const candidateOwnerProfileId = applicationProfileRow.id;
+  src\hirevify-app\components\ProjectSearch.tsx:489:
+  src\hirevify-app\components\ProjectSearch.tsx:490:    const { data: existing } = await supabase
+> src\hirevify-app\components\ProjectSearch.tsx:491:      .from('applications')
+  src\hirevify-app\components\ProjectSearch.tsx:492:      .select('id')
+> src\hirevify-app\components\ProjectSearch.tsx:493:      .eq('job_id', selectedProject.id)
+> src\hirevify-app\components\ProjectSearch.tsx:494:      .eq('candidate_id', candidateOwnerProfileId)
+  src\hirevify-app\components\ProjectSearch.tsx:495:      .maybeSingle();
+  src\hirevify-app\components\ProjectSearch.tsx:496:
+  src\hirevify-app\components\ProjectSearch.tsx:497:    if (existing) {
+  src\hirevify-app\components\ProjectSearch.tsx:498:      toast.error('You have already applied to this project.');
+> src\hirevify-app\components\ProjectSearch.tsx:499:      const markSelectedProjectApplied = () => {
+> src\hirevify-app\components\ProjectSearch.tsx:500:        if (!selectedProject?.id) return;
+  src\hirevify-app\components\ProjectSearch.tsx:501:
+> src\hirevify-app\components\ProjectSearch.tsx:502:        setProjects((prevProjects) =>
+  src\hirevify-app\components\ProjectSearch.tsx:503:          prevProjects.map((project) =>
+> src\hirevify-app\components\ProjectSearch.tsx:504:            project.id === selectedProject.id
+  src\hirevify-app\components\ProjectSearch.tsx:505:              ? {
+  src\hirevify-app\components\ProjectSearch.tsx:506:                  ...project,
+> src\hirevify-app\components\ProjectSearch.tsx:507:                  status: 'applied' as const,
+> src\hirevify-app\components\ProjectSearch.tsx:508:                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+  src\hirevify-app\components\ProjectSearch.tsx:509:                }
+  src\hirevify-app\components\ProjectSearch.tsx:510:              : project
+  src\hirevify-app\components\ProjectSearch.tsx:511:          )
+  src\hirevify-app\components\ProjectSearch.tsx:512:        );
+  src\hirevify-app\components\ProjectSearch.tsx:513:
+> src\hirevify-app\components\ProjectSearch.tsx:514:        setSelectedProject((current) =>
+  src\hirevify-app\components\ProjectSearch.tsx:515:          current
+  src\hirevify-app\components\ProjectSearch.tsx:516:            ? {
+  src\hirevify-app\components\ProjectSearch.tsx:517:                ...current,
+> src\hirevify-app\components\ProjectSearch.tsx:518:                status: 'applied' as const,
+> src\hirevify-app\components\ProjectSearch.tsx:519:                applicationsCount: Number(current.applicationsCount || 0) + 1,
+  src\hirevify-app\components\ProjectSearch.tsx:520:              }
+  src\hirevify-app\components\ProjectSearch.tsx:521:            : current
+  src\hirevify-app\components\ProjectSearch.tsx:522:        );
+  src\hirevify-app\components\ProjectSearch.tsx:523:      };
+  src\hirevify-app\components\ProjectSearch.tsx:524:
+> src\hirevify-app\components\ProjectSearch.tsx:525:      markSelectedProjectApplied();
+  src\hirevify-app\components\ProjectSearch.tsx:526:
+  src\hirevify-app\components\ProjectSearch.tsx:527:      setShowApplicationDialog(false);
+  src\hirevify-app\components\ProjectSearch.tsx:528:      return;
+  src\hirevify-app\components\ProjectSearch.tsx:529:    }
+  src\hirevify-app\components\ProjectSearch.tsx:530:
+> src\hirevify-app\components\ProjectSearch.tsx:531:    const matchScore = calculateMatchScore(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:532:const { error: appError } = await supabase
+> src\hirevify-app\components\ProjectSearch.tsx:533:      .from('applications')
+  src\hirevify-app\components\ProjectSearch.tsx:534:      .insert({
+> src\hirevify-app\components\ProjectSearch.tsx:535:        job_id: selectedProject.id,
+> src\hirevify-app\components\ProjectSearch.tsx:536:        candidate_id: candidateOwnerProfileId,
+  src\hirevify-app\components\ProjectSearch.tsx:537:        cover_letter: coverLetter.trim(),
+> src\hirevify-app\components\ProjectSearch.tsx:538:        status: 'applied',
+  src\hirevify-app\components\ProjectSearch.tsx:539:        match_score: matchScore,
+  src\hirevify-app\components\ProjectSearch.tsx:540:      });
+  src\hirevify-app\components\ProjectSearch.tsx:541:
+  src\hirevify-app\components\ProjectSearch.tsx:542:    if (appError) {
+  src\hirevify-app\components\ProjectSearch.tsx:543:      toast.error('Failed to submit: ' + appError.message);
+  src\hirevify-app\components\ProjectSearch.tsx:547:    // Update job count
+  src\hirevify-app\components\ProjectSearch.tsx:548:    await supabase
+  src\hirevify-app\components\ProjectSearch.tsx:549:      .from('jobs')
+> src\hirevify-app\components\ProjectSearch.tsx:550:      .update({ applications_count: (selectedProject.applicationsCount || 0) + 1 })
+> src\hirevify-app\components\ProjectSearch.tsx:551:      .eq('id', selectedProject.id);
+  src\hirevify-app\components\ProjectSearch.tsx:552:
+  src\hirevify-app\components\ProjectSearch.tsx:553:    // Create Notification for Recruiter
+> src\hirevify-app\components\ProjectSearch.tsx:554:    if (selectedProject.recruiter_id) {
+  src\hirevify-app\components\ProjectSearch.tsx:555:      await supabase
+  src\hirevify-app\components\ProjectSearch.tsx:556:        .from('notifications')
+  src\hirevify-app\components\ProjectSearch.tsx:557:        .insert({
+> src\hirevify-app\components\ProjectSearch.tsx:558:          user_id: selectedProject.recruiter_id,
+  src\hirevify-app\components\ProjectSearch.tsx:559:          type: 'new_application',
+  src\hirevify-app\components\ProjectSearch.tsx:560:          title: 'New Application Received',
+> src\hirevify-app\components\ProjectSearch.tsx:561:          message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
+> src\hirevify-app\components\ProjectSearch.tsx:562:          metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+  src\hirevify-app\components\ProjectSearch.tsx:563:          is_read: false,
+  src\hirevify-app\components\ProjectSearch.tsx:564:        });
+  src\hirevify-app\components\ProjectSearch.tsx:565:    }
+  src\hirevify-app\components\ProjectSearch.tsx:566:
+  src\hirevify-app\components\ProjectSearch.tsx:567:    toast.success('Application submitted successfully! 🎉');
+  src\hirevify-app\components\ProjectSearch.tsx:568:
+  src\hirevify-app\components\ProjectSearch.tsx:569:    
+> src\hirevify-app\components\ProjectSearch.tsx:570:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  src\hirevify-app\components\ProjectSearch.tsx:571:// Refresh projects
+> src\hirevify-app\components\ProjectSearch.tsx:572:    await loadProjects();
+  src\hirevify-app\components\ProjectSearch.tsx:573:
+  src\hirevify-app\components\ProjectSearch.tsx:574:    // Close dialog
+  src\hirevify-app\components\ProjectSearch.tsx:575:    setCoverLetter('');
+> src\hirevify-app\components\ProjectSearch.tsx:576:      const markSelectedProjectApplied = () => {
+> src\hirevify-app\components\ProjectSearch.tsx:577:        if (!selectedProject?.id) return;
+  src\hirevify-app\components\ProjectSearch.tsx:578:
+> src\hirevify-app\components\ProjectSearch.tsx:579:        setProjects((prevProjects) =>
+  src\hirevify-app\components\ProjectSearch.tsx:580:          prevProjects.map((project) =>
+> src\hirevify-app\components\ProjectSearch.tsx:581:            project.id === selectedProject.id
+  src\hirevify-app\components\ProjectSearch.tsx:582:              ? {
+  src\hirevify-app\components\ProjectSearch.tsx:583:                  ...project,
+> src\hirevify-app\components\ProjectSearch.tsx:584:                  status: 'applied' as const,
+> src\hirevify-app\components\ProjectSearch.tsx:585:                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+  src\hirevify-app\components\ProjectSearch.tsx:586:                }
+  src\hirevify-app\components\ProjectSearch.tsx:587:              : project
+  src\hirevify-app\components\ProjectSearch.tsx:588:          )
+  src\hirevify-app\components\ProjectSearch.tsx:589:        );
+  src\hirevify-app\components\ProjectSearch.tsx:590:
+> src\hirevify-app\components\ProjectSearch.tsx:591:        setSelectedProject((current) =>
+  src\hirevify-app\components\ProjectSearch.tsx:592:          current
+  src\hirevify-app\components\ProjectSearch.tsx:593:            ? {
+  src\hirevify-app\components\ProjectSearch.tsx:594:                ...current,
+> src\hirevify-app\components\ProjectSearch.tsx:595:                status: 'applied' as const,
+> src\hirevify-app\components\ProjectSearch.tsx:596:                applicationsCount: Number(current.applicationsCount || 0) + 1,
+  src\hirevify-app\components\ProjectSearch.tsx:597:              }
+  src\hirevify-app\components\ProjectSearch.tsx:598:            : current
+  src\hirevify-app\components\ProjectSearch.tsx:599:        );
+  src\hirevify-app\components\ProjectSearch.tsx:600:      };
+  src\hirevify-app\components\ProjectSearch.tsx:601:
+> src\hirevify-app\components\ProjectSearch.tsx:602:      markSelectedProjectApplied();
+  src\hirevify-app\components\ProjectSearch.tsx:603:
+  src\hirevify-app\components\ProjectSearch.tsx:604:    setShowApplicationDialog(false);
+> src\hirevify-app\components\ProjectSearch.tsx:605:    setSelectedProject(null);
+  src\hirevify-app\components\ProjectSearch.tsx:606:
+  src\hirevify-app\components\ProjectSearch.tsx:607:  } catch (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:608:    console.error(error);
+  src\hirevify-app\components\ProjectSearch.tsx:609:    toast.error('Something went wrong.');
+  src\hirevify-app\components\ProjectSearch.tsx:610:  } finally {
+  src\hirevify-app\components\ProjectSearch.tsx:613:};
+  src\hirevify-app\components\ProjectSearch.tsx:614:
+  src\hirevify-app\components\ProjectSearch.tsx:615:  useEffect(() => {
+> src\hirevify-app\components\ProjectSearch.tsx:616:    const syncAppliedProjectsFromDatabase = async () => {
+  src\hirevify-app\components\ProjectSearch.tsx:617:      try {
+  src\hirevify-app\components\ProjectSearch.tsx:618:        if (!projects.length) return;
+  src\hirevify-app\components\ProjectSearch.tsx:619:
+  src\hirevify-app\components\ProjectSearch.tsx:620:        const supabaseForAppliedState = createSupabaseBrowserClient();
+  src\hirevify-app\components\ProjectSearch.tsx:621:        const { data: authData } = await supabaseForAppliedState.auth.getUser();
+  src\hirevify-app\components\ProjectSearch.tsx:635:        if (!candidateIds.length || !projectIds.length) return;
+  src\hirevify-app\components\ProjectSearch.tsx:636:
+  src\hirevify-app\components\ProjectSearch.tsx:637:        const { data: applicationRows, error } = await supabaseForAppliedState
+> src\hirevify-app\components\ProjectSearch.tsx:638:          .from('applications')
+> src\hirevify-app\components\ProjectSearch.tsx:639:          .select('job_id')
+> src\hirevify-app\components\ProjectSearch.tsx:640:          .in('job_id', projectIds)
+> src\hirevify-app\components\ProjectSearch.tsx:641:          .in('candidate_id', candidateIds);
+  src\hirevify-app\components\ProjectSearch.tsx:642:
+  src\hirevify-app\components\ProjectSearch.tsx:643:        if (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:644:          console.error('Failed to sync applied project state:', error);
+  src\hirevify-app\components\ProjectSearch.tsx:645:          return;
+  src\hirevify-app\components\ProjectSearch.tsx:646:        }
+  src\hirevify-app\components\ProjectSearch.tsx:647:
+> src\hirevify-app\components\ProjectSearch.tsx:648:        const nextAppliedIds = new Set<string>((applicationRows || []).map((row: any) => String(row.job_id)));
+  src\hirevify-app\components\ProjectSearch.tsx:649:
+> src\hirevify-app\components\ProjectSearch.tsx:650:        setAppliedProjectIds(nextAppliedIds);
+  src\hirevify-app\components\ProjectSearch.tsx:651:
+> src\hirevify-app\components\ProjectSearch.tsx:652:        setProjects((prevProjects) =>
+  src\hirevify-app\components\ProjectSearch.tsx:653:          prevProjects.map((project) =>
+  src\hirevify-app\components\ProjectSearch.tsx:654:            nextAppliedIds.has(String(project.id))
+> src\hirevify-app\components\ProjectSearch.tsx:655:              ? { ...project, status: 'applied' as const }
+  src\hirevify-app\components\ProjectSearch.tsx:656:              : project
+  src\hirevify-app\components\ProjectSearch.tsx:657:          )
+  src\hirevify-app\components\ProjectSearch.tsx:658:        );
+  src\hirevify-app\components\ProjectSearch.tsx:659:      } catch (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:660:        console.error('Failed to sync applied project state:', error);
+  src\hirevify-app\components\ProjectSearch.tsx:661:      }
+  src\hirevify-app\components\ProjectSearch.tsx:662:    };
+  src\hirevify-app\components\ProjectSearch.tsx:663:
+> src\hirevify-app\components\ProjectSearch.tsx:664:    void syncAppliedProjectsFromDatabase();
+  src\hirevify-app\components\ProjectSearch.tsx:665:  }, [projects.length]);
+  src\hirevify-app\components\ProjectSearch.tsx:666:
+  src\hirevify-app\components\ProjectSearch.tsx:667:  useEffect(() => {
+> src\hirevify-app\components\ProjectSearch.tsx:668:    const syncAppliedStatusAfterRefresh = async () => {
+  src\hirevify-app\components\ProjectSearch.tsx:669:      try {
+  src\hirevify-app\components\ProjectSearch.tsx:670:        if (!projects.length) return;
+  src\hirevify-app\components\ProjectSearch.tsx:671:
+  src\hirevify-app\components\ProjectSearch.tsx:672:        const supabase = createSupabaseBrowserClient();
+  src\hirevify-app\components\ProjectSearch.tsx:673:        const { data: authData } = await supabase.auth.getUser();
+  src\hirevify-app\components\ProjectSearch.tsx:675:
+  src\hirevify-app\components\ProjectSearch.tsx:676:        if (!authUserId) return;
+  src\hirevify-app\components\ProjectSearch.tsx:677:
+> src\hirevify-app\components\ProjectSearch.tsx:678:        const { data: profileRow } = await supabase
+  src\hirevify-app\components\ProjectSearch.tsx:679:          .from('profiles')
+  src\hirevify-app\components\ProjectSearch.tsx:680:          .select('id, auth_user_id')
+  src\hirevify-app\components\ProjectSearch.tsx:681:          .eq('auth_user_id', authUserId)
+  src\hirevify-app\components\ProjectSearch.tsx:682:          .maybeSingle();
+  src\hirevify-app\components\ProjectSearch.tsx:683:
+> src\hirevify-app\components\ProjectSearch.tsx:684:        const { data: candidateProfileRow } = await supabase
+  src\hirevify-app\components\ProjectSearch.tsx:685:          .from('candidate_profiles')
+  src\hirevify-app\components\ProjectSearch.tsx:686:          .select('id, user_id')
+> src\hirevify-app\components\ProjectSearch.tsx:687:          .or(`user_id.eq.${authUserId}${profileRow?.id ? `,user_id.eq.${profileRow.id}` : ''}`)
+  src\hirevify-app\components\ProjectSearch.tsx:688:          .maybeSingle();
+  src\hirevify-app\components\ProjectSearch.tsx:689:
+  src\hirevify-app\components\ProjectSearch.tsx:690:        const candidateIds = Array.from(
+  src\hirevify-app\components\ProjectSearch.tsx:691:          new Set(
+  src\hirevify-app\components\ProjectSearch.tsx:692:            [
+  src\hirevify-app\components\ProjectSearch.tsx:693:              authUserId,
+> src\hirevify-app\components\ProjectSearch.tsx:694:              profileRow?.id,
+> src\hirevify-app\components\ProjectSearch.tsx:695:              candidateProfileRow?.id,
+> src\hirevify-app\components\ProjectSearch.tsx:696:              candidateProfileRow?.user_id,
+  src\hirevify-app\components\ProjectSearch.tsx:697:            ]
+  src\hirevify-app\components\ProjectSearch.tsx:698:              .filter(Boolean)
+  src\hirevify-app\components\ProjectSearch.tsx:699:              .map(String)
+  src\hirevify-app\components\ProjectSearch.tsx:700:          )
+  src\hirevify-app\components\ProjectSearch.tsx:701:        );
+  src\hirevify-app\components\ProjectSearch.tsx:705:        if (!candidateIds.length || !projectIds.length) return;
+  src\hirevify-app\components\ProjectSearch.tsx:706:
+  src\hirevify-app\components\ProjectSearch.tsx:707:        const { data: applicationRows, error } = await supabase
+> src\hirevify-app\components\ProjectSearch.tsx:708:          .from('applications')
+> src\hirevify-app\components\ProjectSearch.tsx:709:          .select('job_id, candidate_id')
+> src\hirevify-app\components\ProjectSearch.tsx:710:          .in('job_id', projectIds)
+> src\hirevify-app\components\ProjectSearch.tsx:711:          .in('candidate_id', candidateIds);
+  src\hirevify-app\components\ProjectSearch.tsx:712:
+  src\hirevify-app\components\ProjectSearch.tsx:713:        if (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:714:          console.error('Failed to sync applied project status after refresh:', error);
+  src\hirevify-app\components\ProjectSearch.tsx:715:          return;
+  src\hirevify-app\components\ProjectSearch.tsx:716:        }
+  src\hirevify-app\components\ProjectSearch.tsx:717:
+  src\hirevify-app\components\ProjectSearch.tsx:718:        const appliedIds = new Set<string>(
+  src\hirevify-app\components\ProjectSearch.tsx:719:          (applicationRows || [])
+> src\hirevify-app\components\ProjectSearch.tsx:720:            .map((row: any) => row.job_id)
+  src\hirevify-app\components\ProjectSearch.tsx:721:            .filter(Boolean)
+  src\hirevify-app\components\ProjectSearch.tsx:722:            .map(String)
+  src\hirevify-app\components\ProjectSearch.tsx:723:        );
+  src\hirevify-app\components\ProjectSearch.tsx:724:
+> src\hirevify-app\components\ProjectSearch.tsx:725:        setAppliedProjectIds(appliedIds);
+  src\hirevify-app\components\ProjectSearch.tsx:726:
+> src\hirevify-app\components\ProjectSearch.tsx:727:        setProjects((currentProjects) =>
+  src\hirevify-app\components\ProjectSearch.tsx:728:          currentProjects.map((project) =>
+  src\hirevify-app\components\ProjectSearch.tsx:729:            appliedIds.has(String(project.id))
+> src\hirevify-app\components\ProjectSearch.tsx:730:              ? { ...project, status: 'applied' as const }
+  src\hirevify-app\components\ProjectSearch.tsx:731:              : project
+  src\hirevify-app\components\ProjectSearch.tsx:732:          )
+  src\hirevify-app\components\ProjectSearch.tsx:733:        );
+  src\hirevify-app\components\ProjectSearch.tsx:734:      } catch (error) {
+  src\hirevify-app\components\ProjectSearch.tsx:735:        console.error('Failed to sync applied project status after refresh:', error);
+  src\hirevify-app\components\ProjectSearch.tsx:736:      }
+  src\hirevify-app\components\ProjectSearch.tsx:737:    };
+  src\hirevify-app\components\ProjectSearch.tsx:738:
+> src\hirevify-app\components\ProjectSearch.tsx:739:    void syncAppliedStatusAfterRefresh();
+  src\hirevify-app\components\ProjectSearch.tsx:740:  }, [projects.length]);
+  src\hirevify-app\components\ProjectSearch.tsx:741:
+  src\hirevify-app\components\ProjectSearch.tsx:742:  const skillsOptions = [
+  src\hirevify-app\components\ProjectSearch.tsx:743:    'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java', 'C++',
+  src\hirevify-app\components\ProjectSearch.tsx:744:    'UI/UX Design', 'Graphic Design', 'Product Management', 'Data Science',
+  src\hirevify-app\components\ProjectSearch.tsx:868:                <span className="font-medium">{project.timeline}</span>
+  src\hirevify-app\components\ProjectSearch.tsx:869:              </div>
+  src\hirevify-app\components\ProjectSearch.tsx:870:              <div className="flex justify-between">
+> src\hirevify-app\components\ProjectSearch.tsx:871:                <span className="text-muted-foreground">Applications:</span>
+> src\hirevify-app\components\ProjectSearch.tsx:872:                <span className="font-medium">{project.applicationsCount || project.applications || 0}</span>
+  src\hirevify-app\components\ProjectSearch.tsx:873:              </div>
+  src\hirevify-app\components\ProjectSearch.tsx:874:            </div>
+  src\hirevify-app\components\ProjectSearch.tsx:875:          </div>
+  src\hirevify-app\components\ProjectSearch.tsx:876:
+  src\hirevify-app\components\ProjectSearch.tsx:877:          <div>
+  src\hirevify-app\components\ProjectSearch.tsx:1036:                    key={project.id}
+  src\hirevify-app\components\ProjectSearch.tsx:1037:                    className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
+  src\hirevify-app\components\ProjectSearch.tsx:1038:                    onClick={() => {
+> src\hirevify-app\components\ProjectSearch.tsx:1039:                      setSelectedProject(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:1040:                      setShowProjectDetailsDialog(true);
+  src\hirevify-app\components\ProjectSearch.tsx:1041:                    }}
+  src\hirevify-app\components\ProjectSearch.tsx:1042:                  >
+  src\hirevify-app\components\ProjectSearch.tsx:1043:                    <h4 className="font-medium text-sm">{project.title}</h4>
+  src\hirevify-app\components\ProjectSearch.tsx:1044:                    <p className="text-xs text-muted-foreground">{project.company}</p>
+  src\hirevify-app\components\ProjectSearch.tsx:1168:                            <h3 
+  src\hirevify-app\components\ProjectSearch.tsx:1169:                              className="font-semibold text-lg hover:text-primary cursor-pointer"
+  src\hirevify-app\components\ProjectSearch.tsx:1170:                              onClick={() => {
+> src\hirevify-app\components\ProjectSearch.tsx:1171:                                setSelectedProject(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:1172:                                setShowProjectDetailsDialog(true);
+  src\hirevify-app\components\ProjectSearch.tsx:1173:                              }}
+  src\hirevify-app\components\ProjectSearch.tsx:1174:                            >
+  src\hirevify-app\components\ProjectSearch.tsx:1175:                              {project.title}
+  src\hirevify-app\components\ProjectSearch.tsx:1176:                            </h3>
+  src\hirevify-app\components\ProjectSearch.tsx:1230:                            variant="outline"
+  src\hirevify-app\components\ProjectSearch.tsx:1231:                            size="sm"
+  src\hirevify-app\components\ProjectSearch.tsx:1232:                            onClick={() => {
+> src\hirevify-app\components\ProjectSearch.tsx:1233:                              setSelectedProject(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:1234:                              setShowProjectDetailsDialog(true);
+  src\hirevify-app\components\ProjectSearch.tsx:1235:                            }}
+  src\hirevify-app\components\ProjectSearch.tsx:1236:                          >
+  src\hirevify-app\components\ProjectSearch.tsx:1237:                            View Details
+  src\hirevify-app\components\ProjectSearch.tsx:1238:                          </Button>
+  src\hirevify-app\components\ProjectSearch.tsx:1239:                          
+> src\hirevify-app\components\ProjectSearch.tsx:1240:                          {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) ? (
+  src\hirevify-app\components\ProjectSearch.tsx:1241:                            <Button 
+  src\hirevify-app\components\ProjectSearch.tsx:1242:                              size="sm"
+  src\hirevify-app\components\ProjectSearch.tsx:1243:                              onClick={() => {
+  src\hirevify-app\components\ProjectSearch.tsx:1244:
+> src\hirevify-app\components\ProjectSearch.tsx:1245:                                openApplicationDialog(project);
+  src\hirevify-app\components\ProjectSearch.tsx:1246:                              }}
+  src\hirevify-app\components\ProjectSearch.tsx:1247:                            >
+> src\hirevify-app\components\ProjectSearch.tsx:1248:                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+  src\hirevify-app\components\ProjectSearch.tsx:1249:                            </Button>
+> src\hirevify-app\components\ProjectSearch.tsx:1250:                          ) : selectedProject?.status && ['in-progress', 'completed'].includes(selectedProject?.status) && !project.hasVideoSubmission ? (
+  src\hirevify-app\components\ProjectSearch.tsx:1251:                            <Button 
+  src\hirevify-app\components\ProjectSearch.tsx:1252:                              size="sm"
+  src\hirevify-app\components\ProjectSearch.tsx:1253:                              className="bg-red-600 hover:bg-red-700"
+  src\hirevify-app\components\ProjectSearch.tsx:1254:                              onClick={() => handleRecordVideo(project)}
+  src\hirevify-app\components\ProjectSearch.tsx:1255:                            >
+  src\hirevify-app\components\ProjectSearch.tsx:1263:                            </div>
+  src\hirevify-app\components\ProjectSearch.tsx:1264:                          ) : (
+  src\hirevify-app\components\ProjectSearch.tsx:1265:                            <Badge variant="secondary">
+> src\hirevify-app\components\ProjectSearch.tsx:1266:                              {getStatusText(selectedProject?.status)}
+  src\hirevify-app\components\ProjectSearch.tsx:1267:                            </Badge>
+  src\hirevify-app\components\ProjectSearch.tsx:1268:                          )}
+  src\hirevify-app\components\ProjectSearch.tsx:1269:                        </div>
+  src\hirevify-app\components\ProjectSearch.tsx:1270:                      </div>
+  src\hirevify-app\components\ProjectSearch.tsx:1271:                    </Card>
+  src\hirevify-app\components\ProjectSearch.tsx:1281:      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
+  src\hirevify-app\components\ProjectSearch.tsx:1282:        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+  src\hirevify-app\components\ProjectSearch.tsx:1283:          <DialogHeader>
+> src\hirevify-app\components\ProjectSearch.tsx:1284:            <DialogTitle>{selectedProject?.title}</DialogTitle>
+  src\hirevify-app\components\ProjectSearch.tsx:1285:            <DialogDescription>
+> src\hirevify-app\components\ProjectSearch.tsx:1286:              Project details and requirements for {selectedProject?.company}
+  src\hirevify-app\components\ProjectSearch.tsx:1287:            </DialogDescription>
+  src\hirevify-app\components\ProjectSearch.tsx:1288:          </DialogHeader>
+> src\hirevify-app\components\ProjectSearch.tsx:1289:          {selectedProject && (
+  src\hirevify-app\components\ProjectSearch.tsx:1290:            <>
+  src\hirevify-app\components\ProjectSearch.tsx:1291:              <ProjectDetails
+> src\hirevify-app\components\ProjectSearch.tsx:1292:                project={selectedProject}
+> src\hirevify-app\components\ProjectSearch.tsx:1293:                matchScore={calculateMatchScore(selectedProject)}
+  src\hirevify-app\components\ProjectSearch.tsx:1294:                onRecordVideo={() => {
+  src\hirevify-app\components\ProjectSearch.tsx:1295:                  setShowProjectDetailsDialog(false);
+> src\hirevify-app\components\ProjectSearch.tsx:1296:                  handleRecordVideo(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:1297:                }}
+  src\hirevify-app\components\ProjectSearch.tsx:1298:              />
+  src\hirevify-app\components\ProjectSearch.tsx:1299:
+> src\hirevify-app\components\ProjectSearch.tsx:1300:              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) && !appliedProjectIds.has(selectedProject.id) ? (
+  src\hirevify-app\components\ProjectSearch.tsx:1301:  <Button 
+  src\hirevify-app\components\ProjectSearch.tsx:1302:    size="sm"
+  src\hirevify-app\components\ProjectSearch.tsx:1303:    onClick={() => {
+  src\hirevify-app\components\ProjectSearch.tsx:1304:
+> src\hirevify-app\components\ProjectSearch.tsx:1305:                                openApplicationDialog(selectedProject);
+  src\hirevify-app\components\ProjectSearch.tsx:1306:    }}
+  src\hirevify-app\components\ProjectSearch.tsx:1307:  >
+> src\hirevify-app\components\ProjectSearch.tsx:1308:                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+  src\hirevify-app\components\ProjectSearch.tsx:1309:                            </Button>
+  src\hirevify-app\components\ProjectSearch.tsx:1310:) : (
+  src\hirevify-app\components\ProjectSearch.tsx:1311:  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+  src\hirevify-app\components\ProjectSearch.tsx:1312:    ✓ Applied
+  src\hirevify-app\components\ProjectSearch.tsx:1313:  </Badge>
+  src\hirevify-app\components\ProjectSearch.tsx:1321:      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+  src\hirevify-app\components\ProjectSearch.tsx:1322:        <DialogContent>
+  src\hirevify-app\components\ProjectSearch.tsx:1323:          <DialogHeader>
+> src\hirevify-app\components\ProjectSearch.tsx:1324:            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+  src\hirevify-app\components\ProjectSearch.tsx:1325:            <DialogDescription>
+  src\hirevify-app\components\ProjectSearch.tsx:1326:              Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
+  src\hirevify-app\components\ProjectSearch.tsx:1327:            </DialogDescription>
+  src\hirevify-app\components\ProjectSearch.tsx:1328:          </DialogHeader>
+  src\hirevify-app\components\ProjectSearch.tsx:1329:          <div className="space-y-4">
+
+
+

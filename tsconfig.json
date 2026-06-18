@@ -31,7 +31,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "compare-projectsearch",
+    "**/*.backup*",
+    "**/*.bak*"
+  ]
 }
 
 

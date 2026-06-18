@@ -1,0 +1,160 @@
+
+      .replace(/\u00c2/g, '')
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+>     .trim();
+  };
+  
+  const cleanDomTextNodes = (root: HTMLElement) => {
+    };
+  
+    const runATSCheck = () => {
+>     const clean = (value?: string) => (value || '').trim();
+  
+      const contact = resumeData.contactInfo;
+      const hasContact =
+        }
+  
+        const fileName = resumeData.contactInfo.fullName
+>         ? `${resumeData.contactInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`
+          : 'resume.pdf';
+  
+        pdf.save(`hirevify-${resumeData.template}-resume.pdf`);
+                    <label className="block text-sm font-medium mb-2">Full Name *</label>
+                    <Input
+                      value={resumeData.contactInfo.fullName}
+>                     onChange={(e) => updateContactInfo('fullName', e.target.value)}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                    <Input
+                      type="email"
+                      value={resumeData.contactInfo.email}
+>                     onChange={(e) => updateContactInfo('email', e.target.value)}
+                      placeholder="john.doe@email.com"
+                    />
+                  </div>
+                    <Input
+                      type="tel"
+                      value={resumeData.contactInfo.phone}
+>                     onChange={(e) => updateContactInfo('phone', e.target.value)}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <Input
+                      value={resumeData.contactInfo.location}
+>                     onChange={(e) => updateContactInfo('location', e.target.value)}
+                      placeholder="City, State"
+                    />
+                  </div>
+                    <label className="block text-sm font-medium mb-2">Link URL</label>
+                    <Input
+                      value={resumeData.contactInfo.linkedinUrl}
+>                     onChange={(e) => updateContactInfo('linkedinUrl', e.target.value)}
+                      placeholder="Link.com/in/johndoe"
+                    />
+                  </div>
+                    <label className="block text-sm font-medium mb-2">Portfolio URL</label>
+                    <Input
+                      value={resumeData.contactInfo.portfolioUrl}
+>                     onChange={(e) => updateContactInfo('portfolioUrl', e.target.value)}
+                      placeholder="johndoe.com"
+                    />
+                  </div>
+                    </div>
+                    <Textarea
+                      value={resumeData.summary}
+>                     onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
+                      placeholder="Write a compelling 2-3 sentence summary highlighting your key qualifications and career objectives, or click Generate with AI above..."
+                      rows={6}
+                    />
+                            <label className="block text-sm font-medium mb-1">Job Title *</label>
+                            <Input
+                              value={exp.jobTitle}
+>                             onChange={(e) => updateExperience(exp.id, 'jobTitle', e.target.value)}
+                              placeholder="Software Engineer"
+                            />
+                          </div>
+                            <label className="block text-sm font-medium mb-1">Company *</label>
+                            <Input
+                              value={exp.companyName}
+>                             onChange={(e) => updateExperience(exp.id, 'companyName', e.target.value)}
+                              placeholder="Company Name"
+                            />
+                          </div>
+                            <Input
+                              type="month"
+                              value={exp.startDate}
+>                             onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Input
+                              type="month"
+                              value={exp.endDate}
+>                             onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
+                              disabled={exp.isCurrentJob}
+                              placeholder={exp.isCurrentJob ? 'Present' : ''}
+                            />
+                            <input
+                              type="checkbox"
+                              checked={exp.isCurrentJob}
+>                             onChange={(e) => updateExperience(exp.id, 'isCurrentJob', e.target.checked)}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">I currently work here</span>
+                          <label className="block text-sm font-medium mb-1">Description</label>
+                          <Textarea
+                            value={exp.description.join('\n')}
+>                           onChange={(e) => updateExperience(exp.id, 'description', e.target.value.split('\n'))}
+                            placeholder=" Developed and maintained web applications&#10; Collaborated with cross-functional teams&#10; Improved performance by 30%"
+                            rows={4}
+                          />
+                            <label className="block text-sm font-medium mb-1">Degree *</label>
+                            <Input
+                              value={edu.degree}
+>                             onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
+                              placeholder="Bachelor of Science in Computer Science"
+                            />
+                          </div>
+                            <label className="block text-sm font-medium mb-1">University *</label>
+                            <Input
+                              value={edu.university}
+>                             onChange={(e) => updateEducation(edu.id, 'university', e.target.value)}
+                              placeholder="University Name"
+                            />
+                          </div>
+                            <Input
+                              type="month"
+                              value={edu.graduationDate}
+>                             onChange={(e) => updateEducation(edu.id, 'graduationDate', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">GPA (Optional)</label>
+                            <Input
+                              value={edu.gpa || ''}
+>                             onChange={(e) => updateEducation(edu.id, 'gpa', e.target.value)}
+                              placeholder="3.8"
+                            />
+                          </div>
+    const [newSkillCategory, setNewSkillCategory] = useState<'technical' | 'soft' | 'language'>('technical');
+  
+    const handleAddSkill = () => {
+>     if (newSkillName.trim()) {
+        onAddSkill(cleanBrokenText(newSkillName), newSkillCategory);
+        setNewSkillName('');
+      }
+        <div className="flex gap-2">
+          <Input
+            value={newSkillName}
+>           onChange={(e) => setNewSkillName(e.target.value)}
+            placeholder="Add a skill..."
+>           onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+          />
+          <Select value={newSkillCategory} onValueChange={(value: any) => setNewSkillCategory(value)}>
+            <SelectTrigger className="w-40">
+
+
+

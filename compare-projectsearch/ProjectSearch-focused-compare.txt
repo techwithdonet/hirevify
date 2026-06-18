@@ -1,0 +1,960 @@
+
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:26:  timeline: string;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:27:  skills: string[];
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:28:  requirements?: string[];
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:29:  type: string;
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:30:  applications?: any[] | number;
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:31:  applicationsCount?: number;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:32:  createdAt: string;
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:33:  status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:34:  challengeDescription?: string;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:35:  hasVideoSubmission?: boolean;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:36:}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:37:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:38:interface ProjectFilters {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:39:  page?: number;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:51:}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:52:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:53:export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:54:  const { user, accessToken } = useAuth();
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:55:  const [projects, setProjects] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:56:  
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:57:  const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:58:const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:59:  const [isLoading, setIsLoading] = useState(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:60:  const [searchQuery, setSearchQuery] = useState('');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:61:  const [filters, setFilters] = useState<ProjectFilters>({
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:62:    page: 1,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:63:    limit: 20,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:64:    sortBy: 'newest'
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:65:  });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:66:  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:67:  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:68:  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:69:  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:70:  const [coverLetter, setCoverLetter] = useState('');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:71:  const [isApplying, setIsApplying] = useState(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:72:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:73:  // AI-powered recommendations
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:74:  const [recommendations, setRecommendations] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:79:  // Note: All mock data generation removed - using real API data only
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:80:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:81:  useEffect(() => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:82:    // Load real projects data only - no fake data fallback
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:83:    loadProjects();
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:84:  }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:85:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:86:  const loadProjects = async () => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:87:    if (!accessToken) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:88:      setIsLoading(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:89:      console.log('ProjectSearch loaded');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:90:      return;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:91:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:92:    
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:104:        .order('created_at', { ascending: false });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:105:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:106:      if (error) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:107:        console.error('Failed to load published jobs:', error);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:108:        setProjects([]);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:109:        setFilteredProjects([]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:110:        return;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:111:      }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:112:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:113:      const mappedProjects = (jobs || []).map((job: any) => ({
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:114:        id: job.id,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:115:        title: job.title || 'Untitled Project',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:116:        description: job.description || '',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:117:        company: job.company_name || 'Company',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:118:        companyName: job.company_name || 'Company',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:119:        skills: job.skills || [],
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:127:        type: job.job_type || 'freelance',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:128:        jobType: job.job_type || 'freelance',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:129:        remoteType: job.remote_type || 'remote',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:130:        experienceLevel: job.experience_level || 'mid',
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:131:        status: job.status || 'published',
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:132:        applications: job.applications_count || 0,
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:133:        applicationsCount: job.applications_count || 0,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:134:        views: job.views_count || 0,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:135:        viewsCount: job.views_count || 0,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:136:        postedDate: job.created_at,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:137:        createdAt: job.created_at,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:138:        timeline: Array.isArray(job.requirements)
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:139:          ? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, '')
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:141:        requirements: job.requirements || [],
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:142:        matchScore: 85,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:143:      }));
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:144:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:145:      setProjects(mappedProjects as any);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:146:      setFilteredProjects(mappedProjects as any);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:147:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:148:      // AI recommendations disabled for MVP until real AI backend is connected.
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:149:      // This prevents old Supabase Edge Function fetch errors.
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:150:console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:151:    } catch (error) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:152:      console.error('Failed to load projects:', error);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:153:      setProjects([]);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:154:      setFilteredProjects([]);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:155:      toast.error('Failed to load projects. Please check your connection and try again.');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:156:    } finally {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:157:      setIsLoading(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:158:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:159:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:160:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:296:          case 'newest':
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:297:            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:298:          case 'oldest':
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:299:            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:300:          case 'mostApplied':
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:301:            return ((typeof b.applicationsCount === 'number' ? b.applicationsCount : Array.isArray(b.applications) ? b.applications.length : Number(b.applications || 0)) - (typeof a.applicationsCount === 'number' ? a.applicationsCount : Array.isArray(a.applications) ? a.applications.length : Number(a.applications || 0)));
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:302:          case 'budget':
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:303:            // Simple budget sorting by extracting the upper range
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:304:            const getBudgetValue = (budget: string) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:305:              const match = budget.match(/\$[\d,]+\s*-\s*\$?([\d,]+)/);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:306:              return match ? parseInt(match[1].replace(/,/g, '')) : 0;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:307:            };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:311:        }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:312:      });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:313:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:314:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:315:    setFilteredProjects(filtered);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:316:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:317:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:318:  const updateFilter = (key: keyof ProjectFilters, value: any) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:319:    setFilters(prev => ({
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:320:      ...prev,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:321:      [key]: value,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:329:      if (newSet.has(projectId)) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:330:        newSet.delete(projectId);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:331:        toast.success('Removed from bookmarks');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:332:      
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:333:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:334:} else {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:335:        newSet.add(projectId);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:336:        toast.success('Added to bookmarks');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:337:      
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:338:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:339:}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:340:      return newSet;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:341:    });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:342:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:343:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:344:  const calculateMatchScore = (project: Project): number => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:386:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:387:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:388:  const getStatusColor = (status?: string) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:389:    switch (status) {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:390:      case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:391:      case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:392:      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:393:      case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:394:      case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:395:      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:396:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:397:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:398:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:399:  const getStatusText = (status?: string) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:400:    switch (status) {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:401:      case 'applied': return 'Applied';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:402:      case 'selected': return 'Selected';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:403:      case 'in-progress': return 'In Progress';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:404:      case 'completed': return 'Completed';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:405:      case 'submitted': return 'Video Submitted';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:406:      default: return 'Available';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:407:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:412:      onProjectChallengeVideo(project.id, project.title, project.challengeDescription);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:413:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:414:  };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:415:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:416:const applyToProject = async () => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:417:  if (!selectedProject) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:418:    toast.error('Please select a project first.');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:419:    return;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:420:  }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:421:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:422:  if (!coverLetter.trim()) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:453:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:454:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:455:    // Check existing application
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:456:    const { data: existing } = await supabase
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:457:      .from('applications')
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:458:      .select('id')
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:459:      .eq('job_id', selectedProject.id)
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:460:      .eq('candidate_id', candidateProfile.id)
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:461:      .maybeSingle();
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:462:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:463:    if (existing) {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:464:      toast.error('You have already applied to this project.');
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:465:      setShowApplicationDialog(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:466:      return;
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:467:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:468:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:469:    const matchScore = calculateMatchScore(selectedProject);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:470:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:471:    const { error: appError } = await supabase
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:472:      .from('applications')
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:473:      .insert({
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:474:        job_id: selectedProject.id,
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:475:        candidate_id: candidateProfile.id,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:476:        cover_letter: coverLetter.trim(),
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:477:        status: 'applied',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:478:        match_score: matchScore,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:479:        submitted_at: new Date().toISOString(),
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:480:      });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:481:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:482:    if (appError) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:483:      toast.error('Failed to submit: ' + appError.message);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:486:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:487:    // Update job count
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:488:    await supabase
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:489:      .from('jobs')
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:490:      .update({ applications_count: (selectedProject.applicationsCount || 0) + 1 })
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:491:      .eq('id', selectedProject.id);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:492:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:493:    // Create Notification for Recruiter
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:494:    if (selectedProject.recruiter_id) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:495:      await supabase
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:496:        .from('notifications')
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:497:        .insert({
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:498:          user_id: selectedProject.recruiter_id,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:499:          type: 'new_application',
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:500:          title: 'New Application Received',
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:501:          message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:502:          metadata: { job_id: selectedProject.id, candidate_id: candidateProfile.id },
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:503:          is_read: false,
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:504:        });
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:505:    }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:506:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:507:    toast.success('Application submitted successfully! 🎉');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:508:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:509:    
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:510:      setAppliedProjectIds(prev => selectedProject?.id ? new Set([...prev, selectedProject.id]) : prev);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:511:// Refresh projects
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:512:    await loadProjects();
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:513:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:514:    // Close dialog
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:515:    setCoverLetter('');
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:516:    setShowApplicationDialog(false);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:517:    setSelectedProject(null);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:518:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:519:  } catch (error) {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:520:    console.error(error);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:521:    toast.error('Something went wrong.');
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:522:  } finally {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:523:    setIsApplying(false);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:545:    };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:546:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:547:    const getStatusColor = (status?: string) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:548:      switch (status) {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:549:        case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:550:        case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:551:        case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:552:        case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:553:        case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:554:        default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:555:      }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:556:    };
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:557:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:558:    const getStatusText = (status?: string) => {
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:559:      switch (status) {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:560:        case 'applied': return 'Applied';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:561:        case 'selected': return 'Selected';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:562:        case 'in-progress': return 'In Progress';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:563:        case 'completed': return 'Completed';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:564:        case 'submitted': return 'Video Submitted';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:565:        default: return 'Available';
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:566:      }
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:651:                <span className="text-muted-foreground">Timeline:</span>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:652:                <span className="font-medium">{project.timeline}</span>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:653:              </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:654:              <div className="flex justify-between">
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:655:                <span className="text-muted-foreground">Applications:</span>
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:656:                <span className="font-medium">{project.applicationsCount || project.applications || 0}</span>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:657:              </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:658:            </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:659:          </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:660:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:661:          <div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:662:            <h4 className="font-semibold mb-2">Required Skills</h4>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:703:            <SelectContent>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:704:              <SelectItem value="newest">Newest first</SelectItem>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:705:              <SelectItem value="oldest">Oldest first</SelectItem>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:706:              <SelectItem value="budget">Highest budget</SelectItem>
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:707:              <SelectItem value="mostApplied">Most applied</SelectItem>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:708:            </SelectContent>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:709:          </Select>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:710:        </Card>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:711:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:712:        {/* Project Type */}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:713:        <Card className="p-4">
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:819:                  <div
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:820:                    key={project.id}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:821:                    className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:822:                    onClick={() => {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:823:                      setSelectedProject(selectedProject);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:824:                      setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:825:                    }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:826:                  >
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:827:                    <h4 className="font-medium text-sm">{project.title}</h4>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:828:                    <p className="text-xs text-muted-foreground">{project.company}</p>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:829:                    <div className="flex items-center gap-2 mt-1">
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:951:                            </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:952:                            <h3 
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:953:                              className="font-semibold text-lg hover:text-primary cursor-pointer"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:954:                              onClick={() => {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:955:                                setSelectedProject(selectedProject);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:956:                                setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:957:                              }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:958:                            >
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:959:                              {project.title}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:960:                            </h3>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:961:                            <p className="text-sm text-muted-foreground">{project.company}</p>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1013:                          <Button
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1014:                            variant="outline"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1015:                            size="sm"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1016:                            onClick={() => {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1017:                              setSelectedProject(selectedProject);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1018:                              setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1019:                            }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1020:                          >
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1021:                            View Details
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1022:                          </Button>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1023:                          
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1024:                          {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) ? (
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1025:                            <Button 
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1026:                              size="sm"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1027:                              onClick={() => {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1028:                                setSelectedProject(selectedProject);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1029:                                setShowApplicationDialog(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1030:                              }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1031:                            >
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1032:                              Apply Now
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1033:                            </Button>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1034:                          ) : project.status && ['in-progress', 'completed'].includes(project.status) && !project.hasVideoSubmission ? (
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1035:                            <Button 
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1036:                              size="sm"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1037:                              className="bg-red-600 hover:bg-red-700"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1038:                              onClick={() => handleRecordVideo(project)}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1080:                  handleRecordVideo(selectedProject);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1081:                }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1082:              />
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1083:
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1084:              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) && !appliedProjectIds.has(selectedProject.id) ? (
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1085:  <Button 
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1086:    size="sm"
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1087:    onClick={() => {
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1088:      setSelectedProject(selectedProject);
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1089:      setShowApplicationDialog(true);
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1090:    }}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1091:  >
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1092:    Apply Now
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1093:  </Button>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1094:) : (
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1095:  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1096:    ✓ Applied
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1097:  </Badge>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1098:)}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1099:            </>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1100:          )}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1101:        </DialogContent>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1102:      </Dialog>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1103:
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1104:      {/* Application Dialog */}
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1105:      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1106:        <DialogContent>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1107:          <DialogHeader>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1108:            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1109:            <DialogDescription>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1110:              Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1111:            </DialogDescription>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1122:            </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1123:            <div className="flex justify-end gap-2">
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1124:              <Button 
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1125:                variant="outline" 
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1126:                onClick={() => setShowApplicationDialog(false)}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1127:                disabled={isApplying}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1128:              >
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1129:                Cancel
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1130:              </Button>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1131:              <Button 
+> compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1132:                onClick={applyToProject}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1133:                disabled={isApplying || !coverLetter.trim()}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1134:              >
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1135:                {isApplying ? 'Submitting...' : 'Submit Application'}
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1136:              </Button>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1137:            </div>
+  compare-projectsearch\ProjectSearch.ORIGIN-MAIN.tsx:1138:          </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:28:  timeline: string;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:29:  skills: string[];
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:30:  requirements?: string[];
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:31:  type: string;
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:32:  applications?: any[] | number;
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:33:  applicationsCount?: number;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:34:  createdAt: string;
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:35:  status?: 'available' | 'applied' | 'selected' | 'in-progress' | 'completed' | 'submitted';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:36:  challengeDescription?: string;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:37:  hasVideoSubmission?: boolean;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:38:}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:39:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:40:interface ProjectFilters {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:41:  page?: number;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:53:}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:54:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:55:export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:56:  const { user, accessToken } = useAuth();
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:57:  const [projects, setProjects] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:58:  
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:59:  const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:60:const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:61:  const [isLoading, setIsLoading] = useState(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:62:  const [searchQuery, setSearchQuery] = useState('');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:63:  const [filters, setFilters] = useState<ProjectFilters>({
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:64:    page: 1,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:65:    limit: 20,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:66:    sortBy: 'newest'
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:67:  });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:68:  const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:69:  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:70:  const [showApplicationDialog, setShowApplicationDialog] = useState(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:71:  const [showProjectDetailsDialog, setShowProjectDetailsDialog] = useState(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:72:  const [coverLetter, setCoverLetter] = useState('');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:73:  const [isApplying, setIsApplying] = useState(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:74:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:75:  
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:76:  const openApplicationDialog = (projectToApply: Project | null) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:77:    if (!projectToApply?.id) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:78:      toast.error('Please select a project first.');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:79:      return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:80:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:81:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:82:    setSelectedProject(projectToApply);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:83:    setCoverLetter('');
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:84:    setShowApplicationDialog(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:85:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:86:// AI-powered recommendations
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:87:  const [recommendations, setRecommendations] = useState<Project[]>([]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:88:  const [showRecommendations, setShowRecommendations] = useState(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:89:  const [aiMatches, setAiMatches] = useState<Map<string, number>>(new Map());
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:90:  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:92:  // Note: All mock data generation removed - using real API data only
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:93:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:94:  useEffect(() => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:95:    // Load real projects data only - no fake data fallback
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:96:    loadProjects();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:97:  }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:98:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:99:  const loadProjects = async () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:100:    if (!accessToken) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:101:      setIsLoading(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:102:      console.log('ProjectSearch loaded');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:103:      return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:104:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:105:    
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:117:        .order('created_at', { ascending: false });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:118:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:119:      if (error) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:120:        console.error('Failed to load published jobs:', error);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:121:        setProjects([]);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:122:        setFilteredProjects([]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:123:        return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:124:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:125:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:126:      const jobIds = (jobs || []).map((job: any) => String(job.id)).filter(Boolean);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:127:      let appliedJobIdsFromDb = new Set<string>();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:128:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:129:      try {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:130:        const { data: authData } = await supabase.auth.getUser();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:131:        const authUserId = authData?.user?.id;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:132:        const candidateIds = new Set<string>();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:133:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:157:          });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:158:        }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:159:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:160:        if (jobIds.length && candidateIds.size) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:161:          const { data: applicationRows, error: applicationsError } = await supabase
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:162:            .from('applications')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:163:            .select('job_id')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:164:            .in('job_id', jobIds)
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:165:            .in('candidate_id', Array.from(candidateIds));
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:166:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:167:          if (applicationsError) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:168:            console.error('Failed to load applied project ids:', applicationsError);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:169:          } else {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:170:            appliedJobIdsFromDb = new Set<string>(
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:171:              (applicationRows || [])
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:172:                .map((row: any) => row.job_id)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:173:                .filter(Boolean)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:174:                .map(String)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:175:            );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:176:          }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:177:        }
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:178:      } catch (appliedStatusError) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:179:        console.error('Failed to prepare applied project status:', appliedStatusError);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:180:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:181:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:182:      setAppliedProjectIds(appliedJobIdsFromDb);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:183:      const mappedProjects = (jobs || []).map((job: any) => ({
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:184:        id: job.id,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:185:        title: job.title || 'Untitled Project',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:186:        description: job.description || '',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:187:        company: job.company_name || 'Company',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:188:        companyName: job.company_name || 'Company',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:189:        skills: job.skills || [],
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:197:        type: job.job_type || 'freelance',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:198:        jobType: job.job_type || 'freelance',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:199:        remoteType: job.remote_type || 'remote',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:200:        experienceLevel: job.experience_level || 'mid',
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:201:        status: appliedJobIdsFromDb.has(String(job.id)) ? 'applied' : 'available',
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:202:        applications: job.applications_count || 0,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:203:        applicationsCount: job.applications_count || 0,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:204:        views: job.views_count || 0,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:205:        viewsCount: job.views_count || 0,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:206:        postedDate: job.created_at,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:207:        createdAt: job.created_at,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:208:        timeline: Array.isArray(job.requirements)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:209:          ? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, '')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:211:        requirements: job.requirements || [],
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:212:        matchScore: 85,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:213:      }));
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:214:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:215:      setProjects(mappedProjects as any);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:216:      setFilteredProjects(mappedProjects as any);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:217:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:218:      // AI recommendations disabled for MVP until real AI backend is connected.
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:219:      // This prevents old Supabase Edge Function fetch errors.
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:220:console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:221:    } catch (error) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:222:      console.error('Failed to load projects:', error);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:223:      setProjects([]);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:224:      setFilteredProjects([]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:225:      toast.error('Failed to load projects. Please check your connection and try again.');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:226:    } finally {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:227:      setIsLoading(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:228:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:229:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:230:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:366:          case 'newest':
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:367:            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:368:          case 'oldest':
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:369:            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:370:          case 'mostApplied':
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:371:            return ((typeof b.applicationsCount === 'number' ? b.applicationsCount : Array.isArray(b.applications) ? b.applications.length : Number(b.applications || 0)) - (typeof a.applicationsCount === 'number' ? a.applicationsCount : Array.isArray(a.applications) ? a.applications.length : Number(a.applications || 0)));
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:372:          case 'budget':
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:373:            // Simple budget sorting by extracting the upper range
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:374:            const getBudgetValue = (budget: string) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:375:              const match = budget.match(/\$[\d,]+\s*-\s*\$?([\d,]+)/);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:376:              return match ? parseInt(match[1].replace(/,/g, '')) : 0;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:377:            };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:381:        }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:382:      });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:383:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:384:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:385:    setFilteredProjects(filtered);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:386:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:387:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:388:  const updateFilter = (key: keyof ProjectFilters, value: any) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:389:    setFilters(prev => ({
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:390:      ...prev,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:391:      [key]: value,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:452:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:453:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:454:  const getStatusColor = (status?: string) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:455:    switch (status) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:456:      case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:457:      case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:458:      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:459:      case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:460:      case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:461:      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:462:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:463:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:464:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:465:  const getStatusText = (status?: string) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:466:    switch (status) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:467:      case 'applied': return 'Applied';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:468:      case 'selected': return 'Selected';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:469:      case 'in-progress': return 'In Progress';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:470:      case 'completed': return 'Completed';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:471:      case 'submitted': return 'Video Submitted';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:472:      default: return 'Available';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:473:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:478:      onProjectChallengeVideo(project.id, project.title, project.challengeDescription);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:479:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:480:  };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:481:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:482:const applyToProject = async () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:483:  if (!selectedProject) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:484:    toast.error('Please select a project first.');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:485:    return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:486:  }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:487:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:488:  if (!coverLetter.trim()) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:540:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:541:    const candidateOwnerProfileId = applicationProfileRow.id;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:542:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:543:    const { data: existing } = await supabase
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:544:      .from('applications')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:545:      .select('id')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:546:      .eq('job_id', selectedProject.id)
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:547:      .eq('candidate_id', candidateOwnerProfileId)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:548:      .maybeSingle();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:549:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:550:    if (existing) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:551:      toast.error('You have already applied to this project.');
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:552:      const markSelectedProjectApplied = () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:553:        if (!selectedProject?.id) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:554:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:555:        setProjects((prevProjects) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:556:          prevProjects.map((project) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:557:            project.id === selectedProject.id
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:558:              ? {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:559:                  ...project,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:560:                  status: 'applied' as const,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:561:                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:562:                }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:563:              : project
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:564:          )
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:565:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:566:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:567:        setSelectedProject((current) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:568:          current
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:569:            ? {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:570:                ...current,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:571:                status: 'applied' as const,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:572:                applicationsCount: Number(current.applicationsCount || 0) + 1,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:573:              }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:574:            : current
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:575:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:576:      };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:577:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:578:      markSelectedProjectApplied();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:579:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:580:      setShowApplicationDialog(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:581:      return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:582:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:583:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:584:    const matchScore = calculateMatchScore(selectedProject);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:585:const { error: appError } = await supabase
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:586:      .from('applications')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:587:      .insert({
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:588:        job_id: selectedProject.id,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:589:        candidate_id: candidateOwnerProfileId,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:590:        cover_letter: coverLetter.trim(),
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:591:        status: 'applied',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:592:        match_score: matchScore,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:593:      });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:594:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:595:    if (appError) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:596:      toast.error('Failed to submit: ' + appError.message);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:597:      return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:599:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:600:    // Update job count
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:601:    await supabase
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:602:      .from('jobs')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:603:      .update({ applications_count: (selectedProject.applicationsCount || 0) + 1 })
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:604:      .eq('id', selectedProject.id);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:605:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:606:    // Create Notification for Recruiter
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:607:    if (selectedProject.recruiter_id) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:608:      await supabase
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:609:        .from('notifications')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:610:        .insert({
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:611:          user_id: selectedProject.recruiter_id,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:612:          type: 'new_application',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:613:          title: 'New Application Received',
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:614:          message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:615:          metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:616:          is_read: false,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:617:        });
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:618:    }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:619:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:620:    toast.success('Application submitted successfully! 🎉');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:621:// Refresh projects
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:622:    await loadProjects();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:623:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:624:    // Close dialog
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:625:    setCoverLetter('');
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:626:      const markSelectedProjectApplied = () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:627:        if (!selectedProject?.id) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:628:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:629:        setProjects((prevProjects) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:630:          prevProjects.map((project) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:631:            project.id === selectedProject.id
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:632:              ? {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:633:                  ...project,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:634:                  status: 'applied' as const,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:635:                  applicationsCount: Number(project.applicationsCount || 0) + 1,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:636:                }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:637:              : project
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:638:          )
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:639:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:640:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:641:        setSelectedProject((current) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:642:          current
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:643:            ? {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:644:                ...current,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:645:                status: 'applied' as const,
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:646:                applicationsCount: Number(current.applicationsCount || 0) + 1,
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:647:              }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:648:            : current
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:649:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:650:      };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:651:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:652:      markSelectedProjectApplied();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:653:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:654:    setShowApplicationDialog(false);
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:655:    setSelectedProject(null);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:656:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:657:  } catch (error) {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:658:    console.error(error);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:659:    toast.error('Something went wrong.');
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:660:  } finally {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:661:    setIsApplying(false);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:662:  }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:663:};
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:664:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:665:  useEffect(() => {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:666:    const syncAppliedProjectsFromDatabase = async () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:667:      try {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:668:        if (!projects.length) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:669:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:670:        const supabaseForAppliedState = createSupabaseBrowserClient();
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:671:        const { data: authData } = await supabaseForAppliedState.auth.getUser();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:672:        const authUserId = authData?.user?.id;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:673:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:674:        if (!authUserId) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:675:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:676:        const { data: ownerProfile } = await supabaseForAppliedState
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:677:          .from('profiles')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:678:          .select('id, auth_user_id')
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:679:          .eq('auth_user_id', authUserId)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:680:          .maybeSingle();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:681:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:682:        const candidateIds = [ownerProfile?.id, authUserId].filter(Boolean) as string[];
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:683:        const projectIds = projects.map((project) => project.id).filter(Boolean);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:684:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:685:        if (!candidateIds.length || !projectIds.length) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:686:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:687:        const { data: applicationRows, error } = await supabaseForAppliedState
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:688:          .from('applications')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:689:          .select('job_id')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:690:          .in('job_id', projectIds)
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:691:          .in('candidate_id', candidateIds);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:692:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:693:        if (error) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:694:          console.error('Failed to sync applied project state:', error);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:695:          return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:696:        }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:697:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:698:        const nextAppliedIds = new Set<string>((applicationRows || []).map((row: any) => String(row.job_id)));
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:699:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:700:        setAppliedProjectIds(nextAppliedIds);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:701:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:702:        setProjects((prevProjects) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:703:          prevProjects.map((project) =>
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:704:            nextAppliedIds.has(String(project.id))
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:705:              ? { ...project, status: 'applied' as const }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:706:              : project
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:707:          )
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:708:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:709:      } catch (error) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:710:        console.error('Failed to sync applied project state:', error);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:711:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:712:    };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:713:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:714:    void syncAppliedProjectsFromDatabase();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:715:  }, [projects.length]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:716:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:717:  useEffect(() => {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:718:    const syncAppliedStatusAfterRefresh = async () => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:719:      try {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:720:        if (!projects.length) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:721:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:722:        const supabase = createSupabaseBrowserClient();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:723:        const { data: authData } = await supabase.auth.getUser();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:724:        const authUserId = authData?.user?.id;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:754:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:755:        if (!candidateIds.length || !projectIds.length) return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:756:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:757:        const { data: applicationRows, error } = await supabase
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:758:          .from('applications')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:759:          .select('job_id, candidate_id')
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:760:          .in('job_id', projectIds)
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:761:          .in('candidate_id', candidateIds);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:762:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:763:        if (error) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:764:          console.error('Failed to sync applied project status after refresh:', error);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:765:          return;
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:766:        }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:767:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:768:        const appliedIds = new Set<string>(
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:769:          (applicationRows || [])
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:770:            .map((row: any) => row.job_id)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:771:            .filter(Boolean)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:772:            .map(String)
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:773:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:774:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:775:        setAppliedProjectIds(appliedIds);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:776:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:777:        setProjects((currentProjects) =>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:778:          currentProjects.map((project) =>
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:779:            appliedIds.has(String(project.id))
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:780:              ? { ...project, status: 'applied' as const }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:781:              : project
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:782:          )
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:783:        );
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:784:      } catch (error) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:785:        console.error('Failed to sync applied project status after refresh:', error);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:786:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:787:    };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:788:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:789:    void syncAppliedStatusAfterRefresh();
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:790:  }, [projects.length]);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:791:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:792:  const skillsOptions = [
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:793:    'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python', 'Java', 'C++',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:794:    'UI/UX Design', 'Graphic Design', 'Product Management', 'Data Science',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:795:    'Machine Learning', 'DevOps', 'Cloud Computing', 'Mobile Development',
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:811:    };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:812:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:813:    const getStatusColor = (status?: string) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:814:      switch (status) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:815:        case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:816:        case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:817:        case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:818:        case 'completed': return 'bg-purple-100 text-purple-800 border-purple-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:819:        case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:820:        default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:821:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:822:    };
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:823:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:824:    const getStatusText = (status?: string) => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:825:      switch (status) {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:826:        case 'applied': return 'Applied';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:827:        case 'selected': return 'Selected';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:828:        case 'in-progress': return 'In Progress';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:829:        case 'completed': return 'Completed';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:830:        case 'submitted': return 'Video Submitted';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:831:        default: return 'Available';
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:832:      }
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:917:                <span className="text-muted-foreground">Timeline:</span>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:918:                <span className="font-medium">{project.timeline}</span>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:919:              </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:920:              <div className="flex justify-between">
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:921:                <span className="text-muted-foreground">Applications:</span>
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:922:                <span className="font-medium">{project.applicationsCount || project.applications || 0}</span>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:923:              </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:924:            </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:925:          </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:926:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:927:          <div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:928:            <h4 className="font-semibold mb-2">Required Skills</h4>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:969:            <SelectContent>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:970:              <SelectItem value="newest">Newest first</SelectItem>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:971:              <SelectItem value="oldest">Oldest first</SelectItem>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:972:              <SelectItem value="budget">Highest budget</SelectItem>
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:973:              <SelectItem value="mostApplied">Most applied</SelectItem>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:974:            </SelectContent>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:975:          </Select>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:976:        </Card>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:977:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:978:        {/* Project Type */}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:979:        <Card className="p-4">
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1085:                  <div
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1086:                    key={project.id}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1087:                    className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1088:                    onClick={() => {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1089:                      setSelectedProject(project);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1090:                      setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1091:                    }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1092:                  >
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1093:                    <h4 className="font-medium text-sm">{project.title}</h4>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1094:                    <p className="text-xs text-muted-foreground">{project.company}</p>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1095:                    <div className="flex items-center gap-2 mt-1">
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1217:                            </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1218:                            <h3 
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1219:                              className="font-semibold text-lg hover:text-primary cursor-pointer"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1220:                              onClick={() => {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1221:                                setSelectedProject(project);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1222:                                setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1223:                              }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1224:                            >
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1225:                              {project.title}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1226:                            </h3>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1227:                            <p className="text-sm text-muted-foreground">{project.company}</p>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1279:                          <Button
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1280:                            variant="outline"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1281:                            size="sm"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1282:                            onClick={() => {
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1283:                              setSelectedProject(project);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1284:                              setShowProjectDetailsDialog(true);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1285:                            }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1286:                          >
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1287:                            View Details
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1288:                          </Button>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1289:                          
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1291:                            <Button 
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1292:                              size="sm"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1293:                              onClick={() => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1294:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1295:                                openApplicationDialog(project);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1296:                              }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1297:                            >
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1298:                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1299:                            </Button>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1300:                          ) : selectedProject?.status && ['in-progress', 'completed'].includes(selectedProject?.status) && !project.hasVideoSubmission ? (
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1301:                            <Button 
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1302:                              size="sm"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1303:                              className="bg-red-600 hover:bg-red-700"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1304:                              onClick={() => handleRecordVideo(project)}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1346:                  handleRecordVideo(selectedProject);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1347:                }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1348:              />
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1349:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1350:              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) && !appliedProjectIds.has(selectedProject.id) ? (
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1351:  <Button 
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1352:    size="sm"
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1353:    onClick={() => {
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1354:
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1355:                                openApplicationDialog(selectedProject);
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1356:    }}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1357:  >
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1358:                              {selectedProject?.status === 'applied' ? 'Applied' : 'Apply Now'}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1359:                            </Button>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1360:) : (
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1361:  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1362:    ✓ Applied
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1363:  </Badge>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1364:)}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1365:            </>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1366:          )}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1367:        </DialogContent>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1368:      </Dialog>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1369:
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1370:      {/* Application Dialog */}
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1371:      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1372:        <DialogContent>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1373:          <DialogHeader>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1374:            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1375:            <DialogDescription>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1376:              Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1377:            </DialogDescription>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1388:            </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1389:            <div className="flex justify-end gap-2">
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1390:              <Button 
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1391:                variant="outline" 
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1392:                onClick={() => setShowApplicationDialog(false)}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1393:                disabled={isApplying}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1394:              >
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1395:                Cancel
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1396:              </Button>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1397:              <Button 
+> compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1398:                onClick={applyToProject}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1399:                disabled={isApplying || !coverLetter.trim()}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1400:              >
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1401:                {isApplying ? 'Submitting...' : 'Submit Application'}
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1402:              </Button>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1403:            </div>
+  compare-projectsearch\ProjectSearch.LOCAL-CURRENT.tsx:1404:          </div>
+
+
+

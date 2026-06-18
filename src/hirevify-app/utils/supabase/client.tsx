@@ -1,24 +1,24 @@
 ﻿import {
-  createSupabaseBrowserClient,
-  getSupabaseBrowserClientInstance,
-  isSupabaseBrowserClientInitialized,
-  resetSupabaseBrowserClient,
+ createSupabaseBrowserClient,
+ getSupabaseBrowserClientInstance,
+ isSupabaseBrowserClientInitialized,
+ resetSupabaseBrowserClient,
 } from "@/src/lib/supabase";
 
 export function createClient() {
-  return createSupabaseBrowserClient();
+ return createSupabaseBrowserClient();
 }
 
 export function resetClient() {
-  resetSupabaseBrowserClient();
+ resetSupabaseBrowserClient();
 }
 
 export function isClientInitialized() {
-  return isSupabaseBrowserClientInitialized();
+ return isSupabaseBrowserClientInitialized();
 }
 
 export function getClientInstance() {
-  return getSupabaseBrowserClientInstance();
+ return getSupabaseBrowserClientInstance();
 }
 
 

@@ -5,7 +5,7 @@ export const TESTING_MODE = true;
 
 // Log testing mode status
 if (TESTING_MODE) {
-  console.log('ðŸ§ª HireVify Testing Mode: Premium features are unlocked');
+ console.log(' HireVify Testing Mode: Premium features are unlocked');
 }
 
 

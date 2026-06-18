@@ -1,10 +1,10 @@
 ﻿import {
-  supabaseAnonKey,
-  supabaseFunctionsUrl,
-  supabaseProjectId,
-  supabaseRestUrl,
-  supabaseStorageUrl,
-  supabaseUrl,
+ supabaseAnonKey,
+ supabaseFunctionsUrl,
+ supabaseProjectId,
+ supabaseRestUrl,
+ supabaseStorageUrl,
+ supabaseUrl,
 } from "@/src/lib/supabase";
 
 export const projectId = supabaseProjectId;

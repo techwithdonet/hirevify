@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, ArrowLeft, Search, User, Circle } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Briefcase, Circle, MessageCircle, Search, Send, User } from 'lucide-react';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
@@ -9,502 +8,333 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
-
-// Local types to avoid API dependency issues
-interface Message {
-  id: string;
-  senderId: string;
-  recipientId: string;
-  message: string;
-  createdAt: string;
-  senderName?: string;
-}
-
-interface Conversation {
-  otherUser: {
-    id: string;
-    name: string;
-    email: string;
-    userType: 'recruiter' | 'candidate';
-    avatar?: string;
-  };
-  lastMessage: Message;
-  unreadCount: number;
-}
+import { CommunicationsAPI, type Conversation, type Message } from '../utils/api/communications';
 
 interface MessagingCenterProps {
-  onBack: () => void;
-  onUpdateUnreadCount: (count: number) => void;
+ onBack: () => void;
+ onUpdateUnreadCount: (count: number) => void;
 }
 
 export function MessagingCenter({ onBack, onUpdateUnreadCount }: MessagingCenterProps) {
-  const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+ const { user } = useAuth();
+ const [conversations, setConversations] = useState<Conversation[]>([]);
+ const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+ const [messages, setMessages] = useState<Message[]>([]);
+ const [newMessage, setNewMessage] = useState('');
+ const [searchTerm, setSearchTerm] = useState('');
+ const [isLoading, setIsLoading] = useState(true);
+ const [isThreadLoading, setIsThreadLoading] = useState(false);
+ const [isSending, setIsSending] = useState(false);
+ const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Generate mock conversations immediately
-  const generateMockConversations = (): Conversation[] => {
-    if (!user) return [];
+ const filteredConversations = useMemo(() => {
+ const term = searchTerm.trim().toLowerCase();
+ if (!term) return conversations;
 
-    const mockConversations: Conversation[] = [
-      {
-        otherUser: {
-          id: 'user1',
-          name: user.userType === 'recruiter' ? 'Alex Chen' : 'Sarah Johnson',
-          email: user.userType === 'recruiter' ? 'alex@candidate.com' : 'sarah@techcorp.com',
-          userType: user.userType === 'recruiter' ? 'candidate' : 'recruiter',
-          avatar: undefined
-        },
-        lastMessage: {
-          id: 'msg1',
-          message: user.userType === 'recruiter' 
-            ? 'Thank you for considering my application. I\'m very interested in this position!'
-            : 'Hi! I saw your application for our React developer position. Would you be available for a quick chat?',
-          senderId: 'user1',
-          recipientId: user.id || '',
-          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          senderName: user.userType === 'recruiter' ? 'Alex Chen' : 'Sarah Johnson'
-        },
-        unreadCount: 2
-      },
-      {
-        otherUser: {
-          id: 'user2',
-          name: user.userType === 'recruiter' ? 'Morgan Rodriguez' : 'Mike Chen',
-          email: user.userType === 'recruiter' ? 'morgan@candidate.com' : 'mike@designstudio.com',
-          userType: user.userType === 'recruiter' ? 'candidate' : 'recruiter',
-          avatar: undefined
-        },
-        lastMessage: {
-          id: 'msg2',
-          message: user.userType === 'recruiter'
-            ? 'I have experience with the technologies you mentioned. When would be a good time to discuss?'
-            : 'Thank you for your interest in our UX/UI designer role!',
-          senderId: 'user2',
-          recipientId: user.id || '',
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          senderName: user.userType === 'recruiter' ? 'Morgan Rodriguez' : 'Mike Chen'
-        },
-        unreadCount: 0
-      },
-      {
-        otherUser: {
-          id: 'user3',
-          name: user.userType === 'recruiter' ? 'Jordan Taylor' : 'Emily Davis',
-          email: user.userType === 'recruiter' ? 'jordan@candidate.com' : 'emily@startup.com',
-          userType: user.userType === 'recruiter' ? 'candidate' : 'recruiter',
-          avatar: undefined
-        },
-        lastMessage: {
-          id: 'msg3',
-          message: user.userType === 'recruiter'
-            ? 'Looking forward to hearing back about the next steps!'
-            : 'Great portfolio! We\'d love to schedule an interview.',
-          senderId: user.id || '',
-          recipientId: 'user3',
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-          senderName: user.name || 'You'
-        },
-        unreadCount: 1
-      }
-    ];
+ return conversations.filter((conversation) =>
+ conversation.otherUser.name.toLowerCase().includes(term) ||
+ conversation.otherUser.email.toLowerCase().includes(term) ||
+ conversation.lastMessage.message.toLowerCase().includes(term)
+ );
+ }, [conversations, searchTerm]);
 
-    return mockConversations;
-  };
+ const loadConversations = async () => {
+ try {
+ setIsLoading(true);
+ const data = await CommunicationsAPI.getConversations();
+ setConversations(data);
+ onUpdateUnreadCount(data.reduce((sum, conversation) => sum + conversation.unreadCount, 0));
+ setSelectedConversation((current) => current || data[0] || null);
+ } catch (error) {
+ console.error('Failed to load real conversations:', error);
+ setConversations([]);
+ onUpdateUnreadCount(0);
+ } finally {
+ setIsLoading(false);
+ }
+ };
 
-  // Generate mock messages for a conversation
-  const generateMockMessages = (otherUserId: string): Message[] => {
-    if (!user) return [];
+ useEffect(() => {
+ if (!user) return;
+ loadConversations();
+ }, [user?.id]);
 
-    const otherUser = conversations.find(c => c.otherUser.id === otherUserId)?.otherUser;
-    if (!otherUser) return [];
+ useEffect(() => {
+ if (!selectedConversation) {
+ setMessages([]);
+ return;
+ }
 
-    const mockMessages: Message[] = [
-      {
-        id: 'msg1',
-        message: user.userType === 'recruiter' 
-          ? 'Thank you for considering my application for the React Developer position. I have 5 years of experience with React and TypeScript.'
-          : 'Hi! I saw your application for our React developer position. Your experience looks great!',
-        senderId: otherUserId,
-        recipientId: user.id || '',
-        createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-        senderName: otherUser.name
-      },
-      {
-        id: 'msg2',
-        message: user.userType === 'recruiter'
-          ? 'I\'d love to learn more about the project and the team. When would be a good time to chat?'
-          : 'Great! I\'d love to schedule a call to discuss the role in more detail. Are you available this week?',
-        senderId: user.id || '',
-        recipientId: otherUserId,
-        createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        senderName: user.name || 'You'
-      },
-      {
-        id: 'msg3',
-        message: user.userType === 'recruiter'
-          ? 'I\'m available Tuesday or Wednesday afternoon. Looking forward to speaking with you!'
-          : 'Perfect! How about Tuesday at 2 PM? I can send you a calendar invite.',
-        senderId: otherUserId,
-        recipientId: user.id || '',
-        createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-        senderName: otherUser.name
-      },
-      {
-        id: 'msg4',
-        message: user.userType === 'recruiter'
-          ? 'That works perfectly! Thank you for reaching out.'
-          : 'Excellent! I\'ll send the invite shortly. Looking forward to our conversation!',
-        senderId: user.id || '',
-        recipientId: otherUserId,
-        createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-        senderName: user.name || 'You'
-      }
-    ];
+ const loadThread = async () => {
+ try {
+ setIsThreadLoading(true);
+ const data = await CommunicationsAPI.getConversation(selectedConversation.otherUser.id);
+ setMessages(data);
+ } catch (error) {
+ console.error('Failed to load real message thread:', error);
+ setMessages([]);
+ } finally {
+ setIsThreadLoading(false);
+ }
+ };
 
-    return mockMessages;
-  };
+ loadThread();
+ }, [selectedConversation?.otherUser.id]);
 
-  useEffect(() => {
-    if (!user) return;
-    
-    // Load real conversations from Supabase only
-    setConversations([]);
-    onUpdateUnreadCount(0);
-    
-    setIsLoading(false);
-    
-    // Optional: Try to load real data in the background, but don't fail if it doesn't work
-    loadConversationsInBackground();
-  }, [user, onUpdateUnreadCount]);
+ useEffect(() => {
+ messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+ }, [messages]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+ const selectConversation = (conversation: Conversation) => {
+ setSelectedConversation(conversation);
+ };
 
-  const loadConversationsInBackground = async () => {
-    if (!user) return;
-    
-    try {
-      // Try to import and use the real API
-      const { CommunicationsAPI } = await import('../utils/api/communications');
-      const data = await CommunicationsAPI.getConversations();
-      
-      // Only update if we got valid data
-      if (data && Array.isArray(data)) {
-        setConversations(data);
-        const totalUnread = data.reduce((sum, conv) => sum + conv.unreadCount, 0);
-        onUpdateUnreadCount(totalUnread);
-      }
-    } catch (error) {
-      // Silently fail - we already have mock data loaded
-      console.error('Failed to load conversations from Supabase:', error);
-    }
-  };
+ const sendMessage = async () => {
+ if (!selectedConversation || !newMessage.trim()) return;
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+ const messageText = newMessage.trim();
+ setIsSending(true);
 
-  const selectConversation = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    
-    // Load real messages from Supabase only
-    setMessages([]);
-    
-    // Try to load real messages in background
-    loadMessagesInBackground(conversation.otherUser.id);
-  };
+ try {
+ const sentMessage = await CommunicationsAPI.sendMessage({
+ recipientId: selectedConversation.otherUser.id,
+ message: messageText,
+ });
 
-  const loadMessagesInBackground = async (otherUserId: string) => {
-    if (!user) return;
-    
-    try {
-      const { CommunicationsAPI } = await import('../utils/api/communications');
-      const data = await CommunicationsAPI.getConversation(otherUserId);
-      
-      if (data && Array.isArray(data)) {
-        setMessages(data);
-      }
-    } catch (error) {
-      // Silently fail - we already have mock data loaded
-      console.error('Failed to load messages from Supabase:', error);
-    }
-  };
+ setMessages((current) => [...current, sentMessage]);
+ setNewMessage('');
+ await loadConversations();
+ toast.success('Message sent');
+ } catch (error) {
+ console.error('Failed to send real message:', error);
+ toast.error(error instanceof Error ? error.message : 'Message was not sent.');
+ } finally {
+ setIsSending(false);
+ }
+ };
 
-  const sendMessage = async () => {
-    if (!selectedConversation || !newMessage.trim()) return;
-    
-    setIsSending(true);
-    
-    // Optimistic update - add message immediately
-    const optimisticMessage: Message = {
-      id: `temp-${Date.now()}`,
-      message: newMessage.trim(),
-      senderId: user?.id || '',
-      recipientId: selectedConversation.otherUser.id,
-      createdAt: new Date().toISOString(),
-      senderName: user?.name || 'You'
-    };
-    
-    setMessages(prev => [...prev, optimisticMessage]);
-    const messageText = newMessage.trim();
-    setNewMessage('');
-    
-    try {
-      if (user) {
-        // Try to send via real API
-        const { CommunicationsAPI } = await import('../utils/api/communications');
-        const messageData = {
-          recipientId: selectedConversation.otherUser.id,
-          message: messageText,
-        };
-        
-        const sentMessage = await CommunicationsAPI.sendMessage(messageData);
-        
-        // Replace optimistic message with real one
-        setMessages(prev => 
-          prev.map(msg => msg.id === optimisticMessage.id ? sentMessage : msg)
-        );
-        
-        toast.success('Message sent');
-      } else {
-        // No access token, just show success for demo
-        toast.error('Message was not sent. Please login again.');
-      }
-    } catch (error) {
-      console.log('Message sending failed, but optimistic update shown:', error);
-      toast.error('Message was not sent. Please login again.');
-    } finally {
-      setIsSending(false);
-    }
-  };
+ const handleKeyPress = (event: React.KeyboardEvent) => {
+ if (event.key === 'Enter' && !event.shiftKey) {
+ event.preventDefault();
+ sendMessage();
+ }
+ };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+ const formatTime = (dateString: string) => {
+ const date = new Date(dateString);
+ const now = new Date();
+ const diff = now.getTime() - date.getTime();
+ const minutes = Math.floor(diff / 60000);
+ const hours = Math.floor(diff / 3600000);
+ const days = Math.floor(diff / 86400000);
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}d`;
-    
-    return date.toLocaleDateString();
-  };
+ if (minutes < 1) return 'Now';
+ if (minutes < 60) return `${minutes}m`;
+ if (hours < 24) return `${hours}h`;
+ if (days < 7) return `${days}d`;
+ return date.toLocaleDateString();
+ };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading messages...</p>
-        </div>
-      </div>
-    );
-  }
+ const getInitial = (name?: string) => (name || 'User').slice(0, 1).toUpperCase();
 
-  return (
-    <div className="min-h-screen bg-background flex">
-      {/* Conversations Sidebar */}
-      <div className="w-80 bg-card border-r border-border flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <h2 className="font-semibold">Messages</h2>
-          </div>
-          
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
-            <Input 
-              placeholder="Search conversations..."
-              className="pl-9"
-            />
-          </div>
-        </div>
+ return (
+ <div className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#eef6ff_48%,#f6fef9_100%)]">
+ <header className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl">
+ <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+ <div className="flex items-center gap-3">
+ <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
+ <ArrowLeft className="h-5 w-5" />
+ </Button>
+ <div>
+ <p className="text-xs font-semibold uppercase text-blue-700">Messages</p>
+ <h1 className="text-2xl font-semibold text-slate-950">HireVify Inbox</h1>
+ </div>
+ </div>
+ <Badge className="border border-blue-200 bg-blue-50 text-blue-700">Real conversations only</Badge>
+ </div>
+ </header>
 
-        {/* Conversations List */}
-        <ScrollArea className="flex-1">
-          {conversations.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              <MessageCircle className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-sm">No conversations yet</p>
-            </div>
-          ) : (
-            <div className="space-y-1 p-2">
-              {conversations.map((conversation) => (
-                <Card
-                  key={conversation.otherUser.id}
-                  className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
-                    selectedConversation?.otherUser.id === conversation.otherUser.id 
-                      ? 'bg-muted border-primary' 
-                      : ''
-                  }`}
-                  onClick={() => selectConversation(conversation)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={conversation.otherUser.avatar} />
-                        <AvatarFallback>
-                          {conversation.otherUser.name?.charAt(0) || <User className="w-4 h-4" />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm truncate">
-                          {conversation.otherUser.name || 'Unknown User'}
-                        </h4>
-                        <span className="text-xs text-muted-foreground">
-                          {formatTime(conversation.lastMessage.createdAt)}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-muted-foreground truncate">
-                          {conversation.lastMessage.senderId === user?.id ? 'You: ' : ''}
-                          {conversation.lastMessage.message}
-                        </p>
-                        
-                        {conversation.unreadCount > 0 && (
-                          <Badge variant="secondary" className="bg-primary text-primary-foreground px-1.5 py-0.5 text-xs">
-                            {conversation.unreadCount}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+ <main className="mx-auto grid h-[calc(100vh-81px)] max-w-[1500px] grid-cols-1 overflow-hidden border-x border-slate-200 bg-white lg:grid-cols-[340px_minmax(0,1fr)_320px]">
+ <aside className="flex min-h-0 flex-col border-b border-slate-200 bg-white lg:border-b-0 lg:border-r">
+ <div className="border-b border-slate-200 p-4">
+ <div className="relative">
+ <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+ <Input
+ value={searchTerm}
+ onChange={(event) => setSearchTerm(event.target.value)}
+ placeholder="Search messages"
+ className="rounded-full bg-slate-50 pl-10"
+ />
+ </div>
+ </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {selectedConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-border bg-card">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={selectedConversation.otherUser.avatar} />
-                  <AvatarFallback>
-                    {selectedConversation.otherUser.name?.charAt(0) || <User className="w-4 h-4" />}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div>
-                  <h3 className="font-medium">
-                    {selectedConversation.otherUser.name || 'Unknown User'}
-                  </h3>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Circle className="w-3 h-3 text-green-500 fill-current" />
-                    <span>Online</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+ <ScrollArea className="flex-1">
+ {isLoading ? (
+ <div className="p-6 text-sm text-slate-500">Loading real conversations...</div>
+ ) : filteredConversations.length === 0 ? (
+ <div className="p-8 text-center">
+ <MessageCircle className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+ <p className="font-semibold text-slate-950">No real conversations yet</p>
+ <p className="mt-1 text-sm text-slate-500">When a candidate or recruiter sends a message, it will appear here.</p>
+ </div>
+ ) : (
+ <div>
+ {filteredConversations.map((conversation) => {
+ const active = selectedConversation?.otherUser.id === conversation.otherUser.id;
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.senderId === user?.id ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.senderId === user?.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm">{message.message}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.senderId === user?.id 
-                          ? 'text-primary-foreground/70' 
-                          : 'text-muted-foreground'
-                      }`}>
-                        {new Date(message.createdAt).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
+ return (
+ <button
+ key={conversation.otherUser.id}
+ type="button"
+ onClick={() => selectConversation(conversation)}
+ className={`flex w-full items-start gap-3 border-b border-slate-100 p-4 text-left transition ${active ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+ >
+ <div className="relative">
+ <Avatar className="h-12 w-12">
+ <AvatarImage src={conversation.otherUser.avatar} />
+ <AvatarFallback className="bg-blue-100 font-semibold text-blue-700">
+ {getInitial(conversation.otherUser.name)}
+ </AvatarFallback>
+ </Avatar>
+ {conversation.unreadCount > 0 && (
+ <span className="absolute -right-1 -top-1 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+ {conversation.unreadCount}
+ </span>
+ )}
+ </div>
+ <div className="min-w-0 flex-1">
+ <div className="flex items-center justify-between gap-2">
+ <p className="truncate font-semibold text-slate-950">{conversation.otherUser.name || 'User'}</p>
+ <span className="text-xs text-slate-400">{formatTime(conversation.lastMessage.createdAt)}</span>
+ </div>
+ <p className="text-xs text-slate-500">{conversation.otherUser.userType}</p>
+ <p className="mt-1 truncate text-sm text-slate-600">{conversation.lastMessage.message}</p>
+ </div>
+ </button>
+ );
+ })}
+ </div>
+ )}
+ </ScrollArea>
+ </aside>
 
-            {/* Message Input */}
-            <div className="p-4 border-t border-border bg-card">
-              <div className="flex gap-2">
-                <Textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type a message..."
-                  className="resize-none"
-                  rows={1}
-                />
-                <Button 
-                  onClick={sendMessage} 
-                  disabled={!newMessage.trim() || isSending}
-                  size="sm"
-                  className="self-end"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-center">
-            <div>
-              <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Select a conversation</h3>
-              <p className="text-muted-foreground">
-                Choose a conversation from the sidebar to start messaging.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+ <section className="flex min-h-0 flex-col bg-slate-50">
+ {selectedConversation ? (
+ <>
+ <div className="border-b border-slate-200 bg-white p-4">
+ <div className="flex items-center gap-3">
+ <Avatar className="h-11 w-11">
+ <AvatarImage src={selectedConversation.otherUser.avatar} />
+ <AvatarFallback className="bg-blue-100 font-semibold text-blue-700">
+ {getInitial(selectedConversation.otherUser.name)}
+ </AvatarFallback>
+ </Avatar>
+ <div>
+ <h2 className="font-semibold text-slate-950">{selectedConversation.otherUser.name || 'User'}</h2>
+ <div className="flex items-center gap-1 text-xs text-slate-500">
+ <Circle className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
+ <span>{selectedConversation.otherUser.userType}</span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <ScrollArea className="flex-1 p-5">
+ {isThreadLoading ? (
+ <div className="text-sm text-slate-500">Loading real messages...</div>
+ ) : messages.length === 0 ? (
+ <div className="flex h-full items-center justify-center text-center">
+ <div>
+ <MessageCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
+ <p className="font-semibold text-slate-950">No real messages in this thread</p>
+ <p className="mt-1 text-sm text-slate-500">Send the first message to start the conversation.</p>
+ </div>
+ </div>
+ ) : (
+ <div className="space-y-4">
+ {messages.map((message) => {
+ const mine = message.senderId === user?.id;
+
+ return (
+ <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+ <div className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${mine ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-800'}`}>
+ <p className="whitespace-pre-wrap text-sm leading-6">{message.message}</p>
+ <p className={`mt-1 text-right text-[11px] ${mine ? 'text-blue-100' : 'text-slate-400'}`}>
+ {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ </p>
+ </div>
+ </div>
+ );
+ })}
+ <div ref={messagesEndRef} />
+ </div>
+ )}
+ </ScrollArea>
+
+ <div className="border-t border-slate-200 bg-white p-4">
+ <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+ <Textarea
+ value={newMessage}
+ onChange={(event) => setNewMessage(event.target.value)}
+ onKeyPress={handleKeyPress}
+ placeholder="Write a message..."
+ rows={2}
+ className="min-h-[48px] resize-none border-0 bg-transparent text-slate-950 shadow-none focus-visible:ring-0"
+ />
+ <Button onClick={sendMessage} disabled={!newMessage.trim() || isSending} className="rounded-full bg-blue-600 px-4 text-white hover:bg-blue-700">
+ <Send className="h-4 w-4" />
+ </Button>
+ </div>
+ </div>
+ </>
+ ) : (
+ <div className="flex flex-1 items-center justify-center text-center">
+ <div>
+ <MessageCircle className="mx-auto mb-4 h-16 w-16 text-slate-300" />
+ <h2 className="text-lg font-semibold text-slate-950">Select a conversation</h2>
+ <p className="mt-1 text-sm text-slate-500">Real messages from Supabase will open here.</p>
+ </div>
+ </div>
+ )}
+ </section>
+
+ <aside className="hidden border-l border-slate-200 bg-white p-5 lg:block">
+ {selectedConversation ? (
+ <div className="space-y-5">
+ <div className="text-center">
+ <Avatar className="mx-auto h-20 w-20">
+ <AvatarImage src={selectedConversation.otherUser.avatar} />
+ <AvatarFallback className="bg-blue-100 text-2xl font-semibold text-blue-700">
+ {getInitial(selectedConversation.otherUser.name)}
+ </AvatarFallback>
+ </Avatar>
+ <h3 className="mt-3 font-semibold text-slate-950">{selectedConversation.otherUser.name || 'User'}</h3>
+ <p className="text-sm text-slate-500">{selectedConversation.otherUser.email || 'No email saved'}</p>
+ </div>
+ <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+ <p className="text-xs font-semibold uppercase text-slate-500">Profile</p>
+ <div className="mt-3 space-y-2 text-sm text-slate-700">
+ <div className="flex items-center gap-2">
+ <User className="h-4 w-4 text-slate-400" />
+ <span>{selectedConversation.otherUser.userType}</span>
+ </div>
+ {selectedConversation.otherUser.company && (
+ <div className="flex items-center gap-2">
+ <Briefcase className="h-4 w-4 text-slate-400" />
+ <span>{selectedConversation.otherUser.company}</span>
+ </div>
+ )}
+ </div>
+ </div>
+ <Button variant="outline" className="w-full" onClick={onBack}>
+ Back to Dashboard
+ </Button>
+ </div>
+ ) : (
+ <div className="text-sm text-slate-500">Choose a thread to see profile details.</div>
+ )}
+ </aside>
+ </main>
+ </div>
+ );
 }
-
-
-
-
-
-
-

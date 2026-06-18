@@ -779,124 +779,113 @@
 
 /* HireVify Candidate Dashboard Premium Redesign START */
 @layer components {
+  /* Shell: clean neutral background — no gradient theatrics */
   .hv-candidate-shell {
-    @apply relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),radial-gradient(circle_at_top_right,rgba(20,184,166,0.13),transparent_30%),linear-gradient(135deg,#f8fafc_0%,#f6fffb_48%,#edfdf7_100%)];
+    @apply relative min-h-screen overflow-x-hidden;
+    background-color: #f1f5f9;
   }
 
-  .hv-candidate-shell::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 72%);
-  }
-
+  /* Header: solid white, crisp border — backdrop-blur only where it earns its place */
   .hv-candidate-header {
-    @apply sticky top-0 z-40 border-b border-white/70 bg-white/75 shadow-sm shadow-slate-950/5 backdrop-blur-2xl;
+    @apply sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl;
   }
 
+  /* Shared surface foundation: solid white, single-weight border */
   .candidate-profile-hero,
   .candidate-panel,
   .candidate-stat-card {
-    @apply relative border-white/70 bg-white/80 backdrop-blur-xl;
+    @apply border border-slate-200 bg-white;
+  }
+
+  .candidate-profile-hero {
+    @apply rounded-xl shadow-sm;
   }
 
   .candidate-panel {
-    @apply rounded-[2rem] p-5 shadow-xl shadow-slate-950/5 sm:p-6 lg:p-7;
+    @apply rounded-xl shadow-sm;
+    padding: 1.5rem;
   }
 
   .candidate-stat-card {
-    @apply rounded-3xl border-slate-200/70 shadow-lg shadow-slate-950/5 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-xl;
+    @apply rounded-xl shadow-sm transition-all duration-150 hover:border-emerald-300 hover:shadow-md;
   }
 
+  /* Stat icon: smaller, tighter radius — data-forward not decorative */
   .candidate-stat-icon {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ring-black/5;
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg;
   }
 
+  /* Action cards: solid, border-accent on hover — no floating orbs */
   .candidate-action-card {
-    @apply relative overflow-hidden rounded-3xl border border-slate-200/75 bg-white/80 p-5 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:bg-white hover:shadow-xl hover:shadow-emerald-950/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+    @apply relative rounded-xl border border-slate-200 bg-white p-5 text-left shadow-sm
+           transition-all duration-150
+           hover:border-emerald-300 hover:shadow-md
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
   }
 
-  .candidate-action-card::after {
+  /* Thin left accent line on hover — signature detail */
+  .candidate-action-card::before {
     content: "";
     position: absolute;
-    inset: auto -40px -58px auto;
-    width: 128px;
-    height: 128px;
-    border-radius: 9999px;
-    background: rgba(16, 185, 129, 0.08);
-    transition: transform 220ms ease, opacity 220ms ease;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: #10b981;
     opacity: 0;
+    transition: opacity 150ms ease;
   }
 
-  .candidate-action-card:hover::after {
-    transform: translate(-16px, -16px);
+  .candidate-action-card:hover::before {
     opacity: 1;
   }
 
   .candidate-action-icon,
   .candidate-path-icon {
-    @apply flex shrink-0 items-center justify-center rounded-2xl ring-1 ring-inset ring-black/5;
+    @apply flex shrink-0 items-center justify-center rounded-lg;
   }
 
   .candidate-action-icon {
-    @apply h-12 w-12;
+    @apply h-10 w-10;
   }
 
+  /* Path cards: compact list feel */
   .candidate-path-card {
-    @apply flex items-center gap-4 rounded-3xl border border-slate-200/75 bg-white/75 p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-white hover:shadow-lg hover:shadow-emerald-950/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+    @apply flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm
+           transition-all duration-150
+           hover:border-emerald-300 hover:shadow-md
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
   }
 
   .candidate-path-icon {
-    @apply h-11 w-11;
+    @apply h-10 w-10;
   }
 
+  /* Premium card: refined dark green — no blobs, clean gradient */
   .candidate-premium-card {
-    @apply relative overflow-hidden rounded-[2rem] bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_34%),linear-gradient(135deg,#064e3b_0%,#047857_58%,#0f766e_100%)] p-6 shadow-xl shadow-emerald-950/20;
+    @apply relative overflow-hidden rounded-xl p-6;
+    background: linear-gradient(150deg, #064e3b 0%, #065f46 60%, #0d7a5c 100%);
+    box-shadow: 0 4px 20px rgba(6, 78, 59, 0.28);
   }
 
-  .candidate-premium-card::before {
-    content: "";
-    position: absolute;
-    right: -64px;
-    top: -64px;
-    width: 170px;
-    height: 170px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .candidate-premium-card::after {
-    content: "";
-    position: absolute;
-    left: -72px;
-    bottom: -90px;
-    width: 190px;
-    height: 190px;
-    border-radius: 9999px;
-    background: rgba(167, 243, 208, 0.16);
-  }
-
+  /* Quick links: minimal row — clean utility */
   .candidate-quick-link {
-    @apply flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-700 transition duration-200 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
+    @apply flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-left text-sm font-medium text-slate-600
+           transition-all duration-150
+           hover:bg-slate-50 hover:text-emerald-700
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2;
   }
 }
 
 @media (max-width: 640px) {
   .candidate-profile-hero,
   .candidate-panel,
-  .candidate-premium-card {
-    border-radius: 1.5rem;
-  }
-
+  .candidate-premium-card,
   .candidate-action-card,
   .candidate-path-card,
   .candidate-stat-card {
-    border-radius: 1.25rem;
+    border-radius: 0.75rem;
   }
 }
 
@@ -904,16 +893,148 @@
   .candidate-action-card,
   .candidate-path-card,
   .candidate-stat-card,
-  .candidate-quick-link,
-  .candidate-action-card::after {
+  .candidate-quick-link {
     transition: none !important;
   }
 
-  .candidate-action-card:hover,
-  .candidate-path-card:hover,
-  .candidate-stat-card:hover {
-    transform: none !important;
+  .candidate-action-card::before {
+    transition: none !important;
   }
 }
 /* HireVify Candidate Dashboard Premium Redesign END */
+
+
+/* =========================================================
+   HireVify authenticated app light theme fix
+   Keep homepage theme unchanged. Only app shell/pages affected.
+   ========================================================= */
+
+.hv-page-shell,
+.hv-page-shell input,
+.hv-page-shell textarea,
+.hv-page-shell select,
+.hv-page-shell button {
+  color-scheme: light;
+}
+
+.hv-page-shell input,
+.hv-page-shell textarea,
+.hv-page-shell select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.hv-page-shell input::placeholder,
+.hv-page-shell textarea::placeholder {
+  color: #64748b !important;
+}
+
+.hv-page-shell [role="dialog"],
+.hv-page-shell .fixed [role="dialog"],
+.hv-page-shell .fixed [class*="bg-[#0"],
+.hv-page-shell .fixed [class*="bg-green-9"],
+.hv-page-shell .fixed [class*="bg-emerald-9"],
+.hv-page-shell .fixed [class*="bg-slate-9"],
+.hv-page-shell .fixed [class*="bg-gray-9"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbeafe !important;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22) !important;
+}
+
+.hv-page-shell [role="dialog"] *,
+.hv-page-shell .fixed [role="dialog"] *,
+.hv-page-shell .fixed [class*="bg-[#0"] *,
+.hv-page-shell .fixed [class*="bg-green-9"] *,
+.hv-page-shell .fixed [class*="bg-emerald-9"] *,
+.hv-page-shell .fixed [class*="bg-slate-9"] *,
+.hv-page-shell .fixed [class*="bg-gray-9"] * {
+  color: #0f172a !important;
+}
+
+.hv-page-shell .fixed textarea,
+.hv-page-shell .fixed input {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.hv-page-shell .fixed button {
+  border-radius: 0.75rem;
+}
+
+.hv-page-shell .fixed button[class*="bg-emerald"],
+.hv-page-shell .fixed button[class*="bg-green"],
+.hv-page-shell .fixed button[class*="bg-lime"] {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+.hv-page-shell .fixed button[class*="outline"],
+.hv-page-shell .fixed button[class*="border"],
+.hv-page-shell .fixed button:not([class*="bg-"]) {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+
+/* =========================================================
+   HireVify auth/app light theme override
+   Homepage files are untouched; this fixes shared auth/app dialogs.
+   ========================================================= */
+
+body [role="dialog"],
+body .fixed [role="dialog"],
+body [class*="bg-[#02140a]"],
+body [class*="bg-[#031b0d]"],
+body [class*="bg-[#052e16]"],
+body [class*="bg-green-950"],
+body [class*="bg-emerald-950"],
+body [class*="bg-slate-950"],
+body [class*="bg-gray-950"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+body [role="dialog"] *,
+body .fixed [role="dialog"] *,
+body [class*="bg-[#02140a]"] *,
+body [class*="bg-[#031b0d]"] *,
+body [class*="bg-[#052e16]"] *,
+body [class*="bg-green-950"] *,
+body [class*="bg-emerald-950"] *,
+body [class*="bg-slate-950"] *,
+body [class*="bg-gray-950"] * {
+  color: #0f172a !important;
+}
+
+body [role="dialog"] input,
+body [role="dialog"] textarea,
+body [role="dialog"] select,
+body .fixed input,
+body .fixed textarea,
+body .fixed select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+body [role="dialog"] input::placeholder,
+body [role="dialog"] textarea::placeholder,
+body .fixed input::placeholder,
+body .fixed textarea::placeholder {
+  color: #64748b !important;
+}
+
+body [role="dialog"] button[class*="bg-emerald"],
+body [role="dialog"] button[class*="bg-green"],
+body [role="dialog"] button[class*="bg-lime"],
+body .fixed button[class*="bg-emerald"],
+body .fixed button[class*="bg-green"],
+body .fixed button[class*="bg-lime"] {
+  color: #ffffff !important;
+}
 

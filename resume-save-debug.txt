@@ -1,0 +1,56 @@
+
+  src\hirevify-app\components\ResumeBuilder.tsx:651:    return wrapper;
+  src\hirevify-app\components\ResumeBuilder.tsx:652:  };
+  src\hirevify-app\components\ResumeBuilder.tsx:653:  const downloadResume = async () => {
+  src\hirevify-app\components\ResumeBuilder.tsx:654:    if (!resumePreviewRef.current) {
+> src\hirevify-app\components\ResumeBuilder.tsx:655:      toast.error('Resume preview not available. Please go to the Review step first.');
+  src\hirevify-app\components\ResumeBuilder.tsx:656:      return;
+  src\hirevify-app\components\ResumeBuilder.tsx:657:    }
+  src\hirevify-app\components\ResumeBuilder.tsx:658:
+  src\hirevify-app\components\ResumeBuilder.tsx:659:    setIsDownloading(true);
+  src\hirevify-app\components\ResumeBuilder.tsx:660:    const toastId = toast.loading('Generating your PDF...');
+  src\hirevify-app\components\ResumeBuilder.tsx:661:
+  src\hirevify-app\components\ResumeBuilder.tsx:662:    try {
+  src\hirevify-app\components\ResumeBuilder.tsx:663:      // Dynamically import to avoid bundle bloat
+  src\hirevify-app\components\ResumeBuilder.tsx:667:      ]);
+  src\hirevify-app\components\ResumeBuilder.tsx:668:
+  src\hirevify-app\components\ResumeBuilder.tsx:669:      const pdfTarget = createPdfSafeResumeClone();
+  src\hirevify-app\components\ResumeBuilder.tsx:670:      if (!pdfTarget) {
+> src\hirevify-app\components\ResumeBuilder.tsx:671:        throw new Error('Resume preview not available.');
+  src\hirevify-app\components\ResumeBuilder.tsx:672:      }
+  src\hirevify-app\components\ResumeBuilder.tsx:673:
+  src\hirevify-app\components\ResumeBuilder.tsx:674:      const canvas = await html2canvas(pdfTarget, {
+  src\hirevify-app\components\ResumeBuilder.tsx:675:        scale: 3,           // High-res for crisp text
+  src\hirevify-app\components\ResumeBuilder.tsx:676:        useCORS: true,
+  src\hirevify-app\components\ResumeBuilder.tsx:677:        backgroundColor: '#ffffff',
+  src\hirevify-app\components\ResumeBuilder.tsx:678:        logging: false,
+  src\hirevify-app\components\ResumeBuilder.tsx:679:        foreignObjectRendering: false
+  src\hirevify-app\components\ResumeBuilder.tsx:1683:              <ArrowLeft className="w-4 h-4 mr-2" />
+  src\hirevify-app\components\ResumeBuilder.tsx:1684:              Previous
+  src\hirevify-app\components\ResumeBuilder.tsx:1685:            </Button>
+  src\hirevify-app\components\ResumeBuilder.tsx:1686:            <Button onClick={nextStep} className="bg-emerald-600 text-white hover:bg-emerald-700">
+> src\hirevify-app\components\ResumeBuilder.tsx:1687:              {currentStep === 'review' ? 'Complete Resume' : 'Save & Continue'}
+  src\hirevify-app\components\ResumeBuilder.tsx:1688:              <ArrowRight className="w-4 h-4 ml-2" />
+  src\hirevify-app\components\ResumeBuilder.tsx:1689:            </Button>
+  src\hirevify-app\components\ResumeBuilder.tsx:1690:          </div>
+  src\hirevify-app\components\ResumeBuilder.tsx:1691:        </footer>
+  src\hirevify-app\components\ResumeBuilder.tsx:1692:      )}
+  src\hirevify-app\components\ResumeBuilder.tsx:1693:    </div>
+  src\hirevify-app\components\ResumeBuilder.tsx:1694:  );
+  src\hirevify-app\components\ResumeBuilder.tsx:1695:}
+  src\hirevify-app\components\ResumeBuilder.tsx:1808:  );
+  src\hirevify-app\components\ResumeBuilder.tsx:1809:
+  src\hirevify-app\components\ResumeBuilder.tsx:1810:  if (resumeData.template === 'modern') {
+  src\hirevify-app\components\ResumeBuilder.tsx:1811:    return (
+> src\hirevify-app\components\ResumeBuilder.tsx:1812:      <div data-resume-template="modern" className="bg-white text-slate-900 shadow-sm border border-slate-200 max-w-4xl mx-auto">
+  src\hirevify-app\components\ResumeBuilder.tsx:1813:        <div className="grid grid-cols-12 min-h-[900px]">
+  src\hirevify-app\components\ResumeBuilder.tsx:1814:          <aside className="col-span-4 bg-slate-900 text-white p-8">
+  src\hirevify-app\components\ResumeBuilder.tsx:1815:            <h1 className="text-3xl font-bold leading-tight mb-3">{fullName}</h1>
+  src\hirevify-app\components\ResumeBuilder.tsx:1816:            <div className="space-y-1 text-sm text-slate-200 mb-8">
+  src\hirevify-app\components\ResumeBuilder.tsx:1817:              {contactItems.map((item, index) => (
+  src\hirevify-app\components\ResumeBuilder.tsx:1818:                <p key={index}>{item}</p>
+  src\hirevify-app\components\ResumeBuilder.tsx:1819:              ))}
+  src\hirevify-app\components\ResumeBuilder.tsx:1820:            </div>
+
+
+

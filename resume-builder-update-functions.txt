@@ -1,0 +1,507 @@
+
+  import { useAuth } from './AuthProvider';
+  import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+  import { profilesService } from '../services/profilesService';
+  import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+  
+> const cleanBrokenText = (value: string) => {
+    return String(value || '')
+      .replace(/<pad>/gi, '')
+      .replace(/<\/?pad>/gi, '')
+      .replace(/(<pad>\s*)+/gi, '')
+      .replace(/\u00e2\u20ac\u00a2/g, '')
+      .replace(/\u00e2\u20ac\u00a6/g, '...')
+      .replace(/\u00e2\u20ac\u201c/g, '-')
+      .replace(/\u00e2\u20ac\u201d/g, '-')
+      .replace(/\u00e2\u20ac\u02dc/g, "'")
+      .replace(/\u00e2\u20ac\u2122/g, "'")
+      .replace(/\u00e2\u20ac\u0153/g, '"')
+      .replace(/\u00e2\u20ac\u009d/g, '"')
+    while (walker.nextNode()) {
+      nodes.push(walker.currentNode as Text);
+    }
+  
+    nodes.forEach((node) => {
+>     node.nodeValue = cleanBrokenText(node.nodeValue || '');
+    });
+  };
+  
+  interface ResumeBuilderProps {
+    onBack: () => void;
+    onUpgrade: () => void;
+  }
+  
+  interface ContactInfo {
+    fullName: string;
+    email: string;
+    phone: string;
+    const getCurrentStepIndex = () => steps.findIndex(step => step.id === currentStep);
+    const progress = ((getCurrentStepIndex() + 1) / steps.length) * 100;
+  
+    // Auto-clean corrupted AI summary text like <pad><pad>
+    useEffect(() => {
+>     const cleanedSummary = cleanBrokenText(resumeData.summary);
+      if (resumeData.summary !== cleanedSummary) {
+        setResumeData(prev => ({ ...prev, summary: cleanedSummary }));
+      }
+    }, [resumeData.summary]);
+  
+    // ─── Load real Supabase profile data on mount ───────────────────────────────
+    useEffect(() => {
+      if (!user) return;
+  
+      const loadProfileData = async () => {
+        setIsLoadingProfile(true);
+        try {
+          // 2. Get candidate profile using the profile's primary ID
+          const { data: candidateProfile } = await profilesService.getCandidateProfile(profile.id);
+  
+          // 3. Map skills: string[] → Skill[]
+          const mappedSkills: Skill[] = (candidateProfile?.skills || []).map((name: string) => ({
+>           name: cleanBrokenText(name),
+            category: 'technical' as const,
+            proficiency: 'intermediate' as const
+          }));
+  
+          // 4. Update resume data with all real profile fields
+          setResumeData(prev => ({
+            ...prev,
+            contactInfo: {
+              fullName: profile.full_name || user.name || '',
+              email: profile.email || user.email || '',
+              phone: profile.phone || '',
+              location: profile.location || '',
+    };
+  
+    // ─── Real PDF download using html2canvas + jsPDF ────────────────────────────
+    const createPdfSafeResumeClone = () => {
+      const escapeHtml = (value: string) =>
+>       cleanBrokenText(String(value || ''))
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+  
+      const contactInfo = resumeData.contactInfo as any;
+  
+      const fullName = escapeHtml(
+        [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
+      ) || 'Your Name';
+  
+        if (!response.ok) {
+          throw new Error(data?.error || 'AI summary generation failed.');
+        }
+  
+        if (data?.summary) {
+>         setResumeData(prev => ({ ...prev, summary: cleanBrokenText(String(data.summary)) }));
+          toast.success('Summary generated!', { id: toastId });
+        } else {
+          throw new Error('No summary returned from AI');
+        }
+  
+      } catch (err: any) {
+        console.error('AI summary generation failed:', err);
+        toast.error(
+          err instanceof Error ? err.message : 'AI generation failed. Please write your summary manually.',
+          { id: toastId }
+        );
+      } finally {
+          ? rewritten.experience.map((exp: any, index: number) => {
+              const oldExp = resumeData.experience[index];
+  
+              const description = Array.isArray(exp.description)
+                ? exp.description
+>                   .map((line: any) => cleanBrokenText(String(line || '')))
+                    .filter(Boolean)
+                : oldExp?.description || [];
+  
+              return {
+                id: String(exp.id || oldExp?.id || `${Date.now()}-${index}`),
+>               jobTitle: cleanBrokenText(String(exp.jobTitle || oldExp?.jobTitle || '')),
+>               companyName: cleanBrokenText(String(exp.companyName || oldExp?.companyName || '')),
+>               city: cleanBrokenText(String(exp.city || oldExp?.city || '')),
+>               state: cleanBrokenText(String(exp.state || oldExp?.state || '')),
+>               startDate: cleanBrokenText(String(exp.startDate || oldExp?.startDate || '')),
+>               endDate: cleanBrokenText(String(exp.endDate || oldExp?.endDate || '')),
+                isCurrentJob: Boolean(exp.isCurrentJob ?? oldExp?.isCurrentJob ?? false),
+                description
+              };
+            })
+          : resumeData.experience;
+  
+        const rewrittenEducation: Education[] = Array.isArray(rewritten.education)
+          ? rewritten.education.map((edu: any, index: number) => {
+              const oldEdu = resumeData.education[index];
+  
+              return {
+                id: String(edu.id || oldEdu?.id || `${Date.now()}-edu-${index}`),
+>               degree: cleanBrokenText(String(edu.degree || oldEdu?.degree || '')),
+>               university: cleanBrokenText(String(edu.university || oldEdu?.university || '')),
+>               city: cleanBrokenText(String(edu.city || oldEdu?.city || '')),
+>               state: cleanBrokenText(String(edu.state || oldEdu?.state || '')),
+>               graduationDate: cleanBrokenText(String(edu.graduationDate || oldEdu?.graduationDate || '')),
+>               gpa: cleanBrokenText(String(edu.gpa || oldEdu?.gpa || ''))
+              };
+            })
+          : resumeData.education;
+  
+        const rewrittenSkills: Skill[] = Array.isArray(rewritten.skills)
+          ? rewritten.skills
+              .map((skill: any) => ({
+>               name: cleanBrokenText(String(skill.name || '')),
+                category: ['technical', 'soft', 'language'].includes(skill.category)
+                  ? skill.category
+                  : 'technical',
+                proficiency: ['beginner', 'intermediate', 'advanced', 'expert'].includes(skill.proficiency)
+                  ? skill.proficiency
+                  : 'intermediate'
+              }))
+              .filter((skill: Skill) => skill.name.length > 0)
+          : resumeData.skills;
+  
+        setResumeData(prev => ({
+          ...prev,
+>         summary: cleanBrokenText(String(rewritten.summary || prev.summary || '')),
+          experience: rewrittenExperience,
+          education: rewrittenEducation,
+          skills: rewrittenSkills
+        }));
+  
+        toast.success('Resume rewritten with AI. Review it, then download the new version.', { id: toastId });
+        setCurrentStep('review');
+      } catch (err: any) {
+        console.error('AI resume rewrite failed:', err);
+        toast.error(err instanceof Error ? err.message : 'AI resume rewrite failed.', { id: toastId });
+      } finally {
+        setIsRewritingResume(false);
+          throw new Error(data?.error || 'HireVify AI failed to fix the resume.');
+        }
+  
+        const fixed = data?.fixedResume || {};
+  
+>       const fixedSummary = cleanBrokenText(String(fixed.summary || resumeData.summary || ''));
+  
+        const fixedExperience: WorkExperience[] = Array.isArray(fixed.experience)
+          ? fixed.experience.map((exp: any, index: number) => {
+              const oldExp = resumeData.experience[index];
+  
+              return {
+                id: String(exp.id || oldExp?.id || `${Date.now()}-${index}`),
+>               jobTitle: cleanBrokenText(String(exp.jobTitle || oldExp?.jobTitle || '')),
+>               companyName: cleanBrokenText(String(exp.companyName || oldExp?.companyName || '')),
+>               city: cleanBrokenText(String(exp.city || oldExp?.city || '')),
+>               state: cleanBrokenText(String(exp.state || oldExp?.state || '')),
+>               startDate: cleanBrokenText(String(exp.startDate || oldExp?.startDate || '')),
+>               endDate: cleanBrokenText(String(exp.endDate || oldExp?.endDate || '')),
+                isCurrentJob: Boolean(exp.isCurrentJob ?? oldExp?.isCurrentJob ?? false),
+                description: Array.isArray(exp.description)
+>                 ? exp.description.map((line: any) => cleanBrokenText(String(line || ''))).filter(Boolean)
+                  : oldExp?.description || []
+              };
+            })
+          : resumeData.experience;
+  
+        const fixedEducation: Education[] = Array.isArray(fixed.education)
+          ? fixed.education.map((edu: any, index: number) => {
+              const oldEdu = resumeData.education[index];
+  
+              return {
+                id: String(edu.id || oldEdu?.id || `${Date.now()}-edu-${index}`),
+>               degree: cleanBrokenText(String(edu.degree || oldEdu?.degree || '')),
+>               university: cleanBrokenText(String(edu.university || oldEdu?.university || '')),
+>               city: cleanBrokenText(String(edu.city || oldEdu?.city || '')),
+>               state: cleanBrokenText(String(edu.state || oldEdu?.state || '')),
+>               graduationDate: cleanBrokenText(String(edu.graduationDate || oldEdu?.graduationDate || '')),
+>               gpa: cleanBrokenText(String(edu.gpa || oldEdu?.gpa || ''))
+              };
+            })
+          : resumeData.education;
+  
+        const fixedSkills: Skill[] = Array.isArray(fixed.skills)
+          ? fixed.skills
+              .map((skill: any) => ({
+>               name: cleanBrokenText(String(skill.name || '')),
+                category: ['technical', 'soft', 'language'].includes(skill.category) ? skill.category : 'technical',
+                proficiency: ['beginner', 'intermediate', 'advanced', 'expert'].includes(skill.proficiency) ? skill.proficiency : 'intermediate'
+              }))
+              .filter((skill: Skill) => skill.name.length > 0)
+          : resumeData.skills;
+  
+        setResumeData(prev => ({
+          ...prev,
+          summary: fixedSummary || prev.summary,
+          experience: fixedExperience,
+          education: fixedEducation,
+          skills: fixedSkills
+      } finally {
+        setIsFixingResumeWithAI(false);
+      }
+    };
+  
+>   const updateContactInfo = (field: keyof ContactInfo, value: string) => {
+      setResumeData(prev => ({
+        ...prev,
+>       contactInfo: { ...prev.contactInfo, [field]: cleanBrokenText(value) }
+      }));
+    };
+  
+    const addExperience = () => {
+      const newExperience: WorkExperience = {
+        id: Date.now().toString(),
+        jobTitle: '',
+        companyName: '',
+        city: '',
+        state: '',
+        startDate: '',
+        endDate: '',
+        ...prev,
+        experience: [...prev.experience, newExperience]
+      }));
+    };
+  
+>   const updateExperience = (id: string, field: keyof WorkExperience, value: any) => {
+      setResumeData(prev => ({
+        ...prev,
+        experience: prev.experience.map(exp =>
+>         exp.id === id ? { ...exp, [field]: typeof value === 'string' ? cleanBrokenText(value) : value } : exp
+        )
+      }));
+    };
+  
+    const removeExperience = (id: string) => {
+      setResumeData(prev => ({
+        ...prev,
+        experience: prev.experience.filter(exp => exp.id !== id)
+      }));
+    };
+  
+    const addEducation = () => {
+        ...prev,
+        education: [...prev.education, newEducation]
+      }));
+    };
+  
+>   const updateEducation = (id: string, field: keyof Education, value: string) => {
+      setResumeData(prev => ({
+        ...prev,
+        education: prev.education.map(edu =>
+>         edu.id === id ? { ...edu, [field]: typeof value === 'string' ? cleanBrokenText(value) : value } : edu
+        )
+      }));
+    };
+  
+    const removeEducation = (id: string) => {
+      setResumeData(prev => ({
+        ...prev,
+        education: prev.education.filter(edu => edu.id !== id)
+      }));
+    };
+  
+    const addSkill = (name: string, category: 'technical' | 'soft' | 'language') => {
+      const newSkill: Skill = {
+>       name: cleanBrokenText(name),
+        category,
+        proficiency: 'intermediate'
+      };
+      setResumeData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill]
+      }));
+    };
+  
+    const removeSkill = (index: number) => {
+      setResumeData(prev => ({
+        ...prev,
+  
+  // ─── Resume Preview Component (unchanged) ─────────────────────────────────────
+  function ResumePreview({ resumeData, showFullPreview = false }: { resumeData: ResumeData; showFullPreview?: boolean }) {
+    const contactInfo = resumeData.contactInfo as any;
+  
+>   const fullName = cleanBrokenText(
+      [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
+    ) || 'Your Name';
+  
+>   const email = cleanBrokenText(contactInfo.email || '');
+>   const phone = cleanBrokenText(contactInfo.phone || '');
+>   const location = cleanBrokenText(
+      contactInfo.location ||
+      [contactInfo.city, contactInfo.state, contactInfo.country].filter(Boolean).join(', ')
+    );
+  
+>   const summary = cleanBrokenText(resumeData.summary || '');
+  
+    const experience = Array.isArray(resumeData.experience)
+      ? resumeData.experience.filter((exp) =>
+          exp.jobTitle || exp.companyName || exp.startDate || exp.endDate || exp.description?.length
+        )
+      : [];
+  
+    const education = Array.isArray(resumeData.education)
+      ? resumeData.education.filter((edu) =>
+          edu.degree || edu.university || edu.graduationDate
+        )
+      : [];
+    const skills = Array.isArray(resumeData.skills)
+      ? resumeData.skills.filter((skill) => skill.name)
+      : [];
+  
+    const formatDateRange = (startDate?: string, endDate?: string, isCurrentJob?: boolean) => {
+>     const start = cleanBrokenText(startDate || '');
+>     const end = isCurrentJob ? 'Present' : cleanBrokenText(endDate || '');
+      return [start, end].filter(Boolean).join(' - ');
+    };
+  
+    const contactItems = [email, phone, location].filter(Boolean);
+  
+    const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+      <h3 className="text-sm font-bold uppercase tracking-normal text-slate-900 border-b border-slate-300 pb-1 mb-3">
+        {children}
+      </h3>
+    );
+  
+    const ExperienceList = () => (
+        {experience.map((exp, index) => (
+          <div key={exp.id || index} className="mb-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-slate-900">
+>                 {cleanBrokenText(exp.jobTitle || 'Role Title')}
+                </h4>
+                <p className="text-sm font-medium text-slate-700">
+>                 {cleanBrokenText(exp.companyName || 'Company')}
+                  {[exp.city, exp.state].filter(Boolean).length > 0
+>                   ? ` - ${[exp.city, exp.state].filter(Boolean).map((item) => cleanBrokenText(item)).join(', ')}`
+                    : ''}
+                </p>
+              </div>
+              <p className="text-xs text-slate-600 whitespace-nowrap">
+                {formatDateRange(exp.startDate, exp.endDate, exp.isCurrentJob)}
+              </p>
+            </div>
+  
+            {Array.isArray(exp.description) && exp.description.length > 0 && (
+              <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                {exp.description.map((item, itemIndex) => (
+                  <li key={itemIndex} className="flex gap-2">
+                    <span>-</span>
+>                   <span>{cleanBrokenText(item)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </>
+    );
+  
+    const EducationList = () => (
+      <>
+        {education.map((edu, index) => (
+          <div key={edu.id || index} className="mb-4">
+>           <h4 className="font-bold text-slate-900">{cleanBrokenText(edu.degree || 'Degree')}</h4>
+>           <p className="text-sm text-slate-700">{cleanBrokenText(edu.university || 'Institution')}</p>
+            <p className="text-xs text-slate-600">
+>             {[edu.city, edu.state, edu.graduationDate].filter(Boolean).map((item) => cleanBrokenText(item)).join(' - ')}
+            </p>
+>           {edu.gpa && <p className="text-xs text-slate-600">GPA: {cleanBrokenText(edu.gpa)}</p>}
+          </div>
+        ))}
+      </>
+    );
+  
+    const SkillsList = ({ compact = false }: { compact?: boolean }) => (
+      <div className={compact ? 'flex flex-wrap gap-1.5' : 'flex flex-wrap gap-2'}>
+        {skills.map((skill, index) => (
+          <span
+            key={`${skill.name}-${index}`}
+            className={compact
+              ? 'text-xs border border-slate-300 px-2 py-1 rounded'
+              : 'text-sm bg-slate-100 border border-slate-200 px-3 py-1 rounded-full'}
+          >
+>           {cleanBrokenText(skill.name)}
+          </span>
+        ))}
+      </div>
+    );
+  
+    if (resumeData.template === 'modern') {
+      return (
+        <div data-resume-template="modern" className="bg-white text-slate-900 shadow-sm border border-slate-200 max-w-4xl mx-auto">
+          <div className="grid grid-cols-12 min-h-[900px]">
+            <aside className="col-span-4 bg-slate-900 text-white p-8">
+              <h1 className="text-3xl font-bold leading-tight mb-3">{fullName}</h1>
+              <div className="space-y-1 text-sm text-slate-200 mb-8">
+                    Skills
+                  </h3>
+                  <div className="space-y-2">
+                    {skills.map((skill, index) => (
+                      <p key={`${skill.name}-${index}`} className="text-sm text-slate-100">
+>                       {cleanBrokenText(skill.name)}
+                      </p>
+                    ))}
+                  </div>
+                </section>
+              )}
+  
+              {education.length > 0 && (
+                <section>
+                  <h3 className="text-xs font-bold uppercase tracking-normal border-b border-slate-500 pb-2 mb-3">
+                    Education
+                  </h3>
+                  {education.map((edu, index) => (
+                    <div key={edu.id || index} className="mb-4">
+>                     <p className="text-sm font-bold">{cleanBrokenText(edu.degree || 'Degree')}</p>
+>                     <p className="text-xs text-slate-200">{cleanBrokenText(edu.university || 'Institution')}</p>
+>                     <p className="text-xs text-slate-300">{cleanBrokenText(edu.graduationDate || '')}</p>
+                    </div>
+                  ))}
+                </section>
+              )}
+            </aside>
+  
+            <main className="col-span-8 p-8">
+              {summary && (
+                <section className="mb-8">
+                  <SectionTitle>Professional Summary</SectionTitle>
+                  <p className="text-sm leading-7 text-slate-700">{summary}</p>
+                </section>
+    const [newSkillName, setNewSkillName] = useState('');
+    const [newSkillCategory, setNewSkillCategory] = useState<'technical' | 'soft' | 'language'>('technical');
+  
+    const handleAddSkill = () => {
+      if (newSkillName.trim()) {
+>       onAddSkill(cleanBrokenText(newSkillName), newSkillCategory);
+        setNewSkillName('');
+      }
+    };
+  
+    const skillsByCategory = {
+      technical: skills.filter(s => s.category === 'technical'),
+      soft: skills.filter(s => s.category === 'soft'),
+      language: skills.filter(s => s.category === 'language')
+    };
+  
+    return (
+      <div className="space-y-6">
+        <div className="flex gap-2">
+          <Input
+            value={newSkillName}
+            onChange={(e) => setNewSkillName(e.target.value)}
+            placeholder="Add a skill..."
+>           onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+          />
+          <Select value={newSkillCategory} onValueChange={(value: any) => setNewSkillCategory(value)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="technical">Technical</SelectItem>
+              <SelectItem value="soft">Soft Skills</SelectItem>
+              <SelectItem value="language">Language</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleAddSkill}>Add</Button>
+
+
+

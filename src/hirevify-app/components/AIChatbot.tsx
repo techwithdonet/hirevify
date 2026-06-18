@@ -4,510 +4,505 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { 
-  MessageCircle,
-  X,
-  Send,
-  Bot,
-  User,
-  Sparkles,
-  ArrowRight,
-  HelpCircle,
-  Zap,
-  Star,
-  ChevronUp,
-  Minimize2
+ MessageCircle,
+ X,
+ Send,
+ Bot,
+ User,
+ Sparkles,
+ ArrowRight,
+ HelpCircle,
+ Zap,
+ Star,
+ ChevronUp,
+ Minimize2
 } from 'lucide-react';
 
 interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-  quickActions?: QuickAction[];
+ id: string;
+ content: string;
+ sender: 'user' | 'ai';
+ timestamp: Date;
+ quickActions?: QuickAction[];
 }
 
 interface QuickAction {
-  label: string;
-  action: () => void;
-  icon?: any;
-  variant?: 'default' | 'outline' | 'premium';
+ label: string;
+ action: () => void;
+ icon?: any;
+ variant?: 'default' | 'outline' | 'premium';
 }
 
 interface AIChatbotProps {
-  currentScreen: string;
-  userType: 'recruiter' | 'candidate' | null;
-  onNavigate: (screen: string) => void;
-  onUpgrade: () => void;
+ currentScreen: string;
+ userType: 'recruiter' | 'candidate' | null;
+ onNavigate: (screen: string) => void;
+ onUpgrade: () => void;
 }
 
 export function AIChatbot({ currentScreen, userType, onNavigate, onUpgrade }: AIChatbotProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+ const [isOpen, setIsOpen] = useState(false);
+ const [isMinimized, setIsMinimized] = useState(false);
+ const [messages, setMessages] = useState<Message[]>([]);
+ const [inputValue, setInputValue] = useState('');
+ const [isTyping, setIsTyping] = useState(false);
+ const messagesEndRef = useRef<HTMLDivElement>(null);
+ const inputRef = useRef<HTMLInputElement>(null);
 
-  // Context-aware welcome message
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      const welcomeMessage = getWelcomeMessage();
-      setMessages([{
-        id: '1',
-        content: welcomeMessage.content,
-        sender: 'ai',
-        timestamp: new Date(),
-        quickActions: welcomeMessage.quickActions
-      }]);
-    }
-  }, [isOpen, currentScreen, userType]);
+ // Context-aware welcome message
+ useEffect(() => {
+ if (isOpen && messages.length === 0) {
+ const welcomeMessage = getWelcomeMessage();
+ setMessages([{
+ id: '1',
+ content: welcomeMessage.content,
+ sender: 'ai',
+ timestamp: new Date(),
+ quickActions: welcomeMessage.quickActions
+ }]);
+ }
+ }, [isOpen, currentScreen, userType]);
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+ // Auto-scroll to bottom
+ useEffect(() => {
+ messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+ }, [messages]);
 
-  // Focus input when opened
-  useEffect(() => {
-    if (isOpen && !isMinimized) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [isOpen, isMinimized]);
+ // Focus input when opened
+ useEffect(() => {
+ if (isOpen &&!isMinimized) {
+ setTimeout(() => inputRef.current?.focus(), 100);
+ }
+ }, [isOpen, isMinimized]);
 
-  const getWelcomeMessage = () => {
-    const baseQuickActions: QuickAction[] = [
-      {
-        label: 'Show me around',
-        action: () => handleQuickAction("I'd like a tour of the platform"),
-        icon: Star
-      },
-      {
-        label: 'Get help',
-        action: () => handleQuickAction("I need help with something"),
-        icon: HelpCircle
-      }
-    ];
+ const getWelcomeMessage = () => {
+ const baseQuickActions: QuickAction[] = [
+ {
+ label: 'Show me around',
+ action: () => handleQuickAction("I'd like a tour of the platform"),
+ icon: Star
+ },
+ {
+ label: 'Get help',
+ action: () => handleQuickAction("I need help with something"),
+ icon: HelpCircle
+ }
+ ];
 
-    if (!userType) {
-      return {
-        content: "ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã‹Å“Ãƒ¢Ã¢â€š¬Ã‚¹ Welcome to HireVify! I'm your AI assistant. I can help you navigate the platform, understand features, and find what you're looking for. What would you like to explore?",
-        quickActions: [
-          {
-            label: 'For Recruiters',
-            action: () => handleQuickAction("Tell me about recruiter features"),
-            icon: ArrowRight
-          },
-          {
-            label: 'For Candidates',
-            action: () => handleQuickAction("Tell me about candidate features"),
-            icon: ArrowRight
-          },
-          ...baseQuickActions
-        ]
-      };
-    }
+ if (!userType) {
+ return {
+ content: "...‹ Welcome to HireVify! I'm your AI assistant. I can help you navigate the platform, understand features, and find what you're looking for. What would you like to explore?",
+ quickActions: [
+ {
+ label: 'For Recruiters',
+ action: () => handleQuickAction("Tell me about recruiter features"),
+ icon: ArrowRight
+ },
+ {
+ label: 'For Candidates',
+ action: () => handleQuickAction("Tell me about candidate features"),
+ icon: ArrowRight
+ },...baseQuickActions
+ ]
+ };
+ }
 
-    if (userType === 'recruiter') {
-      const recruiterActions: QuickAction[] = [
-        {
-          label: 'Post a Project',
-          action: () => onNavigate('recruiter-post-project'),
-          icon: Zap
-        },
-        {
-          label: 'View Candidates',
-          action: () => onNavigate('recruiter-ats'),
-          icon: ArrowRight
-        },
-        {
-          label: 'Premium Features',
-          action: () => onUpgrade(),
-          icon: Sparkles,
-          variant: 'premium' as const
-        },
-        ...baseQuickActions
-      ];
+ if (userType === 'recruiter') {
+ const recruiterActions: QuickAction[] = [
+ {
+ label: 'Post a Project',
+ action: () => onNavigate('recruiter-post-project'),
+ icon: Zap
+ },
+ {
+ label: 'View Candidates',
+ action: () => onNavigate('recruiter-ats'),
+ icon: ArrowRight
+ },
+ {
+ label: 'Premium Features',
+ action: () => onUpgrade(),
+ icon: Sparkles,
+ variant: 'premium' as const
+ },...baseQuickActions
+ ];
 
-      let contextMessage = "Hello! I'm here to help you make the most of HireVify's recruiting tools. ";
-      
-      switch (currentScreen) {
-        case 'recruiter-dashboard':
-          contextMessage += "I see you're on your dashboard. Would you like to post a new project, review candidates, or explore our premium features?";
-          break;
-        case 'recruiter-post-project':
-          contextMessage += "Great! You're posting a new project. I can help you optimize your job description or explain our matching algorithm.";
-          break;
-        case 'recruiter-ats':
-          contextMessage += "You're reviewing candidates! I can help you understand match scores, schedule interviews, or use our assessment tools.";
-          break;
-        case 'recruiter-analytics':
-          contextMessage += "Analytics are powerful! I can explain the metrics, help you identify trends, or suggest improvements to your hiring process.";
-          break;
-        default:
-          contextMessage += "What would you like to accomplish today?";
-      }
+ let contextMessage = "Hello! I'm here to help you make the most of HireVify's recruiting tools. ";
+ 
+ switch (currentScreen) {
+ case 'recruiter-dashboard':
+ contextMessage += "I see you're on your dashboard. Would you like to post a new project, review candidates, or explore our premium features?";
+ break;
+ case 'recruiter-post-project':
+ contextMessage += "Great! You're posting a new project. I can help you optimize your job description or explain our matching algorithm.";
+ break;
+ case 'recruiter-ats':
+ contextMessage += "You're reviewing candidates! I can help you understand match scores, schedule interviews, or use our assessment tools.";
+ break;
+ case 'recruiter-analytics':
+ contextMessage += "Analytics are powerful! I can explain the metrics, help you identify trends, or suggest improvements to your hiring process.";
+ break;
+ default:
+ contextMessage += "What would you like to accomplish today?";
+ }
 
-      return {
-        content: contextMessage,
-        quickActions: recruiterActions
-      };
-    }
+ return {
+ content: contextMessage,
+ quickActions: recruiterActions
+ };
+ }
 
-    // Candidate user
-    const candidateActions: QuickAction[] = [
-      {
-        label: 'Build Resume',
-        action: () => onNavigate('candidate-resume-builder'),
-        icon: ArrowRight
-      },
-      {
-        label: 'Take Assessment',
-        action: () => onNavigate('candidate-skills-assessment'),
-        icon: Zap
-      },
-      {
-        label: 'Premium Features',
-        action: () => onUpgrade(),
-        icon: Sparkles,
-        variant: 'premium' as const
-      },
-      ...baseQuickActions
-    ];
+ // Candidate user
+ const candidateActions: QuickAction[] = [
+ {
+ label: 'Build Resume',
+ action: () => onNavigate('candidate-resume-builder'),
+ icon: ArrowRight
+ },
+ {
+ label: 'Take Assessment',
+ action: () => onNavigate('candidate-skills-assessment'),
+ icon: Zap
+ },
+ {
+ label: 'Premium Features',
+ action: () => onUpgrade(),
+ icon: Sparkles,
+ variant: 'premium' as const
+ },...baseQuickActions
+ ];
 
-    let contextMessage = "Hi there! I'm your HireVify assistant, ready to help you land your next opportunity. ";
-    
-    switch (currentScreen) {
-      case 'candidate-dashboard':
-        contextMessage += "I see you're on your dashboard. Would you like to update your resume, take a skills assessment, or explore available projects?";
-        break;
-      case 'candidate-resume-builder':
-        contextMessage += "Building your resume is a great start! I can provide tips for highlighting your skills or optimizing for our matching algorithm.";
-        break;
-      case 'candidate-portfolio':
-        contextMessage += "Your portfolio showcases your best work! I can suggest ways to make it stand out to recruiters.";
-        break;
-      case 'candidate-skills-assessment':
-        contextMessage += "Skills assessments help prove your expertise! I can explain how they work or provide tips for success.";
-        break;
-      default:
-        contextMessage += "What would you like to work on today?";
-    }
+ let contextMessage = "Hi there! I'm your HireVify assistant, ready to help you land your next opportunity. ";
+ 
+ switch (currentScreen) {
+ case 'candidate-dashboard':
+ contextMessage += "I see you're on your dashboard. Would you like to update your resume, take a skills assessment, or explore available projects?";
+ break;
+ case 'candidate-resume-builder':
+ contextMessage += "Building your resume is a great start! I can provide tips for highlighting your skills or optimizing for our matching algorithm.";
+ break;
+ case 'candidate-portfolio':
+ contextMessage += "Your portfolio showcases your best work! I can suggest ways to make it stand out to recruiters.";
+ break;
+ case 'candidate-skills-assessment':
+ contextMessage += "Skills assessments help prove your expertise! I can explain how they work or provide tips for success.";
+ break;
+ default:
+ contextMessage += "What would you like to work on today?";
+ }
 
-    return {
-      content: contextMessage,
-      quickActions: candidateActions
-    };
-  };
+ return {
+ content: contextMessage,
+ quickActions: candidateActions
+ };
+ };
 
-  const getContextualResponse = (userMessage: string): { content: string; quickActions?: QuickAction[] } => {
-    const message = userMessage.toLowerCase();
-    
-    // Common help topics
-    if (message.includes('tour') || message.includes('around') || message.includes('overview')) {
-      if (userType === 'recruiter') {
-        return {
-          content: "ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒâ€šÃ‚¯ **HireVify for Recruiters Overview:**\n\n**1. Dashboard** - Your command center for all hiring activities\n**2. Post Projects** - Create detailed project postings with skills matching\n**3. ATS System** - Review candidates with AI-powered match scores\n**4. Skills Assessments** - Test candidates with technical and behavioral assessments\n**5. Analytics** - Track your hiring performance and trends\n**6. Integrations** - Connect with your existing HR tools\n\nWhere would you like to start?",
-          quickActions: [
-            { label: 'Post My First Project', action: () => onNavigate('recruiter-post-project'), icon: Zap },
-            { label: 'See Candidate Pipeline', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
-            { label: 'Explore Analytics', action: () => onNavigate('recruiter-analytics'), icon: Star }
-          ]
-        };
-      } else {
-        return {
-          content: "ÃƒÆ’Ã‚¢Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚¨ **HireVify for Candidates Overview:**\n\n**1. Dashboard** - Track your applications and opportunities\n**2. Resume Builder** - Create ATS-optimized resumes\n**3. Portfolio** - Showcase your best work and projects\n**4. Skills Assessment** - Prove your expertise with validated tests\n**5. Video Interviews** - Complete one-way video screenings\n**6. Project Matching** - Get matched to relevant opportunities\n\nWhat would you like to work on first?",
-          quickActions: [
-            { label: 'Build My Resume', action: () => onNavigate('candidate-resume-builder'), icon: ArrowRight },
-            { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
-            { label: 'Create Portfolio', action: () => onNavigate('candidate-portfolio'), icon: Star }
-          ]
-        };
-      }
-    }
+ const getContextualResponse = (userMessage: string): { content: string; quickActions?: QuickAction[] } => {
+ const message = userMessage.toLowerCase();
+ 
+ // Common help topics
+ if (message.includes('tour') || message.includes('around') || message.includes('overview')) {
+ if (userType === 'recruiter') {
+ return {
+ content: "...... **HireVify for Recruiters Overview:**\n\n**1. Dashboard** - Your command center for all hiring activities\n**2. Post Projects** - Create detailed project postings with skills matching\n**3. ATS System** - Review candidates with AI-powered match scores\n**4. Skills Assessments** - Test candidates with technical and behavioral assessments\n**5. Analytics** - Track your hiring performance and trends\n**6. Integrations** - Connect with your existing HR tools\n\nWhere would you like to start?",
+ quickActions: [
+ { label: 'Post My First Project', action: () => onNavigate('recruiter-post-project'), icon: Zap },
+ { label: 'See Candidate Pipeline', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
+ { label: 'Explore Analytics', action: () => onNavigate('recruiter-analytics'), icon: Star }
+ ]
+ };
+ } else {
+ return {
+ content: "... **HireVify for Candidates Overview:**\n\n**1. Dashboard** - Track your applications and opportunities\n**2. Resume Builder** - Create ATS-optimized resumes\n**3. Portfolio** - Showcase your best work and projects\n**4. Skills Assessment** - Prove your expertise with validated tests\n**5. Video Interviews** - Complete one-way video screenings\n**6. Project Matching** - Get matched to relevant opportunities\n\nWhat would you like to work on first?",
+ quickActions: [
+ { label: 'Build My Resume', action: () => onNavigate('candidate-resume-builder'), icon: ArrowRight },
+ { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
+ { label: 'Create Portfolio', action: () => onNavigate('candidate-portfolio'), icon: Star }
+ ]
+ };
+ }
+ }
 
-    if (message.includes('help') && !message.includes('tour')) {
-      return {
-        content: "I'm here to help! I can assist you with:\n\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Navigation** - Finding the right features and tools\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Feature explanations** - Understanding how everything works\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Best practices** - Tips for success on the platform\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Troubleshooting** - Solving common issues\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Premium features** - Learning about advanced capabilities\n\nWhat specific area would you like help with?",
-        quickActions: [
-          { label: 'Feature Questions', action: () => handleQuickAction("How do features work?") },
-          { label: 'Best Practices', action: () => handleQuickAction("What are the best practices?") },
-          { label: 'Premium Info', action: () => onUpgrade(), variant: 'premium' as const }
-        ]
-      };
-    }
+ if (message.includes('help') &&!message.includes('tour')) {
+ return {
+ content: "I'm here to help! I can assist you with:\n\n **Navigation** - Finding the right features and tools\n **Feature explanations** - Understanding how everything works\n **Best practices** - Tips for success on the platform\n **Troubleshooting** - Solving common issues\n **Premium features** - Learning about advanced capabilities\n\nWhat specific area would you like help with?",
+ quickActions: [
+ { label: 'Feature Questions', action: () => handleQuickAction("How do features work?") },
+ { label: 'Best Practices', action: () => handleQuickAction("What are the best practices?") },
+ { label: 'Premium Info', action: () => onUpgrade(), variant: 'premium' as const }
+ ]
+ };
+ }
 
-    // Feature-specific help
-    if (message.includes('match') || message.includes('score') || message.includes('algorithm')) {
-      return {
-        content: "ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€¦Ã‚½Ãƒâ€šÃ‚¯ **HireVify's AI Matching System:**\n\nOur algorithm analyzes:\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Skills alignment** - Technical and soft skills matching\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Experience level** - Years and type of relevant experience\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Project fit** - Industry, scope, and requirements match\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Availability** - Timeline and commitment compatibility\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Success indicators** - Past performance and ratings\n\nMatch scores above 85% indicate excellent alignment!",
-        quickActions: userType === 'recruiter' ? [
-          { label: 'View Match Scores', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
-          { label: 'Improve Matching', action: () => handleQuickAction("How to improve matching?") }
-        ] : [
-          { label: 'Optimize Profile', action: () => handleQuickAction("How to optimize my profile?") },
-          { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap }
-        ]
-      };
-    }
+ // Feature-specific help
+ if (message.includes('match') || message.includes('score') || message.includes('algorithm')) {
+ return {
+ content: "...... **HireVify's AI Matching System:**\n\nOur algorithm analyzes:\n **Skills alignment** - Technical and soft skills matching\n **Experience level** - Years and type of relevant experience\n **Project fit** - Industry, scope, and requirements match\n **Availability** - Timeline and commitment compatibility\n **Success indicators** - Past performance and ratings\n\nMatch scores above 85% indicate excellent alignment!",
+ quickActions: userType === 'recruiter'? [
+ { label: 'View Match Scores', action: () => onNavigate('recruiter-ats'), icon: ArrowRight },
+ { label: 'Improve Matching', action: () => handleQuickAction("How to improve matching?") }
+ ]: [
+ { label: 'Optimize Profile', action: () => handleQuickAction("How to optimize my profile?") },
+ { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap }
+ ]
+ };
+ }
 
-    if (message.includes('premium') || message.includes('upgrade') || message.includes('pro')) {
-      const features = userType === 'recruiter' ? 
-        "ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Advanced Analytics** - Detailed hiring insights\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Skills Assessments** - Technical testing platform\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Priority Support** - Dedicated account management\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **API Access** - Custom integrations\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Advanced Filters** - Enhanced candidate search" :
-        "ÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Resume Optimization** - ATS keyword analysis\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Portfolio Builder** - Professional project showcase\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Priority Applications** - Fast-track submission\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Interview Prep** - AI-powered practice sessions\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Skills Certification** - Verified competency badges";
+ if (message.includes('premium') || message.includes('upgrade') || message.includes('pro')) {
+ const features = userType === 'recruiter'? 
+ " **Advanced Analytics** - Detailed hiring insights\n **Skills Assessments** - Technical testing platform\n **Priority Support** - Dedicated account management\n **API Access** - Custom integrations\n **Advanced Filters** - Enhanced candidate search":
+ " **Resume Optimization** - ATS keyword analysis\n **Portfolio Builder** - Professional project showcase\n **Priority Applications** - Fast-track submission\n **Interview Prep** - AI-powered practice sessions\n **Skills Certification** - Verified competency badges";
 
-      return {
-        content: `ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒ¢Ã¢â€š¬Ã¢â€ž¢Ãƒâ€¦Ã‚½ **Premium Features for ${userType === 'recruiter' ? 'Recruiters' : 'Candidates'}:**\n\n${features}\n\nUpgrade to unlock advanced capabilities and accelerate your success!`,
-        quickActions: [
-          { label: 'View Pricing', action: () => onUpgrade(), icon: Sparkles, variant: 'premium' as const },
-          { label: 'Compare Plans', action: () => handleQuickAction("Compare premium plans") }
-        ]
-      };
-    }
+ return {
+ content: `...ž... **Premium Features for ${userType === 'recruiter'? 'Recruiters': 'Candidates'}:**\n\n${features}\n\nUpgrade to unlock advanced capabilities and accelerate your success!`,
+ quickActions: [
+ { label: 'View Pricing', action: () => onUpgrade(), icon: Sparkles, variant: 'premium' as const },
+ { label: 'Compare Plans', action: () => handleQuickAction("Compare premium plans") }
+ ]
+ };
+ }
 
-    // Assessment help
-    if (message.includes('assessment') || message.includes('test') || message.includes('skill')) {
-      if (userType === 'recruiter') {
-        return {
-          content: "ÃƒÆ’Ã‚°Ãƒâ€¦Ã‚¸Ãƒâ€šÃ‚§Ãƒâ€šÃ‚  **Skills Assessment Platform:**\n\nCreate comprehensive evaluations:\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Technical Assessments** - Code challenges and technical questions\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Cognitive Tests** - Problem-solving and logical reasoning\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Behavioral Assessments** - Situational judgment scenarios\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ **Custom Evaluations** - Tailored to your specific needs\n\nAssessments help validate candidate skills beyond resumes!",
-          quickActions: [
-            { label: 'Create Assessment', action: () => onNavigate('recruiter-skills-assessment'), icon: Zap },
-            { label: 'View Results', action: () => handleQuickAction("Show me assessment results") }
-          ]
-        };
-      } else {
-        return {
-          content: "Taking Skills Assessments:\n\nTips for success:\n- Read instructions carefully\n- Use preparation time wisely\n- Stay calm and focused\n- Showcase your thought process\n- Ask for clarification if needed\n\nAssessments help prove your expertise to employers!",
-          quickActions: [
-            { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
-            { label: 'Preparation Tips', action: () => handleQuickAction("Assessment preparation tips") }
-          ]
-        };
-      }
-    }
+ // Assessment help
+ if (message.includes('assessment') || message.includes('test') || message.includes('skill')) {
+ if (userType === 'recruiter') {
+ return {
+ content: "... **Skills Assessment Platform:**\n\nCreate comprehensive evaluations:\n **Technical Assessments** - Code challenges and technical questions\n **Cognitive Tests** - Problem-solving and logical reasoning\n **Behavioral Assessments** - Situational judgment scenarios\n **Custom Evaluations** - Tailored to your specific needs\n\nAssessments help validate candidate skills beyond resumes!",
+ quickActions: [
+ { label: 'Create Assessment', action: () => onNavigate('recruiter-skills-assessment'), icon: Zap },
+ { label: 'View Results', action: () => handleQuickAction("Show me assessment results") }
+ ]
+ };
+ } else {
+ return {
+ content: "Taking Skills Assessments:\n\nTips for success:\n- Read instructions carefully\n- Use preparation time wisely\n- Stay calm and focused\n- Showcase your thought process\n- Ask for clarification if needed\n\nAssessments help prove your expertise to employers!",
+ quickActions: [
+ { label: 'Take Assessment', action: () => onNavigate('candidate-skills-assessment'), icon: Zap },
+ { label: 'Preparation Tips', action: () => handleQuickAction("Assessment preparation tips") }
+ ]
+ };
+ }
+ }
 
-    // Default response
-    return {
-      content: "I understand you're looking for help with that. Could you be more specific about what you'd like to know? I can help with:\n\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Platform navigation\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Feature explanations\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Best practices\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Troubleshooting\nÃƒÆ’Ã‚¢Ãƒ¢Ã¢â‚¬Å¡Ã‚¬Ãƒâ€šÃ‚¢ Premium features\n\nJust ask me anything!",
-      quickActions: [
-        { label: 'Platform Tour', action: () => handleQuickAction("Give me a platform tour") },
-        { label: 'Feature Help', action: () => handleQuickAction("How do features work?") }
-      ]
-    };
-  };
+ // Default response
+ return {
+ content: "I understand you're looking for help with that. Could you be more specific about what you'd like to know? I can help with:\n\n Platform navigation\n Feature explanations\n Best practices\n Troubleshooting\n Premium features\n\nJust ask me anything!",
+ quickActions: [
+ { label: 'Platform Tour', action: () => handleQuickAction("Give me a platform tour") },
+ { label: 'Feature Help', action: () => handleQuickAction("How do features work?") }
+ ]
+ };
+ };
 
-  const handleQuickAction = (message: string) => {
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      sender: 'user',
-      timestamp: new Date()
-    };
+ const handleQuickAction = (message: string) => {
+ // Add user message
+ const userMessage: Message = {
+ id: Date.now().toString(),
+ content: message,
+ sender: 'user',
+ timestamp: new Date()
+ };
 
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
+ setMessages(prev => [...prev, userMessage]);
+ setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const response = getContextualResponse(message);
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response.content,
-        sender: 'ai',
-        timestamp: new Date(),
-        quickActions: response.quickActions
-      };
+ // Simulate AI thinking time
+ setTimeout(() => {
+ const response = getContextualResponse(message);
+ const aiMessage: Message = {
+ id: (Date.now() + 1).toString(),
+ content: response.content,
+ sender: 'ai',
+ timestamp: new Date(),
+ quickActions: response.quickActions
+ };
 
-      setMessages(prev => [...prev, aiMessage]);
-      setIsTyping(false);
-    }, 1000);
-  };
+ setMessages(prev => [...prev, aiMessage]);
+ setIsTyping(false);
+ }, 1000);
+ };
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+ const handleSendMessage = () => {
+ if (!inputValue.trim()) return;
 
-    handleQuickAction(inputValue);
-    setInputValue('');
-  };
+ handleQuickAction(inputValue);
+ setInputValue('');
+ };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+ const handleKeyPress = (e: React.KeyboardEvent) => {
+ if (e.key === 'Enter' &&!e.shiftKey) {
+ e.preventDefault();
+ handleSendMessage();
+ }
+ };
 
-  const getQuickActionVariant = (variant?: string) => {
-    switch (variant) {
-      case 'premium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
-      case 'outline':
-        return 'border-border text-foreground hover:bg-muted';
-      default:
-        return 'bg-primary/10 text-primary hover:bg-primary/20';
-    }
-  };
+ const getQuickActionVariant = (variant?: string) => {
+ switch (variant) {
+ case 'premium':
+ return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+ case 'outline':
+ return 'border-border text-foreground hover:bg-muted';
+ default:
+ return 'bg-primary/10 text-primary hover:bg-primary/20';
+ }
+ };
 
-  return (
-    <>
-      {/* Floating Chat Button */}
-      {!isOpen && (
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 z-50"
-          size="lg"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </Button>
-      )}
+ return (
+ <>
+ {/* Floating Chat Button */}
+ {!isOpen && (
+ <Button
+ onClick={() => setIsOpen(true)}
+ className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+ size="lg"
+ >
+ <MessageCircle className="w-6 h-6" />
+ </Button>
+ )}
 
-      {/* Chat Widget */}
-      {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] border border-border shadow-2xl z-50 flex flex-col">
-          {/* Header */}
-          <CardHeader className="pb-3 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-sm font-semibold text-foreground">HireVify Assistant</CardTitle>
-                  <p className="text-xs text-muted-foreground">AI-powered navigation help</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="h-8 w-8 p-0"
-                >
-                  {isMinimized ? <ChevronUp className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsOpen(false)}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
+ {/* Chat Widget */}
+ {isOpen && (
+ <Card className="fixed bottom-6 right-6 w-96 h-[32rem] border border-border shadow-2xl z-50 flex flex-col">
+ {/* Header */}
+ <CardHeader className="pb-3 border-b border-border">
+ <div className="flex items-center justify-between">
+ <div className="flex items-center space-x-3">
+ <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+ <Bot className="w-5 h-5 text-primary" />
+ </div>
+ <div>
+ <CardTitle className="text-sm font-semibold text-foreground">HireVify Assistant</CardTitle>
+ <p className="text-xs text-muted-foreground">AI-powered navigation help</p>
+ </div>
+ </div>
+ <div className="flex items-center space-x-1">
+ <Button
+ variant="ghost"
+ size="sm"
+ onClick={() => setIsMinimized(!isMinimized)}
+ className="h-8 w-8 p-0"
+ >
+ {isMinimized? <ChevronUp className="w-4 h-4" />: <Minimize2 className="w-4 h-4" />}
+ </Button>
+ <Button
+ variant="ghost"
+ size="sm"
+ onClick={() => setIsOpen(false)}
+ className="h-8 w-8 p-0"
+ >
+ <X className="w-4 h-4" />
+ </Button>
+ </div>
+ </div>
+ </CardHeader>
 
-          {!isMinimized && (
-            <>
-              {/* Messages */}
-              <CardContent className="flex-1 p-0">
-                <ScrollArea className="h-full p-4">
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className={`max-w-[80%] ${message.sender === 'user' ? 'order-2' : 'order-1'}`}>
-                          <div
-                            className={`rounded-lg p-3 ${
-                              message.sender === 'user'
-                                ? 'bg-primary text-primary-foreground ml-2'
-                                : 'bg-muted text-foreground mr-2'
-                            }`}
-                          >
-                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                              {message.content}
-                            </div>
-                          </div>
-                          
-                          {/* Quick Actions */}
-                          {message.quickActions && (
-                            <div className="flex flex-wrap gap-2 mt-3 mr-2">
-                              {message.quickActions.map((action, index) => (
-                                <Button
-                                  key={index}
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={action.action}
-                                  className={`text-xs h-7 ${getQuickActionVariant(action.variant)}`}
-                                >
-                                  {action.icon && <action.icon className="w-3 h-3 mr-1" />}
-                                  {action.label}
-                                </Button>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <p className="text-xs text-muted-foreground mt-1 mr-2">
-                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        
-                        <div className={`${message.sender === 'user' ? 'order-1' : 'order-2'}`}>
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted">
-                            {message.sender === 'user' ? (
-                              <User className="w-4 h-4 text-muted-foreground" />
-                            ) : (
-                              <Bot className="w-4 h-4 text-primary" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Typing Indicator */}
-                    {isTyping && (
-                      <div className="flex justify-start">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted">
-                            <Bot className="w-4 h-4 text-primary" />
-                          </div>
-                          <div className="bg-muted text-foreground rounded-lg p-3">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
-                              <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-              </CardContent>
+ {!isMinimized && (
+ <>
+ {/* Messages */}
+ <CardContent className="flex-1 p-0">
+ <ScrollArea className="h-full p-4">
+ <div className="space-y-4">
+ {messages.map((message) => (
+ <div
+ key={message.id}
+ className={`flex ${message.sender === 'user'? 'justify-end': 'justify-start'}`}
+ >
+ <div className={`max-w-[80%] ${message.sender === 'user'? 'order-2': 'order-1'}`}>
+ <div
+ className={`rounded-lg p-3 ${
+ message.sender === 'user'? 'bg-primary text-primary-foreground ml-2': 'bg-muted text-foreground mr-2'
+ }`}
+ >
+ <div className="whitespace-pre-wrap text-sm leading-relaxed">
+ {message.content}
+ </div>
+ </div>
+ 
+ {/* Quick Actions */}
+ {message.quickActions && (
+ <div className="flex flex-wrap gap-2 mt-3 mr-2">
+ {message.quickActions.map((action, index) => (
+ <Button
+ key={index}
+ variant="outline"
+ size="sm"
+ onClick={action.action}
+ className={`text-xs h-7 ${getQuickActionVariant(action.variant)}`}
+ >
+ {action.icon && <action.icon className="w-3 h-3 mr-1" />}
+ {action.label}
+ </Button>
+ ))}
+ </div>
+ )}
+ 
+ <p className="text-xs text-muted-foreground mt-1 mr-2">
+ {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ </p>
+ </div>
+ 
+ <div className={`${message.sender === 'user'? 'order-1': 'order-2'}`}>
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted">
+ {message.sender === 'user'? (
+ <User className="w-4 h-4 text-muted-foreground" />
+ ): (
+ <Bot className="w-4 h-4 text-primary" />
+ )}
+ </div>
+ </div>
+ </div>
+ ))}
+ 
+ {/* Typing Indicator */}
+ {isTyping && (
+ <div className="flex justify-start">
+ <div className="flex items-center space-x-2">
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted">
+ <Bot className="w-4 h-4 text-primary" />
+ </div>
+ <div className="bg-muted text-foreground rounded-lg p-3">
+ <div className="flex space-x-1">
+ <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+ <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
+ <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
+ </div>
+ </div>
+ </div>
+ </div>
+ )}
+ 
+ <div ref={messagesEndRef} />
+ </div>
+ </ScrollArea>
+ </CardContent>
 
-              {/* Input */}
-              <div className="p-4 border-t border-border">
-                <div className="flex space-x-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask me anything about HireVify..."
-                    className="flex-1 px-3 py-2 bg-input-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim()}
-                    size="sm"
-                    className="bg-primary hover:bg-primary-hover text-primary-foreground"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </Card>
-      )}
-    </>
-  );
+ {/* Input */}
+ <div className="p-4 border-t border-border">
+ <div className="flex space-x-2">
+ <input
+ ref={inputRef}
+ type="text"
+ value={inputValue}
+ onChange={(e) => setInputValue(e.target.value)}
+ onKeyPress={handleKeyPress}
+ placeholder="Ask me anything about HireVify..."
+ className="flex-1 px-3 py-2 bg-input-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+ />
+ <Button
+ onClick={handleSendMessage}
+ disabled={!inputValue.trim()}
+ size="sm"
+ className="bg-primary hover:bg-primary-hover text-primary-foreground"
+ >
+ <Send className="w-4 h-4" />
+ </Button>
+ </div>
+ </div>
+ </>
+ )}
+ </Card>
+ )}
+ </>
+ );
 }
 
 

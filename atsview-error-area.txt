@@ -1,0 +1,95 @@
+ 560:  ): (
+ 561:  <p className="text-sm text-muted-foreground">No resume URL saved.</p>
+ 562:  )}
+ 563:  </Card>
+ 564: 
+ 565:  <Card className="p-4">
+ 566:  <Label htmlFor="notes" className="text-foreground mb-3 font-medium">Recruiter Notes</Label>
+ 567:  <Textarea
+ 568:  id="notes"
+ 569:  value={notes}
+ 570:  onChange={(event) => setNotes(event.target.value)}
+ 571:  placeholder="Add notes about this candidate..."
+ 572:  rows={4}
+ 573:  className="bg-input-background border-border text-foreground resize-none mt-2"
+ 574:  />
+ 575:  <p className="text-xs text-muted-foreground mt-2">Notes save will be connected in the next cleanup step.</p>
+ 576:  </Card>
+ 577: 
+ 578:  <div className="space-y-3">
+ 579:  <Button
+ 580:  onClick={onStartInterview}
+ 581:  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+ 582:  >
+ 583:  <Video className="w-4 h-4 mr-2" />
+ 584:  Start Video Interview
+ 585:  </Button>
+ 586:  <div className="grid grid-cols-2 gap-3">
+ 587:  <Button
+ 588:  variant="outline"
+ 589:  className="border-green-200 text-green-800 hover:bg-green-50"
+ 590:  >
+ 591:  <Star className="w-4 h-4 mr-2" />
+ 592:  Shortlist
+ 593:  </Button>
+ 594:  <Button
+ 595:  variant="outline"
+ 596:  className="border-border text-foreground hover:bg-muted"
+ 597:  >
+ 598:  <MessageSquare className="w-4 h-4 mr-2" />
+ 599:  Message
+ 600:  </Button>
+ 601:  </div>
+ 602:  </div>
+ 603:  </TabsContent>
+ 604: 
+ 605:  <TabsContent value="ats-score" className="flex-1 overflow-y-auto p-4 space-y-4">
+ 606:  <Card className="p-4">
+ 607:  <h4 className="text-foreground mb-3 font-medium flex items-center gap-2">
+ 608:  <Target className="h-4 w-4 text-primary" />
+ 609:  ATS Analysis
+ 610:  </h4>
+ 611:  <div className="space-y-3">
+ 612:  <div className="flex justify-between items-center">
+ 613:  <span className="text-sm text-muted-foreground">Overall Score</span>
+ 614:  <span className={`font-bold ${getMatchScoreColor(selectedCand.matchScore)}`}>
+ 615:  {selectedCand.matchScore}%
+ 616:  </span>
+ 617:  </div>
+ 618:  <Progress value={selectedCand.matchScore} className="h-2" />
+ 619:  <p className="text-sm text-muted-foreground">
+ 620:  This score comes from the saved application row. Add real AI scoring later if needed.
+ 621:  </p>
+ 622:  </div>
+ 623:  </Card>
+ 624: 
+ 625:  <Card className="p-4">
+ 626:  <h4 className="text-foreground mb-3 font-medium">Recommendations</h4>
+ 627:  <div className="space-y-2 text-sm text-muted-foreground">
+ 628:  <p>? Review candidate profile and portfolio before shortlisting.</p>
+ 629:  <p>? Schedule an interview if the skills match your project requirements.</p>
+ 630:  <p>? Update application status after screening.</p>
+ 631:  </div>
+ 632:  </Card>
+ 633:  </TabsContent>
+ 634: 
+ 635:  <TabsContent value="performance" className="flex-1 overflow-y-auto p-0">
+ 636:  <ProfessionalATSDashboard className="p-4" />
+ 637:  </TabsContent>
+ 638:  </Tabs>
+ 639:  </div>
+ 640:  </div>
+ 641:  ): (
+ 642:  <div className="h-full flex items-center justify-center">
+ 643:  <div className="text-center">
+ 644:  <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+ 645:  <h3 className="text-foreground mb-2">Select a real applicant</h3>
+ 646:  <p className="text-muted-foreground">Applications from your database will appear here.</p>
+ 647:  </div>
+ 648:  </div>
+ 649:  )}
+ 650:  </div>
+ 651:  </div>
+ 652:  </div>
+ 653:  );
+ 654: }
