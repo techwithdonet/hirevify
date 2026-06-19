@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Briefcase, Circle, MessageCircle, Search, Send, User } from 'lucide-react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Briefcase, Circle, Download, FileText, ImageIcon, MessageCircle, Paperclip, Search, Send, User, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
-import { CommunicationsAPI, type Conversation, type Message } from '../utils/api/communications';
+import { CommunicationsAPI, type Conversation, type Message, type MessageAttachment } from '../utils/api/communications';
 import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface MessagingCenterProps {
@@ -24,6 +24,9 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isThreadLoading, setIsThreadLoading] = useState(false);
@@ -41,7 +44,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
     );
   }, [conversations, searchTerm]);
 
-  // Resolve the auth user to a profiles.id once — every conversation/message
+  // Resolve the auth user to a profiles.id once â€” every conversation/message
   // FK and "is this mine" check downstream depends on this, not the auth uid.
   useEffect(() => {
     if (!user) return;
@@ -135,25 +138,58 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ''; // allow selecting the same file again later
+    if (!file) return;
+
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error('File is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const removeSelectedFile = () => setSelectedFile(null);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const selectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
+    setSelectedFile(null);
   };
 
   const sendMessage = async () => {
-    if (!selectedConversation || !newMessage.trim()) return;
+    if (!selectedConversation || (!newMessage.trim() && !selectedFile)) return;
 
     const messageText = newMessage.trim();
+    const fileToSend = selectedFile;
     setIsSending(true);
+    if (fileToSend) setIsUploadingAttachment(true);
 
     try {
+      let attachment: MessageAttachment | undefined;
+      if (fileToSend) {
+        attachment = await CommunicationsAPI.uploadAttachment(fileToSend, selectedConversation.id);
+      }
+
       const sentMessage = await CommunicationsAPI.sendMessage({
         recipientId: selectedConversation.otherUser.id,
         message: messageText,
         conversationId: selectedConversation.id,
+        attachment,
       });
 
       setMessages((current) => [...current, sentMessage]);
       setNewMessage('');
+      setSelectedFile(null);
       await loadConversations();
       toast.success('Message sent');
     } catch (error) {
@@ -161,6 +197,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
       toast.error(error instanceof Error ? error.message : 'Message was not sent.');
     } finally {
       setIsSending(false);
+      setIsUploadingAttachment(false);
     }
   };
 
@@ -189,7 +226,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
   const getInitial = (name?: string) => (name || 'User').slice(0, 1).toUpperCase();
 
   return (
-    <div className={dashboardTheme.page}>
+    <div className={`${dashboardTheme.page} flex h-dvh flex-col overflow-hidden`}>
       <header className={dashboardTheme.pageHeader}>
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
@@ -205,9 +242,9 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
         </div>
       </header>
 
-      <main className="mx-auto grid h-[calc(100vh-105px)] max-w-[1500px] grid-cols-1 overflow-hidden border-x border-slate-200 bg-white lg:grid-cols-[340px_minmax(0,1fr)_320px]">
+      <main className="mx-auto grid min-h-0 w-full max-w-[1500px] flex-1 grid-cols-1 overflow-hidden border-x border-slate-200 bg-white lg:grid-cols-[340px_minmax(0,1fr)_320px]">
         <aside className="flex min-h-0 flex-col border-b border-slate-200 bg-white lg:border-b-0 lg:border-r">
-          <div className="border-b border-slate-200 p-4">
+          <div className="shrink-0 border-b border-slate-200 p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
@@ -219,7 +256,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
             </div>
           </div>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="min-h-0 flex-1">
             {isLoading ? (
               <div className="p-6 text-sm text-slate-500">Loading real conversations...</div>
             ) : filteredConversations.length === 0 ? (
@@ -276,7 +313,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
         <section className="flex min-h-0 flex-col bg-slate-50">
           {selectedConversation ? (
             <>
-              <div className="border-b border-slate-200 bg-white p-4">
+              <div className="shrink-0 border-b border-slate-200 bg-white p-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-11 w-11">
                     <AvatarImage src={selectedConversation.otherUser.avatar} />
@@ -294,7 +331,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 p-5">
+              <ScrollArea className="min-h-0 flex-1 p-5">
                 {isThreadLoading ? (
                   <div className="text-sm text-slate-500">Loading real messages...</div>
                 ) : messages.length === 0 ? (
@@ -313,7 +350,36 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                       return (
                         <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${mine ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-800'}`}>
-                            <p className="whitespace-pre-wrap text-sm leading-6">{message.message}</p>
+                            {message.attachment && (
+                              message.attachment.type.startsWith('image/') ? (
+                                <a href={message.attachment.url} target="_blank" rel="noopener noreferrer" className="mb-2 block overflow-hidden rounded-xl">
+                                  <img
+                                    src={message.attachment.url}
+                                    alt={message.attachment.name}
+                                    className="max-h-64 w-full object-cover"
+                                  />
+                                </a>
+                              ) : (
+                                <a
+                                  href={message.attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`mb-2 flex items-center gap-3 rounded-xl border p-3 ${mine ? 'border-blue-400 bg-blue-500' : 'border-slate-200 bg-slate-50'}`}
+                                >
+                                  <FileText className={`h-8 w-8 shrink-0 ${mine ? 'text-white' : 'text-slate-500'}`} />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">{message.attachment.name}</p>
+                                    <p className={`text-xs ${mine ? 'text-blue-100' : 'text-slate-500'}`}>
+                                      {formatFileSize(message.attachment.size)}
+                                    </p>
+                                  </div>
+                                  <Download className={`h-4 w-4 shrink-0 ${mine ? 'text-white' : 'text-slate-400'}`} />
+                                </a>
+                              )
+                            )}
+                            {message.message && (
+                              <p className="whitespace-pre-wrap text-sm leading-6">{message.message}</p>
+                            )}
                             <p className={`mt-1 text-right text-[11px] ${mine ? 'text-blue-100' : 'text-slate-400'}`}>
                               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -326,8 +392,46 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                 )}
               </ScrollArea>
 
-              <div className="border-t border-slate-200 bg-white p-4">
+              <div className="shrink-0 border-t border-slate-200 bg-white p-3">
+                {selectedFile && (
+                  <div className="mb-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                    {selectedFile.type.startsWith('image/') ? (
+                      <ImageIcon className="h-6 w-6 shrink-0 text-blue-500" />
+                    ) : (
+                      <FileText className="h-6 w-6 shrink-0 text-slate-500" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-800">{selectedFile.name}</p>
+                      <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeSelectedFile}
+                      className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                      aria-label="Remove attachment"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSending}
+                    className="shrink-0 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                    aria-label="Attach a file"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
                   <Textarea
                     value={newMessage}
                     onChange={(event) => setNewMessage(event.target.value)}
@@ -336,8 +440,16 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                     rows={2}
                     className="min-h-[48px] resize-none border-0 bg-transparent text-slate-950 shadow-none focus-visible:ring-0"
                   />
-                  <Button onClick={sendMessage} disabled={!newMessage.trim() || isSending} className="rounded-full bg-blue-600 px-4 text-white hover:bg-blue-700">
-                    <Send className="h-4 w-4" />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={(!newMessage.trim() && !selectedFile) || isSending}
+                    className="rounded-full bg-blue-600 px-4 text-white hover:bg-blue-700"
+                  >
+                    {isUploadingAttachment ? (
+                      <span className="text-xs">Uploading...</span>
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>

@@ -1,4 +1,11 @@
-﻿import { createClient } from "../supabase/client";
+import { createClient } from "../supabase/client";
+
+export interface MessageAttachment {
+  url: string;
+  name: string;
+  type: string;
+  size: number;
+}
 
 export interface Message {
   id: string;
@@ -12,6 +19,7 @@ export interface Message {
   read: boolean;
   readAt?: string;
   type: "direct" | "system";
+  attachment?: MessageAttachment;
 }
 
 export interface Notification {
@@ -56,6 +64,12 @@ type MessageRow = {
   read: boolean;
   read_at: string | null;
   type: "direct" | "system";
+  payload: {
+    attachment_url?: string;
+    attachment_name?: string;
+    attachment_type?: string;
+    attachment_size?: number;
+  } | null;
 };
 
 type NotificationRow = {
@@ -94,6 +108,17 @@ function normalizeUserType(profile: ProfileRow): "recruiter" | "candidate" {
 }
 
 function mapMessage(row: MessageRow): Message {
+  const payload = row.payload;
+  const attachment: MessageAttachment | undefined =
+    payload && payload.attachment_url
+      ? {
+          url: payload.attachment_url,
+          name: payload.attachment_name || "Attachment",
+          type: payload.attachment_type || "application/octet-stream",
+          size: payload.attachment_size || 0,
+        }
+      : undefined;
+
   return {
     id: row.id,
     conversationId: row.conversation_id,
@@ -106,6 +131,7 @@ function mapMessage(row: MessageRow): Message {
     read: row.read,
     readAt: row.read_at || undefined,
     type: row.type || "direct",
+    attachment,
   };
 }
 
@@ -254,12 +280,50 @@ export class CommunicationsAPI {
     return data as ConversationRow;
   }
 
+  static readonly MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024; // 5MB
+
+  static async uploadAttachment(
+    file: File,
+    conversationId: string,
+  ): Promise<MessageAttachment> {
+    if (file.size > CommunicationsAPI.MAX_ATTACHMENT_SIZE) {
+      throw new Error("File is too large. Maximum size is 5MB.");
+    }
+
+    const supabase = createClient();
+    const senderId = await getCurrentProfileId();
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const path = `${conversationId}/${senderId}-${Date.now()}-${safeName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("chat-attachments")
+      .upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message || "Failed to upload attachment.");
+    }
+
+    const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+
+    return {
+      url: urlData.publicUrl,
+      name: file.name,
+      type: file.type || "application/octet-stream",
+      size: file.size,
+    };
+  }
+
   static async sendMessage(messageData: {
     conversationId: string;
     recipientId: string;
     message: string;
     subject?: string;
     applicationId?: string;
+    attachment?: MessageAttachment;
   }): Promise<Message> {
     const supabase = createClient();
     const senderId = await getCurrentProfileId();
@@ -267,6 +331,19 @@ export class CommunicationsAPI {
     if (!messageData.conversationId) {
       throw new Error("A conversation is required to send a message.");
     }
+
+    if (!messageData.message.trim() && !messageData.attachment) {
+      throw new Error("Message text or an attachment is required.");
+    }
+
+    const payload = messageData.attachment
+      ? {
+          attachment_url: messageData.attachment.url,
+          attachment_name: messageData.attachment.name,
+          attachment_type: messageData.attachment.type,
+          attachment_size: messageData.attachment.size,
+        }
+      : null;
 
     const { data, error } = await supabase
       .from("messages")
@@ -279,6 +356,7 @@ export class CommunicationsAPI {
         application_id: messageData.applicationId || null,
         type: "direct",
         read: false,
+        payload,
       })
       .select("*")
       .single();
