@@ -7,6 +7,7 @@ import type {
   ResumeOptimizationSuggestion,
   SkillsAnalysis
 } from '@/src/hirevify-app/types/resume';
+import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
 
 export const runtime = 'nodejs';
 
@@ -24,22 +25,6 @@ type ResumeAIResponse = {
   skillsAnalysis: SkillsAnalysis | null;
   aiInsights: AIInsight[];
 };
-
-function extractJson(text: string) {
-  const cleaned = text
-    .replace(/```json/gi, '')
-    .replace(/```/g, '')
-    .trim();
-
-  const firstBrace = cleaned.indexOf('{');
-  const lastBrace = cleaned.lastIndexOf('}');
-
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error('AI response did not contain valid JSON.');
-  }
-
-  return cleaned.slice(firstBrace, lastBrace + 1);
-}
 
 function validateResult(value: Partial<ResumeAIResponse>): ResumeAIResponse {
   if (!value.atsScore || typeof value.atsScore.overall !== 'number') {
@@ -295,13 +280,31 @@ export async function POST(request: NextRequest) {
       aiText = await callAnthropic(prompt);
     } else if (provider === 'gemini') {
       aiText = await callGemini(prompt);
+    } else if (provider === 'openai' || provider === 'openrouter' || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY) {
+      aiText = await callConfiguredAI({
+        purpose: 'Resume AI analysis',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are HireVify resume analysis AI. Return only valid JSON. Do not invent candidate facts.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+        maxTokens: 3500,
+        responseFormatJson: true
+      });
     } else if (process.env.GEMINI_API_KEY) {
       aiText = await callGemini(prompt);
     } else {
       aiText = await callAnthropic(prompt);
     }
 
-    const parsed = JSON.parse(extractJson(aiText));
+    const parsed = JSON.parse(extractJsonObject(aiText));
     const result = validateResult(parsed);
 
     return NextResponse.json(result);

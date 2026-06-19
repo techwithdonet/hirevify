@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const targetJobDescription = String(body.targetJobDescription || body.jobDescription || '').trim();
+    const rawResumeText = String(body.rawResumeText || '').trim();
 
     const prompt = `
 Fix this resume for ATS compatibility and recruiter readability${targetJobDescription ? ' for the provided target job' : ''}.
@@ -96,6 +97,9 @@ Strict rules:
 
 Resume data:
 ${JSON.stringify(resumeData, null, 2)}
+
+Raw extracted resume text:
+${rawResumeText || 'Not provided'}
 
 Target job description:
 ${targetJobDescription || 'Not provided'}

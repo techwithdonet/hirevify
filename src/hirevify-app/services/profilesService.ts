@@ -234,7 +234,25 @@ class ProfilesService {
  * Get recruiter profile
  */
  async getRecruiterProfile(userId: string) {
- const { data, error } = await this.supabase.from('recruiter_profiles').select('*').eq('id', userId).single<RecruiterProfile>();
+ const profileId = await this.resolveAppProfileId(userId);
+ const lookupIds = [...new Set([userId, profileId].filter(Boolean))];
+
+ for (const lookupId of lookupIds) {
+ const byId = await this.supabase.from('recruiter_profiles').select('*').eq('id', lookupId).limit(1).maybeSingle<RecruiterProfile>();
+
+ if (byId.data) {
+ return { data: byId.data, error: null };
+ }
+
+ const byUserId = await this.supabase.from('recruiter_profiles').select('*').eq('user_id', lookupId).limit(1).maybeSingle<RecruiterProfile>();
+
+ if (byUserId.data) {
+ return { data: byUserId.data, error: null };
+ }
+ }
+
+ const data = null;
+ const error = null;
 
  if (error) {
  console.error('Error fetching recruiter profile:', error);
@@ -248,7 +266,26 @@ class ProfilesService {
  * Update recruiter profile
  */
  async updateRecruiterProfile(userId: string, updates: Partial<Omit<RecruiterProfile, 'id' | 'created_at' | 'updated_at'>>) {
- const { data, error } = await this.supabase.from('recruiter_profiles').update(updates).eq('id', userId).select().single<RecruiterProfile>();
+ const profileId = await this.resolveAppProfileId(userId);
+ const lookupIds = [...new Set([userId, profileId].filter(Boolean))];
+ let existing: { data: { id: string } | null; error: any } = { data: null, error: null };
+
+ for (const lookupId of lookupIds) {
+ existing = await this.supabase.from('recruiter_profiles').select('id').eq('id', lookupId).limit(1).maybeSingle();
+
+ if (existing.data || existing.error) break;
+
+ existing = await this.supabase.from('recruiter_profiles').select('id').eq('user_id', lookupId).limit(1).maybeSingle();
+
+ if (existing.data || existing.error) break;
+ }
+
+ if (existing.error) {
+ console.error('Error finding recruiter profile for update:', existing.error);
+ return { data: null, error: existing.error };
+ }
+
+ const { data, error } = await this.supabase.from('recruiter_profiles').update(updates).eq('id', existing.data?.id || userId).select().maybeSingle<RecruiterProfile>();
 
  if (error) {
  console.error('Error updating recruiter profile:', error);

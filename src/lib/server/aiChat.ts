@@ -118,15 +118,14 @@ async function callOpenRouter(options: AIChatOptions) {
       "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://hirevify.vercel.app",
       "X-Title": "HireVify",
     },
-    body: JSON.stringify({
-      models: getOpenRouterModels(),
-      messages: options.messages,
-      temperature: options.temperature ?? 0.2,
-      max_tokens: options.maxTokens ?? 1200,
-      ...(options.responseFormatJson ? { response_format: { type: "json_object" } } : {}),
-      provider: {
-        allow_fallbacks: true,
-        sort: "throughput",
+      body: JSON.stringify({
+        models: getOpenRouterModels(),
+        messages: options.messages,
+        temperature: options.temperature ?? 0.2,
+        max_tokens: options.maxTokens ?? 1200,
+        provider: {
+          allow_fallbacks: true,
+          sort: "throughput",
       },
     }),
   });
