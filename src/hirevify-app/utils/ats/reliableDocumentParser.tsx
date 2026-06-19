@@ -72,6 +72,13 @@ export interface ReliableResumeData {
 }
 
 export class ReliableDocumentParser {
+ async parseTextContent(text: string): Promise<ReliableResumeData> {
+ if (!text || text.trim().length < 20) {
+ throw new Error('Insufficient text content found in document. Please ensure the file contains readable text.');
+ }
+
+ return this.parseResumeText(text);
+ }
  
  async parseDocument(file: File): Promise<ReliableResumeData> {
  console.log(' RELIABLE PARSER - Starting document parsing for:', file.name);

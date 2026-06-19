@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { useConversations } from '../hooks/useConversations';
-import { useNotifications } from '../hooks/useNotifications';
 import { Badge } from './ui/badge';
 import { HireVifyLogo } from './HireVifyLogo';
 import { 
@@ -108,12 +107,6 @@ export function RecruiterDashboard({
  const [subscription, setSubscription] = useState<any>(null);
  const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
 const { conversations: messageConversations, isLoading: isMessagesLoading } = useConversations();
- const { unreadCount: unreadNotificationsCount } = useNotifications();
-
- const totalUnreadMessages = messageConversations.reduce(
- (sum, conversation) => sum + (conversation.unreadCount || 0),
- 0
- );
  
  // Safe premium access with fallbacks
  let checkAccess, getSubscription;
@@ -200,6 +193,24 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  loadRecruiterData();
  }, [user?.id]);
 
+ useEffect(() => {
+ if (!user?.id) return;
+
+ const loadMessages = async () => {
+ try {
+ setIsMessagesLoading(true);
+ const conversations = await CommunicationsAPI.getConversations();
+ setMessageConversations(conversations);
+ } catch (error) {
+ console.error('Failed to load recruiter conversations:', error);
+ setMessageConversations([]);
+ } finally {
+ setIsMessagesLoading(false);
+ }
+ };
+
+ loadMessages();
+ }, [user?.id]);
 
  const openGrowthPostFlow = (type: 'experience_builder' | 'micro_internship' | 'mentorship' | 'career_switch') => {
  if (type === 'mentorship' || type === 'career_switch') {
@@ -346,18 +357,18 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  <div className="flex items-center gap-1">
  <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
  <Bell className="w-5 h-5 text-gray-600" />
- {unreadNotificationsCount > 0 && (
+ {false && unreadNotifications > 0 && (
  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
- {unreadNotificationsCount > 9? '9+': unreadNotificationsCount}
+ {unreadNotifications > 99? '99+': unreadNotifications}
  </Badge>
  )}
  </Button>
  
  <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
  <MessageSquare className="w-5 h-5 text-gray-600" />
- {totalUnreadMessages > 0 && (
+ {false && unreadMessages > 0 && (
  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white rounded-full">
- {totalUnreadMessages > 9? '9+': totalUnreadMessages}
+ {unreadMessages}
  </Badge>
  )}
  </Button>
@@ -594,9 +605,9 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  <div className="min-w-0 flex-1">
  <div className="flex items-center justify-between gap-2">
  <p className="truncate text-sm font-semibold text-slate-950">{conversation.otherUser.name || 'User'}</p>
- <span className="text-xs text-slate-400">{conversation.lastMessage ? formatMessageTime(conversation.lastMessage.createdAt) : ''}</span>
+ <span className="text-xs text-slate-400">{formatMessageTime(conversation.lastMessage.createdAt)}</span>
  </div>
- <p className="truncate text-xs text-slate-500">{conversation.lastMessage ? conversation.lastMessage.message : 'No messages yet'}</p>
+ <p className="truncate text-xs text-slate-500">{conversation.lastMessage.message}</p>
  </div>
  {conversation.unreadCount > 0 && (
  <span className="rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">{conversation.unreadCount}</span>
@@ -638,3 +649,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  </div>
  );
 }
+
+
+

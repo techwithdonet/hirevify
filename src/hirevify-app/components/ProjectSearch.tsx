@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, ArrowLeft, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
+import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
@@ -15,6 +15,8 @@ import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 // Local types to avoid API dependency issues
 interface Project {
@@ -943,32 +945,20 @@ const { error: appError } = await supabase.from('applications').insert({
  }
 
  return (
- <div className="min-h-screen bg-background">
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-2xl font-semibold">Discover Projects</h1>
- <p className="text-sm text-muted-foreground">
- Find your next opportunity with AI-powered matching
- </p>
- </div>
- </div>
- 
- <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+ <DashboardPageLayout
+ title="Discover Projects"
+ subtitle="Find your next opportunity with AI-powered matching"
+ onBack={onBack}
+ backLabel="Back"
+ actions={(
+ <Button onClick={onUpgrade} className={dashboardTheme.buttonPrimary}>
  <Zap className="w-4 h-4 mr-2" />
  Upgrade for Premium Search
  </Button>
- </div>
- </div>
- </div>
+ )}
+ shellClassName="flex gap-6"
+ >
 
- <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
  {/* Sidebar Filters */}
  <div className="w-80 space-y-6">
  {/* Search */}
@@ -1232,7 +1222,6 @@ const { error: appError } = await supabase.from('applications').insert({
  </>
  )}
  </div>
- </div>
 
  {/* Project Details Dialog */}
  <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
@@ -1312,7 +1301,7 @@ const { error: appError } = await supabase.from('applications').insert({
  </div>
  </DialogContent>
  </Dialog>
- </div>
+ </DashboardPageLayout>
  );
 }
 

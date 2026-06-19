@@ -43,6 +43,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 import { useAuth } from './AuthProvider';
 
 interface SkillsDevelopmentAIProps {
@@ -400,7 +401,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
 
  if (isLoading &&!skillGaps.length) {
  return (
- <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className={`${dashboardTheme.page} flex items-center justify-center`}>
  <div className="text-center">
  <Brain className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
  <h3 className="text-lg font-semibold mb-2">Analyzing Your Skills</h3>
@@ -416,7 +417,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
  }
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="bg-card border-b border-border">
  <div className="max-w-7xl mx-auto px-6 py-4">

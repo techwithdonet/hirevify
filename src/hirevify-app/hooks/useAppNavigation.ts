@@ -13,6 +13,7 @@ interface UseAppNavigationProps {
  setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
  setSelectedProject: (project: Project | null) => void;
  setSelectedApplication: (application: Application | null) => void;
+ setSelectedConversationId: (conversationId: string | null) => void;
  setProjectChallengeData: (data: {
  projectId: string;
  projectTitle: string;
@@ -27,6 +28,7 @@ export const useAppNavigation = ({
  setCurrentScreen,
  setSelectedProject,
  setSelectedApplication,
+ setSelectedConversationId,
  setProjectChallengeData,
  setAssessmentBuilderData,
  signOut
@@ -60,12 +62,13 @@ export const useAppNavigation = ({
  setCurrentScreen('homepage', { replace: true });
  setSelectedProject(null);
  setSelectedApplication(null);
+ setSelectedConversationId(null);
  toast.success('Logged out successfully');
  } catch (error) {
  console.error('Logout error:', error);
  toast.error('Failed to logout. Please try again.');
  }
- }, [signOut, setCurrentScreen, setSelectedProject, setSelectedApplication]);
+ }, [signOut, setCurrentScreen, setSelectedProject, setSelectedApplication, setSelectedConversationId]);
 
  const navigateToPricing = useCallback(() => {
  setCurrentScreen('pricing');
@@ -245,10 +248,11 @@ export const useAppNavigation = ({
  setCurrentScreen('candidate-dashboard', { replace: true });
  }, [requireAuth, setCurrentScreen]);
 
- const navigateToMessages = useCallback(() => {
+ const navigateToMessages = useCallback((conversationId?: string) => {
  if (!requireAuth('access messages')) return;
+ setSelectedConversationId(conversationId || null);
  setCurrentScreen('messages');
- }, [requireAuth, setCurrentScreen]);
+ }, [requireAuth, setCurrentScreen, setSelectedConversationId]);
 
  const navigateToNotifications = useCallback(() => {
  if (!requireAuth('view notifications')) return;

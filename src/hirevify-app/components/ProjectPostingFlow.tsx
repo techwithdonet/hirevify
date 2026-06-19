@@ -9,6 +9,7 @@ import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
 import { SkillMultiSelect } from './common/SkillMultiSelect';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface Project {
  id: string;
@@ -156,7 +157,7 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <header className="border-b border-border bg-card">
  <div className="max-w-4xl mx-auto px-6 py-4">

@@ -5,7 +5,7 @@
  * It uses a simplified parsing approach that prioritizes reliability over complexity.
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -35,7 +35,11 @@ import {
  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 import { ReliableDocumentParser, type ReliableResumeData } from '../utils/ats/reliableDocumentParser';
+import { functionalDocumentParser } from '../utils/ats/functionalDocumentParser';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { useAuth } from './AuthProvider';
 
 interface ReliableATSScannerProps {
  onBack?: () => void;
@@ -49,46 +53,438 @@ interface ScanResult {
  rawText: string;
 }
 
+interface JobOption {
+ id: string;
+ title: string;
+ description: string;
+ requirements: string[];
+ skills: string[];
+ company?: string;
+}
+
+interface RankedResumeResult extends ScanResult {
+ matchScore: number;
+ matchedKeywords: string[];
+ missingKeywords: string[];
+}
+
+type ResumeTemplate = 'professional' | 'modern' | 'minimalist';
+
+interface OptimizedResumeData {
+ template: ResumeTemplate;
+ contactInfo: {
+ fullName: string;
+ email: string;
+ phone: string;
+ linkedinUrl: string;
+ portfolioUrl: string;
+ location: string;
+ };
+ summary: string;
+ experience: Array<{
+ id: string;
+ jobTitle: string;
+ companyName: string;
+ city: string;
+ state: string;
+ startDate: string;
+ endDate: string;
+ isCurrentJob: boolean;
+ description: string[];
+ }>;
+ skills: Array<{
+ name: string;
+ category: 'technical' | 'soft' | 'language';
+ proficiency: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+ }>;
+ education: Array<{
+ id: string;
+ degree: string;
+ university: string;
+ city: string;
+ state: string;
+ graduationDate: string;
+ gpa?: string;
+ }>;
+}
+
 export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableATSScannerProps) {
+ const { user } = useAuth();
  const [isProcessing, setIsProcessing] = useState(false);
  const [progress, setProgress] = useState(0);
  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+ const [rankedResults, setRankedResults] = useState<RankedResumeResult[]>([]);
  const [error, setError] = useState<string | null>(null);
  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+ const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+ const [jobs, setJobs] = useState<JobOption[]>([]);
+ const [selectedJobId, setSelectedJobId] = useState('');
+ const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+ const [jobDescription, setJobDescription] = useState('');
+ const [optimizedCvText, setOptimizedCvText] = useState('');
+ const [optimizedResumeData, setOptimizedResumeData] = useState<OptimizedResumeData | null>(null);
+ const [isOptimizingCv, setIsOptimizingCv] = useState(false);
+ const [isDownloadingOptimizedCv, setIsDownloadingOptimizedCv] = useState(false);
+ const [isSavingPrimaryCv, setIsSavingPrimaryCv] = useState(false);
  const [activeTab, setActiveTab] = useState('personal');
  const fileInputRef = useRef<HTMLInputElement>(null);
+ const selectedJob = useMemo(() => jobs.find((job) => job.id === selectedJobId) || null, [jobs, selectedJobId]);
+ const isBulkJobScanner = userType === 'recruiter';
+ const isCandidateOptimizer = userType === 'candidate';
+
+ useEffect(() => {
+ if (!isBulkJobScanner) return;
+
+ const loadJobs = async () => {
+ try {
+ setIsLoadingJobs(true);
+ const supabase = createSupabaseBrowserClient();
+ const { data, error } = await supabase
+ .from('jobs')
+ .select('id, title, description, requirements, skills, status, recruiter_profile:recruiter_id(company_name)')
+ .eq('status', 'published')
+ .order('created_at', { ascending: false });
+
+ if (error) {
+ throw new Error(error.message);
+ }
+
+ const mapped = (data || []).map((job: any) => ({
+ id: job.id,
+ title: job.title || 'Untitled job',
+ description: job.description || '',
+ requirements: Array.isArray(job.requirements) ? job.requirements : [],
+ skills: Array.isArray(job.skills) ? job.skills : [],
+ company: job.recruiter_profile?.company_name || 'Recruiter',
+ }));
+
+ setJobs(mapped);
+ setSelectedJobId((current) => current || mapped[0]?.id || '');
+ } catch (error) {
+ console.error('Failed to load jobs for ATS scanner:', error);
+ toast.error(error instanceof Error ? error.message : 'Failed to load jobs.');
+ setJobs([]);
+ } finally {
+ setIsLoadingJobs(false);
+ }
+ };
+
+ loadJobs();
+ }, [isBulkJobScanner]);
+
+ const normalizeKeyword = (value: string) => value.toLowerCase().replace(/[^a-z0-9+#.\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+
+ const extractJobKeywords = (job: JobOption) => {
+ const source = [
+ job.title,
+ job.description,
+ ...job.requirements,
+ ...job.skills,
+ ];
+
+ const stopWords = new Set([
+ 'and', 'or', 'the', 'with', 'for', 'from', 'this', 'that', 'will', 'must', 'have', 'has', 'are', 'you', 'your',
+ 'job', 'role', 'candidate', 'experience', 'work', 'team', 'project', 'requirements', 'skills', 'years',
+ ]);
+
+ return Array.from(
+ new Set(
+ source
+ .flatMap((item) => normalizeKeyword(String(item || '')).split(/[,;|/()]|\s+-\s+|\n/))
+ .flatMap((item) => item.split(/\s+/))
+ .map((item) => item.trim())
+ .filter((item) => item.length >= 2 && !stopWords.has(item)),
+ ),
+ ).slice(0, 80);
+ };
+
+ const resumeToText = (data: ReliableResumeData, rawText: string) => normalizeKeyword([
+ rawText,
+ data.personalInfo.name,
+ data.professionalSummary,
+ ...data.skills.technical,
+ ...data.skills.soft,
+ ...data.skills.tools,
+ ...data.skills.languages,
+ ...data.experience.map((item) => `${item.position} ${item.company} ${item.description}`),
+ ...data.education.map((item) => `${item.degree} ${item.institution}`),
+ ].join(' '));
+
+ const calculateJobMatch = (data: ReliableResumeData, rawText: string, job: JobOption) => {
+ const resumeText = resumeToText(data, rawText);
+ const requiredSkills = job.skills.map(normalizeKeyword).filter(Boolean);
+ const jobKeywords = extractJobKeywords(job);
+ const allKeywords = Array.from(new Set([...requiredSkills, ...jobKeywords]));
+ const matchedKeywords = allKeywords.filter((keyword) => resumeText.includes(keyword));
+ const missingKeywords = allKeywords.filter((keyword) => !resumeText.includes(keyword));
+ const requiredMatches = requiredSkills.filter((keyword) => resumeText.includes(keyword)).length;
+ const requiredScore = requiredSkills.length > 0 ? (requiredMatches / requiredSkills.length) * 70 : 35;
+ const keywordScore = allKeywords.length > 0 ? (matchedKeywords.length / allKeywords.length) * 30 : 0;
+
+ return {
+ matchScore: Math.min(100, Math.round(requiredScore + keywordScore)),
+ matchedKeywords: matchedKeywords.slice(0, 18),
+ missingKeywords: missingKeywords.slice(0, 18),
+ };
+ };
+
+ const readRawTextPreview = async (file: File) => {
+ try {
+ const reader = new FileReader();
+ return await new Promise<string>((resolve, reject) => {
+ const timeout = setTimeout(() => {
+ reader.abort();
+ reject(new Error('Timeout'));
+ }, 5000);
+
+ reader.onload = (event) => {
+ clearTimeout(timeout);
+ resolve(event.target?.result as string || '');
+ };
+ reader.onerror = () => {
+ clearTimeout(timeout);
+ reject(new Error('Failed to read file'));
+ };
+ reader.readAsText(file);
+ });
+ } catch {
+ return '';
+ }
+ };
 
  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
- const file = event.target.files?.[0];
- if (!file) return;
+ const selectedFiles = Array.from(event.target.files || []);
+ const files = isBulkJobScanner ? selectedFiles : selectedFiles.slice(0, 1);
+ if (files.length === 0) return;
 
  // Simple file validation
  const maxSize = 10 * 1024 * 1024; // 10MB
- if (file.size > maxSize) {
+ const tooLarge = files.find((file) => file.size > maxSize);
+ if (tooLarge) {
  setError('File too large. Maximum size is 10MB.');
  return;
  }
 
- setUploadedFile(file);
+ setUploadedFile(files[0]);
+ setUploadedFiles(files);
  setError(null);
  setScanResult(null);
+ setRankedResults([]);
+ setOptimizedCvText('');
  
- toast.success(`File "${file.name}" ready for processing`);
+ toast.success(isBulkJobScanner
+ ? `${files.length} file${files.length === 1 ? '' : 's'} ready for processing`
+ : '1 CV ready for processing');
  };
 
  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
  event.preventDefault();
  event.stopPropagation();
 
- const files = event.dataTransfer.files;
- if (files.length > 0) {
- const file = files[0];
+ const files = Array.from(event.dataTransfer.files);
+ const acceptedFiles = isBulkJobScanner ? files : files.slice(0, 1);
+ if (acceptedFiles.length > 0) {
  if (fileInputRef.current) {
  const dataTransfer = new DataTransfer();
- dataTransfer.items.add(file);
+ acceptedFiles.forEach((file) => dataTransfer.items.add(file));
  fileInputRef.current.files = dataTransfer.files;
  handleFileSelect({ target: { files: dataTransfer.files } } as any);
  }
+ }
+ };
+
+ const processBulkResumes = async () => {
+ if (!selectedJob) {
+ setError('Please choose a job first.');
+ return;
+ }
+
+ if (uploadedFiles.length === 0) {
+ setError('Please select one or more CVs to scan.');
+ return;
+ }
+
+ setIsProcessing(true);
+ setError(null);
+ setProgress(0);
+ setRankedResults([]);
+ setScanResult(null);
+
+ try {
+ const parser = new ReliableDocumentParser();
+ const results: RankedResumeResult[] = [];
+
+ for (let index = 0; index < uploadedFiles.length; index += 1) {
+ const file = uploadedFiles[index];
+ const startTime = Date.now();
+ setProgress(Math.round((index / uploadedFiles.length) * 90));
+
+ const parsed = await parser.parseDocument(file);
+ const rawText = await readRawTextPreview(file);
+ const match = calculateJobMatch(parsed, rawText, selectedJob);
+
+ results.push({
+ fileName: file.name,
+ data: parsed,
+ processingTime: Date.now() - startTime,
+ rawText,
+ ...match,
+ });
+ }
+
+ const ranked = results.sort((a, b) => b.matchScore - a.matchScore);
+ setRankedResults(ranked);
+ setScanResult(ranked[0] || null);
+ setProgress(100);
+ toast.success(`Ranked ${ranked.length} CV${ranked.length === 1 ? '' : 's'} for ${selectedJob.title}`);
+ } catch (error: any) {
+ console.error('Bulk ATS scan failed:', error);
+ const message = error?.message || 'Failed to scan uploaded CVs.';
+ setError(message);
+ toast.error('Bulk scan failed', { description: message });
+ } finally {
+ setIsProcessing(false);
+ setProgress(0);
+ }
+ };
+
+ const generateOptimizedCvText = () => {
+ if (!scanResult) return '';
+
+ const data = scanResult.data;
+ const jdKeywords = normalizeKeyword(jobDescription)
+ .split(/\s+/)
+ .filter((keyword) => keyword.length > 2)
+ .filter((keyword, index, all) => all.indexOf(keyword) === index)
+ .slice(0, 30);
+ const resumeText = resumeToText(data, scanResult.rawText);
+ const missingKeywords = jdKeywords.filter((keyword) => !resumeText.includes(keyword)).slice(0, 12);
+ const technicalSkills = Array.from(new Set([...data.skills.technical, ...data.skills.tools, ...missingKeywords]));
+
+ return [
+ data.personalInfo.name,
+ [data.personalInfo.email, data.personalInfo.phone, data.personalInfo.location].filter(Boolean).join(' | '),
+ '',
+ 'TARGETED PROFESSIONAL SUMMARY',
+ data.professionalSummary !== 'Professional summary not found'
+ ? data.professionalSummary
+ : 'Candidate profile aligned to the pasted job description with relevant skills, measurable experience, and ATS-friendly keywords.',
+ missingKeywords.length > 0
+ ? `Additional role keywords to emphasize naturally: ${missingKeywords.join(', ')}.`
+ : 'The resume already includes strong overlap with the pasted job description.',
+ '',
+ 'CORE SKILLS',
+ technicalSkills.filter(Boolean).join(', ') || 'Add role-specific technical skills from the job description.',
+ '',
+ 'EXPERIENCE',
+ ...(data.experience.length > 0
+ ? data.experience.flatMap((item) => [
+ `${item.position} - ${item.company}`,
+ [item.startDate, item.endDate || 'Present'].filter(Boolean).join(' - '),
+ item.description || 'Rewrite this bullet with measurable impact and job-relevant keywords.',
+ '',
+ ])
+ : ['Add recent experience with measurable achievements tied to the pasted job description.', '']),
+ 'EDUCATION',
+ ...(data.education.length > 0
+ ? data.education.map((item) => `${item.degree} - ${item.institution}${item.graduationDate ? ` (${item.graduationDate})` : ''}`)
+ : ['Add education details relevant to the role.']),
+ '',
+ 'ATS NOTES',
+ `Use these missing or important job terms only where truthful: ${missingKeywords.join(', ') || 'No major missing keywords detected.'}`,
+ ].join('\n');
+ };
+
+ const optimizeCandidateCv = async () => {
+ if (!scanResult) {
+ setError('Upload and scan your CV first.');
+ return;
+ }
+
+ if (!jobDescription.trim()) {
+ setError('Paste a job description before optimizing your CV.');
+ return;
+ }
+
+ setIsOptimizingCv(true);
+ setError(null);
+
+ try {
+ const optimized = generateOptimizedCvText();
+ setOptimizedCvText(optimized);
+ toast.success('AI CV rewrite draft generated.');
+ } finally {
+ setIsOptimizingCv(false);
+ }
+ };
+
+ const downloadOptimizedCv = () => {
+ if (!optimizedCvText.trim()) return;
+
+ const blob = new Blob([optimizedCvText], { type: 'text/plain;charset=utf-8' });
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement('a');
+ link.href = url;
+ link.download = 'hirevify-optimized-cv.txt';
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+ URL.revokeObjectURL(url);
+ };
+
+ const setAsPrimaryCv = async () => {
+ if (!user?.id) {
+ toast.error('Please sign in to save your primary CV.');
+ return;
+ }
+
+ if (!optimizedCvText.trim()) {
+ setError('Generate the optimized CV before setting it as primary.');
+ return;
+ }
+
+ setIsSavingPrimaryCv(true);
+ setError(null);
+
+ try {
+ const supabase = createSupabaseBrowserClient();
+ const blob = new Blob([optimizedCvText], { type: 'text/plain;charset=utf-8' });
+ const path = `resumes/${user.id}/hirevify-primary-cv-${Date.now()}.txt`;
+ const { error: uploadError } = await supabase.storage.from('make-d4feca44-resumes').upload(path, blob, {
+ contentType: 'text/plain;charset=utf-8',
+ upsert: true,
+ });
+
+ if (uploadError) {
+ throw new Error(uploadError.message);
+ }
+
+ const { data: urlData } = supabase.storage.from('make-d4feca44-resumes').getPublicUrl(path);
+ const resumeUrl = urlData.publicUrl;
+ const { data: existingProfile, error: existingError } = await supabase
+ .from('candidate_profiles')
+ .select('id')
+ .eq('user_id', user.id)
+ .maybeSingle();
+
+ if (existingError) {
+ throw new Error(existingError.message);
+ }
+
+ const result = existingProfile?.id
+ ? await supabase.from('candidate_profiles').update({ resume_url: resumeUrl }).eq('id', existingProfile.id)
+ : await supabase.from('candidate_profiles').insert({ user_id: user.id, resume_url: resumeUrl });
+
+ if (result.error) {
+ throw new Error(result.error.message);
+ }
+
+ toast.success('Optimized CV set as your HireVify primary CV.');
+ } catch (error) {
+ console.error('Failed to set primary CV:', error);
+ toast.error(error instanceof Error ? error.message : 'Could not set primary CV.');
+ } finally {
+ setIsSavingPrimaryCv(false);
  }
  };
 
@@ -197,7 +593,9 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
 
  const reset = () => {
  setUploadedFile(null);
+ setUploadedFiles([]);
  setScanResult(null);
+ setRankedResults([]);
  setError(null);
  setProgress(0);
  if (fileInputRef.current) {
@@ -244,7 +642,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  };
 
  return (
- <div className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ecfdf5_100%)] px-4 py-5 sm:px-6 lg:px-8">
+ <div className={`${dashboardTheme.page} px-4 py-5 sm:px-6 lg:px-8`}>
  <div className="mx-auto max-w-6xl space-y-6">
  {/* Header */}
  <Card className="border-slate-200/80 bg-white/95 shadow-sm">
@@ -277,12 +675,94 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  </CardHeader>
  </Card>
 
+ {isBulkJobScanner && (
+ <Card className="border-slate-200/80 bg-white/95 shadow-sm">
+ <CardHeader>
+ <CardTitle className="flex items-center gap-2">
+ <Briefcase className="h-5 w-5 text-emerald-600" />
+ 1. Choose Job
+ </CardTitle>
+ <p className="text-sm text-slate-600">
+ Select the job description first. Uploaded CVs will be ranked against this exact role.
+ </p>
+ </CardHeader>
+ <CardContent className="space-y-4">
+ {isLoadingJobs ? (
+ <div className={dashboardTheme.loadingState}>Loading published jobs...</div>
+ ) : jobs.length === 0 ? (
+ <div className={dashboardTheme.emptyState}>No published jobs are available for matching yet.</div>
+ ) : (
+ <>
+ <select
+ value={selectedJobId}
+ onChange={(event) => {
+ setSelectedJobId(event.target.value);
+ setRankedResults([]);
+ setScanResult(null);
+ }}
+ className={dashboardTheme.select}
+ >
+ {jobs.map((job) => (
+ <option key={job.id} value={job.id}>
+ {job.title} - {job.company}
+ </option>
+ ))}
+ </select>
+ {selectedJob && (
+ <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+ <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+ <div>
+ <h3 className="font-semibold text-slate-950">{selectedJob.title}</h3>
+ <p className="mt-1 line-clamp-2 text-sm text-slate-600">{selectedJob.description || 'No description saved.'}</p>
+ </div>
+ <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700">
+ {selectedJob.skills.length} skills
+ </Badge>
+ </div>
+ {selectedJob.skills.length > 0 && (
+ <div className="mt-3 flex flex-wrap gap-2">
+ {selectedJob.skills.slice(0, 12).map((skill) => (
+ <Badge key={skill} variant="secondary">{skill}</Badge>
+ ))}
+ </div>
+ )}
+ </div>
+ )}
+ </>
+ )}
+ </CardContent>
+ </Card>
+ )}
+
+ {isCandidateOptimizer && (
+ <Card className="border-slate-200/80 bg-white/95 shadow-sm">
+ <CardHeader>
+ <CardTitle className="flex items-center gap-2">
+ <Briefcase className="h-5 w-5 text-emerald-600" />
+ Paste Job Description
+ </CardTitle>
+ <p className="text-sm text-slate-600">
+ Upload one CV, paste a target job description, then generate an ATS-focused rewrite.
+ </p>
+ </CardHeader>
+ <CardContent>
+ <textarea
+ value={jobDescription}
+ onChange={(event) => setJobDescription(event.target.value)}
+ placeholder="Paste the job description here..."
+ rows={7}
+ className={dashboardTheme.textarea}
+ />
+ </CardContent>
+ </Card>
+ )}
+
  {/* Upload Section */}
  <Card className="border-slate-200/80 bg-white/95 shadow-sm">
  <CardHeader>
  <CardTitle className="flex items-center gap-2">
  <Upload className="h-5 w-5" />
- Upload Resume
+ {isBulkJobScanner ? '2. Upload CVs' : 'Upload One CV'}
  </CardTitle>
  </CardHeader>
  <CardContent>
@@ -294,19 +774,31 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  >
  <Upload className="mx-auto mb-4 h-12 w-12 text-emerald-600" />
  <p className="text-lg font-medium mb-2">
- {uploadedFile? uploadedFile.name: 'Drop your resume here or click to browse'}
+ {uploadedFiles.length > 0
+ ? `${uploadedFiles.length} CV${uploadedFiles.length === 1 ? '' : 's'} selected`
+ : isBulkJobScanner
+ ? 'Drop CVs here or click to browse'
+ : 'Drop your resume here or click to browse'}
  </p>
  <p className="text-sm text-muted-foreground mb-4">
- Best with.TXT files. Also tries.PDF,.DOC, and.DOCX. Max 10MB.
+ Best with.TXT files. Also tries.PDF,.DOC, and.DOCX. Max 10MB per file.
  </p>
- <p className="text-xs text-muted-foreground mb-4">
- For best results, copy your resume text and save it as a.txt file.
- </p>
+ {uploadedFiles.length > 0 && (
+ <div className="mx-auto mb-4 max-w-2xl rounded-xl border border-slate-200 bg-white p-3 text-left">
+ <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Selected files</p>
+ <div className="max-h-28 space-y-1 overflow-y-auto text-sm text-slate-700">
+ {uploadedFiles.map((file) => (
+ <div key={`${file.name}-${file.size}`} className="truncate">{file.name}</div>
+ ))}
+ </div>
+ </div>
+ )}
  
  <input
  ref={fileInputRef}
  type="file"
  accept=".txt,.pdf,.doc,.docx"
+ multiple={isBulkJobScanner}
  onChange={handleFileSelect}
  className="hidden"
  />
@@ -321,10 +813,10 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  Choose File
  </Button>
  
- {uploadedFile && (
+ {uploadedFiles.length > 0 && (
  <Button
- onClick={processResume}
- disabled={isProcessing}
+ onClick={isBulkJobScanner ? processBulkResumes : processResume}
+ disabled={isProcessing || (isBulkJobScanner && !selectedJob)}
  size="sm"
  >
  {isProcessing? (
@@ -335,7 +827,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  ): (
  <>
  <Zap className="h-4 w-4 mr-2" />
- Scan Resume
+ {isBulkJobScanner ? `Rank ${uploadedFiles.length} CV${uploadedFiles.length === 1 ? '' : 's'}` : 'Scan Resume'}
  </>
  )}
  </Button>
@@ -358,7 +850,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  <div className="mt-4">
  <Progress value={progress} className="h-2" />
  <p className="text-center text-sm text-muted-foreground mt-2">
- Processing resume... {progress}%
+ {isBulkJobScanner ? 'Ranking CVs' : 'Processing resume'}... {progress}%
  </p>
  </div>
  )}
@@ -374,6 +866,103 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  )}
  </CardContent>
  </Card>
+
+ {isCandidateOptimizer && scanResult && (
+ <Card className="border-slate-200/80 bg-white/95 shadow-sm">
+ <CardHeader>
+ <CardTitle className="flex items-center gap-2">
+ <Zap className="h-5 w-5 text-emerald-600" />
+ AI CV Rewrite
+ </CardTitle>
+ <p className="text-sm text-slate-600">
+ Generate a truthful, ATS-friendly text CV from your uploaded CV and pasted job description.
+ </p>
+ </CardHeader>
+ <CardContent className="space-y-4">
+ <div className="flex flex-wrap gap-2">
+ <Button onClick={optimizeCandidateCv} disabled={isOptimizingCv || !jobDescription.trim()}>
+ {isOptimizingCv ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+ Change CV with AI
+ </Button>
+ <Button variant="outline" onClick={downloadOptimizedCv} disabled={!optimizedCvText.trim()}>
+ <Download className="mr-2 h-4 w-4" />
+ Download
+ </Button>
+ <Button variant="outline" onClick={setAsPrimaryCv} disabled={!optimizedCvText.trim() || isSavingPrimaryCv}>
+ {isSavingPrimaryCv ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+ Set as My HireVify Primary CV
+ </Button>
+ </div>
+ <textarea
+ value={optimizedCvText}
+ onChange={(event) => setOptimizedCvText(event.target.value)}
+ placeholder="Your AI-optimized CV draft will appear here."
+ rows={16}
+ className={dashboardTheme.textarea}
+ />
+ </CardContent>
+ </Card>
+ )}
+
+ {rankedResults.length > 0 && selectedJob && (
+ <Card className="border-slate-200/80 bg-white/95 shadow-sm">
+ <CardHeader>
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+ <div>
+ <CardTitle className="flex items-center gap-2">
+ <Award className="h-5 w-5 text-emerald-600" />
+ Best Matching CVs
+ </CardTitle>
+ <p className="mt-1 text-sm text-slate-600">
+ Showing CVs at or above 70%. If fewer qualify, the strongest matches remain ranked at the top.
+ </p>
+ </div>
+ <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700">
+ {selectedJob.title}
+ </Badge>
+ </div>
+ </CardHeader>
+ <CardContent>
+ <div className="overflow-hidden rounded-xl border border-slate-200">
+ <div className="grid grid-cols-[64px_minmax(0,1fr)_96px] bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-slate-500">
+ <span>Rank</span>
+ <span>CV</span>
+ <span className="text-right">Match</span>
+ </div>
+ {rankedResults
+ .filter((result, _index, all) => result.matchScore >= 70 || all.filter((item) => item.matchScore >= 70).length === 0)
+ .slice(0, 10)
+ .map((result, index) => (
+ <button
+ key={`${result.fileName}-${result.processingTime}`}
+ type="button"
+ onClick={() => {
+ setScanResult(result);
+ setActiveTab('skills');
+ }}
+ className="grid w-full grid-cols-[64px_minmax(0,1fr)_96px] items-start gap-3 border-t border-slate-100 px-4 py-4 text-left transition hover:bg-slate-50"
+ >
+ <span className="font-semibold text-slate-500">#{index + 1}</span>
+ <span className="min-w-0">
+ <span className="block truncate font-semibold text-slate-950">{result.fileName}</span>
+ <span className="mt-1 block text-xs text-slate-500">
+ Matched: {result.matchedKeywords.slice(0, 6).join(', ') || 'No exact keywords'}
+ </span>
+ {result.missingKeywords.length > 0 && (
+ <span className="mt-1 block text-xs text-slate-400">
+ Missing: {result.missingKeywords.slice(0, 5).join(', ')}
+ </span>
+ )}
+ </span>
+ <span className={`text-right text-lg font-bold ${result.matchScore >= 70 ? 'text-emerald-600' : 'text-amber-600'}`}>
+ {result.matchScore}%
+ </span>
+ </button>
+ ))}
+ </div>
+ </CardContent>
+ </Card>
+ )}
 
  {/* Results Section */}
  {scanResult && (

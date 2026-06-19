@@ -18,6 +18,7 @@ import {
  type CareerGrowthStatus,
  type CareerGrowthType,
 } from '../services/careerGrowthService';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface JobRow {
  id: string;
@@ -321,7 +322,7 @@ export function ProjectManagement({
  const label = growthTypeLabels[careerGrowthOnlyType];
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+ <div className={dashboardTheme.page}>
  <div className="max-w-7xl mx-auto px-6 py-8">
  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div className="flex items-center gap-4">
@@ -679,7 +680,7 @@ export function ProjectManagement({
  }
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+ <div className={dashboardTheme.page}>
  <div className="max-w-7xl mx-auto px-6 py-8">
  <div className="flex items-center gap-4 mb-6">
  <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">

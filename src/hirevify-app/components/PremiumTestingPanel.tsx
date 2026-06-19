@@ -8,7 +8,8 @@ import {
  setTestSubscription, 
  clearTestSubscription, 
  usePremiumAccess,
- PREMIUM_FEATURES 
+ PREMIUM_FEATURES,
+ PREMIUM_ENABLED
 } from '../utils/premium';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
@@ -21,7 +22,12 @@ export function PremiumTestingPanel() {
  const { getSubscription, isTestAccount } = usePremiumAccess();
  const [selectedTier, setSelectedTier] = useState<'free' | 'pro' | 'enterprise'>('free');
  const [isVisible, setIsVisible] = useState(false);
- 
+
+ // Hidden while premium is disabled app-wide (see PREMIUM_ENABLED in utils/premium.ts)
+ if (!PREMIUM_ENABLED) {
+ return null;
+ }
+
  const subscription = getSubscription();
 
  // Only show in development or for test accounts

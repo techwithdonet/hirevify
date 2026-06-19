@@ -45,6 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 import { useAuth } from './AuthProvider';
 
 interface AIInterviewCoachProps {
@@ -512,7 +513,7 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="bg-card border-b border-border">
  <div className="max-w-7xl mx-auto px-6 py-4">

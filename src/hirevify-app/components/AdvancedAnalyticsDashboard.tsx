@@ -12,6 +12,7 @@ import { DateRange } from 'react-day-picker';
 import { cn } from './ui/utils';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface AnalyticsMetric {
  label: string;
@@ -464,7 +465,7 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
  );
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <header className="bg-card border-b border-border p-6">
  <div className="max-w-7xl mx-auto flex items-center justify-between">

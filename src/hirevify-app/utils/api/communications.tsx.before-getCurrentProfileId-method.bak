@@ -1,4 +1,4 @@
-﻿import { createClient } from "../supabase/client";
+import { createClient } from "../supabase/client";
 
 export interface Message {
   id: string;
@@ -193,10 +193,6 @@ async function getProfileMap(profileIds: string[]) {
 }
 
 export class CommunicationsAPI {
-  static async getCurrentProfileId(): Promise<string> {
-    return getCurrentProfileId();
-  }
-
   static async getOrCreateConversation(conversationData: {
     recruiterProfileId: string;
     candidateProfileId: string;
@@ -243,7 +239,7 @@ export class CommunicationsAPI {
       .single();
 
     if (error) {
-      // Unique constraint hit (race: another request created it first) â€” fetch the real row.
+      // Unique constraint hit (race: another request created it first) — fetch the real row.
       if (error.code === "23505") {
         const { data: retried } = await findExisting();
         if (retried) return retried as ConversationRow;

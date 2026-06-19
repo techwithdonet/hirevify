@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface RecruiterSettingsProps {
  onBack: () => void;
@@ -486,7 +487,7 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <header className="bg-card border-b border-border p-6">
  <div className="max-w-6xl mx-auto flex items-center justify-between">

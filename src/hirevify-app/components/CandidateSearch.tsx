@@ -15,10 +15,14 @@ import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { profilesService } from '@/src/hirevify-app/services/profilesService';
 import { SkillMultiSelect } from './common/SkillMultiSelect';
+import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
+import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface CandidateSearchProps {
  onBack: () => void;
  onUpgrade?: () => void;
+ onViewMessages: (conversationId?: string) => void;
 }
 
 interface Candidate {
@@ -70,7 +74,7 @@ interface SearchFilters {
  hasPortfolio: boolean;
 }
 
-export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
+export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: CandidateSearchProps) {
  const { user } = useAuth();
  const [activeTab, setActiveTab] = useState('search');
  const [isLoading, setIsLoading] = useState(false);
@@ -371,14 +375,23 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
  }, 500);
  };
 
- const contactCandidate = (candidateId: string) => {
- if (!onUpgrade) {
- toast.success('Message sent to candidate!');
+ const contactCandidate = async (candidateId: string) => {
+ if (!user?.id) {
+ toast.error('Please sign in to message candidates.');
  return;
  }
- 
- toast.info('Direct messaging available in Pro plans');
- onUpgrade();
+
+ try {
+ await openOrCreateConversationAndNavigate({
+ recruiterProfileId: user.id,
+ candidateProfileId: candidateId,
+ currentUserProfileId: user.id,
+ navigateToMessages: onViewMessages,
+ });
+ } catch (error) {
+ console.error('Failed to open candidate conversation:', error);
+ toast.error(error instanceof Error? error.message: 'Could not open messages.');
+ }
  };
 
  const saveCandidate = (candidateId: string) => {
@@ -1018,31 +1031,17 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
  );
 
  return (
- <div className="min-h-screen bg-background">
- {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto flex items-center justify-between">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <div>
- <h1 className="text-2xl font-bold text-foreground">Find Candidates</h1>
- <p className="text-sm text-muted-foreground">
- Search and connect with qualified candidates from our talent pool
- </p>
- </div>
- </div>
- 
- <Button onClick={onUpgrade} className="hidden sm:flex">
+ <DashboardPageLayout
+ title="Find Candidates"
+ subtitle="Search and connect with qualified candidates from our talent pool"
+ onBack={onBack}
+ actions={(
+ <Button onClick={onUpgrade} className={dashboardTheme.buttonPrimary}>
  <Crown className="w-4 h-4 mr-2" />
  Upgrade to Pro
  </Button>
- </div>
- </header>
-
- <main className="max-w-7xl mx-auto p-6">
+ )}
+ >
  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
  {/* Filters Sidebar */}
  <div className="lg:col-span-1">
@@ -1054,11 +1053,10 @@ export function CandidateSearch({ onBack, onUpgrade }: CandidateSearchProps) {
  {renderSearchResults()}
  </div>
  </div>
- </main>
 
  {/* Candidate Profile Modal */}
  {renderCandidateProfile()}
- </div>
+ </DashboardPageLayout>
  );
 }
 

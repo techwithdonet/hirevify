@@ -403,7 +403,7 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  const contactInfo = resumeData.contactInfo as any;
 
  const fullName = escapeHtml(
- [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
+ contactInfo.fullName || [contactInfo.firstName, contactInfo.lastName].filter(Boolean).join(' ')
  ) || 'Your Name';
 
  const email = escapeHtml(contactInfo.email || '');

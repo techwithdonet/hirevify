@@ -10,6 +10,7 @@ import { AddPortfolioForm } from './portfolio/AddPortfolioForm';
 import { useAuth } from './AuthProvider';
 import { portfolioService } from '../services/portfolioService';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface CandidatePortfolioProps {
  onBack: () => void;
@@ -161,7 +162,7 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  <header className="border-b border-border bg-card">
  <div className="px-6 py-4">
  <div className="flex items-center justify-between">

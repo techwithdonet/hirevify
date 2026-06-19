@@ -43,6 +43,7 @@ import { Input } from './ui/input';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface MarketIntelligenceDashboardProps {
  onBack: () => void;
@@ -206,7 +207,7 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="bg-card border-b border-border">
  <div className="max-w-7xl mx-auto px-6 py-4">

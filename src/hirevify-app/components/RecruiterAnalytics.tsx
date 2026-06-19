@@ -7,6 +7,7 @@ import { MetricsCards } from './analytics/MetricsCards';
 import { HiringFunnel } from './analytics/HiringFunnel';
 import { SourceEffectiveness } from './analytics/SourceEffectiveness';
 import { DiversityMetrics } from './analytics/DiversityMetrics';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface RecruiterAnalyticsProps {
  onBack: () => void;
@@ -15,7 +16,7 @@ interface RecruiterAnalyticsProps {
 
 export function RecruiterAnalytics({ onBack, onUpgrade }: RecruiterAnalyticsProps) {
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <header className="border-b border-border bg-card">
  <div className="px-6 py-4">

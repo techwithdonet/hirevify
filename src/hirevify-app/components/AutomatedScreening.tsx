@@ -48,10 +48,13 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
+import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface AutomatedScreeningProps {
  onBack: () => void;
  onUpgrade?: () => void;
+ onViewMessages: (conversationId?: string) => void;
  projectId?: string;
 }
 
@@ -143,7 +146,7 @@ interface ScreeningStats {
  accuracyRate: number; // %
 }
 
-export function AutomatedScreening({ onBack, onUpgrade, projectId }: AutomatedScreeningProps) {
+export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectId }: AutomatedScreeningProps) {
  const { user } = useAuth();
  const [applications, setApplications] = useState<CandidateApplication[]>([]);
  const [filteredApplications, setFilteredApplications] = useState<CandidateApplication[]>([]);
@@ -159,6 +162,25 @@ export function AutomatedScreening({ onBack, onUpgrade, projectId }: AutomatedSc
  });
  const [showCriteriaDialog, setShowCriteriaDialog] = useState(false);
  const [batchSelection, setBatchSelection] = useState<Set<string>>(new Set());
+
+ const openCandidateConversation = async (application: CandidateApplication) => {
+ if (!user?.id) {
+ toast.error('Please sign in to message candidates.');
+ return;
+ }
+
+ try {
+ await openOrCreateConversationAndNavigate({
+ recruiterProfileId: user.id,
+ candidateProfileId: application.candidateId,
+ currentUserProfileId: user.id,
+ navigateToMessages: onViewMessages,
+ });
+ } catch (error) {
+ console.error('Failed to open screening conversation:', error);
+ toast.error(error instanceof Error? error.message: 'Could not open messages.');
+ }
+ };
 
  useEffect(() => {
  loadApplications();
@@ -536,7 +558,7 @@ export function AutomatedScreening({ onBack, onUpgrade, projectId }: AutomatedSc
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="bg-card border-b border-border">
  <div className="max-w-7xl mx-auto px-6 py-4">
@@ -911,7 +933,7 @@ export function AutomatedScreening({ onBack, onUpgrade, projectId }: AutomatedSc
  <Eye className="w-4 h-4 mr-2" />
  View Resume
  </Button>
- <Button variant="outline" size="sm">
+ <Button variant="outline" size="sm" onClick={() => openCandidateConversation(selectedApplication)}>
  <Mail className="w-4 h-4 mr-2" />
  Send Message
  </Button>

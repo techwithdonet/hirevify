@@ -133,6 +133,7 @@ function HireVifyApp() {
  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
  const [unreadMessages, setUnreadMessages] = useState(0);
  const [unreadNotifications, setUnreadNotifications] = useState(3);
+ const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
  const [projectChallengeData, setProjectChallengeData] = useState<{
  projectId: string;
  projectTitle: string;
@@ -226,6 +227,7 @@ function HireVifyApp() {
  setCurrentScreen: navigateScreen,
  setSelectedProject,
  setSelectedApplication,
+ setSelectedConversationId,
  setProjectChallengeData,
  setAssessmentBuilderData,
  signOut,
@@ -258,6 +260,7 @@ function HireVifyApp() {
  selectedApplication={selectedApplication}
  unreadNotifications={unreadNotifications}
  unreadMessages={unreadMessages}
+ selectedConversationId={selectedConversationId}
  projectChallengeData={projectChallengeData}
  assessmentBuilderData={assessmentBuilderData}
  navigation={navigation}

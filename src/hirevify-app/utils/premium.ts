@@ -90,6 +90,13 @@ export const PREMIUM_FEATURES = {
 
 export type PremiumFeatureKey = keyof typeof PREMIUM_FEATURES;
 
+// 🔒 DEV MODE SWITCH
+// While HireVify is still in development, all premium gates are disabled
+// so messaging/contact and every other feature work for everyone.
+// When you're ready to launch paid tiers, flip this to `true` and decide
+// per-feature pricing in PREMIUM_FEATURES above — no other code changes needed.
+export const PREMIUM_ENABLED = false;
+
 // Testing account domains - these get full premium access
 const TESTING_DOMAINS = [
  'test.hirevify.com',
@@ -192,6 +199,11 @@ export const hasPremiumAccess = (
  userEmail?: string,
  userType?: 'recruiter' | 'candidate'
 ): boolean => {
+ // Dev mode: every feature is unlocked for every user until launch
+ if (!PREMIUM_ENABLED) {
+ return true;
+ }
+
  const feature = PREMIUM_FEATURES[featureKey];
  
  // Check if feature exists and user type matches

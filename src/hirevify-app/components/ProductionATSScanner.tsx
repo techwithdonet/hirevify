@@ -13,6 +13,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface ExtractedData {
  name: string;
@@ -365,7 +366,7 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
 
  if (selectedResult) {
  return (
- <div className="min-h-screen bg-gray-50">
+ <div className={dashboardTheme.page}>
  <div className="bg-white border-b border-gray-200">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="flex items-center justify-between h-16">
@@ -495,7 +496,7 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
  }
 
  return (
- <div className="min-h-screen bg-gray-50">
+ <div className={dashboardTheme.page}>
  <div className="bg-white border-b border-gray-200">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="flex items-center justify-between h-16">

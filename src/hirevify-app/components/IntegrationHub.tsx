@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 import {
  getUserIntegrations,
  connectIntegration,
@@ -568,7 +569,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
 
  if (loading) {
  return (
- <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className={`${dashboardTheme.page} flex items-center justify-center`}>
  <div className="text-center">
  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
  <p className="text-muted-foreground">Loading integrations...</p>
@@ -578,7 +579,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  }
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <header className="bg-card border-b border-border p-6">
  <div className="max-w-7xl mx-auto">

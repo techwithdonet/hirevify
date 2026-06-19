@@ -31,6 +31,8 @@ import { applicationsService } from '@/src/hirevify-app/services/applicationsSer
 import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
 import { usePremiumAccess } from '../utils/premium';
+import { useConversations } from '../hooks/useConversations';
+import { useNotifications } from '../hooks/useNotifications';
 import { toast } from 'sonner';
 import { LoadingState } from './layout/AppLayout';
 
@@ -85,11 +87,21 @@ export function CandidateDashboard({
 }: CandidateDashboardProps) {
  const { user } = useAuth();
  const { checkAccess } = usePremiumAccess();
+ const { conversations: messageConversations } = useConversations();
+ const { unreadCount: unreadNotificationsCount } = useNotifications();
+ const totalUnreadMessages = messageConversations.reduce(
+ (sum, conversation) => sum + (conversation.unreadCount || 0),
+ 0
+ );
  void checkAccess;
  void onVideoInterview;
  void onViewInterviews;
  void onProjectChallengeVideo;
  void onMarketIntelligence;
+ // unreadNotifications/unreadMessages props are no longer used directly —
+ // real counts now come from useNotifications/useConversations below.
+ void unreadNotifications;
+ void unreadMessages;
  const [subscription, setSubscription] = useState<any>(null);
  const [candidateProfile, setCandidateProfile] = useState<any>(null);
  const [applications, setApplications] = useState<any[]>([]);
@@ -201,18 +213,18 @@ export function CandidateDashboard({
  <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
  <Button variant="ghost" size="icon" onClick={onViewMessages} className="relative rounded-full text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
  <MessageCircle className="h-5 w-5" />
- {false && unreadMessages > 0 && (
+ {totalUnreadMessages > 0 && (
  <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
- {unreadMessages}
+ {totalUnreadMessages > 9? '9+': totalUnreadMessages}
  </Badge>
  )}
  </Button>
 
  <Button variant="ghost" size="icon" onClick={onViewNotifications} className="relative rounded-full text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
  <Bell className="h-5 w-5" />
- {false && unreadNotifications > 0 && (
+ {unreadNotificationsCount > 0 && (
  <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
- {unreadNotifications}
+ {unreadNotificationsCount > 9? '9+': unreadNotificationsCount}
  </Badge>
  )}
  </Button>

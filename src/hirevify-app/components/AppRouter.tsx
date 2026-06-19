@@ -72,7 +72,7 @@ interface NavigationMethods {
  navigateToInterviews: () => void;
  navigateToSettings: () => void;
  navigateToCandidateSearch: () => void;
- navigateToMessages: () => void;
+ navigateToMessages: (conversationId?: string) => void;
  navigateToNotifications: () => void;
  navigateToPricing: () => void;
  navigateToSkillsFirstHiring: () => void;
@@ -115,6 +115,7 @@ interface AppRouterProps {
  selectedApplication: Application | null;
  unreadNotifications: number;
  unreadMessages: number;
+ selectedConversationId: string | null;
  projectChallengeData: {
  projectId: string;
  projectTitle: string;
@@ -136,6 +137,7 @@ export function AppRouter({
  selectedApplication,
  unreadNotifications,
  unreadMessages,
+ selectedConversationId,
  projectChallengeData,
  assessmentBuilderData,
  navigation,
@@ -236,6 +238,7 @@ export function AppRouter({
  <ATSView 
  onBack={navigation.navigateToRecruiterDashboard}
  onStartInterview={navigation.navigateToLiveInterview}
+ onViewMessages={navigation.navigateToMessages}
  selectedCandidate={selectedApplication as any}
  />
  );
@@ -276,6 +279,7 @@ export function AppRouter({
  <AutomatedScreening 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
+ onViewMessages={navigation.navigateToMessages}
  />
  );
 
@@ -338,6 +342,7 @@ export function AppRouter({
  <CandidateSearch 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
+ onViewMessages={navigation.navigateToMessages}
  />
  );
 
@@ -621,6 +626,7 @@ export function AppRouter({
  <MessagingCenter 
  onBack={user?.userType === 'recruiter'? navigation.navigateToRecruiterDashboard: navigation.navigateToCandidateDashboard}
  onUpdateUnreadCount={setUnreadMessages}
+ selectedConversationId={selectedConversationId}
  />
  );
  

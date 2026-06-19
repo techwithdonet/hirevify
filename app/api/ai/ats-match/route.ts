@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { AtsCandidateInput, AtsJobInput, AtsMatchResult } from '@/src/hirevify-app/services/atsMatchingService';
+import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
 
 export const runtime = 'nodejs';
-
-function extractJson(text: string) {
- const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
- const start = cleaned.indexOf('{');
- const end = cleaned.lastIndexOf('}');
-
- if (start === -1 || end === -1 || end <= start) {
- throw new Error('OpenAI did not return valid JSON.');
- }
-
- return cleaned.slice(start, end + 1);
-}
 
 function sanitizeStringArray(value: unknown) {
  if (!Array.isArray(value)) return [];
@@ -89,12 +78,6 @@ export async function POST(request: NextRequest) {
  return NextResponse.json({ error: session.error }, { status: session.status });
  }
 
- const apiKey = process.env.OPENAI_API_KEY;
-
- if (!apiKey) {
- return NextResponse.json({ error: 'OPENAI_API_KEY is not configured.' }, { status: 503 });
- }
-
  const body = await request.json();
  const job = body.job as AtsJobInput | undefined;
  const candidate = body.candidate as AtsCandidateInput | undefined;
@@ -104,14 +87,8 @@ export async function POST(request: NextRequest) {
  return NextResponse.json({ error: 'Job, candidate, and fallback are required.' }, { status: 400 });
  }
 
- const response = await fetch('https://api.openai.com/v1/chat/completions', {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- Authorization: `Bearer ${apiKey}`,
- },
- body: JSON.stringify({
- model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+ const content = await callConfiguredAI({
+ purpose: 'ATS matching',
  messages: [
  {
  role: 'system',
@@ -123,28 +100,11 @@ export async function POST(request: NextRequest) {
  },
  ],
  temperature: 0.1,
- max_tokens: 700,
- response_format: { type: 'json_object' },
- }),
+ maxTokens: 700,
+ responseFormatJson: true,
  });
 
- const raw = await response.text();
- const json = raw ? JSON.parse(raw) : {};
-
- if (!response.ok) {
- return NextResponse.json(
- { error: json?.error?.message || 'OpenAI ATS matching failed.' },
- { status: response.status }
- );
- }
-
- const content = json?.choices?.[0]?.message?.content;
-
- if (typeof content !== 'string' || !content.trim()) {
- return NextResponse.json({ error: 'OpenAI returned an empty ATS response.' }, { status: 502 });
- }
-
- const parsed = JSON.parse(extractJson(content));
+ const parsed = JSON.parse(extractJsonObject(content));
  const score = Number(parsed.score);
 
  if (!Number.isFinite(score)) {
@@ -158,9 +118,9 @@ export async function POST(request: NextRequest) {
  explanation: String(parsed.explanation || fallback.explanation || '').trim(),
  });
  } catch (error) {
- console.error('ATS OpenAI route failed:', error);
+ console.error('ATS AI route failed:', error);
  return NextResponse.json(
- { error: error instanceof Error ? error.message : 'ATS OpenAI matching failed.' },
+ { error: error instanceof Error ? error.message : 'ATS AI matching failed.' },
  { status: 500 }
  );
  }

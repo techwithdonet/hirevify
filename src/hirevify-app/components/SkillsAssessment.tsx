@@ -15,6 +15,7 @@ import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { assessmentsService } from '../services/assessmentsService';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface SkillsAssessmentProps {
  onBack: () => void;
@@ -1028,7 +1029,7 @@ const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
  };
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="border-b bg-card">
  <div className="container mx-auto px-4 py-6">

@@ -24,6 +24,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from './AuthProvider';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface CandidateSettingsProps {
  onBack: () => void;
@@ -839,7 +840,7 @@ const [currentStep, setCurrentStep] = useState(0);
 
  if (isLoadingProfile) {
  return (
- <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50 flex items-center justify-center">
+ <div className={`${dashboardTheme.page} flex items-center justify-center`}>
  <div className="text-center">
  <Loader className="w-10 h-10 animate-spin text-emerald-600 mx-auto mb-4" />
  <p className="text-muted-foreground">Loading profile...</p>
@@ -851,7 +852,7 @@ const [currentStep, setCurrentStep] = useState(0);
  const CurrentIcon = steps[currentStep].icon;
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-emerald-50">
+ <div className={dashboardTheme.page}>
  <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
  <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
  <div className="flex items-center gap-4">

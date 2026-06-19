@@ -34,6 +34,8 @@ import { careerGrowthService, type CareerGrowthType } from '@/src/hirevify-app/s
 import { calculateAtsMatch, type AtsMatchResult } from '@/src/hirevify-app/services/atsMatchingService';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 type CandidateStatus = 'applied' | 'reviewing' | 'screening' | 'shortlisted' | 'accepted' | 'assigned' | 'in_progress' | 'completed' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn';
 type ApplicationCategory = 'project' | CareerGrowthType;
@@ -65,17 +67,17 @@ interface Candidate {
 interface ATSViewProps {
  onBack: () => void;
  onStartInterview: () => void;
+ onViewMessages: (conversationId?: string) => void;
  selectedCandidate?: any;
 }
 
-export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSViewProps) {
+export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCandidate }: ATSViewProps) {
  const { user } = useAuth();
  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
  const [notes, setNotes] = useState('');
  const [statusFilter, setStatusFilter] = useState<string>('all');
  const [categoryFilter, setCategoryFilter] = useState<'all' | ApplicationCategory>('all');
  const [searchTerm, setSearchTerm] = useState('');
- const [chatMessage, setChatMessage] = useState('');
  const [candidates, setCandidates] = useState<Candidate[]>([]);
  const [isLoading, setIsLoading] = useState(true);
 
@@ -303,6 +305,25 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
  }, [candidates, statusFilter, categoryFilter, searchTerm]);
 
  const selectedCand = candidates.find(c => c.id === selectedCandidateId);
+
+ const openCandidateConversation = async (candidate: Candidate) => {
+ if (!user?.id) {
+ toast.error('Please sign in to message candidates.');
+ return;
+ }
+
+ try {
+ await openOrCreateConversationAndNavigate({
+ recruiterProfileId: user.id,
+ candidateProfileId: candidate.candidateId,
+ currentUserProfileId: user.id,
+ navigateToMessages: onViewMessages,
+ });
+ } catch (error) {
+ console.error('Failed to open applicant conversation:', error);
+ toast.error(error instanceof Error? error.message: 'Could not open messages.');
+ }
+ };
  const categoryOptions: Array<{ value: 'all' | ApplicationCategory; label: string; icon: any; count: number; description: string; tone: string }> = [
  { value: 'all', label: 'All Applications', icon: Users, count: candidates.length, description: 'Every incoming applicant', tone: 'border-slate-200 bg-slate-50 text-slate-700' },
  { value: 'project', label: 'Projects', icon: Briefcase, count: candidates.filter((candidate) => candidate.sourceType === 'project').length, description: 'Normal project applicants', tone: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
@@ -343,7 +364,7 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
  };
 
  return (
- <div className="min-h-screen bg-[linear-gradient(135deg,#f6fbf9_0%,#eef7ff_42%,#fff7ed_100%)]">
+ <div className={dashboardTheme.page}>
  <header className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl">
  <div className="mx-auto w-full max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8">
  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -683,6 +704,7 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
  <Button
  variant="outline"
  className="border-border text-foreground hover:bg-muted"
+ onClick={() => openCandidateConversation(selectedCand)}
  >
  <MessageSquare className="w-4 h-4 mr-2" />
  Message
@@ -762,22 +784,12 @@ export function ATSView({ onBack, onStartInterview, selectedCandidate }: ATSView
  </div>
  <MessageSquare className="h-5 w-5 text-emerald-600" />
  </div>
- <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
- No messages loaded for this applicant yet.
- </div>
- <Textarea
- value={chatMessage}
- onChange={(event) => setChatMessage(event.target.value)}
- placeholder={`Message ${selectedCand.name}...`}
- rows={3}
- className="resize-none border-slate-300 bg-white text-slate-950"
- />
  <Button
  className="mt-3 w-full bg-slate-950 text-white hover:bg-slate-800"
- onClick={() => toast.info('Candidate messaging is ready for the connected messaging flow.')}
+ onClick={() => openCandidateConversation(selectedCand)}
  >
  <MessageSquare className="mr-2 h-4 w-4" />
- Send Message
+ Open Conversation
  </Button>
  </div>
  </div>

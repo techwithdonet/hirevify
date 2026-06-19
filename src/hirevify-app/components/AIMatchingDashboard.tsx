@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface AIMatchingDashboardProps {
  onBack: () => void;
@@ -150,7 +151,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
 
  if (isLoading ||!metrics) {
  return (
- <div className="min-h-screen bg-background p-6">
+ <div className={`${dashboardTheme.page} p-6`}>
  <div className="max-w-7xl mx-auto">
  <div className="flex items-center gap-4 mb-8">
  <Button variant="ghost" onClick={onBack}>
@@ -180,7 +181,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  const { performance, cacheStats } = metrics;
 
  return (
- <div className="min-h-screen bg-background p-6">
+ <div className={`${dashboardTheme.page} p-6`}>
  <div className="max-w-7xl mx-auto">
  {/* Header */}
  <div className="flex items-center justify-between mb-8">

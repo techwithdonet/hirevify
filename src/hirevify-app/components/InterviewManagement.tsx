@@ -1,7 +1,9 @@
-import { ArrowLeft, Video, Calendar, Users, Play } from 'lucide-react';
+import { Video, Calendar, Users, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
+import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface InterviewManagementProps {
  onBack: () => void;
@@ -21,18 +23,13 @@ export function InterviewManagement({
  userType 
 }: InterviewManagementProps) {
  return (
- <div className="min-h-screen bg-background">
- <div className="max-w-7xl mx-auto px-6 py-8">
- <div className="flex items-center gap-4 mb-6">
- <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
- <ArrowLeft className="w-4 h-4" />
- Back to Dashboard
- </Button>
- <h1 className="text-3xl font-bold">Interview Management</h1>
- </div>
- 
+ <DashboardPageLayout
+ title="Interview Management"
+ subtitle={userType === 'recruiter'? 'Schedule and conduct interviews with candidates': 'View and join your scheduled interviews'}
+ onBack={onBack}
+ >
  <div className="grid gap-6">
- <Card>
+ <Card className={dashboardTheme.card}>
  <CardHeader>
  <CardTitle className="flex items-center gap-2">
  <Video className="w-5 h-5" />
@@ -108,8 +105,7 @@ export function InterviewManagement({
  </CardContent>
  </Card>
  </div>
- </div>
- </div>
+ </DashboardPageLayout>
  );
 }
 

@@ -7,6 +7,8 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
+import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 // Local types to avoid API dependency issues
 interface Notification {
@@ -282,7 +284,7 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
 
  if (isLoading) {
  return (
- <div className="min-h-screen bg-background flex items-center justify-center">
+ <div className={`${dashboardTheme.page} flex items-center justify-center`}>
  <div className="text-center">
  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
  <p className="text-muted-foreground">Loading notifications...</p>
@@ -292,37 +294,21 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
  }
 
  return (
- <div className="min-h-screen bg-background">
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-4xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <X className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-2xl font-semibold">Notifications</h1>
- <p className="text-sm text-muted-foreground">
- {notifications.filter(n =>!n.read).length} unread notifications
- </p>
- </div>
- </div>
- 
- {notifications.some(n =>!n.read) && (
- <Button variant="outline" onClick={markAllAsRead}>
+ <DashboardPageLayout
+ title="Notifications"
+ subtitle={`${notifications.filter(n =>!n.read).length} unread notifications`}
+ onBack={onBack}
+ backLabel="Close"
+ shellClassName="max-w-4xl"
+ actions={notifications.some(n =>!n.read) && (
+ <Button variant="outline" onClick={markAllAsRead} className={dashboardTheme.buttonSecondary}>
  <Check className="w-4 h-4 mr-2" />
  Mark All Read
  </Button>
  )}
- </div>
- </div>
- </div>
-
- {/* Notifications List */}
- <div className="max-w-4xl mx-auto px-6 py-6">
+ >
  {notifications.length === 0? (
- <Card className="p-8 text-center">
+ <Card className={dashboardTheme.emptyState}>
  <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
  <h3 className="text-lg font-medium mb-2">No notifications yet</h3>
  <p className="text-muted-foreground">
@@ -371,8 +357,7 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
  </div>
  </ScrollArea>
  )}
- </div>
- </div>
+ </DashboardPageLayout>
  );
 }
 

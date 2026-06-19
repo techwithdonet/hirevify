@@ -43,6 +43,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
+import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface AISkillsDevelopmentProps {
  onBack: () => void;
@@ -417,7 +418,7 @@ export function AISkillsDevelopment({ onBack, onUpgrade }: AISkillsDevelopmentPr
 
  if (isLoading) {
  return (
- <div className="min-h-screen bg-background p-6">
+ <div className={`${dashboardTheme.page} p-6`}>
  <div className="max-w-7xl mx-auto">
  <div className="flex items-center gap-4 mb-8">
  <Button variant="ghost" onClick={onBack}>
@@ -446,7 +447,7 @@ export function AISkillsDevelopment({ onBack, onUpgrade }: AISkillsDevelopmentPr
  }
 
  return (
- <div className="min-h-screen bg-background">
+ <div className={dashboardTheme.page}>
  {/* Header */}
  <div className="bg-card border-b border-border">
  <div className="max-w-7xl mx-auto px-6 py-4">
