@@ -79,7 +79,7 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
 
  setGeneratedLink(link);
  setStep('success');
- toast.success('Interview invite saved to database.');
+ toast.success('Saved');
  } catch (error) {
  console.error('Failed to generate interview link:', error);
  toast.error(error instanceof Error? error.message: 'Failed to generate interview link.');

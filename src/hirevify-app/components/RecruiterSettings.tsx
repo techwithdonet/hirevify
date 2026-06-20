@@ -325,7 +325,7 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
  setIsLoading(true);
  try {
  await saveRecruiterProfileToDatabase();
- toast.success('Recruiter profile saved to database');
+ toast.success('Saved');
  setHasUnsavedChanges(false);
  } catch (error) {
  console.error('Failed to save recruiter profile:', error);
@@ -339,7 +339,7 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
  setIsLoading(true);
  try {
  await saveRecruiterProfileToDatabase();
- toast.success('Company profile saved to database');
+ toast.success('Saved');
  setHasUnsavedChanges(false);
  } catch (error) {
  console.error('Failed to save company profile:', error);

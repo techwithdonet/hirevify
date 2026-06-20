@@ -416,7 +416,7 @@ const [currentStep, setCurrentStep] = useState(0);
  try {
  setIsLoading(true);
  await saveCandidateProfileToDatabase(false);
- toast.success('Draft saved to database');
+ toast.success('Saved');
  } catch (error) {
  console.error('Failed to save draft:', error);
  toast.error(error instanceof Error? error.message: 'Failed to save draft');

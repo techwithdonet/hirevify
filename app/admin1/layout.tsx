@@ -64,9 +64,7 @@ export default function Admin1Layout({ children }: { children: ReactNode }) {
 
   if (isCheckingSavedLogin) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-        Checking admin access...
-      </div>
+      <div className="min-h-screen bg-white" aria-hidden="true" />
     );
   }
 

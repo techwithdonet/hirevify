@@ -21,7 +21,6 @@ import {
  Target,
  Search,
  Briefcase,
- Loader,
  Clock,
  BookOpen,
  Users
@@ -79,7 +78,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
  const [categoryFilter, setCategoryFilter] = useState<'all' | ApplicationCategory>('all');
  const [searchTerm, setSearchTerm] = useState('');
  const [candidates, setCandidates] = useState<Candidate[]>([]);
- const [isLoading, setIsLoading] = useState(true);
 
  const selectedJobId = selectedCandidate?.projectId || selectedCandidate?.job_id || selectedCandidate?.id || null;
  const selectedJobTitle = selectedCandidate?.projectTitle || selectedCandidate?.title || selectedCandidate?.job_title || '';
@@ -87,8 +85,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
 
  const loadApplications = async () => {
  try {
- setIsLoading(true);
-
  const supabase = createSupabaseBrowserClient();
  const { data: authData, error: authError } = await supabase.auth.getUser();
 
@@ -280,8 +276,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
  console.error('Failed to load real applications:', error);
  toast.error(error instanceof Error? error.message: 'Failed to load applications');
  setCandidates([]);
- } finally {
- setIsLoading(false);
  }
  };
 
@@ -383,7 +377,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
  {isBestMatchScanner && selectedJobTitle
  ? `Candidates scoring 70% or higher for ${selectedJobTitle}`
  : selectedJobTitle
- ? `Real applications for ${selectedJobTitle}`
+ ? `Applications for ${selectedJobTitle}`
  : 'Project, micro-internship, and growth applications in one workspace'}
  </p>
  </div>
@@ -398,18 +392,11 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
  </header>
 
  <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
- <div className="mb-4 rounded-lg border border-emerald-200 bg-white/90 p-4 shadow-sm">
- <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
- <div>
+ <div className="mb-4 flex flex-col gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
  <p className="text-xs font-semibold uppercase text-emerald-700">{isBestMatchScanner? 'ATS Best Matches': 'Applications Workspace'}</p>
- <h2 className="text-xl font-semibold text-slate-950">{isBestMatchScanner? 'Best Matching Applicants': 'Review Real Applicants'}</h2>
- </div>
- <p className="max-w-2xl text-sm text-slate-600">
- {isBestMatchScanner
- ? 'Only real applicants with an ATS score of 70% or higher are shown.'
- : 'Filters moved into the sidebar so the candidate list and profile review stay aligned.'}
- </p>
- </div>
+ <Badge className="w-fit border border-emerald-200 bg-white text-emerald-700">
+ {filteredCandidates.length} applicant{filteredCandidates.length === 1? '': 's'}
+ </Badge>
  </div>
 
  <div className="grid min-h-[760px] grid-cols-1 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm xl:grid-cols-[280px_minmax(0,1fr)_390px]">
@@ -489,24 +476,17 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
  </div>
 
  <div className="flex-1 overflow-y-auto">
- {isLoading? (
- <div className="h-full flex items-center justify-center py-24">
- <div className="text-center">
- <Loader className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
- <p className="text-muted-foreground">Loading real applications...</p>
- </div>
- </div>
- ): filteredCandidates.length === 0? (
+ {filteredCandidates.length === 0? (
  <div className="h-full flex items-center justify-center py-24">
  <div className="text-center max-w-md">
  <Briefcase className="w-14 h-14 text-muted-foreground mx-auto mb-4" />
  <h3 className="text-foreground mb-2">
- {isBestMatchScanner? 'No candidate reached 70% ATS match yet': 'No real applications yet'}
+ {isBestMatchScanner? 'No candidate reached 70% ATS match yet': 'No applications yet'}
  </h3>
  <p className="text-muted-foreground">
  {isBestMatchScanner
  ? 'The scanner found no real applicants at or above the 70% threshold for this project.'
- : 'When candidates apply to this project, they will appear here. No dummy candidate data is shown.'}
+ : 'When candidates apply to this project, they will appear here.'}
  </p>
  </div>
  </div>

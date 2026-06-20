@@ -146,7 +146,7 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  try {
  const savedJob = await saveProjectToDatabase();
  setSavedJobId(savedJob.id);
- toast.success(isEditing? 'Project updated in database': 'Project posted to database');
+ toast.success(isEditing? 'Project saved': 'Project posted');
  setStep('success');
  } catch (error) {
  console.error('Failed to save project:', error);

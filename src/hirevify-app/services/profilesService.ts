@@ -251,15 +251,7 @@ class ProfilesService {
  }
  }
 
- const data = null;
- const error = null;
-
- if (error) {
- console.error('Error fetching recruiter profile:', error);
- return { data: null, error };
- }
-
- return { data, error: null };
+ return { data: null, error: null };
  }
 
  /**

@@ -243,7 +243,7 @@ export function CandidateGrowthPage({
  )}
 
  {isLoading? (
- <div className="text-center py-12 text-muted-foreground">Loading opportunities from database...</div>
+ <div className="text-center py-12 text-muted-foreground">Loading opportunities...</div>
  ): filteredOpportunities.length === 0? (
  <div className="text-center py-12">
  <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />

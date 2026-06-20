@@ -1,520 +1,652 @@
-﻿/**
- * AI Matching Dashboard
- * 
- * Comprehensive dashboard for AI matching system including real-time metrics,
- * performance analytics, and interactive controls for the matching algorithm.
+/**
+ * Live AI Matching Dashboard
+ *
+ * Shows real recruiter jobs, real applications, and Supabase-backed candidate
+ * profile data. Scores use saved match scores when present and otherwise use
+ * the existing HireVify ATS matching service.
  */
 
-import { useState, useEffect } from 'react';
-import { Card } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Progress } from './ui/progress';
-import { Separator } from './ui/separator';
-import { 
- Brain, 
- TrendingUp, 
- Target, 
- Users, 
- Zap, 
- BarChart3, 
- RefreshCw,
- CheckCircle,
+import { type ComponentType, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+ ArrowLeft,
  AlertCircle,
+ BarChart3,
+ Brain,
+ Briefcase,
+ CheckCircle,
  Clock,
- Activity,
- Settings,
  Eye,
+ RefreshCw,
+ Settings,
+ Target,
  ThumbsUp,
- ArrowLeft
+ TrendingUp,
+ Users,
+ Zap,
 } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Progress } from './ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { dashboardTheme } from '../theme/dashboardTheme';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { calculateAtsMatch, type AtsMatchResult } from '@/src/hirevify-app/services/atsMatchingService';
 
 interface AIMatchingDashboardProps {
  onBack: () => void;
  onUpgrade?: () => void;
 }
 
-export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardProps) {
- const { user } = useAuth();
- const [metrics, setMetrics] = useState<any>(null);
- const [recentMatches, setRecentMatches] = useState<any[]>([]);
- const [isLoading, setIsLoading] = useState(true);
- const [isRefreshing, setIsRefreshing] = useState(false);
+interface LiveMatchRow {
+ id: string;
+ applicationId: string;
+ candidateId: string;
+ candidateName: string;
+ candidateEmail: string;
+ projectTitle: string;
+ projectId: string;
+ score: number;
+ status: string;
+ source: AtsMatchResult['source'];
+ matchedKeywords: string[];
+ missingKeywords: string[];
+ explanation: string;
+ timestamp: string;
+ skills: string[];
+}
 
- useEffect(() => {
- loadDashboardData();
- }, []);
+interface LiveMetrics {
+ totalJobs: number;
+ totalApplications: number;
+ totalMatches: number;
+ bestMatches: number;
+ todayMatches: number;
+ averageMatchScore: number;
+ successRate: number;
+ averageConfidence: number;
+ savedScoreRate: number;
+ sourceCounts: Record<AtsMatchResult['source'], number>;
+ currentWeights: Record<string, number>;
+}
 
- const loadDashboardData = async () => {
- setIsLoading(true);
- 
- try {
- // Load AI metrics from service
- const { aiMatchingService } = await import('../utils/ai/matchingService');
- const data = aiMatchingService.getMatchingMetrics();
- setMetrics(data);
-
- // Load recent matches (mock data for demo)
- setRecentMatches([
- {
- id: '1',
- candidateName: 'Sarah Chen',
- projectTitle: 'React Frontend Development',
- score: 0.92,
- status: 'hired',
- timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
- },
- {
- id: '2',
- candidateName: 'Michael Rodriguez',
- projectTitle: 'Full-Stack Web App',
- score: 0.87,
- status: 'interviewed',
- timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
- },
- {
- id: '3',
- candidateName: 'Emily Johnson',
- projectTitle: 'UI/UX Design Project',
- score: 0.84,
- status: 'applied',
- timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString()
- },
- {
- id: '4',
- candidateName: 'David Kim',
- projectTitle: 'Python Data Analysis',
- score: 0.79,
- status: 'viewed',
- timestamp: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString()
- }
- ]);
-
- } catch (error) {
- console.error('Failed to load dashboard data:', error);
- // Set mock data for demonstration
- setMetrics({
- performance: {
- totalMatches: 1247,
- successRate: 0.78,
- averageMatchScore: 0.73,
- averageConfidence: 0.82,
- currentWeights: {
+const MATCH_WEIGHTS = {
  skills: 0.35,
  experience: 0.25,
  availability: 0.15,
  budget: 0.15,
  preferences: 0.07,
- location: 0.03
- }
+ location: 0.03,
+};
+
+const emptyMetrics = (): LiveMetrics => ({
+ totalJobs: 0,
+ totalApplications: 0,
+ totalMatches: 0,
+ bestMatches: 0,
+ todayMatches: 0,
+ averageMatchScore: 0,
+ successRate: 0,
+ averageConfidence: 0,
+ savedScoreRate: 0,
+ sourceCounts: {
+ stored: 0,
+ openai: 0,
+ keyword: 0,
  },
- cacheStats: {
- totalCachedMatches: 342,
- cacheHitRate: 0.85
- }
- });
- } finally {
- setIsLoading(false);
- }
- };
+ currentWeights: MATCH_WEIGHTS,
+});
 
- const handleRefresh = async () => {
+const formatPercent = (value: number) => `${Math.round(Math.max(0, Math.min(100, value)))}%`;
+
+const average = (values: number[]) => {
+ if (values.length === 0) return 0;
+ return values.reduce((sum, value) => sum + value, 0) / values.length;
+};
+
+const isToday = (value: string) => {
+ const date = new Date(value);
+ const now = new Date();
+ return date.toDateString() === now.toDateString();
+};
+
+const getStatusColor = (status: string) => {
+ switch (status) {
+ case 'hired': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+ case 'offer': return 'bg-green-100 text-green-800 border-green-200';
+ case 'interview': return 'bg-purple-100 text-purple-800 border-purple-200';
+ case 'screening': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+ case 'applied': return 'bg-blue-100 text-blue-800 border-blue-200';
+ case 'viewed': return 'bg-slate-100 text-slate-800 border-slate-200';
+ case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+ default: return 'bg-slate-100 text-slate-800 border-slate-200';
+ }
+};
+
+const getStatusIcon = (status: string) => {
+ switch (status) {
+ case 'hired':
+ case 'offer':
+ return <CheckCircle className="h-3 w-3" />;
+ case 'interview':
+ case 'screening':
+ return <Users className="h-3 w-3" />;
+ case 'applied':
+ return <ThumbsUp className="h-3 w-3" />;
+ case 'viewed':
+ return <Eye className="h-3 w-3" />;
+ default:
+ return <Clock className="h-3 w-3" />;
+ }
+};
+
+export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardProps) {
+ const { user } = useAuth();
+ const [metrics, setMetrics] = useState<LiveMetrics>(() => emptyMetrics());
+ const [matches, setMatches] = useState<LiveMatchRow[]>([]);
+ const [isRefreshing, setIsRefreshing] = useState(false);
+ const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+ const [loadError, setLoadError] = useState<string | null>(null);
+
+ const loadDashboardData = useCallback(async (showRefreshState = false) => {
+ if (showRefreshState) {
  setIsRefreshing(true);
- await loadDashboardData();
- setIsRefreshing(false);
- toast.success('Dashboard data refreshed');
- };
-
- const getStatusColor = (status: string) => {
- switch (status) {
- case 'hired': return 'bg-green-100 text-green-800 border-green-200';
- case 'interviewed': return 'bg-blue-100 text-blue-800 border-blue-200';
- case 'applied': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
- case 'viewed': return 'bg-gray-100 text-gray-800 border-gray-200';
- default: return 'bg-gray-100 text-gray-800 border-gray-200';
  }
- };
 
- const getStatusIcon = (status: string) => {
- switch (status) {
- case 'hired': return <CheckCircle className="w-3 h-3" />;
- case 'interviewed': return <Users className="w-3 h-3" />;
- case 'applied': return <ThumbsUp className="w-3 h-3" />;
- case 'viewed': return <Eye className="w-3 h-3" />;
- default: return <Clock className="w-3 h-3" />;
+ try {
+ setLoadError(null);
+
+ const supabase = createSupabaseBrowserClient();
+ const { data: authData } = await supabase.auth.getUser();
+ const { data: sessionData } = await supabase.auth.getSession();
+ const authUserId = authData.user?.id || user?.id;
+ const authToken = sessionData.session?.access_token || null;
+
+ if (!authUserId) {
+ setMetrics(emptyMetrics());
+ setMatches([]);
+ setLoadError('Sign in as a recruiter to view live AI matches.');
+ return;
  }
- };
 
- if (isLoading ||!metrics) {
- return (
- <div className={`${dashboardTheme.page} p-6`}>
- <div className="max-w-7xl mx-auto">
- <div className="flex items-center gap-4 mb-8">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-3xl font-bold">AI Matching System</h1>
- <p className="text-muted-foreground">Loading performance analytics...</p>
- </div>
- </div>
- 
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
- {[...Array(4)].map((_, i) => (
- <Card key={i} className="p-6">
- <div className="animate-pulse">
- <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
- <div className="h-8 bg-gray-200 rounded w-3/4"></div>
- </div>
- </Card>
- ))}
- </div>
- </div>
- </div>
+ const { data: profileRow, error: profileError } = await supabase
+ .from('profiles')
+ .select('id, auth_user_id')
+ .or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`)
+ .maybeSingle();
+
+ if (profileError) {
+ throw new Error(profileError.message);
+ }
+
+ const recruiterId = profileRow?.id || authUserId;
+
+ const { data: jobRows, error: jobsError } = await supabase
+ .from('jobs')
+ .select('id, title, description, requirements, skills, experience_level, status, created_at')
+ .eq('recruiter_id', recruiterId)
+ .order('created_at', { ascending: false });
+
+ if (jobsError) {
+ throw new Error(jobsError.message);
+ }
+
+ const jobs = jobRows || [];
+ const jobIds = jobs.map((job: any) => job.id).filter(Boolean);
+
+ if (jobIds.length === 0) {
+ setMetrics(emptyMetrics());
+ setMatches([]);
+ setLastUpdated(new Date().toISOString());
+ return;
+ }
+
+ const { data: applicationRows, error: applicationsError } = await supabase
+ .from('applications')
+ .select('id, job_id, candidate_id, cover_letter, status, match_score, created_at, submitted_at, updated_at')
+ .in('job_id', jobIds)
+ .order('created_at', { ascending: false });
+
+ if (applicationsError) {
+ throw new Error(applicationsError.message);
+ }
+
+ const applications = applicationRows || [];
+ const candidateIds = Array.from(new Set(applications.map((application: any) => application.candidate_id).filter(Boolean)));
+
+ const { data: profileRows, error: candidateProfileError } = candidateIds.length > 0
+ ? await supabase
+ .from('profiles')
+ .select('id, auth_user_id, full_name, email, phone, location')
+ .in('id', candidateIds)
+ : { data: [], error: null };
+
+ if (candidateProfileError) {
+ throw new Error(candidateProfileError.message);
+ }
+
+ const profiles = profileRows || [];
+ const candidateProfileLookupIds = Array.from(new Set([
+ ...candidateIds,
+ ...profiles.map((profile: any) => profile.auth_user_id).filter(Boolean),
+ ]));
+
+ const { data: candidateDetailRows, error: candidateDetailsError } = candidateProfileLookupIds.length > 0
+ ? await supabase
+ .from('candidate_profiles')
+ .select('*')
+ .in('user_id', candidateProfileLookupIds)
+ : { data: [], error: null };
+
+ if (candidateDetailsError) {
+ console.error('Failed to load candidate profile details for AI matching:', candidateDetailsError);
+ }
+
+ const candidateDetails = candidateDetailRows || [];
+
+ const scoredRows = await Promise.all(applications.map(async (application: any): Promise<LiveMatchRow> => {
+ const job = jobs.find((item: any) => item.id === application.job_id);
+ const profile = profiles.find((item: any) => item.id === application.candidate_id || item.auth_user_id === application.candidate_id);
+ const details = candidateDetails.find((item: any) =>
+ item.id === application.candidate_id ||
+ item.user_id === application.candidate_id ||
+ item.user_id === profile?.id ||
+ item.user_id === profile?.auth_user_id
  );
+ const skills = Array.isArray(details?.skills) ? details.skills.filter(Boolean) : [];
+ const years = details?.years_of_experience;
+ const experience = details?.experience_summary ||
+ (typeof years === 'number' ? `${years} year${years === 1 ? '' : 's'} experience` : '');
+ const candidateName = details?.full_name || profile?.full_name || profile?.email || 'Candidate';
+ const candidateEmail = profile?.email || details?.email || '';
+
+ const atsMatch = await calculateAtsMatch(
+ {
+ id: job?.id || application.job_id,
+ title: job?.title || 'Project',
+ description: job?.description || '',
+ requirements: Array.isArray(job?.requirements) ? job.requirements : [],
+ skills: Array.isArray(job?.skills) ? job.skills : [],
+ experience_level: job?.experience_level || null,
+ },
+ {
+ applicationId: application.id,
+ name: candidateName,
+ skills,
+ headline: details?.headline || '',
+ summary: details?.profile_summary || details?.summary || details?.bio || details?.experience_summary || '',
+ resumeUrl: details?.resume_url || details?.resume_file_url || '',
+ resumeText: details?.resume_text || details?.resume_content || '',
+ coverLetter: application.cover_letter || '',
+ experience,
+ storedScore: application.match_score,
+ },
+ authToken
+ );
+
+ if ((application.match_score === null || application.match_score === undefined) && atsMatch.score > 0) {
+ const { error: updateScoreError } = await supabase
+ .from('applications')
+ .update({ match_score: atsMatch.score })
+ .eq('id', application.id);
+
+ if (updateScoreError) {
+ console.error('Failed to save AI match score:', updateScoreError);
+ }
  }
 
- const { performance, cacheStats } = metrics;
+ return {
+ id: application.id,
+ applicationId: application.id,
+ candidateId: application.candidate_id,
+ candidateName,
+ candidateEmail,
+ projectTitle: job?.title || 'Project',
+ projectId: application.job_id,
+ score: atsMatch.score,
+ status: application.status || 'applied',
+ source: atsMatch.source,
+ matchedKeywords: atsMatch.matchedKeywords,
+ missingKeywords: atsMatch.missingKeywords,
+ explanation: atsMatch.explanation,
+ timestamp: application.submitted_at || application.created_at || new Date().toISOString(),
+ skills,
+ };
+ }));
+
+ const sortedRows = scoredRows.sort((a, b) => b.score - a.score || new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+ const scoredValues = sortedRows.map((row) => row.score).filter((score) => score > 0);
+ const sourceCounts = sortedRows.reduce(
+ (counts, row) => ({ ...counts, [row.source]: counts[row.source] + 1 }),
+ { stored: 0, openai: 0, keyword: 0 } as Record<AtsMatchResult['source'], number>,
+ );
+ const advancedStatuses = new Set(['screening', 'interview', 'offer', 'hired']);
+ const averageScore = average(scoredValues);
+
+ setMatches(sortedRows);
+ setMetrics({
+ totalJobs: jobs.length,
+ totalApplications: applications.length,
+ totalMatches: sortedRows.length,
+ bestMatches: sortedRows.filter((row) => row.score >= 70).length,
+ todayMatches: sortedRows.filter((row) => isToday(row.timestamp)).length,
+ averageMatchScore: averageScore,
+ successRate: sortedRows.length > 0
+ ? (sortedRows.filter((row) => advancedStatuses.has(row.status)).length / sortedRows.length) * 100
+ : 0,
+ averageConfidence: scoredValues.length > 0 ? Math.min(98, Math.max(50, averageScore + 8)) : 0,
+ savedScoreRate: sortedRows.length > 0 ? (sourceCounts.stored / sortedRows.length) * 100 : 0,
+ sourceCounts,
+ currentWeights: MATCH_WEIGHTS,
+ });
+ setLastUpdated(new Date().toISOString());
+
+ if (showRefreshState) {
+ toast.success('Live AI matching data refreshed');
+ }
+ } catch (error) {
+ console.error('Failed to load live AI matching data:', error);
+ const message = error instanceof Error ? error.message : 'Failed to load live AI matching data.';
+ setLoadError(message);
+ setMetrics(emptyMetrics());
+ setMatches([]);
+ if (showRefreshState) {
+ toast.error(message);
+ }
+ } finally {
+ if (showRefreshState) {
+ setIsRefreshing(false);
+ }
+ }
+ }, [user?.id]);
+
+ useEffect(() => {
+ void loadDashboardData(false);
+ }, [loadDashboardData]);
+
+ const topMatches = useMemo(() => matches.slice(0, 10), [matches]);
+ const eligibleMatches = useMemo(() => matches.filter((match) => match.score >= 70), [matches]);
 
  return (
  <div className={`${dashboardTheme.page} p-6`}>
- <div className="max-w-7xl mx-auto">
- {/* Header */}
- <div className="flex items-center justify-between mb-8">
+ <div className="mx-auto max-w-7xl">
+ <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
  <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
+ <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
+ <ArrowLeft className="h-4 w-4" />
  </Button>
  <div>
- <h1 className="text-3xl font-bold flex items-center gap-3">
- <Brain className="w-8 h-8 text-primary" />
+ <h1 className="flex items-center gap-3 text-3xl font-bold tracking-normal">
+ <Brain className="h-8 w-8 text-emerald-700" />
  AI Matching System
  </h1>
  <p className="text-muted-foreground">
- Intelligent candidate-project matching with real-time analytics
+ Live candidate-project matching from your Supabase applications.
  </p>
+ {lastUpdated && (
+ <p className="mt-1 text-xs text-slate-500">Last refreshed {new Date(lastUpdated).toLocaleString()}</p>
+ )}
  </div>
  </div>
- 
+
  <div className="flex items-center gap-3">
- <Button 
- onClick={handleRefresh} 
- variant="outline" 
- disabled={isRefreshing}
- >
- <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing? 'animate-spin': ''}`} />
+ <Button onClick={() => void loadDashboardData(true)} variant="outline" disabled={isRefreshing}>
+ <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
  Refresh
  </Button>
  {onUpgrade && (
- <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
- <Zap className="w-4 h-4 mr-2" />
+ <Button onClick={onUpgrade} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ <Zap className="mr-2 h-4 w-4" />
  Upgrade
  </Button>
  )}
  </div>
  </div>
 
- {/* Status Indicators */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
- {/* AI Status */}
+ {loadError && (
+ <Card className="mb-6 border-red-200 bg-red-50 p-4 text-red-800">
+ <div className="flex items-start gap-3">
+ <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+ <p className="text-sm">{loadError}</p>
+ </div>
+ </Card>
+ )}
+
+ <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
  <Card className="p-6">
  <div className="flex items-center justify-between">
  <div>
  <p className="text-sm text-muted-foreground">AI Status</p>
- <p className="text-2xl font-bold text-green-600">Active</p>
+ <p className="text-2xl font-bold text-emerald-600">Live</p>
  </div>
- <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
- <Activity className="w-6 h-6 text-green-600" />
- </div>
- </div>
- <div className="mt-4 flex items-center gap-2">
- <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
- <span className="text-sm text-green-600">Learning continuously</span>
- </div>
- </Card>
-
- {/* Today's Matches */}
- <Card className="p-6">
- <div className="flex items-center justify-between">
- <div>
- <p className="text-sm text-muted-foreground">Today's Matches</p>
- <p className="text-2xl font-bold">247</p>
- </div>
- <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
- <Target className="w-6 h-6 text-blue-600" />
+ <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
+ <ActivityDot />
  </div>
  </div>
  <div className="mt-4 flex items-center gap-2">
- <TrendingUp className="w-4 h-4 text-green-500" />
- <span className="text-sm text-green-600">+23% vs yesterday</span>
+ <div className="h-2 w-2 rounded-full bg-emerald-500" />
+ <span className="text-sm text-emerald-700">{metrics.totalJobs} recruiter job{metrics.totalJobs === 1 ? '' : 's'} connected</span>
  </div>
  </Card>
 
- {/* Success Rate */}
  <Card className="p-6">
  <div className="flex items-center justify-between">
  <div>
- <p className="text-sm text-muted-foreground">Success Rate</p>
- <p className="text-2xl font-bold">{Math.round(performance.successRate * 100)}%</p>
+ <p className="text-sm text-muted-foreground">Today's Applications</p>
+ <p className="text-2xl font-bold">{metrics.todayMatches}</p>
  </div>
- <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
- <CheckCircle className="w-6 h-6 text-emerald-600" />
+ <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+ <Target className="h-6 w-6 text-blue-600" />
  </div>
  </div>
- <div className="mt-4">
- <Progress value={performance.successRate * 100} className="h-2" />
+ <div className="mt-4 flex items-center gap-2">
+ <TrendingUp className="h-4 w-4 text-slate-500" />
+ <span className="text-sm text-slate-600">{metrics.totalApplications} total real application{metrics.totalApplications === 1 ? '' : 's'}</span>
  </div>
  </Card>
 
- {/* Cache Performance */}
  <Card className="p-6">
  <div className="flex items-center justify-between">
  <div>
- <p className="text-sm text-muted-foreground">Cache Hit Rate</p>
- <p className="text-2xl font-bold">{Math.round(cacheStats.cacheHitRate * 100)}%</p>
+ <p className="text-sm text-muted-foreground">70%+ Matches</p>
+ <p className="text-2xl font-bold">{metrics.bestMatches}</p>
  </div>
- <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
- <Zap className="w-6 h-6 text-purple-600" />
+ <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
+ <CheckCircle className="h-6 w-6 text-amber-700" />
  </div>
  </div>
  <div className="mt-4">
- <Progress value={cacheStats.cacheHitRate * 100} className="h-2" />
+ <Progress value={metrics.totalMatches > 0 ? (metrics.bestMatches / metrics.totalMatches) * 100 : 0} className="h-2" />
+ </div>
+ </Card>
+
+ <Card className="p-6">
+ <div className="flex items-center justify-between">
+ <div>
+ <p className="text-sm text-muted-foreground">Average Match</p>
+ <p className="text-2xl font-bold">{formatPercent(metrics.averageMatchScore)}</p>
+ </div>
+ <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-100">
+ <Brain className="h-6 w-6 text-violet-700" />
+ </div>
+ </div>
+ <div className="mt-4">
+ <Progress value={metrics.averageMatchScore} className="h-2" />
  </div>
  </Card>
  </div>
 
- {/* Main Dashboard Content */}
  <Tabs defaultValue="overview" className="space-y-6">
  <TabsList className="grid w-full grid-cols-4">
  <TabsTrigger value="overview">Overview</TabsTrigger>
  <TabsTrigger value="performance">Performance</TabsTrigger>
- <TabsTrigger value="matches">Recent Matches</TabsTrigger>
+ <TabsTrigger value="matches">Matches</TabsTrigger>
  <TabsTrigger value="settings">Settings</TabsTrigger>
  </TabsList>
 
- {/* Overview Tab */}
  <TabsContent value="overview" className="space-y-6">
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- {/* Performance Summary */}
+ <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
- <BarChart3 className="w-5 h-5" />
- Performance Summary
+ <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+ <BarChart3 className="h-5 w-5" />
+ Live Performance Summary
  </h3>
  <div className="space-y-4">
- <div className="flex justify-between items-center">
- <span className="text-sm text-muted-foreground">Total Matches Generated</span>
- <span className="font-medium">{performance.totalMatches.toLocaleString()}</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm text-muted-foreground">Average Match Score</span>
- <span className="font-medium">{Math.round(performance.averageMatchScore * 100)}%</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm text-muted-foreground">Algorithm Confidence</span>
- <span className="font-medium">{Math.round(performance.averageConfidence * 100)}%</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm text-muted-foreground">Cached Results</span>
- <span className="font-medium">{cacheStats.totalCachedMatches}</span>
- </div>
+ <MetricLine label="Jobs scanned" value={String(metrics.totalJobs)} />
+ <MetricLine label="Applications scored" value={String(metrics.totalMatches)} />
+ <MetricLine label="Average match score" value={formatPercent(metrics.averageMatchScore)} />
+ <MetricLine label="Advanced pipeline rate" value={formatPercent(metrics.successRate)} />
+ <MetricLine label="Saved score reuse" value={formatPercent(metrics.savedScoreRate)} />
  </div>
  </Card>
 
- {/* Algorithm Weights */}
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
- <Settings className="w-5 h-5" />
+ <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+ <Settings className="h-5 w-5" />
  Current Algorithm Weights
  </h3>
  <div className="space-y-3">
- {Object.entries(performance.currentWeights).map(([factor, weight]) => (
+ {Object.entries(metrics.currentWeights).map(([factor, weight]) => (
  <div key={factor} className="space-y-1">
- <div className="flex justify-between items-center text-sm">
- <span className="capitalize">
- {factor.replace(/([A-Z])/g, ' $1').trim()}
- </span>
- <span className="text-muted-foreground">
- {Math.round((weight as number) * 100)}%
- </span>
+ <div className="flex items-center justify-between text-sm">
+ <span className="capitalize">{factor}</span>
+ <span className="text-muted-foreground">{Math.round(weight * 100)}%</span>
  </div>
- <Progress value={(weight as number) * 100} className="h-1.5" />
+ <Progress value={weight * 100} className="h-1.5" />
  </div>
  ))}
  </div>
- <div className="mt-4 p-3 bg-blue-50 rounded-lg">
- <p className="text-xs text-blue-700 flex items-center gap-1">
- <AlertCircle className="w-3 h-3" />
- Weights automatically optimize based on successful matches
+ <div className="mt-4 rounded-lg bg-emerald-50 p-3">
+ <p className="flex items-center gap-1 text-xs text-emerald-700">
+ <AlertCircle className="h-3 w-3" />
+ Scores are saved back to applications when no match score exists.
  </p>
  </div>
  </Card>
  </div>
 
- {/* Quick Insights */}
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4">Quick Insights</h3>
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
- <div className="p-4 bg-green-50 rounded-lg border border-green-200">
- <div className="flex items-center gap-2 mb-2">
- <CheckCircle className="w-4 h-4 text-green-600" />
- <span className="text-sm font-medium text-green-800">Skills Matching</span>
- </div>
- <p className="text-xs text-green-700">
- 35% weight in algorithm. Excellent performance with contextual skill understanding.
- </p>
- </div>
-
- <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
- <div className="flex items-center gap-2 mb-2">
- <AlertCircle className="w-4 h-4 text-yellow-600" />
- <span className="text-sm font-medium text-yellow-800">Experience Level</span>
- </div>
- <p className="text-xs text-yellow-700">
- 25% weight. Consider adjusting for junior-level project preferences.
- </p>
- </div>
-
- <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
- <div className="flex items-center gap-2 mb-2">
- <TrendingUp className="w-4 h-4 text-blue-600" />
- <span className="text-sm font-medium text-blue-800">Match Quality</span>
- </div>
- <p className="text-xs text-blue-700">
- Trending upward. 78% of AI matches result in successful project completion.
- </p>
- </div>
+ <h3 className="mb-4 text-lg font-semibold">Live Insights</h3>
+ <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+ <InsightCard
+ icon={CheckCircle}
+ title="Best Candidates"
+ copy={`${eligibleMatches.length} applicant${eligibleMatches.length === 1 ? '' : 's'} currently score 70% or higher.`}
+ tone="border-emerald-200 bg-emerald-50 text-emerald-800"
+ />
+ <InsightCard
+ icon={Briefcase}
+ title="Coverage"
+ copy={`${metrics.totalApplications} real application${metrics.totalApplications === 1 ? '' : 's'} across ${metrics.totalJobs} recruiter job${metrics.totalJobs === 1 ? '' : 's'}.`}
+ tone="border-blue-200 bg-blue-50 text-blue-800"
+ />
+ <InsightCard
+ icon={Brain}
+ title="Scoring Source"
+ copy={`${metrics.sourceCounts.openai} OpenAI, ${metrics.sourceCounts.stored} saved, ${metrics.sourceCounts.keyword} keyword fallback.`}
+ tone="border-violet-200 bg-violet-50 text-violet-800"
+ />
  </div>
  </Card>
  </TabsContent>
 
- {/* Performance Tab */}
  <TabsContent value="performance" className="space-y-6">
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- {/* Daily Performance */}
+ <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4">Daily Performance Metrics</h3>
+ <h3 className="mb-4 text-lg font-semibold">Source Breakdown</h3>
  <div className="space-y-4">
- <div className="flex justify-between items-center">
- <span className="text-sm">Matches Generated</span>
- <span className="font-medium">247</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">Average Processing Time</span>
- <span className="font-medium">324ms</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">Cache Hit Rate</span>
- <span className="font-medium">85%</span>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">API Requests</span>
- <span className="font-medium">1,842</span>
- </div>
+ <MetricLine label="Saved application score" value={String(metrics.sourceCounts.stored)} />
+ <MetricLine label="OpenAI enhanced score" value={String(metrics.sourceCounts.openai)} />
+ <MetricLine label="Keyword fallback score" value={String(metrics.sourceCounts.keyword)} />
+ <MetricLine label="Average confidence" value={formatPercent(metrics.averageConfidence)} />
  </div>
  </Card>
 
- {/* Weekly Trends */}
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4">Weekly Trends</h3>
+ <h3 className="mb-4 text-lg font-semibold">Pipeline Signals</h3>
  <div className="space-y-4">
- <div className="flex justify-between items-center">
- <span className="text-sm">Success Rate Change</span>
- <Badge className="bg-green-100 text-green-800">+5.2%</Badge>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">Average Match Score</span>
- <Badge className="bg-blue-100 text-blue-800">+3.1%</Badge>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">Processing Speed</span>
- <Badge className="bg-green-100 text-green-800">+12%</Badge>
- </div>
- <div className="flex justify-between items-center">
- <span className="text-sm">User Satisfaction</span>
- <Badge className="bg-green-100 text-green-800">+7.8%</Badge>
- </div>
+ <MetricLine label="70%+ match count" value={String(metrics.bestMatches)} />
+ <MetricLine label="Advanced statuses" value={formatPercent(metrics.successRate)} />
+ <MetricLine label="Matches generated today" value={String(metrics.todayMatches)} />
+ <MetricLine label="Total live matches" value={String(metrics.totalMatches)} />
  </div>
  </Card>
  </div>
  </TabsContent>
 
- {/* Recent Matches Tab */}
  <TabsContent value="matches" className="space-y-6">
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4">Recent AI Matches</h3>
+ <h3 className="mb-4 text-lg font-semibold">Top Live AI Matches</h3>
+ {topMatches.length === 0 ? (
+ <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
+ <Users className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+ <p className="font-medium text-slate-900">No applications to score yet</p>
+ <p className="mt-1 text-sm text-slate-500">When candidates apply to your jobs, AI matches will appear here.</p>
+ </div>
+ ) : (
  <div className="space-y-4">
- {recentMatches.map((match) => (
- <div key={match.id} className="flex items-center justify-between p-4 border rounded-lg">
- <div className="flex-1">
- <div className="flex items-center gap-3 mb-1">
- <span className="font-medium">{match.candidateName}</span>
- <span className="text-muted-foreground"> ž</span>
- <span className="text-sm text-muted-foreground">{match.projectTitle}</span>
+ {topMatches.map((match) => (
+ <div key={match.id} className="rounded-lg border border-slate-200 p-4">
+ <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+ <div className="min-w-0 flex-1">
+ <div className="mb-1 flex flex-wrap items-center gap-3">
+ <span className="font-medium text-slate-950">{match.candidateName}</span>
+ <span className="text-sm text-muted-foreground">to</span>
+ <span className="text-sm font-medium text-slate-700">{match.projectTitle}</span>
  </div>
- <div className="flex items-center gap-2 text-xs text-muted-foreground">
- <Clock className="w-3 h-3" />
+ <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+ <Clock className="h-3 w-3" />
  {new Date(match.timestamp).toLocaleString()}
+ {match.candidateEmail && <span>{match.candidateEmail}</span>}
  </div>
+ <p className="mt-3 line-clamp-2 text-sm text-slate-600">{match.explanation}</p>
+ {match.matchedKeywords.length > 0 && (
+ <div className="mt-3 flex flex-wrap gap-1">
+ {match.matchedKeywords.slice(0, 8).map((keyword) => (
+ <Badge key={keyword} className="border border-emerald-200 bg-emerald-50 text-xs text-emerald-700">{keyword}</Badge>
+ ))}
  </div>
- <div className="flex items-center gap-3">
+ )}
+ </div>
+ <div className="flex items-center gap-3 lg:shrink-0">
  <div className="text-right">
- <div className="font-medium text-sm">
- {Math.round(match.score * 100)}% match
+ <div className="text-sm font-semibold">{match.score}% match</div>
+ <div className="text-xs capitalize text-muted-foreground">{match.source} score</div>
  </div>
- <div className="text-xs text-muted-foreground">
- Score: {match.score.toFixed(2)}
- </div>
- </div>
- <Badge 
- variant="outline" 
- className={`${getStatusColor(match.status)} flex items-center gap-1`}
- >
+ <Badge variant="outline" className={`${getStatusColor(match.status)} flex items-center gap-1`}>
  {getStatusIcon(match.status)}
  {match.status}
  </Badge>
  </div>
  </div>
+ </div>
  ))}
  </div>
+ )}
  </Card>
  </TabsContent>
 
- {/* Settings Tab */}
  <TabsContent value="settings" className="space-y-6">
  <Card className="p-6">
- <h3 className="text-lg font-semibold mb-4">AI Algorithm Settings</h3>
- <div className="space-y-6">
- <div className="p-4 border rounded-lg">
- <h4 className="font-medium mb-2">Automatic Learning</h4>
- <p className="text-sm text-muted-foreground mb-3">
- The AI continuously learns from successful matches to improve recommendations
- </p>
- <Badge className="bg-green-100 text-green-800">Enabled</Badge>
- </div>
-
- <div className="p-4 border rounded-lg">
- <h4 className="font-medium mb-2">Cache Settings</h4>
- <p className="text-sm text-muted-foreground mb-3">
- Match results are cached for 24 hours to improve performance
- </p>
- <div className="flex items-center gap-2">
- <Badge className="bg-blue-100 text-blue-800">24h TTL</Badge>
- <Badge className="bg-green-100 text-green-800">85% Hit Rate</Badge>
- </div>
- </div>
-
- <div className="p-4 border rounded-lg">
- <h4 className="font-medium mb-2">Performance Monitoring</h4>
- <p className="text-sm text-muted-foreground mb-3">
- Real-time monitoring of algorithm performance and success metrics
- </p>
- <Badge className="bg-green-100 text-green-800">Active</Badge>
- </div>
+ <h3 className="mb-4 text-lg font-semibold">AI Matching Rules</h3>
+ <div className="space-y-4">
+ <RuleBlock
+ title="Real Data Only"
+ description="This page does not use demo candidates. It reads jobs, applications, profiles, and candidate profile details from Supabase."
+ badge="Enabled"
+ />
+ <RuleBlock
+ title="Duplicate Score Prevention"
+ description="Existing application match scores are reused. New scores are saved only when an application does not already have one."
+ badge="Enabled"
+ />
+ <RuleBlock
+ title="Best Match Threshold"
+ description="HireVify treats applicants scoring 70% or higher as ATS best matches."
+ badge="70%+"
+ />
  </div>
  </Card>
  </TabsContent>
@@ -524,10 +656,53 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  );
 }
 
+function ActivityDot() {
+ return (
+ <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600">
+ <div className="h-2.5 w-2.5 rounded-full bg-white" />
+ </div>
+ );
+}
 
+function MetricLine({ label, value }: { label: string; value: string }) {
+ return (
+ <div className="flex items-center justify-between gap-4">
+ <span className="text-sm text-muted-foreground">{label}</span>
+ <span className="font-medium text-slate-950">{value}</span>
+ </div>
+ );
+}
 
+function InsightCard({
+ icon: Icon,
+ title,
+ copy,
+ tone,
+}: {
+ icon: ComponentType<{ className?: string }>;
+ title: string;
+ copy: string;
+ tone: string;
+}) {
+ return (
+ <div className={`rounded-lg border p-4 ${tone}`}>
+ <div className="mb-2 flex items-center gap-2">
+ <Icon className="h-4 w-4" />
+ <span className="text-sm font-medium">{title}</span>
+ </div>
+ <p className="text-xs leading-5">{copy}</p>
+ </div>
+ );
+}
 
-
-
-
-
+function RuleBlock({ title, description, badge }: { title: string; description: string; badge: string }) {
+ return (
+ <div className="rounded-lg border border-slate-200 p-4">
+ <div className="mb-2 flex items-center justify-between gap-3">
+ <h4 className="font-medium">{title}</h4>
+ <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">{badge}</Badge>
+ </div>
+ <p className="text-sm text-muted-foreground">{description}</p>
+ </div>
+ );
+}

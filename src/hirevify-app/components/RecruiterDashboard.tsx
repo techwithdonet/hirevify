@@ -26,7 +26,6 @@ import {
  Brain,
  Scan,
  Zap,
- Loader,
  BookOpen
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
@@ -39,7 +38,6 @@ import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsS
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { CommunicationsAPI, type Conversation } from '@/src/hirevify-app/utils/api/communications';
 import { toast } from 'sonner';
-import { LoadingState } from './layout/AppLayout';
 
 interface Project {
  id: string;
@@ -99,7 +97,6 @@ export function RecruiterDashboard({
  unreadMessages = 0
 }: RecruiterDashboardProps) {
  const { user } = useAuth();
- const [isLoading, setIsLoading] = useState(true);
  const [recruiterProfile, setRecruiterProfile] = useState<any>(null);
  const [postedJobs, setPostedJobs] = useState<any[]>([]);
  const [applicants, setApplicants] = useState<any[]>([]);
@@ -107,7 +104,7 @@ export function RecruiterDashboard({
  const [stats, setStats] = useState<any>(null);
  const [subscription, setSubscription] = useState<any>(null);
  const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
-const { conversations: messageConversations, isLoading: isMessagesLoading } = useConversations();
+const { conversations: messageConversations } = useConversations();
  const { unreadCount: unreadNotificationsCount } = useNotifications();
 
  const totalUnreadMessages = messageConversations.reduce(
@@ -145,7 +142,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  if (!user?.id) return;
 
  try {
- setIsLoading(true);
  const supabase = createSupabaseBrowserClient();
  const { data: profileRow } = await supabase.from('profiles').select('id').eq('auth_user_id', user.id).maybeSingle();
  const recruiterId = profileRow?.id || user.id;
@@ -192,8 +188,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  } catch (error) {
  console.error('Error loading recruiter data:', error);
  toast.error('Failed to load dashboard data');
- } finally {
- setIsLoading(false);
  }
  };
 
@@ -306,14 +300,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  return date.toLocaleDateString();
  };
 
- if (isLoading) {
- return (
- <div className="hv-page-shell">
- <LoadingState label="Loading your dashboard..." className="min-h-screen" />
- </div>
- );
- }
-
  return (
  <div className="hv-page-shell flex flex-col bg-[linear-gradient(135deg,#f0fdf4_0%,#eff6ff_42%,#fff7ed_100%)]">
  {/* Header */}
@@ -377,16 +363,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
 
  {/* Main Content */}
  <main className="hv-container flex-1 py-6 sm:py-8">
- {isLoading && (
- <div className="flex items-center justify-center py-24">
- <div className="flex flex-col items-center gap-4">
- <Loader className="w-12 h-12 animate-spin text-emerald-600" />
- <p className="text-gray-600">Loading your dashboard...</p>
- </div>
- </div>
- )}
-
- {!isLoading && (
  <>
  <div className="mb-6 overflow-hidden rounded-lg border border-emerald-100 bg-white shadow-sm">
  <div className="grid gap-0 lg:grid-cols-[1.4fr_0.9fr]">
@@ -572,13 +548,11 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  </div>
  </div>
  <div className="space-y-1">
- {isMessagesLoading? (
- <div className="p-5 text-sm text-slate-500">Loading real conversations...</div>
- ): messageConversations.length === 0? (
+ {messageConversations.length === 0? (
  <div className="p-5 text-center">
  <MessageSquare className="mx-auto mb-3 h-8 w-8 text-slate-300" />
- <p className="text-sm font-medium text-slate-900">No real conversations yet</p>
- <p className="mt-1 text-xs text-slate-500">Candidate messages from Supabase will appear here.</p>
+ <p className="text-sm font-medium text-slate-900">No conversations yet</p>
+ <p className="mt-1 text-xs text-slate-500">Candidate messages will appear here.</p>
  </div>
  ): (
  messageConversations.slice(0, 5).map((conversation) => (
@@ -633,7 +607,6 @@ const { conversations: messageConversations, isLoading: isMessagesLoading } = us
  </div>
  </div>
  </>
- )}
  </main>
  </div>
  );

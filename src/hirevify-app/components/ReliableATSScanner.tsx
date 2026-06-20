@@ -37,7 +37,11 @@ import {
 import { toast } from 'sonner';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import { ReliableDocumentParser, type ReliableResumeData } from '../utils/ats/reliableDocumentParser';
-import { extractResumeText } from '../utils/ats/resumeTextExtractor';
+import {
+ extractResumeText,
+ RESUME_UPLOAD_MAX_SIZE_BYTES,
+ RESUME_UPLOAD_MAX_SIZE_MB,
+} from '../utils/ats/resumeTextExtractor';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { useAuth } from './AuthProvider';
 
@@ -144,6 +148,8 @@ const safeSkillProficiency = (value: unknown): 'beginner' | 'intermediate' | 'ad
  return 'intermediate';
 };
 
+const formatFileSize = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+
 export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableATSScannerProps) {
  const { user } = useAuth();
  const [isProcessing, setIsProcessing] = useState(false);
@@ -155,7 +161,6 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
  const [jobs, setJobs] = useState<JobOption[]>([]);
  const [selectedJobId, setSelectedJobId] = useState('');
- const [isLoadingJobs, setIsLoadingJobs] = useState(false);
  const [jobDescription, setJobDescription] = useState('');
  const [optimizedCvText, setOptimizedCvText] = useState('');
  const [optimizedResumeData, setOptimizedResumeData] = useState<OptimizedResumeData | null>(null);
@@ -173,7 +178,6 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
 
  const loadJobs = async () => {
  try {
- setIsLoadingJobs(true);
  const supabase = createSupabaseBrowserClient();
  const { data, error } = await supabase
  .from('jobs')
@@ -200,8 +204,6 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  console.error('Failed to load jobs for ATS scanner:', error);
  toast.error(error instanceof Error ? error.message : 'Failed to load jobs.');
  setJobs([]);
- } finally {
- setIsLoadingJobs(false);
  }
  };
 
@@ -286,11 +288,20 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  const files = isBulkJobScanner ? selectedFiles : selectedFiles.slice(0, 1);
  if (files.length === 0) return;
 
- // Simple file validation
- const maxSize = 10 * 1024 * 1024; // 10MB
- const tooLarge = files.find((file) => file.size > maxSize);
+ const tooLarge = files.find((file) => file.size > RESUME_UPLOAD_MAX_SIZE_BYTES);
  if (tooLarge) {
- setError('File too large. Maximum size is 10MB.');
+ const message = `${tooLarge.name} is ${formatFileSize(tooLarge.size)}. Maximum CV size is ${RESUME_UPLOAD_MAX_SIZE_MB}MB.`;
+ setUploadedFile(null);
+ setUploadedFiles([]);
+ setScanResult(null);
+ setRankedResults([]);
+ setOptimizedCvText('');
+ setOptimizedResumeData(null);
+ setError(message);
+ if (fileInputRef.current) {
+ fileInputRef.current.value = '';
+ }
+ toast.error('File too large', { description: message });
  return;
  }
 
@@ -902,7 +913,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  } else if (errorMessage.includes('corrupted')) {
  errorMessage = 'The file appears to be corrupted. Please try saving your resume as a.txt file.';
  } else if (errorMessage.includes('size')) {
- errorMessage = 'File is too large. Please try with a smaller file (under 10MB).';
+ errorMessage = `File is too large. Please try with a smaller file under ${RESUME_UPLOAD_MAX_SIZE_MB}MB.`;
  }
  
  setError(errorMessage);
@@ -1013,9 +1024,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  </p>
  </CardHeader>
  <CardContent className="space-y-4">
- {isLoadingJobs ? (
- <div className={dashboardTheme.loadingState}>Loading published jobs...</div>
- ) : jobs.length === 0 ? (
+ {jobs.length === 0 ? (
  <div className={dashboardTheme.emptyState}>No published jobs are available for matching yet.</div>
  ) : (
  <>
@@ -1107,14 +1116,17 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  : 'Drop your resume here or click to browse'}
  </p>
  <p className="text-sm text-muted-foreground mb-4">
- Best with .TXT, text-based .PDF, and .DOCX files. Max 10MB per file.
+ Best with .TXT, text-based .PDF, and .DOCX files. Max {RESUME_UPLOAD_MAX_SIZE_MB}MB per file.
  </p>
  {uploadedFiles.length > 0 && (
  <div className="mx-auto mb-4 max-w-2xl rounded-xl border border-slate-200 bg-white p-3 text-left">
  <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Selected files</p>
  <div className="max-h-28 space-y-1 overflow-y-auto text-sm text-slate-700">
  {uploadedFiles.map((file) => (
- <div key={`${file.name}-${file.size}`} className="truncate">{file.name}</div>
+ <div key={`${file.name}-${file.size}`} className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-2 py-1.5">
+ <span className="truncate">{file.name}</span>
+ <span className="shrink-0 text-xs text-slate-500">{formatFileSize(file.size)}</span>
+ </div>
  ))}
  </div>
  </div>
@@ -1584,7 +1596,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  <CardContent>
  <ul className="space-y-2 text-sm text-muted-foreground">
  <li><strong>Best format:</strong> Use a text-based PDF, DOCX, or TXT resume.</li>
- <li><strong>File size:</strong> Keep files under 10MB for optimal performance.</li>
+ <li><strong>File size:</strong> Keep files under {RESUME_UPLOAD_MAX_SIZE_MB}MB for optimal performance.</li>
  <li><strong>Structure:</strong> Use clear section headers such as Experience, Education, and Skills.</li>
  <li><strong>Dates:</strong> Include years in YYYY format, for example 2020-2023.</li>
  <li><strong>Contact info:</strong> Include email, phone, and location clearly.</li>

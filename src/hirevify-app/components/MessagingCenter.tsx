@@ -68,7 +68,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
         return selected || stillExists || data[0] || null;
       });
     } catch (error) {
-      console.error('Failed to load real conversations:', error);
+      console.error('Failed to load conversations:', error);
       setConversations([]);
       onUpdateUnreadCount(0);
     } finally {
@@ -108,7 +108,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
           current.map((c) => (c.id === selectedConversation.id ? { ...c, unreadCount: 0 } : c)),
         );
       } catch (error) {
-        console.error('Failed to load real message thread:', error);
+        console.error('Failed to load message thread:', error);
         setMessages([]);
       } finally {
         setIsThreadLoading(false);
@@ -191,9 +191,9 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
       setNewMessage('');
       setSelectedFile(null);
       await loadConversations();
-      toast.success('Message sent');
+      toast.success('Sent');
     } catch (error) {
-      console.error('Failed to send real message:', error);
+      console.error('Failed to send message:', error);
       toast.error(error instanceof Error ? error.message : 'Message was not sent.');
     } finally {
       setIsSending(false);
@@ -238,7 +238,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
               <h1 className="text-2xl font-semibold text-slate-950">HireVify Inbox</h1>
             </div>
           </div>
-          <Badge className="border border-blue-200 bg-blue-50 text-blue-700">Real conversations only</Badge>
+          <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">HireVify Chat</Badge>
         </div>
       </header>
 
@@ -258,11 +258,11 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
 
           <ScrollArea className="min-h-0 flex-1">
             {isLoading ? (
-              <div className="p-6 text-sm text-slate-500">Loading real conversations...</div>
+              <div className="p-6 text-sm text-slate-500">Loading conversations...</div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageCircle className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                <p className="font-semibold text-slate-950">No real conversations yet</p>
+                <p className="font-semibold text-slate-950">No conversations yet</p>
                 <p className="mt-1 text-sm text-slate-500">When a candidate or recruiter sends a message, it will appear here.</p>
               </div>
             ) : (
@@ -333,12 +333,12 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
 
               <ScrollArea className="min-h-0 flex-1 p-5">
                 {isThreadLoading ? (
-                  <div className="text-sm text-slate-500">Loading real messages...</div>
+                  <div className="text-sm text-slate-500">Loading messages...</div>
                 ) : messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-center">
                     <div>
                       <MessageCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-                      <p className="font-semibold text-slate-950">No real messages in this thread</p>
+                      <p className="font-semibold text-slate-950">No messages in this thread</p>
                       <p className="mt-1 text-sm text-slate-500">Send the first message to start the conversation.</p>
                     </div>
                   </div>
@@ -459,7 +459,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
               <div>
                 <MessageCircle className="mx-auto mb-4 h-16 w-16 text-slate-300" />
                 <h2 className="text-lg font-semibold text-slate-950">Select a conversation</h2>
-                <p className="mt-1 text-sm text-slate-500">Real messages from Supabase will open here.</p>
+                <p className="mt-1 text-sm text-slate-500">HireVify messages will open here.</p>
               </div>
             </div>
           )}

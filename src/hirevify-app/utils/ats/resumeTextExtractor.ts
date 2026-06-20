@@ -4,6 +4,9 @@ export type ResumeTextExtractionResult = {
   warnings: string[];
 };
 
+export const RESUME_UPLOAD_MAX_SIZE_MB = 30;
+export const RESUME_UPLOAD_MAX_SIZE_BYTES = RESUME_UPLOAD_MAX_SIZE_MB * 1024 * 1024;
+
 function cleanExtractedText(text: string) {
   return String(text || '')
     .replace(/\r\n/g, '\n')
@@ -74,8 +77,8 @@ export async function extractResumeText(file: File): Promise<ResumeTextExtractio
     throw new Error('The selected file is empty.');
   }
 
-  if (file.size > 10 * 1024 * 1024) {
-    throw new Error('File is too large. Please upload a file under 10MB.');
+  if (file.size > RESUME_UPLOAD_MAX_SIZE_BYTES) {
+    throw new Error(`File is too large. Please upload a file under ${RESUME_UPLOAD_MAX_SIZE_MB}MB.`);
   }
 
   const attempts: Array<{ method: string; run: () => Promise<string> }> = [];

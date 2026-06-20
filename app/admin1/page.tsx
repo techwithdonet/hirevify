@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/src/hirevify-app/components/AuthProvider";
 import { Button } from "@/src/hirevify-app/components/ui/button";
+import { Toaster } from "@/src/hirevify-app/components/ui/sonner";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -10,7 +11,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
 } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 
 function AdminPanel() {
   const { signIn, setUser } = useAuth();

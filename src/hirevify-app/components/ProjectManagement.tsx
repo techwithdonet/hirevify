@@ -702,7 +702,7 @@ export function ProjectManagement({
  Your Projects
  </CardTitle>
  <p className="text-sm text-gray-500 mt-1">
- {jobs.length} project{jobs.length === 1? '': 's'} saved in database
+ {jobs.length} project{jobs.length === 1? '': 's'} saved
  </p>
  </div>
 
@@ -717,7 +717,7 @@ export function ProjectManagement({
  {isLoading? (
  <div className="py-16 flex flex-col items-center justify-center text-center">
  <Loader className="w-10 h-10 animate-spin text-emerald-600 mb-4" />
- <p className="text-gray-600">Loading projects from database...</p>
+ <p className="text-gray-600">Loading projects...</p>
  </div>
  ): jobs.length === 0? (
  <div className="text-center py-16">

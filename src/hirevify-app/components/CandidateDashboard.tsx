@@ -16,8 +16,7 @@ import {
  Crown,
  CheckCircle,
  Brain,
- Sparkles,
- Loader
+ Sparkles
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -34,7 +33,6 @@ import { usePremiumAccess } from '../utils/premium';
 import { useConversations } from '../hooks/useConversations';
 import { useNotifications } from '../hooks/useNotifications';
 import { toast } from 'sonner';
-import { LoadingState } from './layout/AppLayout';
 
 interface CandidateDashboardProps {
  onBuildResume: () => void;
@@ -107,7 +105,6 @@ export function CandidateDashboard({
  const [applications, setApplications] = useState<any[]>([]);
  const [portfolio, setPortfolio] = useState<any[]>([]);
  const [savedJobs, setSavedJobs] = useState<any[]>([]);
- const [isLoading, setIsLoading] = useState(true);
  const [showATSDialog, setShowATSDialog] = useState(false);
 
  // Load all candidate data from Supabase
@@ -116,8 +113,6 @@ export function CandidateDashboard({
  if (!user?.id) return;
 
  try {
- setIsLoading(true);
-
  // Load subscription
  const subData = await subscriptionsService.getUserSubscription(user.id);
  if (subData.data) {
@@ -153,8 +148,6 @@ export function CandidateDashboard({
  } catch (error) {
  console.error('Error loading candidate data:', error);
  toast.error('Failed to load dashboard data');
- } finally {
- setIsLoading(false);
  }
  };
 
@@ -164,14 +157,6 @@ export function CandidateDashboard({
  const candidateProfileCompleteness = Number(candidateProfile?.profile_completeness || 0);
  const isCandidateProfileComplete =
  Boolean(candidateProfile?.profile_completed) || candidateProfileCompleteness >= 60;
-
- if (isLoading) {
- return (
- <div className="hv-candidate-shell">
- <LoadingState label="Loading your dashboard..." className="min-h-screen" />
- </div>
- );
- }
 
  return (
  <div className="hv-candidate-shell">
@@ -243,16 +228,6 @@ export function CandidateDashboard({
  </header>
 
  <main className="hv-container py-6 sm:py-8 lg:py-10">
- {isLoading && (
- <div className="flex items-center justify-center py-24">
- <div className="flex flex-col items-center gap-4">
- <Loader className="h-12 w-12 animate-spin text-emerald-600" />
- <p className="text-slate-600">Loading your dashboard...</p>
- </div>
- </div>
- )}
-
- {!isLoading && (
  <>
  {/* Profile Completion Hero */}
  <section className="candidate-profile-hero mb-6 rounded-xl">
@@ -558,7 +533,6 @@ export function CandidateDashboard({
  </aside>
  </div>
  </>
- )}
  </main>
 
  {/* ATS Scanner Dialog */}

@@ -3,7 +3,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './components/AppRouter';
-import { LoadingState } from './components/layout/AppLayout';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import type { Application, Project, Screen } from './types/app';
 
@@ -127,8 +126,9 @@ function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate
 }
 
 function HireVifyApp() {
- const { user, signOut, isLoading, authInitialized } = useAuth();
- const [currentScreen, setCurrentScreenState] = useState<Screen>(() => readInitialScreen());
+ const { user, signOut, authInitialized } = useAuth();
+ const [hasResolvedInitialScreen, setHasResolvedInitialScreen] = useState(false);
+ const [currentScreen, setCurrentScreenState] = useState<Screen>('homepage');
  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
  const [unreadMessages, setUnreadMessages] = useState(0);
@@ -174,7 +174,14 @@ function HireVifyApp() {
  return;
  }
 
- navigateScreen(currentScreen, { replace: true, skipScroll: true });
+ const initialScreen = readInitialScreen();
+ setCurrentScreenState(initialScreen);
+ window.localStorage.setItem(SCREEN_STORAGE_KEY, initialScreen);
+ window.history.replaceState({
+ ...(window.history.state || {}),
+ [HISTORY_SCREEN_KEY]: initialScreen,
+ }, '', getUrlForScreen(initialScreen));
+ setHasResolvedInitialScreen(true);
 
  const handlePopState = (event: PopStateEvent) => {
  const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
@@ -243,18 +250,25 @@ function HireVifyApp() {
  };
  }, [navigateScreen]);
 
- if (!authInitialized || isLoading) {
- return (
- <div className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#ecfdf5_100%)]">
- <LoadingState label="Loading HireVify..." className="min-h-screen" />
- </div>
- );
+ const effectiveScreen = useMemo<Screen>(() => {
+ if (user) {
+ const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
+ return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
+ ? dashboardScreen
+ : currentScreen;
+ }
+
+ return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
+ }, [currentScreen, user]);
+
+ if (!hasResolvedInitialScreen || !authInitialized) {
+ return <div className="min-h-screen bg-white" aria-hidden="true" />;
  }
 
  return (
  <div className="min-h-screen">
  <AppRouter
- currentScreen={currentScreen}
+ currentScreen={effectiveScreen}
  user={user}
  selectedProject={selectedProject}
  selectedApplication={selectedApplication}
