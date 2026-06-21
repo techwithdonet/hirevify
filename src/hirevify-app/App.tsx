@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './components/AppRouter';
 import { useAppNavigation } from './hooks/useAppNavigation';
-import type { Application, Project, Screen } from './types/app';
+import type { Application, Project, Screen, Job, JobProjectAssignment } from './types/app';
 
 const SCREEN_STORAGE_KEY = 'hirevify_current_screen';
 const HISTORY_SCREEN_KEY = 'hirevifyScreen';
@@ -37,8 +37,9 @@ const ALL_SCREENS: Screen[] = [
  'recruiter-enhanced-video-interview',
  'recruiter-settings',
  'recruiter-skills-first-hiring',
- 'recruiter-employer-education',
- 'candidate-dashboard',
+  'recruiter-employer-education',
+  'recruiter-application-detail',
+  'candidate-dashboard',
  'candidate-ai-resume-builder',
  'candidate-resume-builder',
  'candidate-ai-interview-coach',
@@ -48,8 +49,13 @@ const ALL_SCREENS: Screen[] = [
  'candidate-knowledge-assessment',
  'candidate-video-interview',
  'candidate-enhanced-video-interview',
- 'candidate-search-projects',
- 'candidate-interviews',
+  'candidate-search-projects',
+'candidate-jobs',
+ 'candidate-job-apply',
+ 'candidate-applied-jobs',
+ 'candidate-saved-jobs',
+ 'candidate-my-jobs',
+  'candidate-interviews',
  'candidate-settings',
  'candidate-experience-builder',
  'candidate-micro-internships',
@@ -128,18 +134,32 @@ function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate
 function HireVifyApp() {
  const { user, signOut, authInitialized } = useAuth();
  const [hasResolvedInitialScreen, setHasResolvedInitialScreen] = useState(false);
- const [currentScreen, setCurrentScreenState] = useState<Screen>('homepage');
- const [selectedProject, setSelectedProject] = useState<Project | null>(null);
- const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
- const [unreadMessages, setUnreadMessages] = useState(0);
- const [unreadNotifications, setUnreadNotifications] = useState(3);
- const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
- const [projectChallengeData, setProjectChallengeData] = useState<{
- projectId: string;
- projectTitle: string;
- challengeDescription?: string;
- } | null>(null);
- const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
+  const [currentScreen, setCurrentScreenState] = useState<Screen>(() => {
+    // Restore from localStorage immediately to prevent homepage flash on refresh.
+    // The flash happens because useState lazily runs this initializer only once
+    // on mount, before auth resolves. By reading localStorage synchronously here
+    // we render the correct screen from the very first frame.
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(SCREEN_STORAGE_KEY);
+      if (isScreen(stored)) return stored;
+      const urlScreen = new URL(window.location.href).searchParams.get('screen');
+      if (isScreen(urlScreen)) return urlScreen;
+    }
+    return 'homepage';
+  });
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<JobProjectAssignment | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(3);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [projectChallengeData, setProjectChallengeData] = useState<{
+    projectId: string;
+    projectTitle: string;
+    challengeDescription?: string;
+  } | null>(null);
+  const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
  const hadAuthenticatedUser = useRef(false);
 
  const navigateScreen = useCallback((screen: Screen, options: ScreenNavigationOptions = {}) => {
@@ -229,16 +249,18 @@ function HireVifyApp() {
  }
  }, [user, currentScreen, authInitialized, navigateScreen]);
 
- const navigation = useAppNavigation({
- user,
- setCurrentScreen: navigateScreen,
- setSelectedProject,
- setSelectedApplication,
- setSelectedConversationId,
- setProjectChallengeData,
- setAssessmentBuilderData,
- signOut,
- });
+  const navigation = useAppNavigation({
+    user,
+    setCurrentScreen: navigateScreen,
+    setSelectedProject,
+    setSelectedApplication,
+    setSelectedJob,
+    setSelectedAssignment,
+    setSelectedConversationId,
+    setProjectChallengeData,
+    setAssessmentBuilderData,
+    signOut,
+  });
 
  const handleUserTypeSelection = useMemo(() => {
  return (userType: 'recruiter' | 'candidate') => {
@@ -250,40 +272,52 @@ function HireVifyApp() {
  };
  }, [navigateScreen]);
 
- const effectiveScreen = useMemo<Screen>(() => {
- if (user) {
- const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
- return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
- ? dashboardScreen
- : currentScreen;
- }
+const effectiveScreen = useMemo<Screen>(() => {
+  if (user) {
+  const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
+  return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
+  ? dashboardScreen
+  : currentScreen;
+  }
 
- return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
- }, [currentScreen, user]);
+  // While auth is still initializing, preserve whatever screen was resolved
+  // from the URL / history / localStorage. Falling back to `homepage` here
+  // causes a flash of the marketing page on every hard refresh from the
+  // candidate or recruiter portal (e.g. user refreshes the dashboard, the
+  // session is briefly null while Supabase hydrates, and the homepage hero
+  // shows for a frame before the portal re-renders).
+  if (!authInitialized) {
+  return currentScreen;
+  }
 
- if (!hasResolvedInitialScreen || !authInitialized) {
- return <div className="min-h-screen bg-white" aria-hidden="true" />;
- }
+  return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
+  }, [currentScreen, user, authInitialized]);
+
+  if (!hasResolvedInitialScreen) {
+  return <div className="min-h-screen bg-white" aria-hidden="true" />;
+  }
 
  return (
  <div className="min-h-screen">
- <AppRouter
- currentScreen={effectiveScreen}
- user={user}
- selectedProject={selectedProject}
- selectedApplication={selectedApplication}
- unreadNotifications={unreadNotifications}
- unreadMessages={unreadMessages}
- selectedConversationId={selectedConversationId}
- projectChallengeData={projectChallengeData}
- assessmentBuilderData={assessmentBuilderData}
- navigation={navigation}
- handleLogout={navigation.handleLogout}
- handleUserTypeSelection={handleUserTypeSelection}
- setCurrentScreen={navigateScreen}
- setUnreadMessages={setUnreadMessages}
- setUnreadNotifications={setUnreadNotifications}
- />
+  <AppRouter
+   currentScreen={effectiveScreen}
+   user={user}
+   selectedProject={selectedProject}
+   selectedApplication={selectedApplication}
+   selectedJob={selectedJob}
+   selectedAssignment={selectedAssignment}
+   unreadNotifications={unreadNotifications}
+   unreadMessages={unreadMessages}
+   selectedConversationId={selectedConversationId}
+   projectChallengeData={projectChallengeData}
+   assessmentBuilderData={assessmentBuilderData}
+   navigation={navigation}
+   handleLogout={navigation.handleLogout}
+   handleUserTypeSelection={handleUserTypeSelection}
+   setCurrentScreen={navigateScreen}
+   setUnreadMessages={setUnreadMessages}
+   setUnreadNotifications={setUnreadNotifications}
+  />
  <Toaster />
  </div>
  );

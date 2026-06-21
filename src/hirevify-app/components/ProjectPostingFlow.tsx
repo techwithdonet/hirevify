@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Link2 } from 'lucide-react';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { jobsService } from '@/src/hirevify-app/services/jobsService';
 import { toast } from 'sonner';
 import { SkillMultiSelect } from './common/SkillMultiSelect';
 import { dashboardTheme } from '../theme/dashboardTheme';
@@ -35,8 +36,43 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  const [timeline, setTimeline] = useState(existingProject?.timeline || '');
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [savedJobId, setSavedJobId] = useState<string | null>(null);
+ const [linkToJobId, setLinkToJobId] = useState<string>('');
+ const [recruiterJobs, setRecruiterJobs] = useState<{ id: string; title: string; has_project: boolean }[]>([]);
+ const [isLoadingJobs, setIsLoadingJobs] = useState(false);
 
  const isEditing =!!existingProject;
+
+ useEffect(() => {
+ const loadRecruiterJobs = async () => {
+ try {
+ setIsLoadingJobs(true);
+ const supabase = createSupabaseBrowserClient();
+ const { data: authData } = await supabase.auth.getUser();
+ if (!authData?.user?.id) return;
+
+ const { data: profileRow } = await supabase
+ .from('profiles')
+ .select('id')
+ .eq('auth_user_id', authData.user.id)
+ .maybeSingle();
+ if (!profileRow?.id) return;
+
+ const { data, error } = await jobsService.getRecruiterJobs(profileRow.id);
+ if (error) {
+ console.warn('Could not load recruiter jobs for project link', error);
+ return;
+ }
+ setRecruiterJobs(
+ (data || []).map((j) => ({ id: j.id, title: j.title, has_project: Boolean(j.has_project) }))
+ );
+ } catch (err) {
+ console.warn('Could not load recruiter jobs for project link', err);
+ } finally {
+ setIsLoadingJobs(false);
+ }
+ };
+ loadRecruiterJobs();
+ }, []);
 
  const parseBudgetRange = (value: string) => {
  const cleaned = value.replace(/,/g, '');
@@ -81,6 +117,53 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  const { data: recruiterProfile } = await supabase.from('recruiter_profiles').select('id, company_name').eq('id', profileRow.id).maybeSingle();
 
  const { min, max, currency } = parseBudgetRange(budget);
+
+ // If the recruiter picked an existing job, attach this project to that job
+ // (update that job's row with has_project=true + project_* fields) instead
+ // of creating a brand-new freelance job row.
+ if (linkToJobId) {
+ const updatePayload: Record<string, any> = {
+ has_project: true,
+ project_title: projectTitle.trim(),
+ project_description: projectDescription.trim(),
+ project_skills: skills,
+ project_timeline: timeline.trim() || null,
+ project_budget_range: budget.trim() || null,
+ updated_at: new Date().toISOString(),
+ };
+
+ if (isEditing && existingProject?.id) {
+ const { data, error } = await supabase
+ .from('jobs')
+ .update(updatePayload)
+ .eq('id', existingProject.id)
+ .select('id, title, status, created_at, updated_at')
+ .single();
+
+ if (error) {
+ throw new Error(error.message || 'Failed to update project.');
+ }
+ if (!data?.id) {
+ throw new Error('Project update did not return a saved row.');
+ }
+ return data;
+ }
+
+ const { data, error } = await supabase
+ .from('jobs')
+ .update(updatePayload)
+ .eq('id', linkToJobId)
+ .select('id, title, status, created_at, updated_at')
+ .single();
+
+ if (error) {
+ throw new Error(error.message || 'Failed to link project to job.');
+ }
+ if (!data?.id) {
+ throw new Error('Link did not return a saved row.');
+ }
+ return data;
+ }
 
  const payload = {
  recruiter_id: profileRow.id,
@@ -186,6 +269,40 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  </p>
  </CardHeader>
  <CardContent className="space-y-8">
+ {/* Link to existing job (optional) */}
+ <div className="space-y-3 rounded-lg border border-dashed border-border bg-muted/30 p-4">
+ <div className="flex items-center gap-2">
+ <Link2 className="h-4 w-4 text-primary" />
+ <Label htmlFor="link-to-job" className="text-foreground text-base font-semibold">
+ Link to an existing job (optional)
+ </Label>
+ </div>
+ <p className="text-xs text-muted-foreground">
+ Choose a job to attach this project to. Candidates browsing that job will see the project details. Leave blank to post a standalone project.
+ </p>
+ <select
+ id="link-to-job"
+ value={linkToJobId}
+ onChange={(e) => setLinkToJobId(e.target.value)}
+ className="w-full rounded-md border border-border bg-input-background px-3 py-2 text-sm text-foreground"
+ >
+ <option value="">
+ {isLoadingJobs ? 'Loading jobs…' : '— Standalone project (no job) —'}
+ </option>
+ {recruiterJobs.map((job) => (
+ <option key={job.id} value={job.id}>
+ {job.title}
+ {job.has_project ? ' • already has a project' : ''}
+ </option>
+ ))}
+ </select>
+ {linkToJobId && (
+ <p className="text-xs text-amber-700">
+ This project will be attached to the selected job and replace any existing project on it.
+ </p>
+ )}
+ </div>
+
  {/* Project Title */}
  <div className="space-y-3">
  <Label htmlFor="project-title" className="text-foreground text-lg">Project Title</Label>
@@ -244,12 +361,18 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
 
  {/* Submit Button */}
  <div className="pt-6">
- <Button 
+ <Button
  onClick={handleSubmit}
  disabled={isSubmitting ||!projectTitle.trim() ||!projectDescription.trim() || skills.length === 0 ||!budget.trim() ||!timeline.trim()}
  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-14 text-lg"
  >
- {isSubmitting? 'Saving to Database...': isEditing? 'Update Project': 'Post Project'}
+ {isSubmitting
+ ? 'Saving to Database...'
+ : linkToJobId
+ ? 'Link Project to Selected Job'
+ : isEditing
+ ? 'Update Project'
+ : 'Post Project'}
  </Button>
  </div>
  </CardContent>
@@ -266,11 +389,18 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  
  <div>
  <h2 className="text-2xl text-foreground mb-3">
- {isEditing? 'Project Updated!': 'Project Posted Successfully!'}
+ {isEditing
+ ? 'Project Updated!'
+ : linkToJobId
+ ? 'Project Linked to Job!'
+ : 'Project Posted Successfully!'}
  </h2>
  <p className="text-muted-foreground text-lg">
- {isEditing? 'Your project has been updated and is now live with the new details.': 'Your project is now live and candidates can start applying. You\'ll receive notifications as applications come in.'
- }
+ {isEditing
+ ? 'Your project has been updated and is now live with the new details.'
+ : linkToJobId
+ ? 'Your project is now attached to the selected job. Candidates browsing that job will see the project details.'
+ : 'Your project is now live and candidates can start applying. You\'ll receive notifications as applications come in.'}
  </p>
  </div>
 
@@ -303,8 +433,11 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
  >
  Back to Dashboard
  </Button>
- <Button 
- onClick={() => setStep('details')}
+ <Button
+ onClick={() => {
+ setStep('details');
+ setLinkToJobId('');
+ }}
  className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground"
  >
  Post Another Project

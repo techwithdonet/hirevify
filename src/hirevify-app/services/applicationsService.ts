@@ -10,7 +10,10 @@ export interface Application {
  job_id: string;
  candidate_id: string;
  cover_letter: string | null;
- status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn';
+ cv_url: string | null;
+ cv_file_name: string | null;
+ cv_uploaded_at: string | null;
+ status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn' | 'assigned';
  match_score: number | null;
  notes: string | null;
  recruiter_notes: string | null;
@@ -42,22 +45,26 @@ export interface ApplicationWithDetails extends Application {
 class ApplicationsService {
  private supabase = createSupabaseBrowserClient();
 
- /**
- * Submit a job application
- */
- async submitApplication(
- jobId: string,
- candidateId: string,
- coverLetter?: string
- ) {
- const { data, error } = await this.supabase.from('applications').insert([
- {
- job_id: jobId,
- candidate_id: candidateId,
- cover_letter: coverLetter || null,
- status: 'applied',
- },
- ]).select().single<Application>();
+  /**
+  * Submit a job application
+  */
+  async submitApplication(
+  jobId: string,
+  candidateId: string,
+  coverLetter?: string,
+  extras?: { cvUrl?: string | null; cvFileName?: string | null }
+  ) {
+  const { data, error } = await this.supabase.from('applications').insert([
+  {
+  job_id: jobId,
+  candidate_id: candidateId,
+  cover_letter: coverLetter || null,
+  cv_url: extras?.cvUrl || null,
+  cv_file_name: extras?.cvFileName || null,
+  cv_uploaded_at: extras?.cvUrl ? new Date().toISOString() : null,
+  status: 'applied',
+  },
+  ]).select().single<Application>();
 
  if (error) {
  console.error('Error submitting application:', error);
@@ -213,19 +220,59 @@ class ApplicationsService {
  return { data, error: null };
  }
 
- /**
- * Check if candidate already applied to job
- */
- async hasApplied(jobId: string, candidateId: string) {
- const { data, error } = await this.supabase.from('applications').select('id').eq('job_id', jobId).eq('candidate_id', candidateId).single();
+  /**
+  * Check if candidate already applied to job
+  */
+  async hasApplied(jobId: string, candidateId: string) {
+  const { data, error } = await this.supabase.from('applications').select('id').eq('job_id', jobId).eq('candidate_id', candidateId).single();
 
- if (error && error.code!== 'PGRST116') {
- console.error('Error checking application:', error);
- return { hasApplied: false, error };
- }
+  if (error && error.code!== 'PGRST116') {
+  console.error('Error checking application:', error);
+  return { hasApplied: false, error };
+  }
 
- return { hasApplied:!!data, error: null };
- }
+  return { hasApplied:!!data, error: null };
+  }
+
+  /**
+   * Upload a CV file to the private `application-files` storage bucket
+   * at path: <authUserId>/cv/<timestamp>_<originalName>
+   * Returns the storage path (not a public URL — caller must use
+   * `getApplicationFileSignedUrl` to fetch a temporary link).
+   */
+  async uploadCV(authUserId: string, file: File) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+    const path = `${authUserId}/cv/${Date.now()}_${safeName}`;
+
+    const { error } = await this.supabase.storage
+      .from('application-files')
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (error) {
+      console.error('CV upload failed:', error);
+      return { path: null, error };
+    }
+
+    return { path, error: null };
+  }
+
+  /**
+   * Returns a short-lived signed URL for a file in `application-files`.
+   * Buckets are private; this is how recruiters (or the candidate) will
+   * fetch the actual CV / project file.
+   */
+  async getApplicationFileSignedUrl(path: string, expiresIn = 60 * 60) {
+    const { data, error } = await this.supabase.storage
+      .from('application-files')
+      .createSignedUrl(path, expiresIn);
+
+    if (error) {
+      console.error('Could not sign application file URL:', error);
+      return { url: null, error };
+    }
+
+    return { url: data?.signedUrl ?? null, error: null };
+  }
 }
 
 export const applicationsService = new ApplicationsService();

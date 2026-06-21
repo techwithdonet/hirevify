@@ -16,7 +16,10 @@ import {
  Crown,
  CheckCircle,
  Brain,
- Sparkles
+ Sparkles,
+ Briefcase,
+ MapPin,
+ DollarSign
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -29,6 +32,7 @@ import { profilesService } from '@/src/hirevify-app/services/profilesService';
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
+import { jobsService } from '@/src/hirevify-app/services/jobsService';
 import { usePremiumAccess } from '../utils/premium';
 import { useConversations } from '../hooks/useConversations';
 import { useNotifications } from '../hooks/useNotifications';
@@ -44,6 +48,8 @@ interface CandidateDashboardProps {
  onViewSettings: () => void;
  onViewMessages: () => void;
  onViewNotifications: () => void;
+ onViewAppliedJobs: () => void;
+ onViewSavedJobs: () => void;
  onUpgrade: () => void;
  onLogout: () => void;
  onExperienceBuilder: () => void;
@@ -69,6 +75,8 @@ export function CandidateDashboard({
  onViewSettings,
  onViewMessages,
  onViewNotifications,
+ onViewAppliedJobs,
+ onViewSavedJobs,
  onUpgrade,
  onLogout,
  onExperienceBuilder,
@@ -105,6 +113,7 @@ export function CandidateDashboard({
  const [applications, setApplications] = useState<any[]>([]);
  const [portfolio, setPortfolio] = useState<any[]>([]);
  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+ const [publishedJobsCount, setPublishedJobsCount] = useState<number>(0);
  const [showATSDialog, setShowATSDialog] = useState(false);
 
  // Load all candidate data from Supabase
@@ -144,6 +153,14 @@ export function CandidateDashboard({
  const savedData = await savedJobsService.getCandidateSavedJobs(user.id);
  if (savedData.data) {
  setSavedJobs(savedData.data);
+ }
+
+ // Load published jobs count for the Find Jobs hero CTA
+ try {
+ const { count } = await jobsService.getPublishedJobs({ limit: 1 });
+ setPublishedJobsCount(count || 0);
+ } catch (countErr) {
+ console.warn('Could not load published jobs count for hero CTA', countErr);
  }
  } catch (error) {
  console.error('Error loading candidate data:', error);
@@ -281,20 +298,26 @@ export function CandidateDashboard({
  </div>
  </section>
 
- {/* Quick Stats */}
- <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
- <Card className="candidate-stat-card">
- <CardContent className="p-5">
- <div className="flex items-start justify-between gap-4">
- <div>
- <p className="text-sm font-medium text-slate-500">Applications</p>
- <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{applications.length}</p>
- </div>
- <div className="candidate-stat-icon bg-emerald-50 text-emerald-700"> <FileText className="h-5 w-5" />
- </div>
- </div>
- </CardContent>
- </Card>
+{/* Quick Stats */}
+  <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <button
+  type="button"
+  onClick={onViewAppliedJobs}
+  className="candidate-stat-card group cursor-pointer text-left transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+  >
+  <CardContent className="p-5">
+  <div className="flex items-start justify-between gap-4">
+  <div>
+  <p className="text-sm font-medium text-slate-500">Applied Jobs</p>
+  <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{applications.length}</p>
+  <p className="mt-1 text-xs font-medium text-emerald-600 opacity-0 transition group-hover:opacity-100">Track status →</p>
+  </div>
+  <div className="candidate-stat-icon bg-emerald-50 text-emerald-700 transition group-hover:bg-emerald-100">
+  <FileText className="h-5 w-5" />
+  </div>
+  </div>
+  </CardContent>
+  </button>
 
  <Card className="candidate-stat-card">
  <CardContent className="p-5">
@@ -310,19 +333,24 @@ export function CandidateDashboard({
  </CardContent>
  </Card>
 
- <Card className="candidate-stat-card">
- <CardContent className="p-5">
- <div className="flex items-start justify-between gap-4">
- <div>
- <p className="text-sm font-medium text-slate-500">Saved Jobs</p>
- <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{savedJobs.length}</p>
- </div>
- <div className="candidate-stat-icon bg-violet-50 text-violet-700">
- <BookOpen className="h-5 w-5" />
- </div>
- </div>
- </CardContent>
- </Card>
+<button
+  type="button"
+  onClick={onViewSavedJobs}
+  className="candidate-stat-card group cursor-pointer text-left transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
+  >
+  <CardContent className="p-5">
+  <div className="flex items-start justify-between gap-4">
+  <div>
+  <p className="text-sm font-medium text-slate-500">Saved Jobs</p>
+  <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{savedJobs.length}</p>
+  <p className="mt-1 text-xs font-medium text-violet-600 opacity-0 transition group-hover:opacity-100">View favourites →</p>
+  </div>
+  <div className="candidate-stat-icon bg-violet-50 text-violet-700 transition group-hover:bg-violet-100">
+  <BookOpen className="h-5 w-5" />
+  </div>
+  </div>
+  </CardContent>
+  </button>
 
  <Card className="candidate-stat-card">
  <CardContent className="p-5">
@@ -337,9 +365,59 @@ export function CandidateDashboard({
  </div>
  </CardContent>
  </Card>
- </section>
+  </section>
 
- {/* Main Grid */}
+  {/* Find Jobs — Hero CTA (most important feature for candidates) */}
+  <section
+  onClick={onSearchProjects}
+  className="group relative cursor-pointer overflow-hidden rounded-2xl border border-emerald-200 bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] p-6 text-white shadow-md transition hover:shadow-lg sm:p-8"
+  >
+  {/* Decorative glow */}
+  <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
+  <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
+
+  <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+  <div className="max-w-2xl">
+  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+  <Sparkles className="h-3.5 w-3.5" />
+  Most important
+  </div>
+  <h2 className="text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+  Find Jobs
+  </h2>
+  <p className="mt-2 text-base text-emerald-50/90 sm:text-lg">
+  Browse open roles from real companies, see attached projects up front, and apply in one click.
+  </p>
+
+  <ul className="mt-4 grid grid-cols-1 gap-2 text-sm text-emerald-50/90 sm:grid-cols-3">
+  <li className="inline-flex items-center gap-2">
+  <Briefcase className="h-4 w-4 text-emerald-200" />
+  {publishedJobsCount} open jobs
+  </li>
+  <li className="inline-flex items-center gap-2">
+  <MapPin className="h-4 w-4 text-emerald-200" />
+  Remote · Hybrid · On-site
+  </li>
+  <li className="inline-flex items-center gap-2">
+  <DollarSign className="h-4 w-4 text-emerald-200" />
+  Transparent budgets
+  </li>
+  </ul>
+  </div>
+
+  <div className="flex flex-col gap-3 lg:items-end">
+  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 transition group-hover:scale-105 group-hover:bg-white/25">
+  <Search className="h-7 w-7" />
+  </div>
+  <div className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-sm transition group-hover:bg-emerald-50">
+  Browse all jobs
+  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+  </div>
+  </div>
+  </div>
+  </section>
+
+  {/* Main Grid */}
  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
  {/* Left Column - Main Tools */}
  <div className="space-y-6">
@@ -394,8 +472,8 @@ export function CandidateDashboard({
  </div>
  <ArrowRight className="h-5 w-5 text-slate-300 transition group-hover:translate-x-1 group-hover:text-emerald-600" />
  </div>
- <h3 className="text-base font-bold text-slate-950">Find Projects</h3>
- <p className="mt-1 text-sm text-slate-500">Explore opportunities</p>
+ <h3 className="text-base font-bold text-slate-950">Find Jobs</h3>
+ <p className="mt-1 text-sm text-slate-500">Open roles from real companies</p>
  </button>
  </div>
  </section>
@@ -485,32 +563,46 @@ export function CandidateDashboard({
  </section>
  )}
 
- {/* Recent Activity */}
- <section className="candidate-panel p-5">
- <div className="mb-4 flex items-center justify-between">
- <h3 className="font-bold text-slate-950">Recent Applications</h3>
- <Badge className="rounded-full border border-slate-200 bg-slate-50 text-slate-500">{applications.length}</Badge>
- </div>
+{/* Recent Activity */}
+  <section className="candidate-panel p-5">
+  <div className="mb-4 flex items-center justify-between">
+  <h3 className="font-bold text-slate-950">Recent Applications</h3>
+  <button
+  type="button"
+  onClick={onViewAppliedJobs}
+  className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+  >
+  View all →
+  </button>
+  </div>
 
- {applications.length > 0? (
- <div className="space-y-3">
- {applications.slice(0, 3).map((app: any, idx: number) => (
- <div key={idx} className="rounded-lg border border-slate-100 bg-slate-50 p-4 transition hover:border-emerald-200 hover:bg-emerald-50">
- <p className="line-clamp-1 text-sm font-bold text-slate-950">{app.job?.title || app.job_title || app.title || 'Application submitted'}</p>
- <p className="mt-1 text-xs font-medium capitalize text-slate-500">Status: {app.status || 'applied'}</p>
- </div>
- ))}
- </div>
- ): (
- <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
- <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm">
- <FileText className="h-6 w-6" />
- </div>
- <p className="mt-3 text-sm font-semibold text-slate-600">No applications yet</p>
- <p className="mt-1 text-xs text-slate-500">Apply to a project to see progress here.</p>
- </div>
- )}
- </section>
+  {applications.length > 0? (
+  <div className="space-y-3">
+  {applications.slice(0, 3).map((app: any, idx: number) => (
+  <button
+  key={idx}
+  type="button"
+  onClick={onViewAppliedJobs}
+  className="block w-full rounded-lg border border-slate-100 bg-slate-50 p-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50"
+  >
+  <p className="line-clamp-1 text-sm font-bold text-slate-950">{app.job?.title || app.job_title || app.title || 'Application submitted'}</p>
+  <p className="mt-1 text-xs font-medium capitalize text-slate-500">Status: {app.status || 'applied'}</p>
+  </button>
+  ))}
+  </div>
+  ): (
+  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm">
+  <FileText className="h-6 w-6" />
+  </div>
+  <p className="mt-3 text-sm font-semibold text-slate-600">No applications yet</p>
+  <p className="mt-1 text-xs text-slate-500">Apply to a project to see progress here.</p>
+  <Button onClick={onViewAppliedJobs} variant="outline" className="mt-3">
+  Browse applied jobs
+  </Button>
+  </div>
+  )}
+  </section>
 
  {/* Quick Links */}
  <section className="candidate-panel p-5">

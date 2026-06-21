@@ -26,6 +26,12 @@ export interface Job {
  has_assessment: boolean;
  has_video_challenge: boolean;
  video_challenge_description: string | null;
+ has_project: boolean;
+ project_title: string | null;
+ project_description: string | null;
+ project_skills: string[];
+ project_timeline: string | null;
+ project_budget_range: string | null;
  created_at: string;
  updated_at: string;
 }

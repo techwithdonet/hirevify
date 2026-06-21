@@ -15,6 +15,7 @@ import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { savedJobsService } from '../services/savedJobsService';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 
@@ -52,9 +53,10 @@ interface ProjectSearchProps {
  onBack: () => void;
  onUpgrade: () => void;
  onProjectChallengeVideo?: (projectId: string, projectTitle: string, challengeDescription?: string) => void;
+ onViewJob?: (job: Project) => void;
 }
 
-export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo }: ProjectSearchProps) {
+export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo, onViewJob }: ProjectSearchProps) {
  const { user, accessToken } = useAuth();
  const [projects, setProjects] = useState<Project[]>([]);
  
@@ -163,7 +165,42 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
  console.error('Failed to prepare applied project status:', appliedStatusError);
  }
 
- setAppliedProjectIds(appliedJobIdsFromDb);
+setAppliedProjectIds(appliedJobIdsFromDb);
+
+  // Load the candidate's saved jobs from the `saved_jobs` table so the
+  // bookmark icon stays in sync with whatever they've favourited before
+  // (across sessions, devices, and the dashboard's "Saved Jobs" tile).
+  try {
+  const { data: authData } = await supabase.auth.getUser();
+  const authUserId = authData?.user?.id;
+
+  if (authUserId) {
+  const { data: profileRow } = await supabase
+  .from('profiles')
+  .select('id, auth_user_id')
+  .eq('auth_user_id', authUserId)
+  .maybeSingle();
+
+  // saved_jobs.candidate_id is the candidate's profiles.id when available
+  // (same shape the dashboard uses to count saved jobs).
+  const candidateIdForSaved = profileRow?.id ?? authUserId;
+  const { data: savedRows, error: savedError } = await supabase
+  .from('saved_jobs')
+  .select('job_id')
+  .eq('candidate_id', candidateIdForSaved);
+
+  if (savedError && savedError.code !== 'PGRST116' && savedError.code !== '42P01' && savedError.code !== '42501') {
+  console.warn('Failed to load saved jobs for bookmarks:', savedError);
+  } else if (Array.isArray(savedRows)) {
+  const savedIds = new Set<string>(
+  savedRows.map((row: any) => String(row.job_id)).filter(Boolean)
+  );
+  setBookmarkedProjects(savedIds);
+  }
+  }
+  } catch (savedLoadError) {
+  console.warn('Failed to hydrate saved jobs:', savedLoadError);
+  }
  const mappedProjects = (jobs || []).map((job: any) => ({
  id: job.id,
  title: job.title || 'Untitled Project',
@@ -367,19 +404,59 @@ console.log(`Successfully loaded ${mappedProjects.length} published jobs from da
  }));
  };
 
- const toggleBookmark = (projectId: string) => {
- setBookmarkedProjects(prev => {
- const newSet = new Set(prev);
- if (newSet.has(projectId)) {
- newSet.delete(projectId);
- toast.success('Removed from bookmarks');
-} else {
- newSet.add(projectId);
- toast.success('Added to bookmarks');
-}
- return newSet;
- });
- };
+const toggleBookmark = async (projectId: string) => {
+  if (!user?.id) {
+  toast.error('Please sign in to save jobs.');
+  return;
+  }
+
+  const wasSaved = bookmarkedProjects.has(projectId);
+
+  // Optimistic update — flip the icon immediately, then reconcile with DB.
+  setBookmarkedProjects(prev => {
+  const newSet = new Set(prev);
+  if (wasSaved) newSet.delete(projectId);
+  else newSet.add(projectId);
+  return newSet;
+  });
+
+  try {
+  if (wasSaved) {
+  const { error } = await savedJobsService.unsaveJob(user.id, projectId);
+  if (error) {
+  console.error('Failed to unsave job', error);
+  // Roll back optimistic change
+  setBookmarkedProjects(prev => new Set(prev).add(projectId));
+  toast.error('Could not remove from saved jobs');
+  return;
+  }
+  toast.success('Removed from saved jobs');
+  } else {
+  const { error } = await savedJobsService.saveJob(user.id, projectId);
+  if (error) {
+  console.error('Failed to save job', error);
+  setBookmarkedProjects(prev => {
+  const newSet = new Set(prev);
+  newSet.delete(projectId);
+  return newSet;
+  });
+  toast.error('Could not save job');
+  return;
+  }
+  toast.success('Added to saved jobs');
+  }
+  } catch (err) {
+  console.error('Bookmark toggle failed:', err);
+  // Roll back on any unexpected failure
+  setBookmarkedProjects(prev => {
+  const newSet = new Set(prev);
+  if (wasSaved) newSet.add(projectId);
+  else newSet.delete(projectId);
+  return newSet;
+  });
+  toast.error('Something went wrong saving this job');
+  }
+  };
 
  const calculateMatchScore = (project: Project): number => {
  // Check if we have AI-generated match score
@@ -944,35 +1021,35 @@ const { error: appError } = await supabase.from('applications').insert({
  );
  }
 
- return (
- <DashboardPageLayout
- title="Discover Projects"
- subtitle="Find your next opportunity with AI-powered matching"
- onBack={onBack}
- backLabel="Back"
- actions={(
- <Button onClick={onUpgrade} className={dashboardTheme.buttonPrimary}>
- <Zap className="w-4 h-4 mr-2" />
- Upgrade for Premium Search
- </Button>
- )}
- shellClassName="flex gap-6"
- >
+  return (
+  <DashboardPageLayout
+  title="All Jobs"
+  subtitle="Browse open roles from real companies and apply in one click"
+  onBack={onBack}
+  backLabel="Back"
+  actions={(
+  <Button onClick={onUpgrade} className={dashboardTheme.buttonPrimary}>
+  <Zap className="w-4 h-4 mr-2" />
+  Upgrade for Premium Search
+  </Button>
+  )}
+  shellClassName="flex gap-6"
+  >
 
  {/* Sidebar Filters */}
  <div className="w-80 space-y-6">
  {/* Search */}
- <Card className="p-4">
- <div className="relative">
- <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
- <Input
- placeholder="Search projects..."
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="pl-9"
- />
- </div>
- </Card>
+  <Card className="p-4">
+  <div className="relative">
+  <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+  <Input
+  placeholder="Search jobs..."
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  className="pl-9"
+  />
+  </div>
+  </Card>
 
  {/* AI Recommendations */}
  {showRecommendations && recommendations.length > 0 && (
@@ -1013,9 +1090,9 @@ const { error: appError } = await supabase.from('applications').insert({
  </Button>
  </SheetTrigger>
  <SheetContent side="left" className="w-80">
- <SheetHeader>
- <SheetTitle>Filter Projects</SheetTitle>
- </SheetHeader>
+    <SheetHeader>
+    <SheetTitle>Filter Jobs</SheetTitle>
+    </SheetHeader>
  <div className="mt-6">
  <FilterContent 
  filters={filters}
@@ -1053,15 +1130,15 @@ const { error: appError } = await supabase.from('applications').insert({
  </Card>
  ))}
  </div>
- ): filteredProjects.length === 0? (
- <Card className="p-12 text-center">
- <div className="max-w-md mx-auto">
- <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
- <h3 className="text-lg font-semibold mb-2">No projects available</h3>
- <p className="text-muted-foreground mb-4">
- {!accessToken? 'Please sign in to view available projects.': searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)? 'Try adjusting your search criteria or filters to find more projects.': 'No projects are currently available. Check back later for new opportunities.'
- }
- </p>
+  ): filteredProjects.length === 0? (
+  <Card className="p-12 text-center">
+  <div className="max-w-md mx-auto">
+  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+  <h3 className="text-lg font-semibold mb-2">No jobs available</h3>
+  <p className="text-muted-foreground mb-4">
+  {!accessToken? 'Please sign in to view available jobs.': searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)? 'Try adjusting your search criteria or filters to find more jobs.': 'No jobs are currently available. Check back later for new opportunities.'
+  }
+  </p>
  {(searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)) && (
  <Button 
  variant="outline" 
@@ -1077,16 +1154,16 @@ const { error: appError } = await supabase.from('applications').insert({
  </Card>
  ): (
  <>
- <div className="flex items-center justify-between mb-6">
- <div>
- <h2 className="text-lg font-semibold">
- {filteredProjects.length} projects found
- </h2>
- <p className="text-sm text-muted-foreground">
- Showing personalized matches based on your skills
- </p>
- </div>
- </div>
+  <div className="flex items-center justify-between mb-6">
+  <div>
+  <h2 className="text-lg font-semibold">
+  {filteredProjects.length} {filteredProjects.length === 1 ? 'job' : 'jobs'} found
+  </h2>
+  <p className="text-sm text-muted-foreground">
+  Showing personalized matches based on your skills
+  </p>
+  </div>
+  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {filteredProjects.map((project) => {
@@ -1112,13 +1189,17 @@ const { error: appError } = await supabase.from('applications').insert({
  {matchScore}%
  </Badge>
  </div>
- <h3 
- className="font-semibold text-lg hover:text-primary cursor-pointer"
- onClick={() => {
- setSelectedProject(project);
- setShowProjectDetailsDialog(true);
- }}
- >
+  <h3
+  className="font-semibold text-lg hover:text-primary cursor-pointer"
+  onClick={() => {
+    if (onViewJob) {
+      onViewJob(project);
+      return;
+    }
+    setSelectedProject(project);
+    setShowProjectDetailsDialog(true);
+  }}
+  >
  {project.title}
  </h3>
  <p className="text-sm text-muted-foreground">{project.company}</p>
@@ -1173,27 +1254,35 @@ const { error: appError } = await supabase.from('applications').insert({
 
  {/* Actions */}
  <div className="flex items-center justify-between pt-2">
- <Button
- variant="outline"
- size="sm"
- onClick={() => {
- setSelectedProject(project);
- setShowProjectDetailsDialog(true);
- }}
- >
- View Details
- </Button>
+  <Button
+  variant="outline"
+  size="sm"
+  onClick={() => {
+    if (onViewJob) {
+      onViewJob(project);
+      return;
+    }
+    setSelectedProject(project);
+    setShowProjectDetailsDialog(true);
+  }}
+  >
+  View Details
+  </Button>
  
- {['available', 'published', 'open'].includes(String(project.status || 'available')) &&!appliedProjectIds.has(project.id)? (
- <Button 
- size="sm"
- onClick={() => {
-
- openApplicationDialog(project);
- }}
- >
- Apply Now
- </Button>
+  {['available', 'published', 'open'].includes(String(project.status || 'available')) &&!appliedProjectIds.has(project.id)? (
+  <Button
+  size="sm"
+  onClick={() => {
+    if (onViewJob) {
+      // Open the dedicated job detail / apply page
+      onViewJob(project);
+      return;
+    }
+    openApplicationDialog(project);
+  }}
+  >
+  Apply Now
+  </Button>
  ): project.status && ['in-progress', 'completed'].includes(project.status) &&!project.hasVideoSubmission? (
  <Button 
  size="sm"

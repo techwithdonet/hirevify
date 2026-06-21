@@ -1,6 +1,6 @@
 ﻿import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { Screen, Project, Application } from '../types/app';
+import { Screen, Project, Application, Job, JobProjectAssignment } from '../types/app';
 import { User } from '../components/AuthProvider';
 
 interface ScreenNavigationOptions {
@@ -9,29 +9,33 @@ interface ScreenNavigationOptions {
 }
 
 interface UseAppNavigationProps {
- user: User | null;
- setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
- setSelectedProject: (project: Project | null) => void;
- setSelectedApplication: (application: Application | null) => void;
- setSelectedConversationId: (conversationId: string | null) => void;
- setProjectChallengeData: (data: {
- projectId: string;
- projectTitle: string;
- challengeDescription?: string;
- } | null) => void;
- setAssessmentBuilderData: (data: unknown) => void;
- signOut: () => Promise<void>;
+  user: User | null;
+  setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
+  setSelectedProject: (project: Project | null) => void;
+  setSelectedApplication: (application: Application | null) => void;
+  setSelectedJob: (job: Job | null) => void;
+  setSelectedAssignment: (assignment: JobProjectAssignment | null) => void;
+  setSelectedConversationId: (conversationId: string | null) => void;
+  setProjectChallengeData: (data: {
+    projectId: string;
+    projectTitle: string;
+    challengeDescription?: string;
+  } | null) => void;
+  setAssessmentBuilderData: (data: unknown) => void;
+  signOut: () => Promise<void>;
 }
 
 export const useAppNavigation = ({
- user,
- setCurrentScreen,
- setSelectedProject,
- setSelectedApplication,
- setSelectedConversationId,
- setProjectChallengeData,
- setAssessmentBuilderData,
- signOut
+  user,
+  setCurrentScreen,
+  setSelectedProject,
+  setSelectedApplication,
+  setSelectedJob,
+  setSelectedAssignment,
+  setSelectedConversationId,
+  setProjectChallengeData,
+  setAssessmentBuilderData,
+  signOut
 }: UseAppNavigationProps) => {
 
  // Show login prompt for unauthenticated users trying to access protected features
@@ -83,11 +87,43 @@ export const useAppNavigation = ({
  }, [requireAuth, setSelectedProject, setCurrentScreen]);
 
  // Enhanced navigation for "Find a Project" - requires authentication
- const navigateToProjectSearch = useCallback(() => {
- if (!requireAuth('search for projects', 'candidate')) return;
- 
- setCurrentScreen('candidate-search-projects');
- }, [requireAuth, setCurrentScreen]);
+  const navigateToProjectSearch = useCallback(() => {
+  if (!requireAuth('search for projects', 'candidate')) return;
+  
+  setCurrentScreen('candidate-search-projects');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToJobs = useCallback(() => {
+    if (!requireAuth('browse jobs', 'candidate')) return;
+    setCurrentScreen('candidate-jobs');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToMyJobs = useCallback(() => {
+    if (!requireAuth('view your jobs', 'candidate')) return;
+    setCurrentScreen('candidate-my-jobs');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToAppliedJobs = useCallback(() => {
+    if (!requireAuth('view your applied jobs', 'candidate')) return;
+    setCurrentScreen('candidate-applied-jobs');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToSavedJobs = useCallback(() => {
+    if (!requireAuth('view your saved jobs', 'candidate')) return;
+    setCurrentScreen('candidate-saved-jobs');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToJobApply = useCallback((job: Job) => {
+    if (!requireAuth('apply to jobs', 'candidate')) return;
+    setSelectedJob(job);
+    setCurrentScreen('candidate-job-apply');
+  }, [requireAuth, setSelectedJob, setCurrentScreen]);
+
+  const navigateToRecruiterApplicationDetail = useCallback((application: Application) => {
+    if (!requireAuth('review applications', 'recruiter')) return;
+    setSelectedApplication(application);
+    setCurrentScreen('recruiter-application-detail');
+  }, [requireAuth, setSelectedApplication, setCurrentScreen]);
 
  const navigateToProjects = useCallback(() => {
  if (!requireAuth('manage projects', 'recruiter')) return;
@@ -329,67 +365,109 @@ export const useAppNavigation = ({
  setCurrentScreen('candidate-skills-development-ai');
  }, [requireAuth, setCurrentScreen]);
 
- const navigateToProjectChallengeVideo = useCallback((projectId: string, projectTitle: string, challengeDescription?: string) => {
- if (!requireAuth('record project explanation', 'candidate')) return;
- 
- setProjectChallengeData({
- projectId,
- projectTitle,
- challengeDescription
- });
- setCurrentScreen('candidate-project-challenge-video');
- }, [requireAuth, setProjectChallengeData, setCurrentScreen]);
+  const navigateToProjectChallengeVideo = useCallback((projectId: string, projectTitle: string, challengeDescription?: string) => {
+  if (!requireAuth('record project explanation', 'candidate')) return;
+  
+  setProjectChallengeData({
+    projectId,
+    projectTitle,
+    challengeDescription
+  });
+  setCurrentScreen('candidate-project-challenge-video');
+  }, [requireAuth, setProjectChallengeData, setCurrentScreen]);
 
- return {
- navigateHome,
- handleLogout,
- navigateToPricing,
- navigateToPostProject,
- navigateToProjectSearch,
- navigateToProjects,
- navigateToInterviews,
- navigateToSettings,
- navigateToATS,
- navigateToResumeBuilder,
- navigateToATSScanner,
- navigateToFunctionalATS,
- navigateToAccuracyFirstATS,
- navigateToCandidateATSScanner,
- navigateToCandidateFunctionalATS,
- navigateToCandidateAccuracyFirstATS,
- navigateToAIMatchingDashboard,
- navigateToPortfolio,
- navigateToAnalytics,
- navigateToAdvancedAnalytics,
- navigateToKnowledgeAssessment,
- navigateToCustomAssessmentBuilder,
- navigateToVideoInterview,
- navigateToEnhancedVideoInterview,
- navigateToIntegrations,
- navigateToSubscriptionManager,
- navigateToBetaProgram,
- navigateToLiveInterview,
- navigateToOneWayInterview,
- navigateToRecruiterDashboard,
- navigateToCandidateDashboard,
- navigateToMessages,
- navigateToNotifications,
- navigateToAISkillsDevelopment,
- navigateToAICareerAdvisor,
- navigateToCandidateSearch,
- navigateToExperienceBuilder,
- navigateToMicroInternships,
- navigateToSkillsFirstHiring,
- navigateToMentorshipProgram,
- navigateToEmployerEducation,
- navigateToCareerSwitcherTrack,
- navigateToAutomatedScreening,
- navigateToRecruiterMarketIntelligence,
- navigateToCandidateMarketIntelligence,
- navigateToAIInterviewCoach,
- navigateToSkillsDevelopmentAI,
- navigateToProjectChallengeVideo,
- };
+  // Navigate to Post Job screen (enhanced from Post Project)
+  const navigateToPostJob = useCallback((job?: Job) => {
+    if (!requireAuth('post jobs', 'recruiter')) return;
+    
+    setSelectedJob(job || null);
+    setCurrentScreen('recruiter-post-job');
+  }, [requireAuth, setSelectedJob, setCurrentScreen]);
+
+  // Navigate to job detail from candidate side
+  const navigateToJobDetail = useCallback((job: Job) => {
+    if (!requireAuth('view job details', 'candidate')) return;
+    
+    setSelectedJob(job);
+    setCurrentScreen('candidate-job-detail');
+  }, [requireAuth, setSelectedJob, setCurrentScreen]);
+
+  // Navigate to project assignment for candidate
+  const navigateToProjectAssignment = useCallback((assignmentId: string) => {
+    if (!requireAuth('view project assignment', 'candidate')) return;
+    
+    setSelectedAssignment({ id: assignmentId } as JobProjectAssignment);
+    setCurrentScreen('candidate-project-assignment');
+  }, [requireAuth, setSelectedAssignment, setCurrentScreen]);
+
+  // Navigate to project submission
+  const navigateToProjectSubmission = useCallback((assignmentId: string) => {
+    if (!requireAuth('submit project', 'candidate')) return;
+    
+    setSelectedAssignment({ id: assignmentId } as JobProjectAssignment);
+    setCurrentScreen('candidate-project-submission');
+  }, [requireAuth, setSelectedAssignment, setCurrentScreen]);
+
+  return {
+  navigateHome,
+  handleLogout,
+  navigateToPricing,
+  navigateToPostProject,
+  navigateToPostJob,
+  navigateToProjectSearch,
+  navigateToProjects,
+  navigateToInterviews,
+  navigateToSettings,
+  navigateToATS,
+  navigateToResumeBuilder,
+  navigateToATSScanner,
+  navigateToFunctionalATS,
+  navigateToAccuracyFirstATS,
+  navigateToCandidateATSScanner,
+  navigateToCandidateFunctionalATS,
+  navigateToCandidateAccuracyFirstATS,
+  navigateToAIMatchingDashboard,
+  navigateToPortfolio,
+  navigateToAnalytics,
+  navigateToAdvancedAnalytics,
+  navigateToKnowledgeAssessment,
+  navigateToCustomAssessmentBuilder,
+  navigateToVideoInterview,
+  navigateToEnhancedVideoInterview,
+  navigateToIntegrations,
+  navigateToSubscriptionManager,
+  navigateToBetaProgram,
+  navigateToLiveInterview,
+  navigateToOneWayInterview,
+  navigateToRecruiterDashboard,
+  navigateToCandidateDashboard,
+  navigateToMessages,
+  navigateToNotifications,
+  navigateToAISkillsDevelopment,
+  navigateToAICareerAdvisor,
+  navigateToCandidateSearch,
+  navigateToExperienceBuilder,
+  navigateToMicroInternships,
+  navigateToSkillsFirstHiring,
+  navigateToMentorshipProgram,
+  navigateToEmployerEducation,
+  navigateToCareerSwitcherTrack,
+  navigateToAutomatedScreening,
+  navigateToRecruiterMarketIntelligence,
+  navigateToCandidateMarketIntelligence,
+  navigateToAIInterviewCoach,
+  navigateToSkillsDevelopmentAI,
+  navigateToProjectChallengeVideo,
+  navigateToJobDetail,
+  navigateToProjectAssignment,
+  navigateToProjectSubmission,
+  navigateToJobApply,
+  navigateToMyJobs,
+  navigateToJobs,
+  navigateToAppliedJobs,
+  navigateToSavedJobs,
+  navigateToRecruiterApplicationDetail,
+  };
 };
 
 

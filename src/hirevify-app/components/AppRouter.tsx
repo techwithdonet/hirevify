@@ -47,53 +47,66 @@ import { RecruiterDashboard } from './RecruiterDashboard';
 import { CandidateDashboard } from './CandidateDashboard';
 import { SubscriptionManager } from './SubscriptionManager';
 import { BetaProgram } from './BetaProgram';
+import { JobPostingFlow } from './JobPostingFlow';
+import { CandidateJobDetail } from './CandidateJobDetail';
+import { CandidateJobApply } from './CandidateJobApply';
+import { CandidateProjectAssignment } from './CandidateProjectAssignment';
+import { CandidateAppliedJobs } from './CandidateAppliedJobs';
+import { CandidateSavedJobs } from './CandidateSavedJobs';
 import { toast } from 'sonner';
-import { VideoSubmissionData, UserType, Project, Application, Screen } from '../types/app';
+import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment } from '../types/app';
 
 // Define the navigation methods that we expect from useAppNavigation
 interface NavigationMethods {
- navigateToPostProject: (project?: Project) => void;
- navigateToProjectSearch: () => void;
- navigateToRecruiterDashboard: () => void;
- navigateToCandidateDashboard: () => void;
- navigateToProjects: () => void;
- navigateToATS: (application?: Application) => void;
- navigateToATSScanner: () => void;
- navigateToAccuracyFirstATS: () => void;
- navigateToCandidateATSScanner: () => void;
- navigateToCandidateAccuracyFirstATS: () => void;
- navigateToAutomatedScreening: () => void;
- navigateToAIMatchingDashboard: () => void;
- navigateToRecruiterMarketIntelligence: () => void;
- navigateToCandidateMarketIntelligence: () => void;
- navigateToAnalytics: () => void;
- navigateToKnowledgeAssessment: () => void;
- navigateToIntegrations: () => void;
- navigateToInterviews: () => void;
- navigateToSettings: () => void;
- navigateToCandidateSearch: () => void;
- navigateToMessages: (conversationId?: string) => void;
- navigateToNotifications: () => void;
- navigateToPricing: () => void;
- navigateToSkillsFirstHiring: () => void;
- navigateToEmployerEducation: () => void;
- navigateToResumeBuilder: () => void;
- navigateToPortfolio: () => void;
- navigateToVideoInterview: () => void;
- navigateToExperienceBuilder: () => void;
- navigateToMicroInternships: () => void;
- navigateToMentorshipProgram: () => void;
- navigateToCareerSwitcherTrack: () => void;
- navigateToProjectChallengeVideo: (projectId: string, projectTitle: string, challengeDescription?: string) => void;
- navigateToAIInterviewCoach: () => void;
- navigateToSkillsDevelopmentAI: () => void;
- navigateToLiveInterview: () => void;
- navigateToEnhancedVideoInterview: () => void;
- navigateToCustomAssessmentBuilder: (existingAssessment?: any) => void;
- navigateToAdvancedAnalytics: () => void;
- navigateToSubscriptionManager: () => void;
- navigateHome: () => void;
- handleLogout: () => Promise<void>;
+  navigateToPostProject: (project?: Project) => void;
+  navigateToPostJob: (job?: Job) => void;
+  navigateToProjectSearch: () => void;
+  navigateToRecruiterDashboard: () => void;
+  navigateToCandidateDashboard: () => void;
+  navigateToProjects: () => void;
+  navigateToATS: (application?: Application) => void;
+  navigateToATSScanner: () => void;
+  navigateToAccuracyFirstATS: () => void;
+  navigateToCandidateATSScanner: () => void;
+  navigateToCandidateAccuracyFirstATS: () => void;
+  navigateToAutomatedScreening: () => void;
+  navigateToAIMatchingDashboard: () => void;
+  navigateToRecruiterMarketIntelligence: () => void;
+  navigateToCandidateMarketIntelligence: () => void;
+  navigateToAnalytics: () => void;
+  navigateToKnowledgeAssessment: () => void;
+  navigateToIntegrations: () => void;
+  navigateToInterviews: () => void;
+  navigateToSettings: () => void;
+  navigateToCandidateSearch: () => void;
+  navigateToMessages: (conversationId?: string) => void;
+  navigateToNotifications: () => void;
+  navigateToPricing: () => void;
+  navigateToSkillsFirstHiring: () => void;
+  navigateToEmployerEducation: () => void;
+  navigateToResumeBuilder: () => void;
+  navigateToPortfolio: () => void;
+  navigateToVideoInterview: () => void;
+  navigateToExperienceBuilder: () => void;
+  navigateToMicroInternships: () => void;
+  navigateToMentorshipProgram: () => void;
+  navigateToCareerSwitcherTrack: () => void;
+  navigateToProjectChallengeVideo: (projectId: string, projectTitle: string, challengeDescription?: string) => void;
+  navigateToJobDetail: (job: Job) => void;
+  navigateToProjectAssignment: (assignmentId: string) => void;
+  navigateToProjectSubmission: (assignmentId: string) => void;
+  navigateToJobApply: (job: Job) => void;
+ navigateToAppliedJobs: () => void;
+ navigateToSavedJobs: () => void;
+  navigateToAIInterviewCoach: () => void;
+  navigateToSkillsDevelopmentAI: () => void;
+  navigateToLiveInterview: () => void;
+  navigateToEnhancedVideoInterview: () => void;
+  navigateToCustomAssessmentBuilder: (existingAssessment?: any) => void;
+  navigateToAdvancedAnalytics: () => void;
+  navigateToSubscriptionManager: () => void;
+  navigateHome: () => void;
+  handleLogout: () => Promise<void>;
 }
 
 interface ScreenNavigationOptions {
@@ -108,44 +121,78 @@ interface User {
  userType: UserType;
 }
 
+/**
+ * ProjectSearch passes its own local `Project` shape to `onViewJob`. The
+ * rest of the app speaks the unified `Job` type (which now carries the
+ * project_* fields too). This adapter bridges the two so we can navigate
+ * to CandidateJobDetail regardless of where the row originated.
+ */
+const projectToJob = (p: any): Job => ({
+  id: p.id,
+  recruiter_id: p.recruiter_id ?? '',
+  title: p.title,
+  description: p.description ?? '',
+  requirements: p.requirements ?? [],
+  skills: p.skills ?? [],
+  job_type: 'freelance',
+  experience_level: 'mid',
+  location: p.location ?? '',
+  remote_type: 'remote',
+  budget_min: null,
+  budget_max: null,
+  budget_currency: 'USD',
+  status: 'published',
+  has_project: true,
+  project_title: p.title,
+  project_description: p.description ?? null,
+  project_skills: p.skills ?? [],
+  project_timeline: p.timeline ?? null,
+  project_budget_range: p.budget ?? null,
+  created_at: p.createdAt ?? new Date().toISOString(),
+});
+
 interface AppRouterProps {
- currentScreen: Screen;
- user: User | null;
- selectedProject: Project | null;
- selectedApplication: Application | null;
- unreadNotifications: number;
- unreadMessages: number;
- selectedConversationId: string | null;
- projectChallengeData: {
- projectId: string;
- projectTitle: string;
- challengeDescription?: string;
- } | null;
- assessmentBuilderData: any;
- navigation: NavigationMethods;
- handleLogout: () => Promise<void>;
- handleUserTypeSelection: (userType: UserType) => void;
- setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
- setUnreadMessages: (count: number) => void;
- setUnreadNotifications: (count: number) => void;
+  currentScreen: Screen;
+  user: User | null;
+  selectedProject: Project | null;
+  selectedApplication: Application | null;
+  selectedJob: Job | null;
+  selectedAssignment: JobProjectAssignment | null;
+  unreadNotifications: number;
+  unreadMessages: number;
+  selectedConversationId: string | null;
+  projectChallengeData: {
+    projectId: string;
+    projectTitle: string;
+    challengeDescription?: string;
+  } | null;
+  assessmentBuilderData: any;
+  navigation: NavigationMethods;
+  handleLogout: () => Promise<void>;
+  handleUserTypeSelection: (userType: UserType) => void;
+  setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
+  setUnreadMessages: (count: number) => void;
+  setUnreadNotifications: (count: number) => void;
 }
 
 export function AppRouter({
- currentScreen,
- user,
- selectedProject,
- selectedApplication,
- unreadNotifications,
- unreadMessages,
- selectedConversationId,
- projectChallengeData,
- assessmentBuilderData,
- navigation,
- handleLogout,
- handleUserTypeSelection,
- setCurrentScreen,
- setUnreadMessages,
- setUnreadNotifications,
+  currentScreen,
+  user,
+  selectedProject,
+  selectedApplication,
+  selectedJob,
+  selectedAssignment,
+  unreadNotifications,
+  unreadMessages,
+  selectedConversationId,
+  projectChallengeData,
+  assessmentBuilderData,
+  navigation,
+  handleLogout,
+  handleUserTypeSelection,
+  setCurrentScreen,
+  setUnreadMessages,
+  setUnreadNotifications,
 }: AppRouterProps) {
  
  switch (currentScreen) {
@@ -158,11 +205,12 @@ export function AppRouter({
  />
  );
  
- case 'recruiter-dashboard':
- return (
- <RecruiterDashboard 
- onPostProject={(project?: any) => navigation.navigateToPostProject(project)}
- onViewProjects={navigation.navigateToProjects}
+  case 'recruiter-dashboard':
+  return (
+  <RecruiterDashboard 
+  onPostProject={(project?: any) => navigation.navigateToPostProject(project)}
+  onPostJob={(job?: any) => navigation.navigateToPostJob(job)}
+  onViewProjects={navigation.navigateToProjects}
  onViewATS={navigation.navigateToATS}
  onViewATSScanner={navigation.navigateToATSScanner}
  onViewAutomatedScreening={navigation.navigateToAutomatedScreening}
@@ -185,15 +233,23 @@ export function AppRouter({
  />
  );
  
- case 'recruiter-post-project':
- return (
- <ProjectPostingFlow 
- onBack={navigation.navigateToRecruiterDashboard}
- existingProject={selectedProject as any}
- />
- );
+  case 'recruiter-post-project':
+  return (
+  <ProjectPostingFlow 
+  onBack={navigation.navigateToRecruiterDashboard}
+  existingProject={selectedProject as any}
+  />
+  );
 
- case 'recruiter-projects':
+  case 'recruiter-post-job':
+  return (
+  <JobPostingFlow 
+  onBack={navigation.navigateToRecruiterDashboard}
+  existingJob={selectedJob as any}
+  />
+  );
+
+  case 'recruiter-projects':
  return (
  <ProjectManagement 
  onBack={navigation.navigateToRecruiterDashboard}
@@ -362,33 +418,35 @@ export function AppRouter({
  />
  );
  
- case 'candidate-dashboard':
- return (
- <CandidateDashboard 
- onBuildResume={navigation.navigateToResumeBuilder}
- onViewPortfolio={navigation.navigateToPortfolio}
- onTakeKnowledgeAssessment={navigation.navigateToKnowledgeAssessment}
- onVideoInterview={navigation.navigateToVideoInterview}
- onSearchProjects={navigation.navigateToProjectSearch}
- onViewInterviews={navigation.navigateToInterviews}
- onViewSettings={navigation.navigateToSettings}
- onViewMessages={navigation.navigateToMessages}
- onViewNotifications={navigation.navigateToNotifications}
- onUpgrade={navigation.navigateToPricing}
- onLogout={handleLogout}
- onExperienceBuilder={navigation.navigateToExperienceBuilder}
- onMicroInternships={navigation.navigateToMicroInternships}
- onMentorshipProgram={navigation.navigateToMentorshipProgram}
- onCareerSwitcherTrack={navigation.navigateToCareerSwitcherTrack}
- onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
- onAIInterviewCoach={navigation.navigateToAIInterviewCoach}
- onSkillsDevelopmentAI={navigation.navigateToSkillsDevelopmentAI}
- onMarketIntelligence={navigation.navigateToCandidateMarketIntelligence}
- onATSScanner={navigation.navigateToCandidateATSScanner}
- unreadNotifications={unreadNotifications}
- unreadMessages={unreadMessages}
- />
- );
+case 'candidate-dashboard':
+  return (
+  <CandidateDashboard 
+  onBuildResume={navigation.navigateToResumeBuilder}
+  onViewPortfolio={navigation.navigateToPortfolio}
+  onTakeKnowledgeAssessment={navigation.navigateToKnowledgeAssessment}
+  onVideoInterview={navigation.navigateToVideoInterview}
+  onSearchProjects={navigation.navigateToProjectSearch}
+  onViewInterviews={navigation.navigateToInterviews}
+  onViewSettings={navigation.navigateToSettings}
+  onViewMessages={navigation.navigateToMessages}
+  onViewNotifications={navigation.navigateToNotifications}
+  onViewAppliedJobs={navigation.navigateToAppliedJobs}
+  onViewSavedJobs={navigation.navigateToSavedJobs}
+  onUpgrade={navigation.navigateToPricing}
+  onLogout={handleLogout}
+  onExperienceBuilder={navigation.navigateToExperienceBuilder}
+  onMicroInternships={navigation.navigateToMicroInternships}
+  onMentorshipProgram={navigation.navigateToMentorshipProgram}
+  onCareerSwitcherTrack={navigation.navigateToCareerSwitcherTrack}
+  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  onAIInterviewCoach={navigation.navigateToAIInterviewCoach}
+  onSkillsDevelopmentAI={navigation.navigateToSkillsDevelopmentAI}
+  onMarketIntelligence={navigation.navigateToCandidateMarketIntelligence}
+  onATSScanner={navigation.navigateToCandidateATSScanner}
+  unreadNotifications={unreadNotifications}
+  unreadMessages={unreadMessages}
+  />
+  );
 
  case 'candidate-interviews':
  return (
@@ -479,14 +537,90 @@ export function AppRouter({
  />
  );
  
- case 'candidate-search-projects':
- return (
- <ProjectSearch 
- onBack={navigation.navigateToCandidateDashboard}
- onUpgrade={navigation.navigateToPricing}
- onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
- />
- );
+  case 'candidate-search-projects':
+  case 'candidate-jobs':
+  return (
+  <ProjectSearch
+  onBack={navigation.navigateToCandidateDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  onViewJob={(p) => navigation.navigateToJobDetail(projectToJob(p))}
+  />
+  );
+
+  case 'candidate-job-detail':
+  return (
+  selectedJob ? (
+  <CandidateJobDetail
+  job={selectedJob as any}
+  onBack={navigation.navigateToProjectSearch}
+  onViewAssignment={(assignmentId) => navigation.navigateToProjectAssignment(assignmentId)}
+  onApply={navigation.navigateToJobApply}
+  />
+  ) : (
+  <ProjectSearch
+  onBack={navigation.navigateToCandidateDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  onViewJob={(p) => navigation.navigateToJobDetail(projectToJob(p))}
+  />
+  )
+  );
+
+  case 'candidate-project-assignment':
+  case 'candidate-project-submission':
+  return (
+  selectedAssignment?.id ? (
+  <CandidateProjectAssignment
+  assignmentId={selectedAssignment.id}
+  onBack={navigation.navigateToCandidateDashboard}
+  />
+  ) : (
+  <ProjectSearch
+  onBack={navigation.navigateToCandidateDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  />
+  )
+  );
+
+  case 'candidate-job-apply':
+  return (
+  selectedJob ? (
+  <CandidateJobApply
+  job={selectedJob as any}
+  onBack={() => navigation.navigateToJobDetail(selectedJob as Job)}
+  onApplied={navigation.navigateToCandidateDashboard}
+  />
+  ) : (
+  <ProjectSearch
+  onBack={navigation.navigateToCandidateDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  onViewJob={(p) => navigation.navigateToJobDetail(projectToJob(p))}
+  />
+  )
+  );
+
+  case 'candidate-applied-jobs':
+  return (
+  <CandidateAppliedJobs
+  onBack={navigation.navigateToCandidateDashboard}
+  onViewJob={navigation.navigateToJobDetail}
+  onViewAssignment={navigation.navigateToProjectAssignment}
+  onSearchProjects={navigation.navigateToProjectSearch}
+  />
+  );
+
+  case 'candidate-saved-jobs':
+  return (
+  <CandidateSavedJobs
+  onBack={navigation.navigateToCandidateDashboard}
+  onViewJob={navigation.navigateToJobDetail}
+  onBrowseJobs={navigation.navigateToProjectSearch}
+  />
+  );
+
 
  case 'candidate-experience-builder':
  return (

@@ -54,7 +54,8 @@ interface Project {
 
 interface RecruiterDashboardProps {
  [key: string]: any;
- onPostProject: (project?: Project) => void;
+ onPostProject?: (project?: Project) => void;
+ onPostJob?: (job?: any) => void;
  onViewProjects?: () => void;
  onViewATS: () => void;
  onViewATSScanner?: () => void;
@@ -75,8 +76,9 @@ interface RecruiterDashboardProps {
  unreadMessages?: number;
 }
 
-export function RecruiterDashboard({ 
- onPostProject, 
+export function RecruiterDashboard({
+ onPostProject,
+ onPostJob,
  onViewProjects,
  onViewATS, 
  onViewATSScanner,
@@ -395,7 +397,7 @@ const { conversations: messageConversations } = useConversations();
 
  <div className="grid grid-cols-2 divide-x divide-slate-200 sm:grid-cols-4 lg:grid-cols-2">
  {[
- { label: 'Active Projects', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, tone: 'from-emerald-50 to-white text-emerald-700' },
+  { label: 'Active Jobs', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, tone: 'from-emerald-50 to-white text-emerald-700' },
  { label: 'Applications', value: totalApplicationCount, icon: Users, action: onViewATS, tone: 'from-blue-50 to-white text-blue-700' },
  { label: 'Interviews', value: stats?.interviewsScheduled || 0, icon: Calendar, action: onViewInterviews, tone: 'from-amber-50 to-white text-amber-700' },
  { label: 'Hire Rate', value: stats?.hireRate || 'N/A', icon: BarChart3, action: onViewAnalytics, tone: 'from-violet-50 to-white text-violet-700' },
@@ -420,21 +422,36 @@ const { conversations: messageConversations } = useConversations();
  </div>
  </div>
 
- <div className="mb-6 rounded-lg border border-emerald-100 bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] p-5 text-white shadow-sm">
- <div className="mb-4 flex flex-col gap-1">
- <p className="text-xs font-semibold uppercase text-emerald-200">Project Actions</p>
- <h2 className="text-xl font-semibold text-white">Create and Source Candidates</h2>
- </div>
- <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
- <Button onClick={() => onPostProject()} className="h-14 rounded-lg bg-white px-6 font-semibold text-slate-950 shadow-sm hover:bg-emerald-50">
- <Plus className="mr-2 h-5 w-5" />
- Post New Project
- </Button>
- <Button variant="outline" onClick={onSearchCandidates} className="h-14 rounded-lg border-white/40 bg-white/10 px-6 font-semibold text-white hover:bg-white/20">
- <Search className="mr-2 h-5 w-5" />
- Search Candidates
- </Button>
- </div>
+  <div className="mb-6 rounded-lg border border-emerald-100 bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] p-5 text-white shadow-sm">
+  <div className="mb-4 flex flex-col gap-1">
+  <p className="text-xs font-semibold uppercase text-emerald-200">Job Actions</p>
+  <h2 className="text-xl font-semibold text-white">Post Jobs and Source Candidates</h2>
+  </div>
+  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+  <Button
+  onClick={() => (onPostJob ? onPostJob() : onPostProject?.())}
+  className="h-14 rounded-lg bg-white px-6 font-semibold text-slate-950 shadow-sm hover:bg-emerald-50"
+  >
+  <Plus className="mr-2 h-5 w-5" />
+  Post Job
+  </Button>
+  <Button
+  variant="outline"
+  onClick={onSearchCandidates}
+  className="h-14 rounded-lg border-white/40 bg-white/10 px-6 font-semibold text-white hover:bg-white/20"
+  >
+  <Search className="mr-2 h-5 w-5" />
+  Search Candidates
+  </Button>
+  <Button
+  variant="outline"
+  onClick={() => onPostProject?.()}
+  className="h-14 rounded-lg border-white/40 bg-white/10 px-6 font-semibold text-white hover:bg-white/20"
+  >
+  <Briefcase className="mr-2 h-5 w-5" />
+  Post Project Only
+  </Button>
+  </div>
  </div>
 
  <div className="mb-6 rounded-lg border border-slate-200 bg-white shadow-sm">
