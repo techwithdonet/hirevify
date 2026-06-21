@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
  AlertCircle,
  ArrowLeft,
@@ -152,9 +152,9 @@ const [currentStep, setCurrentStep] = useState(0);
  if (skillsPreferences.jobTypes.length < 1) missing.push('Preferred job type');
  if (!skillsPreferences.noticePeriod.trim()) missing.push('Availability / notice period');
  if (!skillsPreferences.timezone.trim()) missing.push('Timezone');
- if (Number(skillsPreferences.salaryMin) <= 0) missing.push('Salary minimum');
- if (Number(skillsPreferences.salaryMax) <= 0) missing.push('Salary maximum');
- if (Number(skillsPreferences.salaryMax) < Number(skillsPreferences.salaryMin)) missing.push('Salary maximum must be greater than minimum');
+ 
+ 
+ 
  if (!skillsPreferences.currency.trim()) missing.push('Currency');
  if (!hasPortfolioOrResume()) missing.push('Resume, portfolio, GitHub, LinkedIn, or website');
 
@@ -175,9 +175,9 @@ const [currentStep, setCurrentStep] = useState(0);
  skillsPreferences.jobTypes.length >= 1,
  Boolean(skillsPreferences.noticePeriod.trim()),
  Boolean(skillsPreferences.timezone.trim()),
- Number(skillsPreferences.salaryMin) > 0,
- Number(skillsPreferences.salaryMax) > 0,
- Number(skillsPreferences.salaryMax) >= Number(skillsPreferences.salaryMin),
+ 
+ 
+ 
  Boolean(skillsPreferences.currency.trim()),
  hasPortfolioOrResume(),
  ];
@@ -239,16 +239,6 @@ const [currentStep, setCurrentStep] = useState(0);
 
  if (!skillsPreferences.timezone.trim()) {
  toast.error('Select your timezone');
- return false;
- }
-
- if (Number(skillsPreferences.salaryMin) <= 0 || Number(skillsPreferences.salaryMax) <= 0) {
- toast.error('Enter valid salary minimum and maximum');
- return false;
- }
-
- if (Number(skillsPreferences.salaryMax) < Number(skillsPreferences.salaryMin)) {
- toast.error('Salary maximum must be greater than salary minimum');
  return false;
  }
  }
@@ -701,25 +691,6 @@ const [currentStep, setCurrentStep] = useState(0);
  </Select>
  </div>
  </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <div>
- <Label>Salary Minimum {renderRequiredBadge()}</Label>
- <Input
- type="number"
- value={skillsPreferences.salaryMin}
- onChange={(event) => setSkillsPreferences({...skillsPreferences, salaryMin: Number(event.target.value || 0) })}
- />
- </div>
- <div>
- <Label>Salary Maximum {renderRequiredBadge()}</Label>
- <Input
- type="number"
- value={skillsPreferences.salaryMax}
- onChange={(event) => setSkillsPreferences({...skillsPreferences, salaryMax: Number(event.target.value || 0) })}
- />
- </div>
- </div>
  </CardContent>
  </Card>
  );
@@ -949,6 +920,7 @@ const [currentStep, setCurrentStep] = useState(0);
  </div>
  );
 }
+
 
 
 
