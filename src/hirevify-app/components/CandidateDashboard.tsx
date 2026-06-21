@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
  Bell,
  MessageCircle,
@@ -206,7 +206,7 @@ export function CandidateDashboard({
  {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
  </Badge>
  ): (
- <Button onClick={onUpgrade} className="hidden rounded-full bg-white px-5 font-semibold text-white shadow-sm hover:bg-slate-800 md:flex">
+ <Button onClick={onUpgrade} className="hidden rounded-full bg-slate-900 px-5 font-semibold text-white shadow-sm hover:bg-slate-800 hover:text-white md:flex">
  <Crown className="mr-2 h-4 w-4" />
  Upgrade to Pro
  </Button>
@@ -290,7 +290,7 @@ export function CandidateDashboard({
  <p className="mt-1 text-sm leading-6 text-slate-600">
  {isCandidateProfileComplete? 'Review your latest details before applying to new projects.': 'Finish the missing fields to improve matching quality.'}
  </p>
- <Button onClick={onViewSettings} className="mt-4 w-full rounded-full bg-white text-white shadow-sm hover:bg-slate-800">
+ <Button onClick={onViewSettings} className="mt-4 w-full rounded-full bg-slate-900 text-white shadow-sm hover:bg-slate-800 hover:text-white">
  {isCandidateProfileComplete? 'View / Edit Profile': 'Complete Profile'}
  <ArrowRight className="ml-2 h-4 w-4" />
  </Button>
@@ -310,7 +310,7 @@ export function CandidateDashboard({
   <div>
   <p className="text-sm font-medium text-slate-500">Applied Jobs</p>
   <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{applications.length}</p>
-  <p className="mt-1 text-xs font-medium text-emerald-600 opacity-0 transition group-hover:opacity-100">Track status →</p>
+  <p className="mt-1 text-xs font-medium text-emerald-600 opacity-0 transition group-hover:opacity-100">Track status ?</p>
   </div>
   <div className="candidate-stat-icon bg-emerald-50 text-emerald-700 transition group-hover:bg-emerald-100">
   <FileText className="h-5 w-5" />
@@ -343,7 +343,7 @@ export function CandidateDashboard({
   <div>
   <p className="text-sm font-medium text-slate-500">Saved Jobs</p>
   <p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-950">{savedJobs.length}</p>
-  <p className="mt-1 text-xs font-medium text-violet-600 opacity-0 transition group-hover:opacity-100">View favourites →</p>
+  <p className="mt-1 text-xs font-medium text-violet-600 opacity-0 transition group-hover:opacity-100">View favourites ?</p>
   </div>
   <div className="candidate-stat-icon bg-violet-50 text-violet-700 transition group-hover:bg-violet-100">
   <BookOpen className="h-5 w-5" />
@@ -572,7 +572,7 @@ export function CandidateDashboard({
   onClick={onViewAppliedJobs}
   className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
   >
-  View all →
+  View all ?
   </button>
   </div>
 
@@ -635,4 +635,6 @@ export function CandidateDashboard({
  </div>
  );
 }
+
+
 

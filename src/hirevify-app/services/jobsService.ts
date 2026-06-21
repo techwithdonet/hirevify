@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Jobs/Projects Service
  * Handles all job posting and retrieval operations from Supabase
  */
@@ -93,7 +93,7 @@ class JobsService {
  const { data, error, count } = await query.range(offset, offset + limit - 1).returns<JobWithRecruiter[]>();
 
  if (error) {
- console.error('Error fetching published jobs:', error);
+ console.error('Error fetching published jobs:', JSON.stringify(error, null, 2), error);
  return { data: [], error, count: 0 };
  }
 
