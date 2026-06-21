@@ -205,7 +205,7 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
 
  const { data: profile } = await supabase.from('profiles').select('*').eq('auth_user_id', user.id).maybeSingle();
 
- const { data: recruiterProfile } = await supabase.from('recruiter_profiles').select('*').eq('id', profile?.id).maybeSingle();
+ const { data: recruiterProfile } = await supabase.from('recruiter_profiles').select('*').eq('id', profile?.id || user.id).maybeSingle();
 
  const fullName = recruiterProfile?.contact_person || profile?.full_name || user?.name || '';
  const [firstName = '',...lastNameParts] = fullName.split(' ');
@@ -1358,7 +1358,6 @@ export function RecruiterSettings({ onBack, onUpgrade }: RecruiterSettingsProps)
  </div>
  );
 }
-
 
 
 
