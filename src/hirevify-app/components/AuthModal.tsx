@@ -107,9 +107,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </DialogHeader>
 
  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="px-6 py-5">
- <TabsList className="grid w-full grid-cols-2 rounded-lg bg-slate-100">
- <TabsTrigger value="signin">Sign In</TabsTrigger>
- <TabsTrigger value="signup">Sign Up</TabsTrigger>
+ <TabsList className="auth-tabs grid w-full grid-cols-2 rounded-lg bg-slate-100">
+ <TabsTrigger value="signin" className="auth-tab-trigger">Sign In</TabsTrigger>
+ <TabsTrigger value="signup" className="auth-tab-trigger">Sign Up</TabsTrigger>
  </TabsList>
 
  <form onSubmit={handleSubmit} className="space-y-4 pt-2">
@@ -311,5 +311,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </Dialog>
  );
 }
+
 
 
