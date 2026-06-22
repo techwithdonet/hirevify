@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+﻿import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -29,6 +29,9 @@ import {
   AlertCircle,
   Check,
   Zap,
+  Video,
+  PlayCircle,
+  FileCheck,
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
@@ -81,6 +84,9 @@ interface AssignmentRecord {
   assignmentStatus: AssignmentStatus;
   assignedAt: string;
   respondedAt?: string;
+  projectSubmissionUrl?: string | null;
+  videoSubmissionUrl?: string | null;
+  submissionNotes?: string | null;
 }
 
 interface ATSViewProps {
@@ -98,13 +104,14 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Set<string>>(new Set());
   const [assignments, setAssignments] = useState<AssignmentRecord[]>([]);
-  // Tracks which application IDs already have an assignment — these are read-only
+  // Tracks which application IDs already have an assignment ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â these are read-only
   const [assignedCandidateIds, setAssignedCandidateIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchFilter, setMatchFilter] = useState<'all' | '70plus' | 'below'>('all');
   const [showAssignmentPanel, setShowAssignmentPanel] = useState(false);
+  const [activeTab, setActiveTab] = useState<'applicants' | 'projects'>('applicants');
 
   // Load recruiter profile
   useEffect(() => {
@@ -303,6 +310,9 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
           assignmentStatus: a.assignment_status,
           assignedAt: a.created_at,
           respondedAt: a.assignment_status !== 'pending' ? a.updated_at : undefined,
+          projectSubmissionUrl: a.project_submission_url || null,
+          videoSubmissionUrl: a.video_submission_url || null,
+          submissionNotes: a.submission_notes || null,
         })));
 
         // Build a set of already-assigned application IDs so we can lock those cards
@@ -338,7 +348,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId);
   const selectedJobApplications = filteredApplications;
-  // High-match list for display — includes assigned so recruiter can see the stats
+  // High-match list for display ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â includes assigned so recruiter can see the stats
   const highMatchApps = applications.filter((a) => a.matchScore >= 70);
   // Selectable high-match = exclude already-assigned (already shown as locked cards)
   const selectableHighMatch = highMatchApps.filter((a) => !assignedCandidateIds.has(a.id));
@@ -553,16 +563,50 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
               </Button>
               <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="h-14 shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase text-emerald-700">Applications</p>
-                <h1 className="truncate text-2xl font-semibold text-slate-950">Job Application Manager</h1>
-                <p className="text-sm text-slate-500">Select a job to view and manage applications</p>
+                <p className="text-xs font-semibold uppercase text-emerald-700">Recruiter</p>
+                <h1 className="truncate text-2xl font-semibold text-slate-950">Candidate Pipeline</h1>
+                <p className="text-sm text-slate-500">Manage applications and track project submissions</p>
               </div>
+            </div>
+            
+            {/* Tab Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveTab('applicants')}
+                className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
+                  activeTab === 'applicants'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <User className="h-4 w-4" />
+                Active Jobs
+              </button>
+              <button
+                onClick={() => setActiveTab('projects')}
+                className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
+                  activeTab === 'projects'
+                    ? 'bg-white text-purple-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <FileCheck className="h-4 w-4" />
+                Ongoing Projects
+                {assignments.filter(a => ['submitted', 'under_review'].includes(a.assignmentStatus)).length > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white">
+                    {assignments.filter(a => ['submitted', 'under_review'].includes(a.assignmentStatus)).length}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+        {/* ==================== ACTIVE JOBS TAB ==================== */}
+        {activeTab === 'applicants' && (
+        <>
         {/* Job Selector */}
         <div className="mb-6 rounded-lg border border-emerald-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 bg-gradient-to-r from-emerald-50 to-white p-4">
@@ -802,7 +846,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
                                 <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
                                   <Mail className="h-3.5 w-3.5 shrink-0" />
                                   <span className="truncate">{app.email}</span>
-                                  <span className="text-slate-300">·</span>
+                                  <span className="text-slate-300">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·</span>
                                   <Calendar className="h-3.5 w-3.5 shrink-0" />
                                   <span>{new Date(app.appliedDate).toLocaleDateString()}</span>
                                 </div>
@@ -865,6 +909,92 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
 
               {/* Right: Application Status */}
               <div className="space-y-4">
+                {/* Video Verification Progress */}
+                <div className="rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-white shadow-sm overflow-hidden">
+                  <div className="border-b border-purple-100 bg-purple-50 p-4">
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="h-5 w-5 text-purple-600" />
+                      <h3 className="font-semibold text-slate-950">Video Verification</h3>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Track candidate video & project submissions
+                    </p>
+                  </div>
+                  
+                  {/* Progress Stats */}
+                  {assignments.length > 0 && (
+                    <div className="p-4 space-y-4">
+                      {/* Progress Bar */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-slate-700">Verification Progress</span>
+                          <span className="text-sm font-bold text-purple-700">
+                            {assignments.filter(a => a.assignmentStatus === 'under_review' || a.assignmentStatus === 'submitted').length} / {assignments.length}
+                          </span>
+                        </div>
+                        <div className="w-full bg-purple-100 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-500"
+                        style={{ width: `${assignments.length > 0 ? Math.round((assignments.filter((assignment) => assignment.assignmentStatus === 'hired').length / assignments.length) * 100) : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white rounded-lg border border-purple-100 p-3 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <FileCheck className="h-4 w-4 text-purple-600" />
+                            <span className="text-2xl font-bold text-purple-700">
+                              {assignments.filter(a => a.projectSubmissionUrl).length}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">Project Submitted</p>
+                        </div>
+                        <div className="bg-white rounded-lg border border-purple-100 p-3 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Video className="h-4 w-4 text-purple-600" />
+                            <span className="text-2xl font-bold text-purple-700">
+                              {assignments.filter(a => a.videoSubmissionUrl).length}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">Video Submitted</p>
+                        </div>
+                      </div>
+                      
+                      {/* Pending Review Count */}
+                      {assignments.filter(a => a.assignmentStatus === 'submitted').length > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                          <p className="text-xs text-amber-800">
+                            <span className="font-semibold">{assignments.filter(a => a.assignmentStatus === 'submitted').length}</span> submission(s) awaiting your review
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Under Review */}
+                      {assignments.filter(a => a.assignmentStatus === 'under_review').length > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 text-blue-600 shrink-0" />
+                          <p className="text-xs text-blue-800">
+                            <span className="font-semibold">{assignments.filter(a => a.assignmentStatus === 'under_review').length}</span> in review
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {assignments.length === 0 && (
+                    <div className="p-6 text-center">
+                      <AlertCircle className="mx-auto mb-2 h-8 w-8 text-slate-300" />
+                      <p className="text-sm font-medium text-slate-600">No assignments yet</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Assign candidates to track their status here
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                   <div className="border-b border-slate-200 bg-slate-50 p-4">
                     <div className="flex items-center gap-2">
@@ -933,17 +1063,180 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
             </div>
           </>
         )}
+        </>
+        )}
+        
+        {/* ==================== ONGOING PROJECTS TAB ==================== */}
+        {activeTab === 'projects' && (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Projects', value: assignments.length, color: 'border-slate-200 bg-white', textColor: 'text-slate-700' },
+                { label: 'Submitted', value: assignments.filter(a => a.assignmentStatus === 'submitted').length, color: 'border-blue-200 bg-blue-50', textColor: 'text-blue-700' },
+                { label: 'Under Review', value: assignments.filter(a => a.assignmentStatus === 'under_review').length, color: 'border-purple-200 bg-purple-50', textColor: 'text-purple-700' },
+                { label: 'Completed', value: assignments.filter(a => ['hired', 'not_selected'].includes(a.assignmentStatus)).length, color: 'border-emerald-200 bg-emerald-50', textColor: 'text-emerald-700' },
+              ].map((stat) => (
+                <div key={stat.label} className={`rounded-lg border p-4 ${stat.color}`}>
+                  <p className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
+                  <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+                </div>
+              ))}
+            </div>
 
-        {!selectedJobId && jobs.length > 0 && (
-          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-24 text-center">
-            <Target className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-            <h3 className="text-lg font-semibold text-slate-700">Select a job above</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Choose a job from your list to view and manage candidate applications
-            </p>
+            {/* 4-Phase Progress Overview */}
+            <div className="rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-white p-6">
+              <h3 className="text-lg font-semibold text-slate-950 mb-4">Recruitment Pipeline</h3>
+              <div className="flex items-center justify-between">
+                {[
+                  { phase: 'Submitted', icon: FileCheck, color: 'bg-blue-500', count: assignments.filter(a => a.assignmentStatus === 'submitted').length },
+                  { phase: 'Under Review', icon: RefreshCw, color: 'bg-purple-500', count: assignments.filter(a => a.assignmentStatus === 'under_review').length },
+                  { phase: 'Approved', icon: CheckCircle2, color: 'bg-emerald-500', count: assignments.filter(a => a.assignmentStatus === 'hired').length },
+                  { phase: 'Hired', icon: Crown, color: 'bg-amber-500', count: assignments.filter(a => a.assignmentStatus === 'hired').length },
+                ].map((phase, idx) => {
+                  const Icon = phase.icon;
+                  return (
+                    <div key={phase.phase} className="flex items-center">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-14 h-14 rounded-full ${phase.color} flex items-center justify-center shadow-lg`}>
+                          <Icon className="w-7 h-7 text-white" />
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-slate-700">{phase.phase}</p>
+                        <p className="text-xs text-slate-500">{phase.count} candidates</p>
+                      </div>
+                      {idx < 3 && (
+                        <div className="w-16 h-1 bg-slate-200 mx-2 rounded-full">
+                          <div className={`h-full ${phase.color} rounded-full`} style={{ width: '100%' }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Candidate List with Progress */}
+            {assignments.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
+                <FileCheck className="mx-auto mb-3 h-12 w-12 text-slate-300" />
+                <p className="font-semibold text-slate-700">No ongoing projects</p>
+                <p className="mt-1 text-sm text-slate-500">Assign candidates to jobs to start tracking their progress here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-slate-950">Candidates Progress</h3>
+                {assignments.map((assignment) => {
+                  const phaseIndex = ['submitted', 'under_review', 'hired', 'not_selected'].indexOf(assignment.assignmentStatus);
+                  const progress = assignment.assignmentStatus === 'pending' ? 0 : 
+                                   assignment.assignmentStatus === 'accepted' ? 1 :
+                                   phaseIndex >= 0 ? phaseIndex + 1 : 1;
+                  
+                  return (
+                    <div key={assignment.id} className="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12">
+                            <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
+                              {assignment.candidateName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-slate-950">{assignment.candidateName}</p>
+                            <p className="text-sm text-slate-500">{assignment.candidateEmail}</p>
+                          </div>
+                        </div>
+                        <Badge className={getAssignmentBadge(assignment.assignmentStatus).class} variant="outline">
+                          {getAssignmentBadge(assignment.assignmentStatus).label}
+                        </Badge>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-slate-500">Submission Progress</span>
+                          <span className="text-xs font-medium text-slate-700">
+                            {assignment.projectSubmissionUrl && assignment.videoSubmissionUrl ? 'Complete' : 
+                             assignment.projectSubmissionUrl ? 'Project Done' : 
+                             assignment.videoSubmissionUrl ? 'Video Done' : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <div className={`flex-1 h-2 rounded-full ${assignment.projectSubmissionUrl ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                          <div className={`flex-1 h-2 rounded-full ${assignment.videoSubmissionUrl ? 'bg-purple-500' : 'bg-slate-200'}`} />
+                          <div className={`flex-1 h-2 rounded-full ${['under_review', 'hired'].includes(assignment.assignmentStatus) ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                          <div className={`flex-1 h-2 rounded-full ${assignment.assignmentStatus === 'hired' ? 'bg-amber-500' : 'bg-slate-200'}`} />
+                        </div>
+                        <div className="flex justify-between mt-1 text-xs text-slate-400">
+                          <span>Project</span>
+                          <span>Video</span>
+                          <span>Review</span>
+                          <span>Hired</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        {assignment.assignmentStatus === 'submitted' && (
+                          <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => {
+                            // Update status to under_review
+                            projectAssignmentsService.updateAssignmentStatus(assignment.id, 'under_review');
+                            // Refresh assignments
+                            const loadAssignments = async () => {
+                              const { data } = await projectAssignmentsService.getJobAssignments(selectedJobId!);
+                              if (data) {
+                                setAssignments(data.map((a: any) => ({
+                                  id: a.id,
+                                  candidateName: a.candidate_profile?.full_name || 'Candidate',
+                                  candidateEmail: a.candidate_profile?.email || '',
+                                  assignmentStatus: a.assignment_status,
+                                  assignedAt: a.created_at,
+                                  respondedAt: a.assignment_status !== 'pending' ? a.updated_at : undefined,
+                                  projectSubmissionUrl: a.project_submission_url || null,
+                                  videoSubmissionUrl: a.video_submission_url || null,
+                                  submissionNotes: a.submission_notes || null,
+                                })));
+                              }
+                            };
+                            loadAssignments();
+                          }}>
+                            <RefreshCw className="w-4 h-4 mr-1" />
+                            Start Review
+                          </Button>
+                        )}
+                        {assignment.assignmentStatus === 'under_review' && (
+                          <>
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                              projectAssignmentsService.updateAssignmentStatus(assignment.id, 'hired');
+                              window.location.reload();
+                            }}>
+                              <Check className="w-4 h-4 mr-1" />
+                              Approve & Hire
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => {
+                              projectAssignmentsService.updateAssignmentStatus(assignment.id, 'not_selected');
+                              window.location.reload();
+                            }}>
+                              <X className="w-4 h-4 mr-1" />
+                              Not Selected
+                            </Button>
+                          </>
+                        )}
+                        {(assignment.projectSubmissionUrl || assignment.videoSubmissionUrl) && (
+                          <Button size="sm" variant="outline" className="border-purple-200 text-purple-600">
+                            <PlayCircle className="w-4 h-4 mr-1" />
+                            View Submission
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </main>
     </div>
   );
 }
+
