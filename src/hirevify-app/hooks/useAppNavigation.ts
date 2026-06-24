@@ -330,12 +330,17 @@ export const useAppNavigation = ({
  setCurrentScreen('candidate-mentorship-program');
  }, [requireAuth, setCurrentScreen]);
 
- const navigateToEmployerEducation = useCallback(() => {
- if (!requireAuth('access employer education', 'recruiter')) return;
- setCurrentScreen('recruiter-employer-education');
- }, [requireAuth, setCurrentScreen]);
+const navigateToEmployerEducation = useCallback(() => {
+  if (!requireAuth('access employer education', 'recruiter')) return;
+  setCurrentScreen('recruiter-employer-education');
+  }, [requireAuth, setCurrentScreen]);
 
- const navigateToCareerSwitcherTrack = useCallback(() => {
+  const navigateToOngoingProjects = useCallback(() => {
+  if (!requireAuth('access ongoing projects', 'recruiter')) return;
+  setCurrentScreen('recruiter-ongoing-projects');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToCareerSwitcherTrack = useCallback(() => {
  if (!requireAuth('access the career switcher track', 'candidate')) return;
  setCurrentScreen('candidate-career-switcher-track');
  }, [requireAuth, setCurrentScreen]);
@@ -409,7 +414,10 @@ export const useAppNavigation = ({
   }, [requireAuth, setSelectedAssignment, setCurrentScreen]);
 
   return {
-  navigateHome,
+  
+    navigateToRecruiterProfileEditor: () => setCurrentScreen('recruiter-profile-editor'),
+    navigateToCandidateProfileEditor: () => setCurrentScreen('candidate-profile-editor'),
+navigateHome,
   handleLogout,
   navigateToPricing,
   navigateToPostProject,
@@ -451,6 +459,7 @@ export const useAppNavigation = ({
   navigateToSkillsFirstHiring,
   navigateToMentorshipProgram,
   navigateToEmployerEducation,
+  navigateToOngoingProjects,
   navigateToCareerSwitcherTrack,
   navigateToAutomatedScreening,
   navigateToRecruiterMarketIntelligence,
@@ -469,6 +478,7 @@ export const useAppNavigation = ({
   navigateToRecruiterApplicationDetail,
   };
 };
+
 
 
 
