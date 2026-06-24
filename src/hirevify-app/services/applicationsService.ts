@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Applications Service
  * Handles all job application operations from Supabase
  */
@@ -110,25 +110,78 @@ class ApplicationsService {
  return { data: data || [], error: null };
  }
 
- /**
- * Get all applications for a job
- */
- async getJobApplications(jobId: string) {
- const { data, error } = await this.supabase.from('applications').select(
- `
- *,
- candidate_profile:candidate_id(full_name, email, avatar_url),
- candidate_details:candidate_id(headline, skills, years_of_experience)
- `
- ).eq('job_id', jobId).order('submitted_at', { ascending: false }).returns<ApplicationWithDetails[]>();
+/**
+  * Get all applications for a job
+  */
+  async getJobApplications(jobId: string) {
+    const { data: applications, error } = await this.supabase
+      .from('applications')
+      .select('*')
+      .eq('job_id', jobId)
+      .order('created_at', { ascending: false })
+      .returns<Application[]>();
 
- if (error) {
- console.error('Error fetching job applications:', error);
- return { data: [], error };
- }
+    if (error) {
+      console.error('Error fetching job applications:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        raw: error,
+      });
+      return { data: [], error };
+    }
 
- return { data: data || [], error: null };
- }
+    const rows = applications || [];
+    const candidateIds = Array.from(
+      new Set(rows.map((application) => application.candidate_id).filter(Boolean))
+    );
+
+    if (candidateIds.length === 0) {
+      return { data: rows as ApplicationWithDetails[], error: null };
+    }
+
+    const { data: profiles, error: profilesError } = await this.supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', candidateIds);
+
+    if (profilesError) {
+      console.error('Error fetching application candidate profiles:', {
+        message: profilesError?.message,
+        details: profilesError?.details,
+        hint: profilesError?.hint,
+        code: profilesError?.code,
+        raw: profilesError,
+      });
+    }
+
+    const { data: candidateProfiles, error: detailsError } = await this.supabase
+      .from('candidate_profiles')
+      .select('*')
+      .in('id', candidateIds);
+
+    if (detailsError) {
+      console.error('Error fetching application candidate details:', {
+        message: detailsError?.message,
+        details: detailsError?.details,
+        hint: detailsError?.hint,
+        code: detailsError?.code,
+        raw: detailsError,
+      });
+    }
+
+    const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]));
+    const detailsMap = new Map((candidateProfiles || []).map((profile) => [profile.id, profile]));
+
+    const merged = rows.map((application) => ({
+      ...application,
+      candidate_profile: profileMap.get(application.candidate_id) || null,
+      candidate_details: detailsMap.get(application.candidate_id) || null,
+    })) as ApplicationWithDetails[];
+
+    return { data: merged, error: null };
+  }
 
  /**
  * Get applications for a recruiter's jobs
@@ -237,7 +290,7 @@ class ApplicationsService {
   /**
    * Upload a CV file to the private `application-files` storage bucket
    * at path: <authUserId>/cv/<timestamp>_<originalName>
-   * Returns the storage path (not a public URL — caller must use
+   * Returns the storage path (not a public URL â€” caller must use
    * `getApplicationFileSignedUrl` to fetch a temporary link).
    */
   async uploadCV(authUserId: string, file: File) {
@@ -276,5 +329,8 @@ class ApplicationsService {
 }
 
 export const applicationsService = new ApplicationsService();
+
+
+
 
 

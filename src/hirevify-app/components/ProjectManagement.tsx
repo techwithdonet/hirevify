@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Briefcase, Calendar, Edit, Eye, Loader, MapPin, Plus, Scan, Trash2, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -39,6 +39,7 @@ interface JobRow {
 interface ProjectManagementProps {
  onBack: () => void;
  onEditProject?: (project?: any) => void;
+  onPostJob?: (job?: any) => void;
  onViewApplications?: (project?: any) => void;
  onCreateProject?: () => void;
 }
@@ -104,6 +105,7 @@ const emptyGrowthForm = (type: RecruiterGrowthPostType) => ({
 export function ProjectManagement({
  onBack,
  onEditProject,
+  onPostJob,
  onViewApplications,
  onCreateProject,
 }: ProjectManagementProps) {
@@ -178,7 +180,7 @@ export function ProjectManagement({
 
  if (error) throw new Error(error.message);
 
- setJobs(data || []);
+ setJobs((data || []).filter((job: any) => !(job.has_project === true && job.job_type === 'freelance')));
  } catch (error) {
  console.error('Failed to load recruiter projects:', error);
  toast.error(error instanceof Error? error.message: 'Failed to load projects');
@@ -688,8 +690,8 @@ export function ProjectManagement({
  Back to Dashboard
  </Button>
  <div>
- <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
- <p className="text-gray-600">Manage all your hiring projects in one place</p>
+<h1 className="text-3xl font-bold text-gray-900">Job Management</h1>
+  <p className="text-gray-600">Manage all your posted jobs in one place</p>
  </div>
  </div>
 
@@ -697,40 +699,40 @@ export function ProjectManagement({
  <CardHeader>
  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
  <div>
- <CardTitle className="flex items-center gap-2 text-gray-900">
- <Briefcase className="w-5 h-5 text-emerald-600" />
- Your Projects
- </CardTitle>
- <p className="text-sm text-gray-500 mt-1">
- {jobs.length} project{jobs.length === 1? '': 's'} saved
- </p>
- </div>
+<CardTitle className="flex items-center gap-2 text-gray-900">
+  <Briefcase className="w-5 h-5 text-emerald-600" />
+  Your Jobs
+  </CardTitle>
+  <p className="text-sm text-gray-500 mt-1">
+  {jobs.length} job{jobs.length === 1? '': 's'} saved
+  </p>
+  </div>
 
- <Button onClick={openCreateProject} className="bg-emerald-600 hover:bg-emerald-700 text-white">
- <Plus className="w-4 h-4 mr-2" />
- Create New Project
- </Button>
+  <Button onClick={openCreateProject} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+  <Plus className="w-4 h-4 mr-2" />
+  Post New Job
+  </Button>
  </div>
  </CardHeader>
 
  <CardContent>
  {isLoading? (
- <div className="py-16 flex flex-col items-center justify-center text-center">
- <Loader className="w-10 h-10 animate-spin text-emerald-600 mb-4" />
- <p className="text-gray-600">Loading projects...</p>
- </div>
- ): jobs.length === 0? (
- <div className="text-center py-16">
- <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
- <Briefcase className="w-8 h-8 text-emerald-600" />
- </div>
- <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
- <p className="text-gray-500 mb-6">Create your first project to start hiring top talent</p>
- <Button onClick={openCreateProject} className="bg-emerald-600 hover:bg-emerald-700 text-white">
- <Plus className="w-4 h-4 mr-2" />
- Create New Project
- </Button>
- </div>
+<div className="py-16 flex flex-col items-center justify-center text-center">
+  <Loader className="w-10 h-10 animate-spin text-emerald-600 mb-4" />
+  <p className="text-gray-600">Loading jobs...</p>
+  </div>
+  ): jobs.length === 0? (
+  <div className="text-center py-16">
+  <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+  <Briefcase className="w-8 h-8 text-emerald-600" />
+  </div>
+  <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs yet</h3>
+  <p className="text-gray-500 mb-6">Post your first job to start hiring top talent</p>
+  <Button onClick={openCreateProject} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+  <Plus className="w-4 h-4 mr-2" />
+  Post New Job
+  </Button>
+  </div>
  ): (
  <div className="space-y-4">
  {jobs.map((job) => (
@@ -772,24 +774,16 @@ export function ProjectManagement({
  </div>
  </div>
 
- <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[170px]">
- <Button variant="outline" onClick={() => onViewApplications?.(mapJobToProject(job))}>
- <Eye className="w-4 h-4 mr-2" />
- View Applications
- </Button>
- <Button
- variant="outline"
- className="border-emerald-200 text-emerald-800 hover:bg-emerald-50"
- onClick={() => onViewApplications?.({...mapJobToProject(job), atsScannerMode: true })}
- >
- <Scan className="w-4 h-4 mr-2" />
- Use HireVify ATS Scanner to find best match
- </Button>
- <Button variant="outline" onClick={() => onEditProject?.(mapJobToProject(job))}>
- <Edit className="w-4 h-4 mr-2" />
- Edit Project
- </Button>
- </div>
+<div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[170px]">
+  <Button variant="outline" onClick={() => onViewApplications?.({ id: job.id, title: job.title || '', description: job.description || '', skills: job.skills || [], location: job.location || '', status: job.status || 'published' })}>
+  <Eye className="w-4 h-4 mr-2" />
+  View Applications
+  </Button>
+ <Button variant="outline" onClick={() => onPostJob?.(job)}>
+   <Edit className="w-4 h-4 mr-2" />
+   Edit Job
+   </Button>
+  </div>
  </div>
  </div>
  ))}
@@ -801,3 +795,7 @@ export function ProjectManagement({
  </div>
  );
 }
+
+
+
+

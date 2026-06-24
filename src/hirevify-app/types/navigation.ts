@@ -4,6 +4,7 @@
   | 'recruiter-post-project'
   | 'recruiter-post-job'
   | 'recruiter-projects'
+  | 'recruiter-job-applicants'
   | 'recruiter-ats'
   | 'recruiter-ats-scanner'
   | 'recruiter-functional-ats'
@@ -18,7 +19,7 @@
   | 'recruiter-search-candidates'
   | 'recruiter-interviews'
   | 'recruiter-enhanced-video-interview'
-  | 'recruiter-settings'
+  | 'recruiter-profile-editor' | 'recruiter-settings'
   | 'recruiter-skills-first-hiring'
   | 'recruiter-employer-education'
   | 'candidate-dashboard'
@@ -31,7 +32,7 @@
   | 'candidate-search-projects'
   | 'candidate-job-detail'
   | 'candidate-interviews'
-  | 'candidate-settings'
+  | 'candidate-profile-editor' | 'candidate-settings'
   | 'candidate-experience-builder'
   | 'candidate-micro-internships'
   | 'candidate-mentorship-program'
@@ -90,6 +91,7 @@ export interface VideoSubmissionData {
  duration: number;
  timestamp: number;
 }
+
 
 
 

@@ -93,10 +93,13 @@ interface ATSViewProps {
   onBack: () => void;
   onStartInterview: () => void;
   onViewMessages: (conversationId?: string) => void;
+  onViewOngoingProjects?: () => void;
   selectedCandidate?: any;
 }
 
-export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCandidate }: ATSViewProps) {
+const isProjectOnlyJobRow = (job: any) => job?.job_type === 'freelance' && job?.has_project === true;
+
+export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoingProjects, selectedCandidate }: ATSViewProps) {
   const { user } = useAuth();
   const [recruiterId, setRecruiterId] = useState<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -145,7 +148,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
         const supabase = createSupabaseBrowserClient();
         const { data, error } = await supabase
           .from('jobs')
-          .select('id, title, description, skills, requirements, experience_level, status')
+          .select('id, title, description, skills, requirements, experience_level, status, job_type, has_project')
           .eq('recruiter_id', recruiterId)
           .order('created_at', { ascending: false });
 
@@ -164,7 +167,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
           });
         }
 
-        setJobs((data || []).map((j: any) => ({
+        setJobs((data || []).filter((job: any) => !isProjectOnlyJobRow(job)).map((j: any) => ({
           ...j,
           applicationCount: appCounts[j.id] || 0,
         })));
@@ -1121,10 +1124,28 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
                 <FileCheck className="mx-auto mb-3 h-12 w-12 text-slate-300" />
                 <p className="font-semibold text-slate-700">No ongoing projects</p>
                 <p className="mt-1 text-sm text-slate-500">Assign candidates to jobs to start tracking their progress here</p>
+                {onViewOngoingProjects && (
+                  <button
+                    onClick={onViewOngoingProjects}
+                    className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                  >
+                    View All Ongoing Projects
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-950">Candidates Progress</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-950">Candidates Progress</h3>
+                  {onViewOngoingProjects && (
+                    <button
+                      onClick={onViewOngoingProjects}
+                      className="text-sm font-medium text-teal-600 hover:text-teal-700"
+                    >
+                      View All →
+                    </button>
+                  )}
+                </div>
                 {assignments.map((assignment) => {
                   const phaseIndex = ['submitted', 'under_review', 'hired', 'not_selected'].indexOf(assignment.assignmentStatus);
                   const progress = assignment.assignmentStatus === 'pending' ? 0 : 
@@ -1239,4 +1260,8 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, selectedCand
     </div>
   );
 }
+
+
+
+
 

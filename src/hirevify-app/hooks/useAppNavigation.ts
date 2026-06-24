@@ -389,13 +389,27 @@ const navigateToEmployerEducation = useCallback(() => {
     setCurrentScreen('recruiter-post-job');
   }, [requireAuth, setSelectedJob, setCurrentScreen]);
 
-  // Navigate to job detail from candidate side
-  const navigateToJobDetail = useCallback((job: Job) => {
-    if (!requireAuth('view job details', 'candidate')) return;
-    
-    setSelectedJob(job);
-    setCurrentScreen('candidate-job-detail');
-  }, [requireAuth, setSelectedJob, setCurrentScreen]);
+// Navigate to job detail from candidate side
+   const navigateToJobDetail = useCallback((job: Job) => {
+     if (!requireAuth('view job details', 'candidate')) return;
+     
+     setSelectedJob(job);
+     setCurrentScreen('candidate-job-detail');
+   }, [requireAuth, setSelectedJob, setCurrentScreen]);
+
+   // Navigate to job applicants (recruiter side)
+   const navigateToJobApplicants = useCallback((job: any) => {
+     if (!requireAuth('view job applicants', 'recruiter')) return;
+     
+     setSelectedJob(job);
+     setCurrentScreen('recruiter-job-applicants');
+   }, [requireAuth, setSelectedJob, setCurrentScreen]);
+
+   // Navigate back to recruiter projects (job management)
+   const navigateToRecruiterProjects = useCallback(() => {
+     if (!requireAuth('manage jobs', 'recruiter')) return;
+     setCurrentScreen('recruiter-projects');
+   }, [requireAuth, setCurrentScreen]);
 
   // Navigate to project assignment for candidate
   const navigateToProjectAssignment = useCallback((assignmentId: string) => {
@@ -470,13 +484,15 @@ navigateHome,
   navigateToJobDetail,
   navigateToProjectAssignment,
   navigateToProjectSubmission,
-  navigateToJobApply,
-  navigateToMyJobs,
-  navigateToJobs,
-  navigateToAppliedJobs,
-  navigateToSavedJobs,
-  navigateToRecruiterApplicationDetail,
-  };
+navigateToJobApply,
+   navigateToMyJobs,
+   navigateToJobs,
+   navigateToAppliedJobs,
+   navigateToSavedJobs,
+   navigateToRecruiterApplicationDetail,
+   navigateToJobApplicants,
+   navigateToRecruiterProjects,
+   };
 };
 
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -13,12 +13,13 @@ import { dashboardTheme } from '../theme/dashboardTheme';
 import { useAuth } from './AuthProvider';
 
 interface JobData {
+  recruiter_id?: string | null;
   id?: string;
   title: string;
   description: string;
   requirements: string[];
   skills: string[];
-  job_type: 'fulltime' | 'contract' | 'freelance' | 'internship';
+  job_type: 'fulltime' | 'contract';
   experience_level: 'entry' | 'mid' | 'senior' | 'lead';
   location: string;
   remote_type: 'remote' | 'onsite' | 'hybrid';
@@ -34,6 +35,17 @@ interface JobData {
   project_budget_range?: string | null;
 }
 
+
+type ActiveProjectOption = {
+  id: string;
+  title: string;
+  status?: string | null;
+  project_title?: string | null;
+  project_description?: string | null;
+  project_skills?: string[] | null;
+  project_timeline?: string | null;
+  project_budget_range?: string | null;
+};
 interface JobPostingFlowProps {
   onBack: () => void;
   existingJob?: JobData | null;
@@ -52,7 +64,11 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
   const [jobRequirements, setJobRequirements] = useState<string[]>(existingJob?.requirements || []);
   const [requirementInput, setRequirementInput] = useState('');
   const [skills, setSkills] = useState<string[]>(existingJob?.skills || []);
-  const [jobType, setJobType] = useState<JobData['job_type']>(existingJob?.job_type || 'fulltime');
+  const [jobType, setJobType] = useState<JobData['job_type']>(
+    (existingJob?.job_type === 'fulltime' || existingJob?.job_type === 'contract') 
+      ? existingJob.job_type 
+      : 'fulltime'
+  );
   const [experienceLevel, setExperienceLevel] = useState<JobData['experience_level']>(existingJob?.experience_level || 'mid');
   const [location, setLocation] = useState(existingJob?.location || '');
   const [remoteType, setRemoteType] = useState<JobData['remote_type']>(existingJob?.remote_type || 'remote');
@@ -72,8 +88,114 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
   const [projectSkills, setProjectSkills] = useState<string[]>(existingJob?.project_skills || []);
   const [projectTimeline, setProjectTimeline] = useState(existingJob?.project_timeline || '');
   const [projectBudgetRange, setProjectBudgetRange] = useState(existingJob?.project_budget_range || '');
+  const [activeProjects, setActiveProjects] = useState<ActiveProjectOption[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [extraAttachedProjects, setExtraAttachedProjects] = useState<ActiveProjectOption[]>([]);
+  const [removedExtraProjectIds, setRemovedExtraProjectIds] = useState<string[]>([]);
 
   const isEditing = Boolean(existingJob?.id);
+  useEffect(() => {
+    const loadActiveProjectsForJobEdit = async () => {
+      if (!isEditing) return;
+
+      const supabase = createSupabaseBrowserClient();
+
+      let recruiterId = existingJob?.recruiter_id || null;
+
+      if (!recruiterId) {
+        const { data: authData } = await supabase.auth.getUser();
+
+        if (authData.user?.id) {
+          const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('auth_user_id', authData.user.id)
+            .maybeSingle();
+
+          recruiterId = profileRow?.id || null;
+        }
+      }
+
+      let query = supabase
+        .from('jobs')
+        .select('id, title, status, job_type, recruiter_id, project_title, project_description, project_skills, project_timeline, project_budget_range')
+        .eq('has_project', true)
+        .eq('job_type', 'freelance')
+        .eq('status', 'published');
+
+      if (existingJob?.id) {
+        query = query.neq('id', existingJob.id);
+      }
+
+      if (recruiterId) {
+        query = query.eq('recruiter_id', recruiterId);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading active projects for job edit:', {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code,
+          raw: error,
+        });
+        return;
+      }
+
+      setActiveProjects((data || []) as ActiveProjectOption[]);
+    };
+
+    loadActiveProjectsForJobEdit();
+  }, [isEditing, existingJob?.id, existingJob?.recruiter_id]);
+
+  const attachProjectFromDropdown = (projectId: string) => {
+    const selectedProject = activeProjects.find((project) => project.id === projectId);
+    setSelectedProjectId('');
+
+    if (!selectedProject) return;
+
+    const alreadyMainProject =
+      projectTitle &&
+      (selectedProject.project_title || selectedProject.title) === projectTitle;
+
+    const alreadyExtraProject = extraAttachedProjects.some((project) => project.id === selectedProject.id);
+
+    if (alreadyMainProject || alreadyExtraProject) {
+      return;
+    }
+
+    // If this job already has a project, keep it and add the selected one as an extra project.
+    if (projectTitle || showProjectSection) {
+      setExtraAttachedProjects((prev) => [...prev, selectedProject]);
+      setRemovedExtraProjectIds((prev) => prev.filter((id) => id !== selectedProject.id));
+      return;
+    }
+
+    // If no project exists yet, make the selected project the main associated project.
+    setShowProjectSection(true);
+    setProjectTitle(selectedProject.project_title || selectedProject.title || '');
+    setProjectDescription(selectedProject.project_description || '');
+    setProjectSkills(Array.isArray(selectedProject.project_skills) ? selectedProject.project_skills : []);
+    setProjectTimeline(selectedProject.project_timeline || '');
+    setProjectBudgetRange(selectedProject.project_budget_range || '');
+  };
+
+  const removeExtraAttachedProject = (projectId: string) => {
+    setExtraAttachedProjects((prev) => prev.filter((project) => project.id !== projectId));
+    setRemovedExtraProjectIds((prev) => [...new Set([...prev, projectId])]);
+  };
+
+  const removeAssociatedProject = () => {
+    setSelectedProjectId('');
+    setShowProjectSection(false);
+    setProjectTitle('');
+    setProjectDescription('');
+    setProjectSkills([]);
+    setProjectTimeline('');
+    setProjectBudgetRange('');
+  };
 
   useEffect(() => {
     const loadRecruiterProfile = async () => {
@@ -258,7 +380,7 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
     }
 
     // If the recruiter opened the "Add Project" sub-form, both title and
-    // description are required before we let them Save Project and Post Job.
+    // description are required before we let them {isEditing ? 'Save Job Changes' : showProjectSection ? '{isEditing ? 'Save Job Changes' : showProjectSection ? 'Save Project and Post Job' : 'Post Job'}' : 'Post Job'}.
     if (showProjectSection) {
       if (!projectTitle.trim()) {
         toast.error('Please enter a project title (or remove the project section).');
@@ -406,8 +528,6 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                   >
                     <option value="fulltime">Full-time</option>
                     <option value="contract">Contract</option>
-                    <option value="freelance">Freelance</option>
-                    <option value="internship">Internship</option>
                   </select>
                 </div>
 
@@ -528,8 +648,88 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                   <Briefcase className="w-4 h-4 mr-2" />
                   {showProjectSection ? 'Remove Project' : 'Add Project for this Job'}
                 </Button>
+
+              {isEditing && (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">Associated Project</h3>
+                      <p className="text-sm text-gray-600">
+                        View the project attached to this job, remove it, or choose another active project.
+                      </p>
+                    </div>
+
+                    {projectTitle && (
+                      <Button type="button" variant="outline" onClick={removeAssociatedProject}>
+                        Remove Project
+                      </Button>
+                    )}
+                  </div>
+
+                                    {extraAttachedProjects.length > 0 && (
+                    <div className="mb-4 space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Extra attached projects</p>
+                      {extraAttachedProjects.map((project) => (
+                        <div key={project.id} className="flex items-start justify-between gap-3 rounded-xl border border-white bg-white p-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{project.project_title || project.title}</p>
+                            {project.project_description && (
+                              <p className="mt-1 text-sm text-gray-600 line-clamp-2">{project.project_description}</p>
+                            )}
+                            {project.project_timeline && (
+                              <p className="mt-2 text-xs text-gray-500">Timeline: {project.project_timeline}</p>
+                            )}
+                            {project.project_budget_range && (
+                              <p className="text-xs text-gray-500">Budget: {project.project_budget_range}</p>
+                            )}
+                          </div>
+                          <Button type="button" variant="outline" size="sm" onClick={() => removeExtraAttachedProject(project.id)}>
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+{projectTitle ? (
+                    <div className="mb-4 rounded-xl border border-white bg-white p-4">
+                      <p className="text-sm font-semibold text-gray-900">{projectTitle}</p>
+                      {projectDescription && (
+                        <p className="mt-1 text-sm text-gray-600 line-clamp-2">{projectDescription}</p>
+                      )}
+                      {projectTimeline && (
+                        <p className="mt-2 text-xs text-gray-500">Timeline: {projectTimeline}</p>
+                      )}
+                      {projectBudgetRange && (
+                        <p className="text-xs text-gray-500">Budget: {projectBudgetRange}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mb-4 rounded-xl border border-dashed border-emerald-200 bg-white p-4 text-sm text-gray-600">
+                      No project is currently attached to this job.
+                    </div>
+                  )}
+
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    Add project from active projects
+                  </label>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(event) => attachProjectFromDropdown(event.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  >
+                    <option value="">Choose active project</option>
+                    {activeProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.project_title || project.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+
                 
-                {showProjectSection && (
+                {showProjectSection && !isEditing && (
                   <div className="mt-4 space-y-4 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground">
                       Attach a project that matched candidates will work on after being selected.
@@ -599,7 +799,7 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                 )}
               </div>
 
-              {/* Submit — Save Project (if attached) and Post Job */}
+              {/* Submit â€” Save Project (if attached) and Post Job */}
               <div className="pt-2 space-y-3">
                 <Button
                   onClick={handleSubmit}
@@ -614,10 +814,10 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                 >
                   {isSubmitting
                     ? 'Saving...'
+                    : isEditing
+                    ? 'Save Job Changes'
                     : showProjectSection && projectTitle.trim()
                     ? 'Save Project and Post Job'
-                    : isEditing
-                    ? 'Update Job'
                     : 'Post Job'}
                 </Button>
               </div>
@@ -710,3 +910,9 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
 }
 
 export default JobPostingFlow;
+
+
+
+
+
+

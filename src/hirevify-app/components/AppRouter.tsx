@@ -24,9 +24,11 @@ import { MessagingCenter } from './MessagingCenter';
 import { ProjectSearch } from './ProjectSearch';
 import { CandidateSearch } from './CandidateSearch';
 import { ProjectManagement } from './ProjectManagement';
+import { JobApplicants } from './JobApplicants';
 import { InterviewManagement } from './InterviewManagement';
 import { EnhancedVideoInterview } from './EnhancedVideoInterview';
 import { RecruiterSettings } from './RecruiterSettings';
+import { RecruiterProfileEditor } from './RecruiterProfileEditor';
 import { AIMatchingDashboard } from './AIMatchingDashboard';
 import { AutomatedScreening } from './AutomatedScreening';
 import { MarketIntelligenceDashboard } from './MarketIntelligenceDashboard';
@@ -34,7 +36,9 @@ import { AdvancedAnalyticsDashboard } from './AdvancedAnalyticsDashboard';
 import { CustomAssessmentBuilder } from './CustomAssessmentBuilder';
 import { SkillsFirstHiring } from './SkillsFirstHiring';
 import { EmployerEducation } from './EmployerEducation';
+import { OngoingProjects } from './OngoingProjects';
 import { CandidateSettings } from './CandidateSettings';
+import { CandidateProfileEditor } from './CandidateProfileEditor';
 import { AIInterviewCoach } from './AIInterviewCoach';
 import { SkillsDevelopmentAI } from './SkillsDevelopmentAI';
 import { ExperienceBuilder } from './ExperienceBuilder';
@@ -64,6 +68,8 @@ interface NavigationMethods {
   navigateToRecruiterDashboard: () => void;
   navigateToCandidateDashboard: () => void;
   navigateToProjects: () => void;
+  navigateToJobApplicants: (job: any) => void;
+  navigateToRecruiterProjects: () => void;
   navigateToATS: (application?: Application) => void;
   navigateToATSScanner: () => void;
   navigateToAccuracyFirstATS: () => void;
@@ -78,12 +84,15 @@ interface NavigationMethods {
   navigateToIntegrations: () => void;
   navigateToInterviews: () => void;
   navigateToSettings: () => void;
+  navigateToRecruiterProfileEditor: () => void;
+  navigateToCandidateProfileEditor: () => void;
   navigateToCandidateSearch: () => void;
   navigateToMessages: (conversationId?: string) => void;
   navigateToNotifications: () => void;
   navigateToPricing: () => void;
   navigateToSkillsFirstHiring: () => void;
   navigateToEmployerEducation: () => void;
+  navigateToOngoingProjects: () => void;
   navigateToResumeBuilder: () => void;
   navigateToPortfolio: () => void;
   navigateToVideoInterview: () => void;
@@ -205,33 +214,35 @@ export function AppRouter({
  />
  );
  
-  case 'recruiter-dashboard':
-  return (
-  <RecruiterDashboard 
-  onPostProject={(project?: any) => navigation.navigateToPostProject(project)}
-  onPostJob={(job?: any) => navigation.navigateToPostJob(job)}
-  onViewProjects={navigation.navigateToProjects}
- onViewATS={navigation.navigateToATS}
- onViewATSScanner={navigation.navigateToATSScanner}
- onViewAutomatedScreening={navigation.navigateToAutomatedScreening}
- onViewAIMatchingDashboard={navigation.navigateToAIMatchingDashboard}
- onViewMarketIntelligence={navigation.navigateToRecruiterMarketIntelligence}
- onViewAnalytics={navigation.navigateToAnalytics}
- onViewSkillsAssessment={navigation.navigateToKnowledgeAssessment}
- onViewIntegrations={navigation.navigateToIntegrations}
- onViewInterviews={navigation.navigateToInterviews}
- onViewSettings={navigation.navigateToSettings}
- onSearchCandidates={navigation.navigateToCandidateSearch}
- onViewMessages={navigation.navigateToMessages}
- onViewNotifications={navigation.navigateToNotifications}
- onUpgrade={navigation.navigateToPricing}
- onLogout={handleLogout}
+   case 'recruiter-dashboard':
+   return (
+   <RecruiterDashboard 
+   onPostProject={(project?: any) => navigation.navigateToPostProject(project)}
+   onPostJob={(job?: any) => navigation.navigateToPostJob(job)}
+   onViewProjects={navigation.navigateToProjects}
+  onViewATS={navigation.navigateToATS}
+  onViewATSScanner={navigation.navigateToATSScanner}
+  onViewAutomatedScreening={navigation.navigateToAutomatedScreening}
+  onViewAIMatchingDashboard={navigation.navigateToAIMatchingDashboard}
+  onViewMarketIntelligence={navigation.navigateToRecruiterMarketIntelligence}
+  onViewAnalytics={navigation.navigateToAnalytics}
+  onViewSkillsAssessment={navigation.navigateToKnowledgeAssessment}
+  onViewIntegrations={navigation.navigateToIntegrations}
+  onViewInterviews={navigation.navigateToInterviews}
+  onViewSettings={navigation.navigateToSettings}
+          onEditProfile={() => setCurrentScreen('recruiter-profile-editor')}
+  onSearchCandidates={navigation.navigateToCandidateSearch}
+  onViewMessages={navigation.navigateToMessages}
+  onViewNotifications={navigation.navigateToNotifications}
+  onUpgrade={navigation.navigateToPricing}
+  onLogout={handleLogout}
  onSkillsFirstHiring={navigation.navigateToSkillsFirstHiring}
- onEmployerEducation={navigation.navigateToEmployerEducation}
- unreadNotifications={unreadNotifications}
- unreadMessages={unreadMessages}
- />
- );
+   onEmployerEducation={navigation.navigateToEmployerEducation}
+   onViewOngoingProjects={navigation.navigateToOngoingProjects}
+   unreadNotifications={unreadNotifications}
+  unreadMessages={unreadMessages}
+  />
+  );
  
   case 'recruiter-post-project':
   return (
@@ -249,16 +260,25 @@ export function AppRouter({
   />
   );
 
-  case 'recruiter-projects':
- return (
- <ProjectManagement 
- onBack={navigation.navigateToRecruiterDashboard}
- onEditProject={(project) => navigation.navigateToPostProject(project as any)}
- onViewApplications={navigation.navigateToATS}
- />
- );
+case 'recruiter-projects':
+  return (
+  <ProjectManagement 
+  onBack={navigation.navigateToRecruiterDashboard}
+  onEditProject={(project) => navigation.navigateToPostProject(project as any)}
+  onViewApplications={(job) => navigation.navigateToJobApplicants(job)}
+    onPostJob={(job?: any) => navigation.navigateToPostJob(job)}
+  />
+  );
 
- case 'recruiter-interviews':
+  case 'recruiter-job-applicants':
+  return (
+  <JobApplicants
+  job={selectedJob as any}
+  onBack={navigation.navigateToRecruiterProjects}
+  />
+  );
+
+  case 'recruiter-interviews':
  return (
  <InterviewManagement 
  onBack={navigation.navigateToRecruiterDashboard}
@@ -281,23 +301,32 @@ export function AppRouter({
  />
  );
 
- case 'recruiter-settings':
- return (
- <RecruiterSettings 
- onBack={navigation.navigateToRecruiterDashboard}
- onUpgrade={navigation.navigateToPricing}
- />
- );
+  case 'recruiter-settings':
+  return (
+  <RecruiterSettings 
+  onBack={navigation.navigateToRecruiterDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  />
+  );
+  
+  case 'recruiter-profile-editor':
+  return (
+  <RecruiterProfileEditor 
+  onBack={navigation.navigateToRecruiterDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  />
+  );
  
- case 'recruiter-ats':
- return (
- <ATSView 
- onBack={navigation.navigateToRecruiterDashboard}
- onStartInterview={navigation.navigateToLiveInterview}
- onViewMessages={navigation.navigateToMessages}
- selectedCandidate={selectedApplication as any}
- />
- );
+case 'recruiter-ats':
+  return (
+  <ATSView 
+  onBack={navigation.navigateToRecruiterDashboard}
+  onStartInterview={navigation.navigateToLiveInterview}
+  onViewMessages={navigation.navigateToMessages}
+  onViewOngoingProjects={navigation.navigateToOngoingProjects}
+  selectedCandidate={selectedApplication as any}
+  />
+  );
 
  case 'recruiter-ats-scanner':
  return (
@@ -410,13 +439,25 @@ export function AppRouter({
  />
  );
 
- case 'recruiter-employer-education':
- return (
- <EmployerEducation 
- onBack={navigation.navigateToRecruiterDashboard}
- onUpgrade={navigation.navigateToPricing}
- />
- );
+case 'recruiter-employer-education':
+  return (
+  <EmployerEducation
+  onBack={navigation.navigateToRecruiterDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  />
+  );
+
+  case 'recruiter-ongoing-projects':
+  return (
+  <OngoingProjects
+  onBack={navigation.navigateToRecruiterDashboard}
+  onViewCandidateDetail={(assignmentId) => {
+    // TODO: Navigate to candidate detail with assignment
+    console.log('View candidate detail:', assignmentId);
+  }}
+  onViewMessages={navigation.navigateToMessages}
+  />
+  );
  
 case 'candidate-dashboard':
   return (
@@ -428,6 +469,7 @@ case 'candidate-dashboard':
   onSearchProjects={navigation.navigateToProjectSearch}
   onViewInterviews={navigation.navigateToInterviews}
   onViewSettings={navigation.navigateToSettings}
+          onEditProfile={() => setCurrentScreen('candidate-profile-editor')}
   onViewMessages={navigation.navigateToMessages}
   onViewNotifications={navigation.navigateToNotifications}
   onViewAppliedJobs={navigation.navigateToAppliedJobs}
@@ -442,7 +484,6 @@ case 'candidate-dashboard':
   onAIInterviewCoach={navigation.navigateToAIInterviewCoach}
   onSkillsDevelopmentAI={navigation.navigateToSkillsDevelopmentAI}
   onMarketIntelligence={navigation.navigateToCandidateMarketIntelligence}
-  onATSScanner={navigation.navigateToCandidateATSScanner}
   unreadNotifications={unreadNotifications}
   unreadMessages={unreadMessages}
   />
@@ -472,13 +513,20 @@ case 'candidate-dashboard':
  />
  );
 
- case 'candidate-settings':
- return (
- <CandidateSettings 
- onBack={navigation.navigateToCandidateDashboard}
- onUpgrade={navigation.navigateToPricing}
- />
- );
+  case 'candidate-settings':
+  return (
+  <CandidateSettings 
+  onBack={navigation.navigateToCandidateDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  />
+  );
+  
+  case 'candidate-profile-editor':
+  return (
+  <CandidateProfileEditor 
+  onBack={navigation.navigateToCandidateDashboard}
+  />
+  );
  
  case 'candidate-ai-resume-builder':
  case 'candidate-resume-builder':
@@ -782,6 +830,11 @@ case 'candidate-dashboard':
  );
  }
 }
+
+
+
+
+
 
 
 

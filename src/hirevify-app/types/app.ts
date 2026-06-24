@@ -94,6 +94,7 @@ export type Screen =
   | 'recruiter-post-project'
   | 'recruiter-post-job'
   | 'recruiter-projects'
+  | 'recruiter-job-applicants'
   | 'recruiter-ats'
   | 'recruiter-ats-scanner'
   | 'recruiter-functional-ats'
@@ -111,9 +112,11 @@ export type Screen =
   | 'recruiter-interviews'
   | 'recruiter-enhanced-video-interview'
   | 'recruiter-settings'
+  | 'recruiter-profile-editor'
   | 'recruiter-skills-first-hiring'
   | 'recruiter-employer-education'
   | 'recruiter-application-detail'  // recruiter reviews an application + can assign project / mark project-level-passed
+  | 'recruiter-ongoing-projects'    // ongoing projects with assigned candidates and progress tracking
   | 'candidate-dashboard'
   | 'candidate-ai-resume-builder'
   | 'candidate-resume-builder'
@@ -133,6 +136,7 @@ export type Screen =
  | 'candidate-my-jobs'            // applied + assigned jobs in one place
   | 'candidate-interviews'
   | 'candidate-settings'
+  | 'candidate-profile-editor'
   | 'candidate-experience-builder'
   | 'candidate-micro-internships'
   | 'candidate-mentorship-program'
@@ -171,6 +175,8 @@ export interface AppState {
 }
 
 export type UserType = 'recruiter' | 'candidate';
+
+
 
 
 
