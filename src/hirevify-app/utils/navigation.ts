@@ -129,12 +129,17 @@ export class NavigationManager {
  this.setCurrentScreen('recruiter-skills-first-hiring');
  };
 
- navigateToEmployerEducation = () => {
- if (!this.requireAuth('access employer education', 'recruiter')) return;
- this.setCurrentScreen('recruiter-employer-education');
- };
+navigateToEmployerEducation = () => {
+  if (!this.requireAuth('access employer education', 'recruiter')) return;
+  this.setCurrentScreen('recruiter-employer-education');
+  };
 
- navigateToCustomAssessmentBuilder = (existingAssessment?: any) => {
+  navigateToOngoingProjects = () => {
+  if (!this.requireAuth('access ongoing projects', 'recruiter')) return;
+  this.setCurrentScreen('recruiter-ongoing-projects');
+  };
+
+  navigateToCustomAssessmentBuilder = (existingAssessment?: any) => {
  if (!this.requireAuth('create custom assessments', 'recruiter')) return;
  this.setAssessmentBuilderData(existingAssessment || null);
  this.setCurrentScreen('recruiter-custom-assessment-builder');
@@ -222,16 +227,36 @@ export class NavigationManager {
  }
  };
 
- navigateToSettings = () => {
- if (!this.requireAuth('access settings')) return;
- if (this.user!.userType === 'recruiter') {
- this.setCurrentScreen('recruiter-settings');
- } else {
- this.setCurrentScreen('candidate-settings');
- }
- };
+  navigateToSettings = () => {
+  if (!this.requireAuth('access settings')) return;
+  if (this.user!.userType === 'recruiter') {
+  this.setCurrentScreen('recruiter-settings');
+  } else {
+  this.setCurrentScreen('candidate-settings');
+  }
+  };
 
- navigateToKnowledgeAssessment = () => {
+  navigateToRecruiterSettings = () => {
+  if (!this.requireAuth('access settings', 'recruiter')) return;
+  this.setCurrentScreen('recruiter-settings');
+  };
+
+  navigateToRecruiterProfileEditor = () => {
+  if (!this.requireAuth('edit profile', 'recruiter')) return;
+  this.setCurrentScreen('recruiter-profile-editor');
+  };
+
+  navigateToCandidateSettings = () => {
+  if (!this.requireAuth('access settings', 'candidate')) return;
+  this.setCurrentScreen('candidate-settings');
+  };
+
+  navigateToCandidateProfileEditor = () => {
+  if (!this.requireAuth('edit profile', 'candidate')) return;
+  this.setCurrentScreen('candidate-profile-editor');
+  };
+
+  navigateToKnowledgeAssessment = () => {
  if (!this.requireAuth('access knowledge assessments')) return;
  if (this.user!.userType === 'recruiter') {
  this.setCurrentScreen('recruiter-skills-assessment');

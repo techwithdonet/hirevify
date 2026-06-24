@@ -15,6 +15,8 @@ import {
   DollarSign,
   Clock,
   Sparkles,
+  FileText,
+  X,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -27,6 +29,9 @@ import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import { projectAssignmentsService } from '../services/projectAssignmentsService';
+import { VideoRecorder } from './VideoRecorder';
+import { supabase } from '@/src/lib/supabase';
+import { cn } from './ui/utils';
 import type { JobProjectAssignment } from '../types/app';
 
 interface CandidateProjectAssignmentProps {
@@ -126,8 +131,12 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
 
   // Submission form state
   const [projectUrl, setProjectUrl] = useState('');
+  const [projectFiles, setProjectFiles] = useState<Array<{ name: string; size: number; url: string }>>([]);
   const [videoUrl, setVideoUrl] = useState('');
+  const [recordingVideoUrl, setRecordingVideoUrl] = useState<string | null>(null);
   const [submissionNotes, setSubmissionNotes] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -243,15 +252,21 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
 
   const handleSubmitProject = async () => {
     if (!assignment) return;
-    if (!projectUrl.trim()) {
-      toast.error('Please add a link to your project submission (GitHub, Drive, etc.).');
+    if (!projectUrl.trim() && projectFiles.length === 0) {
+      toast.error('Please add a project link or upload project files.');
       return;
     }
     setIsMutating(true);
     try {
+      // Combine project URL with uploaded file URLs
+      const allProjectUrls = [
+        ...(projectUrl.trim() ? [projectUrl.trim()] : []),
+        ...projectFiles.map(f => f.url),
+      ].join(', ');
+
       const { error } = await projectAssignmentsService.submitProject(assignment.id, {
-        projectSubmissionUrl: projectUrl.trim(),
-        videoSubmissionUrl: videoUrl.trim() || undefined,
+        projectSubmissionUrl: allProjectUrls,
+        videoSubmissionUrl: recordingVideoUrl || videoUrl.trim() || undefined,
         submissionNotes: submissionNotes.trim() || undefined,
       });
       if (error) throw error;
@@ -262,6 +277,79 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
     } finally {
       setIsMutating(false);
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !assignment) return;
+
+    setUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${assignment.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('project-files')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('project-files')
+        .getPublicUrl(fileName);
+
+      setProjectFiles(prev => [...prev, {
+        name: file.name,
+        size: file.size,
+        url: urlData.publicUrl,
+      }]);
+
+      toast.success('File uploaded successfully!');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to upload file');
+    } finally {
+      setUploadingFile(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeProjectFile = (index: number) => {
+    setProjectFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVideoSave = async (videoBlob: Blob | null, videoUrl: string | null, comment: string) => {
+    if (!videoBlob || !videoUrl || !assignment) {
+      toast.error('No video recorded');
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileName = `${assignment.id}/${Date.now()}-project-intro.webm`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('project-files')
+        .upload(fileName, videoBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('project-files')
+        .getPublicUrl(fileName);
+
+      setRecordingVideoUrl(urlData.publicUrl);
+      toast.success('Video saved! Click Submit to send your project.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save video');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   if (isLoading) {
@@ -433,8 +521,10 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
             <Card>
               <CardHeader>
                 <CardTitle className="text-foreground">Submit your work</CardTitle>
+                <p className="text-sm text-muted-foreground">Upload your project files and record a video explaining what you did.</p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Project Link */}
                 <div className="space-y-2">
                   <Label htmlFor="project-url" className="text-foreground">Project link</Label>
                   <div className="relative">
@@ -448,33 +538,107 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="video-url" className="text-foreground">Video submission link (optional)</Label>
-                  <div className="relative">
-                    <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="video-url"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="Loom, YouTube (unlisted), or hosted MP4 link"
-                      className="pl-9"
+
+                {/* Project File Upload */}
+                <div className="space-y-3">
+                  <Label className="text-foreground">Or upload project files</Label>
+                  <label className="block">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
+                      onChange={handleFileUpload}
+                      disabled={uploadingFile}
+                      className="hidden"
                     />
-                  </div>
+                    <div className={cn(
+                      "flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 p-6 cursor-pointer transition-all",
+                      "hover:border-emerald-400 hover:bg-emerald-50/50",
+                      uploadingFile && "opacity-50 cursor-not-allowed"
+                    )}>
+                      {uploadingFile ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+                          <span className="text-slate-600">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-slate-400" />
+                          <span className="text-slate-600">Click to upload files (PDF, DOC, ZIP, Images)</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+
+                  {/* Uploaded Files List */}
+                  {projectFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {projectFiles.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-emerald-600" />
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                              <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeProjectFile(idx)}
+                            className="text-slate-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
+                {/* Video Recording Section */}
+                <div className="space-y-3">
+                  <Label className="text-foreground">Record a video explaining your work</Label>
+                  <p className="text-sm text-muted-foreground -mt-1">
+                    Record yourself explaining what you did for this project. Recruiters love seeing your communication skills!
+                  </p>
+                  
+                  <VideoRecorder
+                    onSave={handleVideoSave}
+                    initialVideoUrl={recordingVideoUrl || videoUrl}
+                    disabled={uploadingVideo}
+                  />
+
+                  {uploadingVideo && (
+                    <div className="flex items-center justify-center gap-2 text-emerald-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Saving video...</span>
+                    </div>
+                  )}
+
+                  {recordingVideoUrl && (
+                    <p className="text-sm text-emerald-600 font-medium">
+                      ✓ Video recorded and ready to submit
+                    </p>
+                  )}
+                </div>
+
+                {/* Notes */}
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-foreground">Notes for the recruiter</Label>
+                  <Label htmlFor="notes" className="text-foreground">Notes for the recruiter (optional)</Label>
                   <Textarea
                     id="notes"
                     value={submissionNotes}
                     onChange={(e) => setSubmissionNotes(e.target.value)}
-                    rows={4}
+                    rows={3}
                     placeholder="Anything the recruiter should know about your work?"
                   />
                 </div>
+
+                {/* Submit Button */}
                 <div className="flex justify-end">
                   <Button
                     onClick={handleSubmitProject}
-                    disabled={isMutating || !projectUrl.trim()}
+                    disabled={isMutating || (!projectUrl.trim() && projectFiles.length === 0)}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {isMutating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

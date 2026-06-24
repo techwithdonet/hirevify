@@ -19,6 +19,7 @@ const ALL_SCREENS: Screen[] = [
  'recruiter-dashboard',
  'recruiter-post-project',
  'recruiter-projects',
+ 'recruiter-job-applicants',
  'recruiter-ats',
  'recruiter-ats-scanner',
  'recruiter-functional-ats',

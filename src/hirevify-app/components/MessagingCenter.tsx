@@ -9,7 +9,7 @@ import { Badge } from './ui/badge';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { CommunicationsAPI, type Conversation, type Message, type MessageAttachment } from '../utils/api/communications';
-import { dashboardTheme } from '../theme/dashboardTheme';
+
 
 interface MessagingCenterProps {
   onBack: () => void;
@@ -226,43 +226,43 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
   const getInitial = (name?: string) => (name || 'User').slice(0, 1).toUpperCase();
 
   return (
-    <div className={`${dashboardTheme.page} flex h-dvh flex-col overflow-hidden`}>
-      <header className={dashboardTheme.pageHeader}>
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <div className="premium-page flex h-dvh flex-col overflow-hidden">
+      <header className="premium-header">
+        <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
+            <Button variant="ghost" size="icon" onClick={onBack} className="premium-btn-icon-ghost">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <p className="text-xs font-semibold uppercase text-blue-700">Messages</p>
-              <h1 className="text-2xl font-semibold text-slate-950">HireVify Inbox</h1>
+              <p className="premium-eyebrow text-blue-600">Messages</p>
+              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">HireVify Inbox</h1>
             </div>
           </div>
-          <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">HireVify Chat</Badge>
+          <Badge className="premium-badge-success">HireVify Chat</Badge>
         </div>
       </header>
 
-      <main className="mx-auto grid min-h-0 w-full max-w-[1500px] flex-1 grid-cols-1 overflow-hidden border-x border-slate-200 bg-white lg:grid-cols-[340px_minmax(0,1fr)_320px]">
-        <aside className="flex min-h-0 flex-col border-b border-slate-200 bg-white lg:border-b-0 lg:border-r">
-          <div className="shrink-0 border-b border-slate-200 p-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <main className="mx-auto grid min-h-0 w-full max-w-[1500px] flex-1 grid-cols-1 overflow-hidden border-x border-slate-200/80 bg-white lg:grid-cols-[340px_minmax(0,1fr)_320px]">
+        <aside className="flex min-h-0 flex-col border-b border-slate-200/80 bg-white lg:border-b-0 lg:border-r">
+          <div className="shrink-0 border-b border-slate-200/80 p-3">
+            <div className="premium-search">
+              <Search className="premium-search-icon" />
               <Input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search messages"
-                className="rounded-full bg-slate-50 pl-10"
+                className="premium-input pl-10"
               />
             </div>
           </div>
 
           <ScrollArea className="min-h-0 flex-1">
             {isLoading ? (
-              <div className="p-6 text-sm text-slate-500">Loading conversations...</div>
+              <div className="p-6 text-center text-sm text-slate-500">Loading conversations...</div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageCircle className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                <p className="font-semibold text-slate-950">No conversations yet</p>
+                <p className="font-semibold text-slate-900">No conversations yet</p>
                 <p className="mt-1 text-sm text-slate-500">When a candidate or recruiter sends a message, it will appear here.</p>
               </div>
             ) : (
@@ -280,24 +280,24 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                       <div className="relative">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={conversation.otherUser.avatar} />
-                          <AvatarFallback className="bg-blue-100 font-semibold text-blue-700">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-50 font-semibold text-blue-700">
                             {getInitial(conversation.otherUser.name)}
                           </AvatarFallback>
                         </Avatar>
                         {conversation.unreadCount > 0 && (
-                          <span className="absolute -right-1 -top-1 rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
                             {conversation.unreadCount}
                           </span>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate font-semibold text-slate-950">{conversation.otherUser.name || 'User'}</p>
+                          <p className="truncate font-semibold text-slate-900">{conversation.otherUser.name || 'User'}</p>
                           <span className="text-xs text-slate-400">
                             {conversation.lastMessage ? formatTime(conversation.lastMessage.createdAt) : ''}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500">{conversation.otherUser.userType}</p>
+                        <p className="text-xs capitalize text-slate-500">{conversation.otherUser.userType}</p>
                         <p className="mt-1 truncate text-sm text-slate-600">
                           {conversation.lastMessage ? conversation.lastMessage.message : 'No messages yet'}
                         </p>
@@ -310,22 +310,22 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
           </ScrollArea>
         </aside>
 
-        <section className="flex min-h-0 flex-col bg-slate-50">
+        <section className="flex min-h-0 flex-col bg-slate-50/50">
           {selectedConversation ? (
             <>
-              <div className="shrink-0 border-b border-slate-200 bg-white p-3">
+              <div className="shrink-0 border-b border-slate-200/80 bg-white p-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-11 w-11">
                     <AvatarImage src={selectedConversation.otherUser.avatar} />
-                    <AvatarFallback className="bg-blue-100 font-semibold text-blue-700">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-50 font-semibold text-blue-700">
                       {getInitial(selectedConversation.otherUser.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="font-semibold text-slate-950">{selectedConversation.otherUser.name || 'User'}</h2>
+                    <h2 className="font-semibold text-slate-900">{selectedConversation.otherUser.name || 'User'}</h2>
                     <div className="flex items-center gap-1 text-xs text-slate-500">
                       <Circle className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
-                      <span>{selectedConversation.otherUser.userType}</span>
+                      <span className="capitalize">{selectedConversation.otherUser.userType}</span>
                     </div>
                   </div>
                 </div>
@@ -333,12 +333,14 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
 
               <ScrollArea className="min-h-0 flex-1 p-5">
                 {isThreadLoading ? (
-                  <div className="text-sm text-slate-500">Loading messages...</div>
+                  <div className="flex items-center justify-center">
+                    <div className="premium-spinner" />
+                  </div>
                 ) : messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-center">
                     <div>
                       <MessageCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-                      <p className="font-semibold text-slate-950">No messages in this thread</p>
+                      <p className="font-semibold text-slate-900">No messages in this thread</p>
                       <p className="mt-1 text-sm text-slate-500">Send the first message to start the conversation.</p>
                     </div>
                   </div>

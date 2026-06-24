@@ -115,27 +115,16 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
         if (cancelled) return;
         setProfile(profileRow ?? null);
 
-        // 2) candidate_profiles row by user_id (= profiles.id)
-        if (profileRow?.id) {
-          const { data: extrasRow } = await supabase
-            .from('candidate_profiles')
-            .select(
-              'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability',
-            )
-            .eq('user_id', profileRow.id)
-            .maybeSingle<CandidateExtras>();
-          if (!cancelled) setExtras(extrasRow ?? null);
-        } else {
-          // Fallback — try by the auth id directly, some schemas link by auth_user_id
-          const { data: extrasRow } = await supabase
-            .from('candidate_profiles')
-            .select(
-              'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability',
-            )
-            .eq('user_id', user.id)
-            .maybeSingle<CandidateExtras>();
-          if (!cancelled) setExtras(extrasRow ?? null);
-        }
+        // 2) candidate_profiles row by user_id (= auth.users.id, NOT profiles.id)
+        // Try auth id first as per database schema comment in profilesService
+        const { data: extrasRow } = await supabase
+          .from('candidate_profiles')
+          .select(
+            'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability',
+          )
+          .eq('user_id', user.id)
+          .maybeSingle<CandidateExtras>();
+        if (!cancelled) setExtras(extrasRow ?? null);
       } catch (err) {
         console.warn('Could not resolve candidate profile', err);
       } finally {

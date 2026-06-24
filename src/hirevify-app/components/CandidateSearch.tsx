@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -179,7 +179,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  experience: yearsOfExperience > 0? `${yearsOfExperience} years`: 'Not specified',
  yearsOfExperience,
  timezone: details.timezone || 'IST',
- availability: details.availability || 'immediate',
+ availability: normalizeCandidateAvailability(details.availability),
 
  salaryRange: {
  min: Number(details.salary_min || 0),
@@ -411,16 +411,52 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  return 'text-red-600 bg-red-100';
  };
 
- const getAvailabilityBadge = (availability: string) => {
- const config = {
- 'immediate': { label: 'Available Now', className: 'bg-green-100 text-green-800' },
- 'two-weeks': { label: '2 Weeks Notice', className: 'bg-blue-100 text-blue-800' },
- 'one-month': { label: '1 Month Notice', className: 'bg-yellow-100 text-yellow-800' },
- 'not-looking': { label: 'Not Looking', className: 'bg-gray-100 text-gray-800' }
- };
- 
- return config[availability as keyof typeof config] || config['not-looking'];
- };
+function normalizeCandidateAvailability(value?: string | null): 'immediate' | 'two-weeks' | 'one-month' | 'not-looking' {
+  const raw = String(value || '').trim().toLowerCase();
+
+  if (!raw || raw === 'null' || raw === 'undefined') {
+    return 'immediate';
+  }
+
+  const compact = raw
+    .replace(/[_\s]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+  if (['immediate', 'available', 'available-now', 'available-immediately', 'now', 'asap'].includes(compact)) {
+    return 'immediate';
+  }
+
+  if (['two-weeks', '2-weeks', '2-weeks-notice', 'available-in-2-weeks', 'available-in-two-weeks'].includes(compact)) {
+    return 'two-weeks';
+  }
+
+  if (['one-month', '1-month', '30-days', '30-days-notice', 'available-in-1-month', 'available-in-one-month'].includes(compact)) {
+    return 'one-month';
+  }
+
+  if (['not-looking', 'not-available', 'not-actively-looking', 'unavailable'].includes(compact)) {
+    return 'not-looking';
+  }
+
+  return 'immediate';
+}
+
+const getAvailabilityBadge = (availability: string) => {
+  const config = {
+  'immediate': { label: 'Available Now', className: 'bg-green-100 text-green-800' },
+  'two-weeks': { label: '2 Weeks Notice', className: 'bg-blue-100 text-blue-800' },
+  'one-month': { label: '1 Month Notice', className: 'bg-yellow-100 text-yellow-800' },
+  'not-looking': { label: 'Not Looking', className: 'bg-gray-100 text-gray-800' }
+  };
+  
+  // If availability is empty/null/undefined, show neutral "Availability Unknown" instead of defaulting to "Not Looking"
+  if (!availability || availability === '' || availability === 'null' || availability === 'undefined') {
+    return { label: 'Availability Unknown', className: 'bg-slate-100 text-slate-600' };
+  }
+  
+  const normalizedAvailability = normalizeCandidateAvailability(availability);
+  return config[normalizedAvailability] || { label: 'Availability Unknown', className: 'bg-slate-100 text-slate-600' };
+  };
 
  const clearAllFilters = () => {
  setSearchFilters({
@@ -1059,6 +1095,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  </DashboardPageLayout>
  );
 }
+
 
 
 

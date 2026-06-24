@@ -35,7 +35,8 @@
     "node_modules",
     "compare-projectsearch",
     "**/*.backup*",
-    "**/*.bak*"
+    "**/*.bak*",
+    "supabase/functions"
   ]
 }
 

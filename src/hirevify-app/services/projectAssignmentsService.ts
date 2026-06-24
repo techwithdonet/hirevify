@@ -79,6 +79,31 @@ class ProjectAssignmentsService {
   }
 
   /**
+   * Update assignment status
+   */
+  async updateAssignmentStatus(assignmentId: string, status: 'pending' | 'accepted' | 'rejected' | 'submitted' | 'under_review' | 'hired' | 'not_selected') {
+    const { data, error } = await this.supabase
+      .from('job_project_assignments')
+      .update({ 
+        assignment_status: status,
+        updated_at: new Date().toISOString(),
+        ...(status === 'under_review' ? { reviewed_at: new Date().toISOString() } : {}),
+        ...(status === 'hired' ? { decided_at: new Date().toISOString(), final_decision: 'hired' } : {}),
+        ...(status === 'not_selected' ? { decided_at: new Date().toISOString(), final_decision: 'not_selected' } : {}),
+      })
+      .eq('id', assignmentId)
+      .select()
+      .single<JobProjectAssignment>();
+
+    if (error) {
+      console.error('Error updating assignment status:', error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
+  /**
    * Get all assignments for a candidate
    */
   async getCandidateAssignments(candidateId: string) {
