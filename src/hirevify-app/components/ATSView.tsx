@@ -394,7 +394,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   }, [applications, applicationStatusFilter, searchTerm, matchFilter]);
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId);
-  // High-match list for display ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â includes assigned so recruiter can see the stats
+  // High-match list for display  •   •  includes assigned so recruiter can see the stats
   const isAlreadyAssignedApplication = (application: JobApplication) =>
     assignedApplicationIds.has(application.applicationId) ||
     assignedApplicationIds.has(application.id) ||
@@ -1062,7 +1062,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                 <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
                                   <Mail className="h-3.5 w-3.5 shrink-0" />
                                   <span className="truncate">{app.email}</span>
-                                  <span className="text-slate-300">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·</span>
+                                  <span className="text-slate-300"> •   • </span>
                                   <Calendar className="h-3.5 w-3.5 shrink-0" />
                                   <span>{new Date(app.appliedDate).toLocaleDateString()}</span>
                                 </div>
@@ -1500,6 +1500,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     </div>
   );
 }
+
 
 
 
