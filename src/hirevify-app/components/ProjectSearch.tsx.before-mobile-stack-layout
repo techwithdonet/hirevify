@@ -645,19 +645,13 @@ const { error: appError } = await supabase.from('applications').insert({
 
  // Create Notification for Recruiter
  if (selectedProject.recruiter_id) {
- const { data: recruiterProfile } = await supabase
- .from('profiles')
- .select('auth_user_id')
- .eq('id', selectedProject.recruiter_id)
- .maybeSingle();
-
  await supabase.from('notifications').insert({
- user_id: recruiterProfile?.auth_user_id || selectedProject.recruiter_id,
+ user_id: selectedProject.recruiter_id,
  type: 'new_application',
  title: 'New Application Received',
  message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
- data: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
- read: false,
+ metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+ is_read: false,
  });
  }
 
@@ -1279,9 +1273,9 @@ const { error: appError } = await supabase.from('applications').insert({
                 </>
               )}
             </div>
-    <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[280px_minmax(0,1fr)_280px]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)_280px]">
       {/* Search, filters and sidebar */}
-      <div className="order-1 w-full space-y-5 2xl:col-start-1">
+      <div className="order-1 w-full space-y-5 lg:col-start-1">
 
         {/* Search Bar */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -1329,7 +1323,7 @@ const { error: appError } = await supabase.from('applications').insert({
  {/* Mobile Filter Sheet */}
  <Sheet>
  <SheetTrigger asChild>
- <Button variant="outline" className="hidden">
+ <Button variant="outline" className="w-full lg:hidden">
  <Filter className="w-4 h-4 mr-2" />
  Filters
  </Button>
@@ -1349,7 +1343,7 @@ const { error: appError } = await supabase.from('applications').insert({
   </Sheet>
 
   {/* Desktop Filters */}
-  <div className="block">
+  <div className="hidden lg:block">
   <FilterContent 
   filters={filters}
   updateFilter={updateFilter}
@@ -1359,7 +1353,7 @@ const { error: appError } = await supabase.from('applications').insert({
       </div>
 
       {/* Sidebar */}
-      <aside className="order-2 w-full space-y-4 2xl:col-start-3">
+      <aside className="order-2 w-full space-y-4 lg:col-start-3">
         {/* AI Recommendations */}
         {showRecommendations && recommendations.length > 0 && (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1412,7 +1406,7 @@ const { error: appError } = await supabase.from('applications').insert({
         {/* Mobile Filter Button */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="hidden">
+            <Button variant="outline" className="w-full lg:hidden bg-white border-slate-200">
               <Filter className="w-4 h-4 mr-2" />
               Filters
             </Button>
@@ -1517,7 +1511,6 @@ const { error: appError } = await supabase.from('applications').insert({
   </div>
   );
 }
-
 
 
 

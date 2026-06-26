@@ -114,11 +114,6 @@ class ApplicationsService {
  type: 'new_application',
  title: 'New application received',
  message: `A candidate applied for "${jobRow.title || 'your job'}".`,
- data: {
- job_id: jobId,
- application_id: data.id,
- candidate_id: candidateId,
- },
  read: false,
  },
  ]);
@@ -406,15 +401,7 @@ class ApplicationsService {
   /**
    * Returns a short-lived signed URL for a file in the resumes bucket.
    */
-  /**
-   * Returns a short-lived signed URL for a file in the resumes bucket.
-   * Missing storage objects are treated as empty files instead of console errors.
-   */
   async getApplicationFileSignedUrl(path: string, expiresIn = 60 * 60) {
-    if (!path) {
-      return { url: null, error: null };
-    }
-
     if (/^https?:\/\//i.test(path)) {
       return { url: path, error: null };
     }
@@ -424,43 +411,30 @@ class ApplicationsService {
       ? [parsed.bucket]
       : DEFAULT_CV_BUCKETS;
 
-    const objectPathsToTry = Array.from(
-      new Set(
-        [
-          parsed.path,
-          parsed.path.replace(/^resumes\//, ''),
-          parsed.path.replace(/^cv-uploads\//, ''),
-          parsed.path.replace(/^candidate-resumes\//, ''),
-        ].filter(Boolean)
-      )
-    );
-
     for (const bucket of bucketsToTry) {
-      for (const objectPath of objectPathsToTry) {
-        const { data, error } = await this.supabase.storage
-          .from(bucket)
-          .createSignedUrl(objectPath, expiresIn);
+      const { data, error } = await this.supabase.storage
+        .from(bucket)
+        .createSignedUrl(parsed.path, expiresIn);
 
-        if (!error && data?.signedUrl) {
-          return { url: data.signedUrl, error: null };
-        }
+      if (!error && data?.signedUrl) {
+        return { url: data.signedUrl, error: null };
+      }
 
-        const message = String(error?.message || '').toLowerCase();
-        const isMissingStorageObject =
-          message.includes('object not found') ||
-          message.includes('not found') ||
-          message.includes('does not exist') ||
-          message.includes('bucket not found');
+      const message = String(error?.message || '').toLowerCase();
+      const bucketMissing =
+        message.includes('bucket not found') ||
+        message.includes('not found') ||
+        message.includes('does not exist');
 
-        if (isMissingStorageObject) {
-          continue;
-        }
-
-        const publicUrl = this.supabase.storage.from(bucket).getPublicUrl(objectPath).data?.publicUrl;
+      if (!bucketMissing) {
+        const publicUrl = this.supabase.storage.from(bucket).getPublicUrl(parsed.path).data?.publicUrl;
         if (publicUrl) {
           return { url: publicUrl, error: null };
         }
+      }
 
+      if (parsed.bucket && error) {
+        console.error('Could not sign application file URL:', error);
         return { url: null, error };
       }
     }

@@ -645,19 +645,13 @@ const { error: appError } = await supabase.from('applications').insert({
 
  // Create Notification for Recruiter
  if (selectedProject.recruiter_id) {
- const { data: recruiterProfile } = await supabase
- .from('profiles')
- .select('auth_user_id')
- .eq('id', selectedProject.recruiter_id)
- .maybeSingle();
-
  await supabase.from('notifications').insert({
- user_id: recruiterProfile?.auth_user_id || selectedProject.recruiter_id,
+ user_id: selectedProject.recruiter_id,
  type: 'new_application',
  title: 'New Application Received',
  message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
- data: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
- read: false,
+ metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+ is_read: false,
  });
  }
 
@@ -1046,7 +1040,7 @@ const { error: appError } = await supabase.from('applications').insert({
   <div className="relative overflow-hidden bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] text-white">
     <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
     <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
-    <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
+    <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
       <button
         onClick={onBack}
         className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
@@ -1055,13 +1049,13 @@ const { error: appError } = await supabase.from('applications').insert({
         Back to dashboard
       </button>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
             <Search className="h-3.5 w-3.5" />
             Browse Jobs
           </div>
-          <h1 className="text-2xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
             All Jobs
           </h1>
           <p className="mt-2 text-sm text-emerald-50/90">
@@ -1077,11 +1071,165 @@ const { error: appError } = await supabase.from('applications').insert({
     </div>
   </div>
 
-  <main className="w-full space-y-5 px-3 py-5 sm:px-6 sm:py-8">
+  <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Main content - Jobs List */}
+      <div className="space-y-6 lg:col-span-2">
+
+        {/* Search Bar */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Search jobs, skills, or companies..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 text-base border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+ {/* AI Recommendations */}
+ {showRecommendations && recommendations.length > 0 && (
+ <Card className="p-4">
+ <div className="flex items-center gap-2 mb-3">
+ <Zap className="w-4 h-4 text-amber-500" />
+ <h3 className="font-medium">AI Recommendations</h3>
+ </div>
+ <div className="space-y-2">
+ {recommendations.map((project) => (
+ <div
+ key={project.id}
+ className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
+ onClick={() => {
+ setSelectedProject(project);
+ setShowProjectDetailsDialog(true);
+ }}
+ >
+ <h4 className="font-medium text-sm">{project.title}</h4>
+ <p className="text-xs text-muted-foreground">{project.company}</p>
+ <div className="flex items-center gap-2 mt-1">
+ <Badge variant="outline" className="text-xs">
+ {calculateMatchScore(project)}% match
+ </Badge>
+ </div>
+ </div>
+ ))}
+ </div>
+ </Card>
+ )}
+
+ {/* Mobile Filter Sheet */}
+ <Sheet>
+ <SheetTrigger asChild>
+ <Button variant="outline" className="w-full lg:hidden">
+ <Filter className="w-4 h-4 mr-2" />
+ Filters
+ </Button>
+ </SheetTrigger>
+ <SheetContent side="left" className="w-80">
+    <SheetHeader>
+    <SheetTitle>Filter Jobs</SheetTitle>
+    </SheetHeader>
+ <div className="mt-6">
+  <FilterContent 
+  filters={filters}
+  updateFilter={updateFilter}
+  skillsOptions={skillsOptions}
+  />
+  </div>
+  </SheetContent>
+  </Sheet>
+
+  {/* Desktop Filters */}
+  <div className="hidden lg:block">
+  <FilterContent 
+  filters={filters}
+  updateFilter={updateFilter}
+  skillsOptions={skillsOptions}
+  />
+  </div>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="space-y-4">
+        {/* AI Recommendations */}
+        {showRecommendations && recommendations.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <h3 className="font-semibold text-sm text-slate-950">AI Recommendations</h3>
+            </div>
+            <div className="space-y-2">
+              {recommendations.map((project) => (
+                <div
+                  key={project.id}
+                  className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedProject(project);
+                    setShowProjectDetailsDialog(true);
+                  }}
+                >
+                  <h4 className="font-medium text-sm text-slate-950">{project.title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{project.company}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                      {calculateMatchScore(project)}% match
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Stats */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-950 mb-3">Quick Stats</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Total Jobs</span>
+              <span className="font-semibold text-slate-950">{filteredProjects.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Applied</span>
+              <span className="font-semibold text-emerald-600">{appliedProjectIds.size}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Saved</span>
+              <span className="font-semibold text-amber-600">{bookmarkedProjects.size}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Filter Button */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full lg:hidden bg-white border-slate-200">
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Filter Jobs</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <FilterContent 
+                filters={filters}
+                updateFilter={updateFilter}
+                skillsOptions={skillsOptions}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </aside>
+    </div>
+
         {/* Jobs List */}
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+        <div className="space-y-4">
           {isLoading? (
-            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="animate-pulse space-y-4">
@@ -1130,11 +1278,11 @@ const { error: appError } = await supabase.from('applications').insert({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredProjects.map((project) => {
                   const matchScore = calculateMatchScore(project);
                   return (
-                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6 cursor-pointer">
+                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                       <div className="space-y-4">
                         {/* Project Header */}
                         <div className="flex items-start justify-between">
@@ -1279,160 +1427,6 @@ const { error: appError } = await supabase.from('applications').insert({
                 </>
               )}
             </div>
-    <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[280px_minmax(0,1fr)_280px]">
-      {/* Search, filters and sidebar */}
-      <div className="order-1 w-full space-y-5 2xl:col-start-1">
-
-        {/* Search Bar */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Search jobs, skills, or companies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 h-12 text-base border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
-            />
-          </div>
-        </div>
-
- {/* AI Recommendations */}
- {showRecommendations && recommendations.length > 0 && (
- <Card className="p-4">
- <div className="flex items-center gap-2 mb-3">
- <Zap className="w-4 h-4 text-amber-500" />
- <h3 className="font-medium">AI Recommendations</h3>
- </div>
- <div className="space-y-2">
- {recommendations.map((project) => (
- <div
- key={project.id}
- className="p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
- onClick={() => {
- setSelectedProject(project);
- setShowProjectDetailsDialog(true);
- }}
- >
- <h4 className="font-medium text-sm">{project.title}</h4>
- <p className="text-xs text-muted-foreground">{project.company}</p>
- <div className="flex items-center gap-2 mt-1">
- <Badge variant="outline" className="text-xs">
- {calculateMatchScore(project)}% match
- </Badge>
- </div>
- </div>
- ))}
- </div>
- </Card>
- )}
-
- {/* Mobile Filter Sheet */}
- <Sheet>
- <SheetTrigger asChild>
- <Button variant="outline" className="hidden">
- <Filter className="w-4 h-4 mr-2" />
- Filters
- </Button>
- </SheetTrigger>
- <SheetContent side="left" className="w-80">
-    <SheetHeader>
-    <SheetTitle>Filter Jobs</SheetTitle>
-    </SheetHeader>
- <div className="mt-6">
-  <FilterContent 
-  filters={filters}
-  updateFilter={updateFilter}
-  skillsOptions={skillsOptions}
-  />
-  </div>
-  </SheetContent>
-  </Sheet>
-
-  {/* Desktop Filters */}
-  <div className="block">
-  <FilterContent 
-  filters={filters}
-  updateFilter={updateFilter}
-  skillsOptions={skillsOptions}
-  />
-  </div>
-      </div>
-
-      {/* Sidebar */}
-      <aside className="order-2 w-full space-y-4 2xl:col-start-3">
-        {/* AI Recommendations */}
-        {showRecommendations && recommendations.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap className="w-4 h-4 text-amber-500" />
-              <h3 className="font-semibold text-sm text-slate-950">AI Recommendations</h3>
-            </div>
-            <div className="space-y-2">
-              {recommendations.map((project) => (
-                <div
-                  key={project.id}
-                  className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                  onClick={() => {
-                    setSelectedProject(project);
-                    setShowProjectDetailsDialog(true);
-                  }}
-                >
-                  <h4 className="font-medium text-sm text-slate-950">{project.title}</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{project.company}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                      {calculateMatchScore(project)}% match
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Stats */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-950 mb-3">Quick Stats</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Total Jobs</span>
-              <span className="font-semibold text-slate-950">{filteredProjects.length}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Applied</span>
-              <span className="font-semibold text-emerald-600">{appliedProjectIds.size}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-600">Saved</span>
-              <span className="font-semibold text-amber-600">{bookmarkedProjects.size}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Filter Button */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="hidden">
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80">
-            <SheetHeader>
-              <SheetTitle>Filter Jobs</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <FilterContent 
-                filters={filters}
-                updateFilter={updateFilter}
-                skillsOptions={skillsOptions}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </aside>
-    </div>
-
 
       {/* Project Details Dialog */}
       <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
@@ -1517,11 +1511,6 @@ const { error: appError } = await supabase.from('applications').insert({
   </div>
   );
 }
-
-
-
-
-
 
 
 

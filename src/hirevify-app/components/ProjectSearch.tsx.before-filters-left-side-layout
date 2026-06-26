@@ -645,19 +645,13 @@ const { error: appError } = await supabase.from('applications').insert({
 
  // Create Notification for Recruiter
  if (selectedProject.recruiter_id) {
- const { data: recruiterProfile } = await supabase
- .from('profiles')
- .select('auth_user_id')
- .eq('id', selectedProject.recruiter_id)
- .maybeSingle();
-
  await supabase.from('notifications').insert({
- user_id: recruiterProfile?.auth_user_id || selectedProject.recruiter_id,
+ user_id: selectedProject.recruiter_id,
  type: 'new_application',
  title: 'New Application Received',
  message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
- data: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
- read: false,
+ metadata: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+ is_read: false,
  });
  }
 
@@ -1046,7 +1040,7 @@ const { error: appError } = await supabase.from('applications').insert({
   <div className="relative overflow-hidden bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] text-white">
     <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
     <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
-    <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
+    <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
       <button
         onClick={onBack}
         className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
@@ -1055,13 +1049,13 @@ const { error: appError } = await supabase.from('applications').insert({
         Back to dashboard
       </button>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
             <Search className="h-3.5 w-3.5" />
             Browse Jobs
           </div>
-          <h1 className="text-2xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
             All Jobs
           </h1>
           <p className="mt-2 text-sm text-emerald-50/90">
@@ -1077,11 +1071,11 @@ const { error: appError } = await supabase.from('applications').insert({
     </div>
   </div>
 
-  <main className="w-full space-y-5 px-3 py-5 sm:px-6 sm:py-8">
+  <main className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {/* Jobs List */}
     <div className="mx-auto w-full max-w-5xl space-y-4">
           {isLoading? (
-            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="animate-pulse space-y-4">
@@ -1130,11 +1124,11 @@ const { error: appError } = await supabase.from('applications').insert({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredProjects.map((project) => {
                   const matchScore = calculateMatchScore(project);
                   return (
-                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6 cursor-pointer">
+                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                       <div className="space-y-4">
                         {/* Project Header */}
                         <div className="flex items-start justify-between">
@@ -1279,9 +1273,9 @@ const { error: appError } = await supabase.from('applications').insert({
                 </>
               )}
             </div>
-    <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[280px_minmax(0,1fr)_280px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Search, filters and sidebar */}
-      <div className="order-1 w-full space-y-5 2xl:col-start-1">
+      <div className="space-y-6 lg:col-span-2">
 
         {/* Search Bar */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -1329,7 +1323,7 @@ const { error: appError } = await supabase.from('applications').insert({
  {/* Mobile Filter Sheet */}
  <Sheet>
  <SheetTrigger asChild>
- <Button variant="outline" className="hidden">
+ <Button variant="outline" className="w-full lg:hidden">
  <Filter className="w-4 h-4 mr-2" />
  Filters
  </Button>
@@ -1349,7 +1343,7 @@ const { error: appError } = await supabase.from('applications').insert({
   </Sheet>
 
   {/* Desktop Filters */}
-  <div className="block">
+  <div className="hidden lg:block">
   <FilterContent 
   filters={filters}
   updateFilter={updateFilter}
@@ -1359,7 +1353,7 @@ const { error: appError } = await supabase.from('applications').insert({
       </div>
 
       {/* Sidebar */}
-      <aside className="order-2 w-full space-y-4 2xl:col-start-3">
+      <aside className="space-y-4">
         {/* AI Recommendations */}
         {showRecommendations && recommendations.length > 0 && (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1412,7 +1406,7 @@ const { error: appError } = await supabase.from('applications').insert({
         {/* Mobile Filter Button */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="hidden">
+            <Button variant="outline" className="w-full lg:hidden bg-white border-slate-200">
               <Filter className="w-4 h-4 mr-2" />
               Filters
             </Button>
@@ -1517,11 +1511,6 @@ const { error: appError } = await supabase.from('applications').insert({
   </div>
   );
 }
-
-
-
-
-
 
 
 

@@ -193,10 +193,27 @@ function CandidateCard({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const openSubmission = (url: string | null | undefined) => {
+  const openSubmission = async (url: string | null | undefined) => {
     if (!url) return;
     const firstUrl = url.split(',').map((value) => value.trim()).filter(Boolean)[0];
     if (!firstUrl) return;
+
+    const pathFromPublicUrl = firstUrl.match(/\/storage\/v1\/object\/public\/project-files\/(.+)$/)?.[1];
+    const directPath = firstUrl.startsWith('project-files::') ? firstUrl.split('::')[1] : null;
+    const objectPath = directPath || pathFromPublicUrl;
+
+    if (objectPath) {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.storage
+        .from('project-files')
+        .createSignedUrl(decodeURIComponent(objectPath), 60 * 10);
+
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    }
+
     window.open(firstUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -276,7 +293,7 @@ function CandidateCard({
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                openSubmission(assignment.project_submission_url);
+                void openSubmission(assignment.project_submission_url);
               }}
               className="h-8 text-slate-500 hover:text-emerald-600"
             >
@@ -289,7 +306,7 @@ function CandidateCard({
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                openSubmission(assignment.video_submission_url);
+                void openSubmission(assignment.video_submission_url);
               }}
               className="h-8 text-slate-500 hover:text-purple-600"
             >
@@ -391,14 +408,14 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
     const active = assignments.filter((a) => !['hired', 'not_selected', 'rejected'].includes(a.assignment_status));
     const pendingReview = assignments.filter((a) => a.assignment_status === 'submitted');
     const underReview = assignments.filter((a) => a.assignment_status === 'under_review');
-    const hired = assignments.filter((a) => a.assignment_status === 'hired');
+    const completed = assignments.filter((a) => ['hired', 'not_selected', 'rejected'].includes(a.assignment_status));
 
     return {
       total: assignments.length,
       active: active.length,
       pendingReview: pendingReview.length,
       underReview: underReview.length,
-      hired: hired.length,
+      completed: completed.length,
     };
   }, [assignments]);
 
@@ -491,8 +508,8 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
             <p className="text-xs text-slate-500">Under Review</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-emerald-600">{stats.hired}</p>
-            <p className="text-xs text-slate-500">Hired</p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
+            <p className="text-xs text-slate-500">Completed</p>
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ interface Notification {
   type: string;
   title: string;
   message: string;
+  data?: any;
   read: boolean;
   createdAt: string;
   readAt?: string;
@@ -23,9 +24,10 @@ interface Notification {
 interface NotificationCenterProps {
   onBack: () => void;
   onUpdateUnreadCount: (count: number) => void;
+  onOpenNotification?: (notification: Notification) => void;
 }
 
-export function NotificationCenter({ onBack, onUpdateUnreadCount }: NotificationCenterProps) {
+export function NotificationCenter({ onBack, onUpdateUnreadCount, onOpenNotification }: NotificationCenterProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -197,6 +199,13 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
     }
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+    onOpenNotification?.(notification);
+  };
+
   const markAllAsRead = async () => {
     const unreadNotifications = notifications.filter(n =>!n.read);
     
@@ -329,9 +338,9 @@ export function NotificationCenter({ onBack, onUpdateUnreadCount }: Notification
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              onClick={() =>!notification.read && markAsRead(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
               className={cn(
-                "group rounded-2xl border bg-white p-4 transition-all duration-200",
+                "group cursor-pointer rounded-2xl border bg-white p-4 transition-all duration-200",
                 !notification.read 
                   ? 'border-blue-200 bg-blue-50/30 shadow-sm' 
                   : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'

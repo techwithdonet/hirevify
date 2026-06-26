@@ -41,6 +41,8 @@ interface CandidateProjectAssignmentProps {
 
 interface AssignmentDetail {
   id: string;
+  job_id?: string;
+  application_id?: string | null;
   assignment_status: JobProjectAssignment['assignment_status'];
   project_submission_url: string | null;
   video_submission_url: string | null;
@@ -235,6 +237,11 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
         type: 'assignment',
         title,
         message,
+        data: {
+          assignment_id: assignment.id,
+          job_id: assignment.job_id,
+          application_id: assignment.application_id,
+        },
         read: false,
       },
     ]);
@@ -318,6 +325,11 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
     setUploadingFile(true);
     try {
       const fileExt = file.name.split('.').pop();
+      const allowedArchiveExtensions = ['zip', 'rar', '7z'];
+      if (!fileExt || !allowedArchiveExtensions.includes(fileExt.toLowerCase())) {
+        toast.error('Upload your project as a ZIP, RAR, or 7Z archive.');
+        return;
+      }
       const fileName = `${assignment.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -326,14 +338,10 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('project-files')
-        .getPublicUrl(fileName);
-
       setProjectFiles(prev => [...prev, {
         name: file.name,
         size: file.size,
-        url: urlData.publicUrl,
+        url: `project-files::${fileName}`,
       }]);
 
       toast.success('File uploaded successfully!');
@@ -365,11 +373,7 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('project-files')
-        .getPublicUrl(fileName);
-
-      setRecordingVideoUrl(urlData.publicUrl);
+      setRecordingVideoUrl(`project-files::${fileName}`);
       toast.success('Video saved! Click Submit to send your project.');
     } catch (err: any) {
       toast.error(err?.message || 'Failed to save video');
@@ -573,11 +577,11 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
 
                 {/* Project File Upload */}
                 <div className="space-y-3">
-                  <Label className="text-foreground">Or upload project files</Label>
+                  <Label className="text-foreground">Or upload project archive</Label>
                   <label className="block">
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg"
+                      accept=".zip,.rar,.7z,application/zip,application/x-zip-compressed,application/x-rar-compressed,application/x-7z-compressed"
                       onChange={handleFileUpload}
                       disabled={uploadingFile}
                       className="hidden"
@@ -595,7 +599,7 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
                       ) : (
                         <>
                           <Upload className="w-5 h-5 text-slate-400" />
-                          <span className="text-slate-600">Click to upload files (PDF, DOC, ZIP, Images)</span>
+                          <span className="text-slate-600">Click to upload project ZIP/RAR/7Z</span>
                         </>
                       )}
                     </div>

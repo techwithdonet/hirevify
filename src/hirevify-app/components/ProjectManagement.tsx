@@ -147,6 +147,7 @@ export function ProjectManagement({
  const [showGrowthForm, setShowGrowthForm] = useState(false);
  const [editingGrowthId, setEditingGrowthId] = useState<string | null>(null);
  const [expandedGrowthId, setExpandedGrowthId] = useState<string | null>(null);
+ const [growthReviewMode, setGrowthReviewMode] = useState(false);
  const [scoreByApplicationId, setScoreByApplicationId] = useState<Record<string, string>>({});
 
  useEffect(() => {
@@ -161,7 +162,9 @@ export function ProjectManagement({
  setShowGrowthForm(false);
  setEditingGrowthId(null);
  setExpandedGrowthId(null);
+ setGrowthReviewMode(window.localStorage.getItem('hirevify_growth_review_mode') === 'applications');
  window.localStorage.removeItem('hirevify_growth_post_type');
+ window.localStorage.removeItem('hirevify_growth_review_mode');
  }, []);
 
  const loadGrowthData = async (profileId: string, type: RecruiterGrowthPostType) => {
@@ -253,6 +256,14 @@ export function ProjectManagement({
  if (!careerGrowthOnlyType) return [];
  return growthOpportunities.filter((opportunity) => opportunity.type === careerGrowthOnlyType);
  }, [careerGrowthOnlyType, growthOpportunities]);
+
+ useEffect(() => {
+ if (!growthReviewMode || expandedGrowthId || filteredGrowthOpportunities.length === 0) return;
+ const opportunityWithApplicants = filteredGrowthOpportunities.find((opportunity) =>
+ growthApplications.some((application) => application.opportunity_id === opportunity.id)
+ );
+ setExpandedGrowthId((opportunityWithApplicants || filteredGrowthOpportunities[0]).id);
+ }, [expandedGrowthId, filteredGrowthOpportunities, growthApplications, growthReviewMode]);
 
  const openCreateProject = () => {
  if (onCreateProject) {
@@ -378,8 +389,41 @@ export function ProjectManagement({
  await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
  };
 
- const acceptGrowthApplication = async (applicationId: string) => {
- await updateGrowthStatus(applicationId, 'accepted');
+ const notifyGrowthCandidate = async (application: CareerGrowthApplication, title: string, message: string) => {
+ const supabase = createSupabaseBrowserClient();
+ const { data: candidateProfile } = await supabase
+ .from('profiles')
+ .select('auth_user_id')
+ .eq('id', application.candidate_profile_id)
+ .maybeSingle();
+ await supabase.from('notifications').insert({
+ user_id: candidateProfile?.auth_user_id || application.candidate_profile_id,
+ type: 'career_growth',
+ title,
+ message,
+ data: {
+ application_id: application.id,
+ opportunity_id: application.opportunity_id,
+ type: application.opportunity?.type,
+ },
+ read: false,
+ });
+ };
+
+ const acceptGrowthApplication = async (application: CareerGrowthApplication) => {
+ if (!recruiterProfileId || !careerGrowthOnlyType) return;
+ const { error } = await careerGrowthService.updateCareerGrowthApplicationStatus(application.id, 'accepted');
+ if (error) {
+ toast.error(error.message);
+ return;
+ }
+ await notifyGrowthCandidate(
+ application,
+ `${growthTypeLabels[careerGrowthOnlyType]} assigned`,
+ `Your application for "${application.opportunity?.title || growthTypeLabels[careerGrowthOnlyType]}" was accepted. You can now submit your project file.`,
+ );
+ toast.success('Candidate assigned.');
+ await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
  };
 
  const reviewGrowthApplication = async (applicationId: string) => {
@@ -401,7 +445,31 @@ export function ProjectManagement({
  return;
  }
 
+ const application = growthApplications.find((item) => item.id === applicationId);
+ if (application) {
+ await notifyGrowthCandidate(
+ application,
+ 'Project approved',
+ `Your project for "${application.opportunity?.title || 'career growth opportunity'}" was approved. Your certificate is ready.`,
+ );
+ }
  toast.success('Score saved and certificate issued.');
+ await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
+ };
+
+ const rejectGrowthApplication = async (application: CareerGrowthApplication) => {
+ if (!recruiterProfileId || !careerGrowthOnlyType) return;
+ const { error } = await careerGrowthService.updateCareerGrowthApplicationStatus(application.id, 'rejected');
+ if (error) {
+ toast.error(error.message);
+ return;
+ }
+ await notifyGrowthCandidate(
+ application,
+ 'Application not selected',
+ `Your ${growthTypeLabels[careerGrowthOnlyType]} application for "${application.opportunity?.title || 'this opportunity'}" was not selected.`,
+ );
+ toast.success('Application rejected.');
  await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
  };
 
@@ -773,25 +841,41 @@ export function ProjectManagement({
  {applicants.map((application) => {
  const submission = getApplicationSubmission(application.id);
  const review = parseCareerGrowthReview(application.recruiter_notes);
- const progress = application.status === 'completed' ? 100 : submission ? 66 : ['accepted', 'assigned', 'in_progress'].includes(application.status) ? 33 : 12;
+ const progress = application.status === 'completed' || application.status === 'rejected' ? 100 : submission ? 66 : ['accepted', 'assigned', 'in_progress'].includes(application.status) ? 33 : 12;
+ const canDecideApplication = ['applied', 'reviewing', 'screening', 'shortlisted'].includes(application.status);
+ const canReviewSubmission = Boolean(submission) && !['completed', 'rejected'].includes(application.status);
 
  return (
- <div key={application.id} className="rounded-lg bg-slate-50 p-3">
+ <div key={application.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
  <div className="min-w-0 flex-1">
- <p className="text-sm font-medium text-gray-900">
+ <div className="flex flex-wrap items-center gap-2">
+ <p className="text-sm font-semibold text-slate-950">
  {application.candidate_profile?.full_name || application.candidate_profile?.email || 'Candidate'}
  </p>
- <p className="text-xs text-gray-500">
- Applied {new Date(application.created_at).toLocaleDateString()} - Status: {application.status}
+ <Badge className={
+ application.status === 'accepted' || application.status === 'assigned'
+ ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+ : application.status === 'rejected'
+ ? 'border-red-200 bg-red-50 text-red-700'
+ : application.status === 'completed'
+ ? 'border-blue-200 bg-blue-50 text-blue-700'
+ : 'border-slate-200 bg-slate-50 text-slate-700'
+ } variant="outline">
+ {application.status.replace('_', ' ')}
+ </Badge>
+ </div>
+ <p className="mt-1 text-xs text-slate-500">
+ Applied {new Date(application.created_at).toLocaleDateString()}
  </p>
  <div className="mt-3 max-w-md">
  <div className="mb-1 flex justify-between text-[11px] font-medium text-slate-500">
  <span>Applied</span>
- <span>Accepted</span>
+ <span>Assigned</span>
  <span>Submitted</span>
+ <span>Completed</span>
  </div>
- <div className="h-2 overflow-hidden rounded-full bg-white">
+ <div className="h-2 overflow-hidden rounded-full bg-slate-100">
  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
  </div>
  </div>
@@ -816,12 +900,12 @@ export function ProjectManagement({
  )}
  </div>
  <div className="flex flex-col gap-2 sm:min-w-[220px]">
- {application.status === 'applied' && (
- <Button size="sm" onClick={() => acceptGrowthApplication(application.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">
- Accept Application
+ {canDecideApplication && (
+ <Button size="sm" onClick={() => acceptGrowthApplication(application)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ Assign Candidate
  </Button>
  )}
- {submission && application.status !== 'completed' && (
+ {canReviewSubmission && (
  <div className="flex gap-2">
  <Input
  type="number"
@@ -833,13 +917,18 @@ export function ProjectManagement({
  className="bg-white"
  />
  <Button size="sm" onClick={() => reviewGrowthApplication(application.id)}>
- Issue
+ Approve
  </Button>
  </div>
  )}
- {application.status !== 'completed' && (
- <Button size="sm" variant="outline" onClick={() => updateGrowthStatus(application.id, 'rejected')}>
+ {canDecideApplication && (
+ <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => rejectGrowthApplication(application)}>
  Reject
+ </Button>
+ )}
+ {canReviewSubmission && (
+ <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => rejectGrowthApplication(application)}>
+ Reject Submission
  </Button>
  )}
  </div>

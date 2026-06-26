@@ -817,6 +817,18 @@ case 'candidate-dashboard':
  <NotificationCenter 
  onBack={user?.userType === 'recruiter'? navigation.navigateToRecruiterDashboard: navigation.navigateToCandidateDashboard}
  onUpdateUnreadCount={setUnreadNotifications}
+ onOpenNotification={(notification) => {
+   const data = (notification as any).data || {};
+   if (user?.userType === 'candidate' && data.assignment_id) {
+     navigation.navigateToProjectAssignment(data.assignment_id);
+     return;
+   }
+   if (user?.userType === 'recruiter') {
+     navigation.navigateToATS();
+     return;
+   }
+   navigation.navigateToCandidateDashboard();
+ }}
  />
  );
  

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import { careerGrowthService, parseCareerGrowthReview, type CareerGrowthApplication, type CareerGrowthOpportunity, type CareerGrowthSubmission, type CareerGrowthType } from '../services/careerGrowthService';
+import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 
 interface CandidateGrowthPageProps {
@@ -49,7 +50,8 @@ function getStatusBadge(status?: string) {
  case 'in_progress':
  return <Badge className="bg-blue-100 text-blue-800 border-blue-200">In Progress</Badge>;
  case 'accepted':
- return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Accepted</Badge>;
+ case 'assigned':
+ return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Assigned</Badge>;
  case 'rejected':
  return <Badge className="bg-red-100 text-red-800 border-red-200">Rejected</Badge>;
  case 'withdrawn':
@@ -202,6 +204,22 @@ export function CandidateGrowthPage({
 
  if (error) throw new Error(error.message);
  await careerGrowthService.updateCareerGrowthApplicationStatus(application.id, 'in_progress');
+ if (application.opportunity?.recruiter_id) {
+ const supabase = createSupabaseBrowserClient();
+ const { data: recruiterProfile } = await supabase
+ .from('profiles')
+ .select('auth_user_id')
+ .eq('id', application.opportunity.recruiter_id)
+ .maybeSingle();
+ await supabase.from('notifications').insert({
+ user_id: recruiterProfile?.auth_user_id || application.opportunity.recruiter_id,
+ type: 'career_growth_submission',
+ title: 'Project submitted',
+ message: `Candidate submitted work for "${application.opportunity?.title || title}".`,
+ data: { application_id: application.id, opportunity_id: application.opportunity_id, type },
+ read: false,
+ });
+ }
  toast.success('Project submitted.');
  await loadGrowthData();
  } catch (error) {
@@ -262,6 +280,22 @@ export function CandidateGrowthPage({
  }
 
  if (data) {
+ if (opportunity.recruiter_id) {
+ const supabase = createSupabaseBrowserClient();
+ const { data: recruiterProfile } = await supabase
+ .from('profiles')
+ .select('auth_user_id')
+ .eq('id', opportunity.recruiter_id)
+ .maybeSingle();
+ await supabase.from('notifications').insert({
+ user_id: recruiterProfile?.auth_user_id || opportunity.recruiter_id,
+ type: 'career_growth_application',
+ title: 'New application received',
+ message: `A candidate applied for "${opportunity.title}".`,
+ data: { application_id: data.id, opportunity_id: opportunity.id, type },
+ read: false,
+ });
+ }
  toast.success(`${appliedToastVerb} ${opportunity.title}.`);
  await loadGrowthData();
  }
@@ -471,7 +505,7 @@ export function CandidateGrowthPage({
  <div>
  <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
  <span>Applied</span>
- <span>Accepted</span>
+ <span>Assigned</span>
  <span>Submitted</span>
  </div>
  <div className="h-2 overflow-hidden rounded-full bg-slate-100">

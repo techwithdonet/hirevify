@@ -211,9 +211,10 @@ export function RecruiterDashboard({
   }, [user?.id]);
 
 
-  const openGrowthPostFlow = (type: 'experience_builder' | 'micro_internship') => {
+  const openGrowthApplications = (type: 'experience_builder' | 'micro_internship') => {
     if (typeof window!== 'undefined') {
       window.localStorage.setItem('hirevify_growth_post_type', type);
+      window.localStorage.setItem('hirevify_growth_review_mode', 'applications');
     }
 
     onViewProjects?.();
@@ -222,44 +223,47 @@ export function RecruiterDashboard({
   const recruiterProfileCompleteness = Number(recruiterProfile?.profile_completeness || 0);
   const isRecruiterProfileComplete =
     Boolean(recruiterProfile?.profile_completed) || recruiterProfileCompleteness >= 60;
-  const totalApplicationCount = applicants.length + growthApplicants.length;
   const growthApplicationCountByType = (type: CareerGrowthType) =>
     growthApplicants.filter((application) => application.opportunity?.type === type).length;
   const latestApplicationLabel = (application: any) =>
     application?.candidate_profile?.full_name || application?.candidate_profile?.email || application?.candidate_name || application?.candidate_email || 'Candidate';
   const applicationSections = [
     {
-      key: 'projects',
-      title: 'Projects',
-      subtitle: 'Job project assignments',
+      key: 'job_applications',
+      title: 'Job Applications',
+      subtitle: 'Candidates who applied to jobs',
       count: applicants.length,
       icon: Briefcase,
       accent: 'bg-emerald-50 text-emerald-600',
       hoverAccent: 'group-hover:bg-emerald-600',
       action: onViewATS,
-      latest: applicants[0]? `${latestApplicationLabel(applicants[0])} - ${applicants[0]?.job?.title || applicants[0]?.job_title || 'Project'}`: 'No applications yet',
+      latest: applicants[0]? `${latestApplicationLabel(applicants[0])} - ${applicants[0]?.job?.title || applicants[0]?.job_title || 'Job'}`: 'No applications yet',
     },
     {
       key: 'experience_builder',
-      title: 'Experience Builder',
-      subtitle: 'Posted experience tasks',
+      title: 'Experience Builder Applications',
+      subtitle: 'Candidates applying to experience posts',
       count: growthApplicationCountByType('experience_builder'),
       icon: Target,
       accent: 'bg-blue-50 text-blue-600',
       hoverAccent: 'group-hover:bg-blue-600',
-      action: () => openGrowthPostFlow('experience_builder'),
-      latest: growthApplicants.find((application) => application.opportunity?.type === 'experience_builder')?.opportunity?.title || 'No applications yet',
+      action: () => openGrowthApplications('experience_builder'),
+      latest: growthApplicants.find((application) => application.opportunity?.type === 'experience_builder')
+        ? `${latestApplicationLabel(growthApplicants.find((application) => application.opportunity?.type === 'experience_builder'))} - ${growthApplicants.find((application) => application.opportunity?.type === 'experience_builder')?.opportunity?.title || 'Experience post'}`
+        : 'No applications yet',
     },
     {
       key: 'micro_internship',
-      title: 'Micro Internship',
-      subtitle: 'Short internship posts',
+      title: 'Micro Internship Applications',
+      subtitle: 'Candidates applying to micro internships',
       count: growthApplicationCountByType('micro_internship'),
       icon: Clock,
       accent: 'bg-amber-50 text-amber-600',
       hoverAccent: 'group-hover:bg-amber-600',
-      action: () => openGrowthPostFlow('micro_internship'),
-      latest: growthApplicants.find((application) => application.opportunity?.type === 'micro_internship')?.opportunity?.title || 'No applications yet',
+      action: () => openGrowthApplications('micro_internship'),
+      latest: growthApplicants.find((application) => application.opportunity?.type === 'micro_internship')
+        ? `${latestApplicationLabel(growthApplicants.find((application) => application.opportunity?.type === 'micro_internship'))} - ${growthApplicants.find((application) => application.opportunity?.type === 'micro_internship')?.opportunity?.title || 'Micro internship'}`
+        : 'No applications yet',
     },
     // Mentorship and Career Switch removed from recruiter portal
   ];
@@ -267,9 +271,9 @@ export function RecruiterDashboard({
     ...applicants.slice(0, 3).map((application) => ({
       id: application.id,
       candidate: latestApplicationLabel(application),
-      source: application.job?.title || application.job_title || 'Project',
+      source: application.job?.title || application.job_title || 'Job',
       status: application.status || 'applied',
-      category: 'Project',
+      category: 'Job Application',
     })),
     ...growthApplicants
       .filter((application) => application.opportunity?.type && ['experience_builder', 'micro_internship'].includes(application.opportunity.type))
@@ -421,11 +425,10 @@ export function RecruiterDashboard({
         </div>
 
         {/* Stats Grid */}
-        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             { label: 'Jobs', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, color: 'text-blue-600 bg-blue-50' },
             { label: 'All Projects', value: applicants.filter((a) => a.status === 'assigned').length, icon: Briefcase, action: onViewOngoingProjects || onViewATS, color: 'text-teal-600 bg-teal-50' },
-            { label: 'Applications', value: totalApplicationCount, icon: Users, action: onViewATS, color: 'text-emerald-600 bg-emerald-50' },
             { label: 'Hire Rate', value: stats?.hireRate || 'N/A', icon: TrendingUp, action: onViewAnalytics, color: 'text-violet-600 bg-violet-50' },
           ].map((item) => {
             const Icon = item.icon;
@@ -453,9 +456,9 @@ export function RecruiterDashboard({
           <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 sm:p-6">
             <div className="mb-4">
               <p className="premium-eyebrow text-slate-400">Quick Actions</p>
-              <h2 className="mt-1 text-xl font-semibold text-white">Post Jobs and Source Candidates</h2>
+              <h2 className="mt-1 text-xl font-semibold text-white">Post jobs and source candidates</h2>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button
                 onClick={() => (onPostJob ? onPostJob() : onPostProject?.())}
                 className="h-14 rounded-xl bg-white px-6 font-semibold text-slate-900 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-emerald-50"
@@ -470,14 +473,6 @@ export function RecruiterDashboard({
               >
                 <Search className="mr-2 h-5 w-5" />
                 Search Candidates
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onPostProject?.()}
-                className="h-14 rounded-xl border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                <Briefcase className="mr-2 h-5 w-5" />
-                Post Project
               </Button>
             </div>
           </div>
@@ -502,24 +497,22 @@ export function RecruiterDashboard({
                   key={section.key}
                   type="button"
                   onClick={section.action}
-                  className="group flex flex-col rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-slate-300 hover:shadow-md"
+                  className="group flex min-h-[160px] flex-col rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/70 p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg"
                 >
-                  <div className="mb-3">
+                  <div className="mb-4 flex items-center justify-between">
                     <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors', section.accent, section.hoverAccent, 'group-hover:text-white')}>
                       <Icon className="h-5 w-5" />
                     </span>
-                  </div>
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{section.title}</h3>
-                      <p className="mt-0.5 text-xs text-slate-500">{section.subtitle}</p>
-                    </div>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                    <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 px-2 text-sm font-bold text-white shadow-sm">
                       {section.count}
                     </span>
                   </div>
-                  <p className="mt-auto line-clamp-2 text-xs text-slate-500">{section.latest}</p>
-                  <div className="mt-3 flex items-center text-xs font-medium text-slate-600">
+                  <div className="mb-3">
+                    <h3 className="text-base font-semibold text-slate-950">{section.title}</h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">{section.subtitle}</p>
+                  </div>
+                  <p className="mt-auto line-clamp-2 rounded-lg bg-white/70 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-100">{section.latest}</p>
+                  <div className="mt-4 flex items-center text-xs font-semibold text-slate-600">
                     <span className="transition-colors group-hover:text-emerald-600">View all</span>
                     <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>

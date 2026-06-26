@@ -394,16 +394,11 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   }, [applications, applicationStatusFilter, searchTerm, matchFilter]);
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId);
-  // High-match list for display  •   •  includes assigned so recruiter can see the stats
+  // High-match list for display ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â includes assigned so recruiter can see the stats
   const isAlreadyAssignedApplication = (application: JobApplication) =>
     assignedApplicationIds.has(application.applicationId) ||
     assignedApplicationIds.has(application.id) ||
     assignedCandidateIds.has(application.candidateId);
-  const getAssignmentForApplication = (application: JobApplication) =>
-    assignments.find((assignment) =>
-      assignment.applicationId === application.applicationId ||
-      assignment.candidateId === application.candidateId
-    );
   const pendingApplications = filteredApplications.filter((application) => !isAlreadyAssignedApplication(application));
   const assignedApplications = filteredApplications.filter((application) => isAlreadyAssignedApplication(application));
   const selectedJobApplications = assignmentFilter === 'assigned' ? assignedApplications : pendingApplications;
@@ -467,7 +462,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
         if (hasAssignment) continue;
 
-        const { data: assignment, error } = await projectAssignmentsService.createAssignment({
+        const { error } = await projectAssignmentsService.createAssignment({
           jobId: selectedJobId,
           projectId: selectedJobId,
           candidateId: app.candidateId,
@@ -494,11 +489,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
               type: 'assignment',
               title: 'New Project Assignment',
               message: `You have been assigned to "${selectedJob?.title}". Please review and accept or decline.`,
-              data: {
-                assignment_id: assignment?.id,
-                job_id: selectedJobId,
-                application_id: app.applicationId,
-              },
               read: false,
             },
           ]);
@@ -609,36 +599,14 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     }
   };
 
-  const openSubmissionUrl = async (url: string | null | undefined) => {
+  const openSubmissionUrl = (url: string | null | undefined) => {
     if (!url) return;
     const firstUrl = url.split(',').map((value) => value.trim()).filter(Boolean)[0];
     if (!firstUrl) return;
-
-    const pathFromPublicUrl = firstUrl.match(/\/storage\/v1\/object\/public\/project-files\/(.+)$/)?.[1];
-    const directPath = firstUrl.startsWith('project-files::') ? firstUrl.split('::')[1] : null;
-    const objectPath = directPath || pathFromPublicUrl;
-
-    if (objectPath) {
-      const supabase = createSupabaseBrowserClient();
-      const { data } = await supabase.storage
-        .from('project-files')
-        .createSignedUrl(decodeURIComponent(objectPath), 60 * 10);
-
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-        return;
-      }
-    }
-
     window.open(firstUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const notifyCandidate = async (
-    candidateProfileId: string,
-    title: string,
-    message: string,
-    data?: Record<string, string | null | undefined>,
-  ) => {
+  const notifyCandidate = async (candidateProfileId: string, title: string, message: string) => {
     const supabase = createSupabaseBrowserClient();
     const { data: candidateProfile } = await supabase
       .from('profiles')
@@ -652,10 +620,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
         type: 'assignment',
         title,
         message,
-        data: {
-          job_id: selectedJobId,
-          ...data,
-        },
         read: false,
       },
     ]);
@@ -684,10 +648,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       await updateApplicationFromAssignment(assignment, applicationStatus);
     }
 
-    await notifyCandidate(assignment.candidateId, notificationTitle, notificationMessage, {
-      assignment_id: assignment.id,
-      application_id: assignment.applicationId,
-    });
+    await notifyCandidate(assignment.candidateId, notificationTitle, notificationMessage);
     await refreshProjectAssignments();
     toast.success(notificationTitle);
   };
@@ -807,7 +768,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
               </div>
               {selectedJob && (
                 <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
-                  {applications.length} application{applications.length !== 1 ? 's' : ''}
+                  {selectedJobApplications.length} application{selectedJobApplications.length !== 1 ? 's' : ''}
                 </Badge>
               )}
             </div>
@@ -968,11 +929,11 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             </div>
 
             {/* Main Content: Applications + Status */}
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
               {/* Left: Applications List */}
               <div className="space-y-4">
                 {/* Search + Filter */}
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -983,7 +944,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-950 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                     />
                   </div>
-                  <div className="flex shrink-0 flex-wrap gap-2">
+                  <div className="flex gap-2">
                     {([
                       { value: 'active' as const, label: 'Active' },
                       { value: 'rejected' as const, label: 'Rejected' },
@@ -992,7 +953,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       <button
                         key={filter.value}
                         onClick={() => setApplicationStatusFilter(filter.value)}
-                        className={`min-w-fit rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
                           applicationStatusFilter === filter.value
                             ? 'border-slate-400 bg-slate-900 text-white'
                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -1005,7 +966,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       <button
                         key={f}
                         onClick={() => setMatchFilter(f)}
-                        className={`min-w-fit rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
                           matchFilter === f
                             ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -1046,8 +1007,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       const isSelected = selectedCandidateIds.has(app.id);
                       const isHighMatch = app.matchScore >= 70;
                       const isAlreadyAssigned = isAlreadyAssignedApplication(app);
-                      const assignmentRecord = getAssignmentForApplication(app);
-                      const assignmentBadge = getAssignmentBadge(assignmentRecord?.assignmentStatus || 'pending');
 
                       return (
                         <Card
@@ -1091,8 +1050,8 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                 <div className="flex items-center gap-2">
                                   <p className="truncate text-base font-semibold text-slate-950">{app.name}</p>
                                   {isAlreadyAssigned ? (
-                                    <Badge className={assignmentBadge.class} variant="outline">
-                                      {assignmentBadge.label}
+                                    <Badge className="bg-teal-50 text-teal-700 border-teal-200" variant="outline">
+                                      Assigned
                                     </Badge>
                                   ) : (
                                     <Badge className={getStatusBadge(app.status)} variant="outline">
@@ -1103,7 +1062,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                 <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
                                   <Mail className="h-3.5 w-3.5 shrink-0" />
                                   <span className="truncate">{app.email}</span>
-                                  <span className="text-slate-300"> •   • </span>
+                                  <span className="text-slate-300">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·</span>
                                   <Calendar className="h-3.5 w-3.5 shrink-0" />
                                   <span>{new Date(app.appliedDate).toLocaleDateString()}</span>
                                 </div>
@@ -1199,13 +1158,13 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-slate-700">Verification Progress</span>
                           <span className="text-sm font-bold text-purple-700">
-                            {assignments.filter(a => a.projectSubmissionUrl || a.videoSubmissionUrl || ['submitted', 'under_review', 'hired', 'not_selected'].includes(a.assignmentStatus)).length} / {assignments.length}
+                            {assignments.filter(a => a.assignmentStatus === 'under_review' || a.assignmentStatus === 'submitted').length} / {assignments.length}
                           </span>
                         </div>
                         <div className="w-full bg-purple-100 rounded-full h-3 overflow-hidden">
                           <div 
                             className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-500"
-                        style={{ width: `${assignments.length > 0 ? Math.round((assignments.filter((assignment) => assignment.projectSubmissionUrl || assignment.videoSubmissionUrl || ['submitted', 'under_review', 'hired', 'not_selected'].includes(assignment.assignmentStatus)).length / assignments.length) * 100) : 0}%` }}
+                        style={{ width: `${assignments.length > 0 ? Math.round((assignments.filter((assignment) => assignment.assignmentStatus === 'hired').length / assignments.length) * 100) : 0}%` }}
                           />
                         </div>
                       </div>
@@ -1320,7 +1279,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       { label: 'Total', value: assignments.length, color: 'text-slate-700 bg-slate-50' },
                       { label: 'Pending', value: assignments.filter(a => a.assignmentStatus === 'pending').length, color: 'text-amber-700 bg-amber-50' },
                       { label: 'Accepted', value: assignments.filter(a => a.assignmentStatus === 'accepted').length, color: 'text-emerald-700 bg-emerald-50' },
-                      { label: 'Not Selected', value: assignments.filter(a => ['rejected', 'not_selected'].includes(a.assignmentStatus)).length, color: 'text-red-700 bg-red-50' },
+                      { label: 'Rejected', value: assignments.filter(a => a.assignmentStatus === 'rejected').length, color: 'text-red-700 bg-red-50' },
                     ].map((stat) => (
                       <div key={stat.label} className={`rounded-lg border border-slate-200 p-3 text-center ${stat.color}`}>
                         <p className="text-2xl font-bold">{stat.value}</p>
@@ -1451,14 +1410,14 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                         <div className="flex gap-1">
                           <div className={`flex-1 h-2 rounded-full ${assignment.projectSubmissionUrl ? 'bg-blue-500' : 'bg-slate-200'}`} />
                           <div className={`flex-1 h-2 rounded-full ${assignment.videoSubmissionUrl ? 'bg-purple-500' : 'bg-slate-200'}`} />
-                          <div className={`flex-1 h-2 rounded-full ${['under_review', 'hired', 'not_selected'].includes(assignment.assignmentStatus) ? 'bg-emerald-500' : 'bg-slate-200'}`} />
-                          <div className={`flex-1 h-2 rounded-full ${['hired', 'not_selected'].includes(assignment.assignmentStatus) ? 'bg-amber-500' : 'bg-slate-200'}`} />
+                          <div className={`flex-1 h-2 rounded-full ${['under_review', 'hired'].includes(assignment.assignmentStatus) ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                          <div className={`flex-1 h-2 rounded-full ${assignment.assignmentStatus === 'hired' ? 'bg-amber-500' : 'bg-slate-200'}`} />
                         </div>
                         <div className="flex justify-between mt-1 text-xs text-slate-400">
                           <span>Project</span>
                           <span>Video</span>
                           <span>Review</span>
-                          <span>Decision</span>
+                          <span>Hired</span>
                         </div>
                       </div>
 
@@ -1518,26 +1477,15 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                             </Button>
                           </>
                         )}
-                        {assignment.projectSubmissionUrl && (
+                        {(assignment.projectSubmissionUrl || assignment.videoSubmissionUrl) && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                            onClick={() => void openSubmissionUrl(assignment.projectSubmissionUrl)}
-                          >
-                            <FileCheck className="w-4 h-4 mr-1" />
-                            Project File
-                          </Button>
-                        )}
-                        {assignment.videoSubmissionUrl && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-purple-200 text-purple-600 hover:bg-purple-50"
-                            onClick={() => void openSubmissionUrl(assignment.videoSubmissionUrl)}
+                            className="border-purple-200 text-purple-600"
+                            onClick={() => openSubmissionUrl(assignment.projectSubmissionUrl || assignment.videoSubmissionUrl)}
                           >
                             <PlayCircle className="w-4 h-4 mr-1" />
-                            Video
+                            View Submission
                           </Button>
                         )}
                       </div>
@@ -1552,7 +1500,6 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     </div>
   );
 }
-
 
 
 
