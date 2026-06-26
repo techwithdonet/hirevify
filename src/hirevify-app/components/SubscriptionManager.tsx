@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Calendar, Download, AlertCircle, CheckCircle, Clock, Pause, Play, X, Edit, RotateCcw, ExternalLink, Shield, Users, Crown, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -202,16 +202,16 @@ export function SubscriptionManager({ onBack, userType }: SubscriptionManagerPro
  return `${used} / ${limit}`;
  };
 
- if (loading) {
- return (
- <div className="min-h-screen bg-background">
- <div className="max-w-6xl mx-auto px-6 py-8">
- <div className="flex items-center gap-4 mb-8">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-5 h-5" />
- </Button>
- <Skeleton className="h-8 w-64" />
- </div>
+if (loading) {
+    return (
+      <div className="premium-page">
+        <header className="premium-header">
+          <div className="premium-header-inner">
+            <Skeleton className="h-8 w-64" />
+          </div>
+        </header>
+        <main className="premium-content">
+          <div className="max-w-6xl mx-auto">
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  <div className="lg:col-span-2 space-y-8">
@@ -234,31 +234,36 @@ export function SubscriptionManager({ onBack, userType }: SubscriptionManagerPro
  </CardHeader>
  <CardContent>
  <Skeleton className="h-20 w-full" />
- </CardContent>
- </Card>
- </div>
- </div>
- </div>
- </div>
- );
- }
+</CardContent>
+  </Card>
+  </div>
+  </div>
+  </div>
+  </main>
+  </div>
+  );
+  }
 
- const currentPlan = getCurrentPlan();
+  const currentPlan = getCurrentPlan();
 
  return (
- <div className="min-h-screen bg-background">
- <div className="max-w-6xl mx-auto px-6 py-8">
+ <div className="premium-page">
  {/* Header */}
- <div className="flex items-center gap-4 mb-8">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-5 h-5" />
+ <ArrowLeft className="w-4 h-4 mr-2" />
+ Back
  </Button>
  <div>
- <h1 className="text-3xl font-bold text-foreground">Subscription Management</h1>
- <p className="text-muted-foreground">Manage your HireVify subscription and billing</p>
+ <h1 className="text-2xl font-bold text-slate-950">Subscription Management</h1>
+ <p className="text-sm text-slate-500">Manage your HireVify subscription and billing</p>
  </div>
  </div>
+ </header>
 
+ <main className="premium-content">
+ <div className="max-w-6xl mx-auto">
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
  {/* Main Content */}
  <div className="lg:col-span-2 space-y-8">
@@ -741,13 +746,14 @@ export function SubscriptionManager({ onBack, userType }: SubscriptionManagerPro
  onClick={handleChangePlan}
  disabled={!selectedNewPlan ||!!actionLoading}
  >
- {actionLoading === 'change-plan'? 'Changing...': 'Change Plan'}
- </Button>
- </DialogFooter>
- </DialogContent>
- </Dialog>
- </div>
- );
+{actionLoading === 'change-plan'? 'Changing...': 'Change Plan'}
+  </Button>
+  </DialogFooter>
+  </DialogContent>
+  </Dialog>
+  </main>
+  </div>
+  );
 }
 
 

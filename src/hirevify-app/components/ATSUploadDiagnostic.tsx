@@ -243,16 +243,23 @@ export function ATSUploadDiagnostic() {
  };
 
  return (
- <div className="max-w-4xl mx-auto p-6 space-y-6">
- <div className="text-center space-y-2">
- <h1 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+ <div className="premium-page">
+ <header className="premium-header">
+ <div className="premium-header-inner">
+ <div>
+ <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
  <FileText className="w-6 h-6 text-primary" />
  ATS Upload Diagnostic
  </h1>
- <p className="text-gray-600">
+ <p className="text-sm text-slate-500">
  Test file upload functionality and identify any issues
  </p>
  </div>
+ </div>
+ </header>
+
+ <main className="premium-content">
+ <div className="max-w-4xl mx-auto space-y-6">
 
  {/* File Selection */}
  <Card>
@@ -399,6 +406,8 @@ export function ATSUploadDiagnostic() {
  </div>
  </CardContent>
  </Card>
+ </div>
+ </main>
  </div>
  );
 }
