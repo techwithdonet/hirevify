@@ -218,9 +218,9 @@ export function EnhancedATSScanner({
  };
 
  if (activeView === 'detail' && selectedCandidate) {
- return (
- <div className="min-h-screen bg-gray-50">
- {/* Detail Header */}
+  return (
+  <div className="premium-page">
+  {/* Detail Header */}
  <div className="bg-white border-b border-gray-200">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="flex items-center justify-between h-16">
@@ -370,8 +370,8 @@ export function EnhancedATSScanner({
  }
 
  return (
- <div className="min-h-screen bg-gray-50">
- {/* Header */}
+  <div className="premium-page">
+  {/* Header */}
  <div className="bg-white border-b border-gray-200">
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <div className="flex items-center justify-between h-16">

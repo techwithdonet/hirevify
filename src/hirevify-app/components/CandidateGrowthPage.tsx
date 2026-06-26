@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Award, BookOpen, Briefcase, Building, CheckCircle, Clock, MapPin, Play, Star, Target, Users } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Briefcase, Building, CheckCircle, Clock, Download, FileText, MapPin, Play, Star, Target, Upload, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
-import { careerGrowthService, type CareerGrowthApplication, type CareerGrowthOpportunity, type CareerGrowthType } from '../services/careerGrowthService';
+import { careerGrowthService, parseCareerGrowthReview, type CareerGrowthApplication, type CareerGrowthOpportunity, type CareerGrowthSubmission, type CareerGrowthType } from '../services/careerGrowthService';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 
 interface CandidateGrowthPageProps {
@@ -107,6 +107,11 @@ export function CandidateGrowthPage({
  const [applications, setApplications] = useState<CareerGrowthApplication[]>([]);
  const [isLoading, setIsLoading] = useState(true);
  const [isApplyingId, setIsApplyingId] = useState<string | null>(null);
+ const [submissions, setSubmissions] = useState<CareerGrowthSubmission[]>([]);
+ const [submissionTextById, setSubmissionTextById] = useState<Record<string, string>>({});
+ const [submissionUrlById, setSubmissionUrlById] = useState<Record<string, string>>({});
+ const [submissionFileById, setSubmissionFileById] = useState<Record<string, File | null>>({});
+ const [isSubmittingId, setIsSubmittingId] = useState<string | null>(null);
  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
  const loadGrowthData = async () => {
@@ -133,7 +138,14 @@ export function CandidateGrowthPage({
  }
 
  setOpportunities(opportunityResult.data);
- setApplications(applicationResult.data.filter((application) => application.opportunity?.type === type));
+ const filteredApplications = applicationResult.data.filter((application) => application.opportunity?.type === type);
+ setApplications(filteredApplications);
+ const submissionResult = await careerGrowthService.getSubmissionsForApplications(filteredApplications.map((application) => application.id));
+ if (submissionResult.error) {
+ toast.error(submissionResult.error.message);
+ } else {
+ setSubmissions(submissionResult.data);
+ }
  setIsLoading(false);
  };
 
@@ -149,6 +161,83 @@ export function CandidateGrowthPage({
 
  const getApplication = (opportunityId: string) => {
  return applications.find((application) => application.opportunity_id === opportunityId);
+ };
+
+ const getSubmission = (applicationId: string) => submissions.find((submission) => submission.application_id === applicationId);
+
+ const getProgress = (application: CareerGrowthApplication) => {
+ const submission = getSubmission(application.id);
+ if (application.status === 'completed') return 100;
+ if (submission || application.status === 'in_progress') return 66;
+ if (['accepted', 'assigned', 'shortlisted'].includes(application.status)) return 33;
+ return 12;
+ };
+
+ const handleSubmitWork = async (application: CareerGrowthApplication) => {
+ const text = submissionTextById[application.id]?.trim() || '';
+ const url = submissionUrlById[application.id]?.trim() || '';
+ const file = submissionFileById[application.id] || null;
+
+ if (!text && !url && !file) {
+ toast.error('Add a project note, link, or file before submitting.');
+ return;
+ }
+
+ setIsSubmittingId(application.id);
+ try {
+ let filePath: string | undefined;
+ if (file) {
+ const upload = await careerGrowthService.uploadCareerGrowthFile(application.candidate_profile_id, file);
+ if (upload.error || !upload.path) throw new Error(upload.error?.message || 'Project upload failed.');
+ filePath = upload.path;
+ }
+
+ const { error } = await careerGrowthService.submitCareerGrowthWork(application.id, {
+ candidate_profile_id: application.candidate_profile_id,
+ submission_text: text,
+ submission_url: url,
+ file_url: filePath,
+ status: 'submitted',
+ });
+
+ if (error) throw new Error(error.message);
+ await careerGrowthService.updateCareerGrowthApplicationStatus(application.id, 'in_progress');
+ toast.success('Project submitted.');
+ await loadGrowthData();
+ } catch (error) {
+ toast.error(error instanceof Error ? error.message : 'Could not submit project.');
+ } finally {
+ setIsSubmittingId(null);
+ }
+ };
+
+ const downloadCertificate = async (application: CareerGrowthApplication) => {
+ const review = parseCareerGrowthReview(application.recruiter_notes);
+ const { jsPDF } = await import('jspdf');
+ const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+ const name = user?.name || application.candidate_profile?.full_name || 'Student';
+ const titleText = application.opportunity?.title || title;
+ doc.setFillColor(245, 253, 250);
+ doc.rect(0, 0, 842, 595, 'F');
+ doc.setDrawColor(16, 185, 129);
+ doc.setLineWidth(4);
+ doc.rect(36, 36, 770, 523);
+ doc.setFont('helvetica', 'bold');
+ doc.setFontSize(34);
+ doc.text('Certificate of Completion', 421, 150, { align: 'center' });
+ doc.setFontSize(18);
+ doc.setFont('helvetica', 'normal');
+ doc.text('This certificate is awarded to', 421, 205, { align: 'center' });
+ doc.setFont('helvetica', 'bold');
+ doc.setFontSize(28);
+ doc.text(name, 421, 250, { align: 'center' });
+ doc.setFont('helvetica', 'normal');
+ doc.setFontSize(16);
+ doc.text(`for completing ${titleText}`, 421, 300, { align: 'center' });
+ doc.text(`Score: ${review.score ?? 0}%`, 421, 335, { align: 'center' });
+ doc.setFontSize(12);
+ doc.text(`Issued by HireVify on ${new Date(review.certificateIssuedAt || Date.now()).toLocaleDateString()}`, 421, 430, { align: 'center' });
+ doc.save(`${titleText.replace(/[^a-z0-9]+/gi, '_')}_certificate.pdf`);
  };
 
  const handleApply = async (opportunity: CareerGrowthOpportunity) => {
@@ -179,24 +268,26 @@ export function CandidateGrowthPage({
  };
 
  return (
- <div className="min-h-screen bg-background">
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto flex items-center justify-between">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
- </div>
- <Badge className="bg-primary/10 text-primary border-primary/20">
- <Target className="w-3 h-3 mr-1" />
- {badgeLabel}
- </Badge>
- </div>
- </header>
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center space-x-4">
+  <Button variant="ghost" onClick={onBack}>
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Dashboard
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
+  </div>
+  <Badge className="bg-primary/10 text-primary border-primary/20">
+  <Target className="w-3 h-3 mr-1" />
+  {badgeLabel}
+  </Badge>
+  </div>
+  </div>
+  </header>
 
- <main className="max-w-7xl mx-auto p-6">
+  <main className="premium-content">
  <div className="text-center mb-12">
  <div className="inline-flex items-center bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
  <Target className="w-4 h-4 mr-2" />
@@ -352,7 +443,14 @@ export function CandidateGrowthPage({
  </div>
  ): (
  <div className="space-y-6">
- {applications.map((application) => (
+ {applications.map((application) => {
+ const submission = getSubmission(application.id);
+ const review = parseCareerGrowthReview(application.recruiter_notes);
+ const canSubmit = ['accepted', 'assigned', 'in_progress'].includes(application.status);
+ const canDownloadCertificate = application.status === 'completed' && review.certificateIssued;
+ const progress = getProgress(application);
+
+ return (
  <Card key={application.id}>
  <CardHeader>
  <div className="flex items-start justify-between gap-4">
@@ -365,19 +463,78 @@ export function CandidateGrowthPage({
  {getStatusBadge(application.status)}
  </div>
  </CardHeader>
- <CardContent>
+ <CardContent className="space-y-4">
  <p className="text-sm text-muted-foreground mb-4">
  {application.opportunity?.description || 'No description provided.'}
  </p>
+
+ <div>
+ <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
+ <span>Applied</span>
+ <span>Accepted</span>
+ <span>Submitted</span>
+ </div>
+ <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+ <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />
+ </div>
+ </div>
+
+ {canSubmit && !submission && (
+ <div className="space-y-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+ <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+ <Upload className="h-4 w-4 text-emerald-700" />
+ Submit your project
+ </div>
+ <Input
+ placeholder="Project link"
+ value={submissionUrlById[application.id] || ''}
+ onChange={(event) => setSubmissionUrlById((current) => ({ ...current, [application.id]: event.target.value }))}
+ />
+ <Input
+ placeholder="Short note"
+ value={submissionTextById[application.id] || ''}
+ onChange={(event) => setSubmissionTextById((current) => ({ ...current, [application.id]: event.target.value }))}
+ />
+ <label className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
+ <FileText className="h-4 w-4" />
+ {submissionFileById[application.id]?.name || 'Attach project file'}
+ <input
+ type="file"
+ className="hidden"
+ onChange={(event) => setSubmissionFileById((current) => ({ ...current, [application.id]: event.target.files?.[0] || null }))}
+ />
+ </label>
+ <Button onClick={() => handleSubmitWork(application)} disabled={isSubmittingId === application.id}>
+ {isSubmittingId === application.id ? 'Submitting...' : 'Submit Project'}
+ </Button>
+ </div>
+ )}
+
+ {submission && (
+ <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900">
+ Project submitted. Recruiter can now review and score your work.
+ </div>
+ )}
+
  {application.recruiter_notes && (
  <div className="rounded-lg border border-border p-3 text-sm">
- <div className="font-medium mb-1">Recruiter Notes</div>
- <p className="text-muted-foreground">{application.recruiter_notes}</p>
+ <div className="font-medium mb-1">Recruiter Review</div>
+ <p className="text-muted-foreground">
+ {review.score !== undefined ? `Score: ${review.score}%` : ''}
+ {review.note ? ` - ${review.note}` : ''}
+ </p>
  </div>
+ )}
+ {canDownloadCertificate && (
+ <Button variant="outline" onClick={() => downloadCertificate(application)}>
+ <Download className="mr-2 h-4 w-4" />
+ Download Certificate
+ </Button>
  )}
  </CardContent>
  </Card>
- ))}
+ );
+ })}
  </div>
  )}
  </TabsContent>

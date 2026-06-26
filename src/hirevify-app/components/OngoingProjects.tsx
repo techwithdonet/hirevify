@@ -1,6 +1,6 @@
 /**
- * Ongoing Projects Screen
- * Shows all assigned candidates with 4-phase progress tracking
+ * All Projects Screen
+ * Shows all assigned candidates with status and submission tracking
  * Recruiter can verify, approve, and hire candidates
  */
 
@@ -193,6 +193,13 @@ function CandidateCard({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const openSubmission = (url: string | null | undefined) => {
+    if (!url) return;
+    const firstUrl = url.split(',').map((value) => value.trim()).filter(Boolean)[0];
+    if (!firstUrl) return;
+    window.open(firstUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div
       className="rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-md cursor-pointer"
@@ -263,6 +270,32 @@ function CandidateCard({
           <span>Assigned {formatDate(assignment.created_at)}</span>
         </div>
         <div className="flex items-center gap-2">
+          {assignment.project_submission_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                openSubmission(assignment.project_submission_url);
+              }}
+              className="h-8 text-slate-500 hover:text-emerald-600"
+            >
+              <FileCheck className="h-4 w-4" />
+            </Button>
+          )}
+          {assignment.video_submission_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                openSubmission(assignment.video_submission_url);
+              }}
+              className="h-8 text-slate-500 hover:text-purple-600"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -323,7 +356,7 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
         const { data, error } = await projectAssignmentsService.getRecruiterAssignments(recruiterId);
         if (error) {
           console.error('Error loading assignments:', error);
-          toast.error('Failed to load ongoing projects');
+          toast.error('Failed to load projects');
           return;
         }
         setAssignments(data || []);
@@ -355,9 +388,7 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
 
   // Stats
   const stats = useMemo(() => {
-    const active = assignments.filter(
-      (a) => !['hired', 'not_selected', 'rejected'].includes(a.assignment_status)
-    );
+    const active = assignments.filter((a) => !['hired', 'not_selected', 'rejected'].includes(a.assignment_status));
     const pendingReview = assignments.filter((a) => a.assignment_status === 'submitted');
     const underReview = assignments.filter((a) => a.assignment_status === 'under_review');
     const hired = assignments.filter((a) => a.assignment_status === 'hired');
@@ -389,10 +420,12 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
         const candidateName = a.candidate_profile?.full_name?.toLowerCase() || '';
         const candidateEmail = a.candidate_profile?.email?.toLowerCase() || '';
         const jobTitle = a.job?.title?.toLowerCase() || '';
+        const projectTitle = a.project?.title?.toLowerCase() || '';
         if (
           !candidateName.includes(search) &&
           !candidateEmail.includes(search) &&
-          !jobTitle.includes(search)
+          !jobTitle.includes(search) &&
+          !projectTitle.includes(search)
         ) {
           return false;
         }
@@ -432,12 +465,12 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Ongoing Projects</h1>
-              <p className="text-sm text-slate-500">Track candidate progress and make hiring decisions</p>
+              <h1 className="text-xl font-bold text-slate-900">All Projects</h1>
+              <p className="text-sm text-slate-500">Track every assigned project, submission, and decision</p>
             </div>
           </div>
           <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
-            {stats.active} Active
+            {stats.total} Total
           </Badge>
         </div>
       </header>
@@ -521,7 +554,7 @@ export function OngoingProjects({ onBack, onViewCandidateDetail, onViewMessages 
             <div className="mb-4 rounded-full bg-slate-100 p-4">
               <Briefcase className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">No ongoing projects</h3>
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">No projects yet</h3>
             <p className="text-sm text-slate-500">
               Assign candidates to projects from the ATS view to see them here.
             </p>

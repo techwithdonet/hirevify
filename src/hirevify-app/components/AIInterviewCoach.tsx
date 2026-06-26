@@ -513,44 +513,42 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  };
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-2xl font-semibold flex items-center gap-2">
- <Brain className="w-6 h-6 text-primary" />
- AI Interview Coach
- </h1>
- <p className="text-sm text-muted-foreground">
- Personalized interview preparation and practice
- </p>
- </div>
- </div>
- 
- <div className="flex items-center gap-3">
- {jobTitle && (
- <Badge className="bg-primary/10 text-primary">
- Preparing for: {jobTitle}
- </Badge>
- )}
- {onUpgrade && (
- <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
- <Zap className="w-4 h-4 mr-2" />
- Upgrade
- </Button>
- )}
- </div>
- </div>
- </div>
- </div>
-
- <div className="max-w-7xl mx-auto px-6 py-8">
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center gap-4">
+  <Button variant="ghost" onClick={onBack}>
+  <ArrowLeft className="w-4 h-4" />
+  </Button>
+  <div>
+  <h1 className="text-2xl font-semibold flex items-center gap-2">
+  <Brain className="w-6 h-6 text-primary" />
+  AI Interview Coach
+  </h1>
+  <p className="text-sm text-muted-foreground">
+  Personalized interview preparation and practice
+  </p>
+  </div>
+  </div>
+  
+  <div className="flex items-center gap-3">
+  {jobTitle && (
+  <Badge className="bg-primary/10 text-primary">
+  Preparing for: {jobTitle}
+  </Badge>
+  )}
+  {onUpgrade && (
+  <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
+  <Zap className="w-4 h-4 mr-2" />
+  Upgrade
+  </Button>
+  )}
+  </div>
+  </div>
+  </div>
+  </header>
+  <main className="premium-content">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
  <TabsList className="grid w-full grid-cols-4">
  <TabsTrigger value="preparation">Preparation</TabsTrigger>
@@ -1123,10 +1121,10 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  </div>
  )}
  </TabsContent>
- </Tabs>
- </div>
- </div>
- );
+  </Tabs>
+  </main>
+  </div>
+  );
 }
 
 

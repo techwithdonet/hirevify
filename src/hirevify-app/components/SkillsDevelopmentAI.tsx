@@ -416,27 +416,23 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
  );
  }
 
- return (
+return (
  <div className={dashboardTheme.page}>
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
+ <ArrowLeft className="w-4 h-4 mr-2" />
+ Back to Dashboard
  </Button>
  <div>
- <h1 className="text-2xl font-semibold flex items-center gap-2">
+ <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
  <Brain className="w-6 h-6 text-primary" />
  AI Skills Development
  </h1>
- <p className="text-sm text-muted-foreground">
+ <p className="text-sm text-slate-500">
  Personalized learning paths based on market intelligence
  </p>
  </div>
- </div>
- 
  <div className="flex items-center gap-3">
  {targetRole && (
  <Badge className="bg-primary/10 text-primary">
@@ -451,10 +447,9 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
  )}
  </div>
  </div>
- </div>
- </div>
+ </header>
 
- <div className="max-w-7xl mx-auto px-6 py-8">
+ <main className="premium-content">
  {/* Quick Setup */}
  {!personalizedPlan && (
  <Card className="mb-8 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border-primary/20">
@@ -969,7 +964,7 @@ export function SkillsDevelopmentAI({ onBack, onUpgrade }: SkillsDevelopmentAIPr
  </TabsContent>
  )}
  </Tabs>
- </div>
+ </main>
  </div>
  );
 }

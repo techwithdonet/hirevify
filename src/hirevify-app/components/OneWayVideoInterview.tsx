@@ -635,11 +635,10 @@ export function OneWayVideoInterview({ onBack, onComplete }: OneWayVideoIntervie
  );
 
  return (
- <div className="min-h-screen bg-background">
+ <div className="premium-page">
  {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto">
- <div className="flex items-center justify-between">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <div className="flex items-center space-x-4">
  {interviewState === 'instructions' && (
  <Button variant="ghost" onClick={onBack} className="hover:bg-muted">
@@ -651,7 +650,7 @@ export function OneWayVideoInterview({ onBack, onComplete }: OneWayVideoIntervie
  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
  </div>
  </div>
- 
+
  {interviewState!== 'instructions' && interviewState!== 'completed' && (
  <div className="flex items-center space-x-4">
  <Button variant="outline" className="border-border text-foreground hover:bg-muted">
@@ -661,13 +660,14 @@ export function OneWayVideoInterview({ onBack, onComplete }: OneWayVideoIntervie
  </div>
  )}
  </div>
- </div>
  </header>
 
  {/* Content */}
+ <main className="premium-content">
  {interviewState === 'instructions' && renderInstructions()}
  {(interviewState === 'preparation' || interviewState === 'recording' || interviewState === 'review') && renderInterview()}
  {interviewState === 'completed' && renderCompletion()}
+ </main>
  </div>
  );
 }

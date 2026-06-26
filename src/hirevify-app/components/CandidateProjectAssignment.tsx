@@ -220,12 +220,36 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
     }
   };
 
+  const notifyRecruiter = async (title: string, message: string) => {
+    if (!assignment?.job.recruiter_id) return;
+
+    const { data: recruiterProfile } = await supabase
+      .from('profiles')
+      .select('auth_user_id')
+      .eq('id', assignment.job.recruiter_id)
+      .maybeSingle();
+
+    await supabase.from('notifications').insert([
+      {
+        user_id: recruiterProfile?.auth_user_id || assignment.job.recruiter_id,
+        type: 'assignment',
+        title,
+        message,
+        read: false,
+      },
+    ]);
+  };
+
   const handleAccept = async () => {
     if (!assignment) return;
     setIsMutating(true);
     try {
       const { error } = await projectAssignmentsService.acceptAssignment(assignment.id);
       if (error) throw error;
+      await notifyRecruiter(
+        'Project accepted',
+        `Candidate accepted the project assignment for "${assignment.job.title}".`,
+      );
       toast.success('Project accepted. You can now upload your submission.');
       await refresh();
     } catch (err: any) {
@@ -241,6 +265,10 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
     try {
       const { error } = await projectAssignmentsService.rejectAssignment(assignment.id);
       if (error) throw error;
+      await notifyRecruiter(
+        'Project declined',
+        `Candidate declined the project assignment for "${assignment.job.title}".`,
+      );
       toast.success('Project declined.');
       await refresh();
     } catch (err: any) {
@@ -270,6 +298,10 @@ export function CandidateProjectAssignment({ assignmentId, onBack }: CandidatePr
         submissionNotes: submissionNotes.trim() || undefined,
       });
       if (error) throw error;
+      await notifyRecruiter(
+        'Project submitted',
+        `Candidate submitted project work for "${assignment.job.title}". Review the submitted file and video.`,
+      );
       toast.success('Submission sent! The recruiter will review it soon.');
       await refresh();
     } catch (err: any) {

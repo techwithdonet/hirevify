@@ -427,46 +427,47 @@ export default function AdminAssessmentsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <Link href="/admin1" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Admin
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Assessment Management</h1>
-            <p className="text-gray-600">
-              Create assessments, add questions, add answer options, and choose the correct answer.
-            </p>
+    <div className="premium-page">
+      <main className="premium-content">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Link href="/admin1" className="mb-3 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Admin
+              </Link>
+              <h1 className="premium-title">Assessment Management</h1>
+              <p className="premium-subtitle">
+                Create assessments, add questions, add answer options, and choose the correct answer.
+              </p>
+            </div>
+
+            <Button onClick={resetForm} className="premium-btn-accent">
+              <Plus className="h-4 w-4 mr-2" />
+              New Assessment
+            </Button>
           </div>
 
-          <Button onClick={resetForm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            New Assessment
-          </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingId ? "Edit Assessment" : "Add Assessment"}</CardTitle>
-          </CardHeader>
+          <Card className="premium-card">
+            <CardHeader className="premium-card-header">
+              <CardTitle className="premium-card-title">{editingId ? "Edit Assessment" : "Add Assessment"}</CardTitle>
+            </CardHeader>
 
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Label>Title</Label>
-                <Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+                <Input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} className="premium-input" />
               </div>
 
               <div className="md:col-span-2">
                 <Label>Description</Label>
-                <Textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={3} />
+                <Textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows={3} className="premium-textarea" />
               </div>
 
               <div>
                 <Label>Category</Label>
-                <Input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
+                <Input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="premium-input" />
               </div>
 
               <div>
@@ -483,12 +484,12 @@ export default function AdminAssessmentsPage() {
 
               <div>
                 <Label>Duration Minutes</Label>
-                <Input type="number" value={form.duration_minutes} onChange={(event) => setForm({ ...form, duration_minutes: Number(event.target.value) })} />
+                <Input type="number" value={form.duration_minutes} onChange={(event) => setForm({ ...form, duration_minutes: Number(event.target.value) })} className="premium-input" />
               </div>
 
               <div>
                 <Label>Passing Score %</Label>
-                <Input type="number" value={form.passing_score} onChange={(event) => setForm({ ...form, passing_score: Number(event.target.value) })} />
+                <Input type="number" value={form.passing_score} onChange={(event) => setForm({ ...form, passing_score: Number(event.target.value) })} className="premium-input" />
               </div>
 
               <div>
@@ -505,27 +506,27 @@ export default function AdminAssessmentsPage() {
 
               <div>
                 <Label>Skills comma separated</Label>
-                <Input value={skillsText} onChange={(event) => setSkillsText(event.target.value)} placeholder="React, JavaScript, JSX" />
+                <Input value={skillsText} onChange={(event) => setSkillsText(event.target.value)} placeholder="React, JavaScript, JSX" className="premium-input" />
               </div>
             </div>
 
-            <div className="rounded-xl border bg-white p-5">
-              <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="premium-panel">
+              <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Questions</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold text-slate-900">Questions</h3>
+                  <p className="text-sm text-slate-500">
                     Add any number of questions. Each question can have its own answers and correct answer.
                   </p>
                 </div>
 
-                <Button type="button" onClick={addQuestion} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button type="button" onClick={addQuestion} className="premium-btn-accent">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Question
                 </Button>
               </div>
 
               {questions.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-6 text-center text-gray-500">
+                <div className="premium-empty">
                   No questions added yet. Click Add Question.
                 </div>
               ) : (
@@ -534,7 +535,7 @@ export default function AdminAssessmentsPage() {
                     const validOptions = (question.options || []).filter((option) => option.trim());
 
                     return (
-                      <div key={questionIndex} className="rounded-lg border bg-gray-50 p-4 space-y-4">
+                      <div key={questionIndex} className="space-y-4 rounded-xl border border-slate-200/80 bg-slate-50 p-4">
                         <div className="flex items-center justify-between">
                           <h4 className="font-semibold text-gray-900">Question {questionIndex + 1}</h4>
                           <Button type="button" variant="destructive" size="sm" onClick={() => removeQuestion(questionIndex)}>
@@ -550,6 +551,7 @@ export default function AdminAssessmentsPage() {
                             onChange={(event) => updateQuestion(questionIndex, "question_text", event.target.value)}
                             placeholder="Enter question..."
                             rows={2}
+                            className="premium-textarea"
                           />
                         </div>
 
@@ -571,6 +573,7 @@ export default function AdminAssessmentsPage() {
                               type="number"
                               value={question.points}
                               onChange={(event) => updateQuestion(questionIndex, "points", Number(event.target.value))}
+                              className="premium-input"
                             />
                           </div>
 
@@ -603,6 +606,7 @@ export default function AdminAssessmentsPage() {
                                   value={option}
                                   onChange={(event) => updateOption(questionIndex, optionIndex, event.target.value)}
                                   placeholder={`Answer ${optionIndex + 1}`}
+                                  className="premium-input"
                                 />
                                 <Button type="button" variant="outline" onClick={() => removeOption(questionIndex, optionIndex)}>
                                   <X className="h-4 w-4" />
@@ -620,12 +624,12 @@ export default function AdminAssessmentsPage() {
 
             <div className="flex justify-end gap-3">
               {editingId && (
-                <Button variant="outline" onClick={resetForm}>
+                <Button variant="outline" onClick={resetForm} className="premium-btn-secondary">
                   <X className="h-4 w-4 mr-2" />
                   Cancel Edit
                 </Button>
               )}
-              <Button onClick={saveAssessment} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button onClick={saveAssessment} disabled={saving} className="premium-btn-accent">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? "Saving..." : editingId ? "Update Assessment" : "Add Assessment"}
               </Button>
@@ -633,13 +637,13 @@ export default function AdminAssessmentsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="premium-card">
+          <CardHeader className="premium-card-header">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle>Assessments</CardTitle>
+              <CardTitle className="premium-card-title">Assessments</CardTitle>
               <div className="relative w-full md:w-80">
                 <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search assessments..." />
+                <Input className="premium-input pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search assessments..." />
               </div>
             </div>
           </CardHeader>
@@ -652,7 +656,7 @@ export default function AdminAssessmentsPage() {
             ) : (
               <div className="space-y-4">
                 {filteredAssessments.map((assessment) => (
-                  <div key={assessment.id} className="rounded-xl border bg-white p-5">
+                  <div key={assessment.id} className="premium-panel">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -691,7 +695,8 @@ export default function AdminAssessmentsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   );
 }

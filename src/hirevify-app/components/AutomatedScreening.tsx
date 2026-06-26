@@ -558,43 +558,41 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  };
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-2xl font-semibold flex items-center gap-2">
- <Brain className="w-6 h-6 text-primary" />
- Automated Candidate Screening
- </h1>
- <p className="text-sm text-muted-foreground">
- AI-powered pre-screening with intelligent recommendations
- </p>
- </div>
- </div>
- 
- <div className="flex items-center gap-3">
- <Button variant="outline" onClick={() => setShowCriteriaDialog(true)}>
- <Settings className="w-4 h-4 mr-2" />
- Screening Criteria
- </Button>
- {onUpgrade && (
- <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
- <Zap className="w-4 h-4 mr-2" />
- Upgrade
- </Button>
- )}
- </div>
- </div>
- </div>
- </div>
-
- <div className="max-w-7xl mx-auto px-6 py-8">
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center gap-4">
+  <Button variant="ghost" onClick={onBack}>
+  <ArrowLeft className="w-4 h-4" />
+  </Button>
+  <div>
+  <h1 className="text-2xl font-semibold flex items-center gap-2">
+  <Brain className="w-6 h-6 text-primary" />
+  Automated Candidate Screening
+  </h1>
+  <p className="text-sm text-muted-foreground">
+  AI-powered pre-screening with intelligent recommendations
+  </p>
+  </div>
+  </div>
+  
+  <div className="flex items-center gap-3">
+  <Button variant="outline" onClick={() => setShowCriteriaDialog(true)}>
+  <Settings className="w-4 h-4 mr-2" />
+  Screening Criteria
+  </Button>
+  {onUpgrade && (
+  <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
+  <Zap className="w-4 h-4 mr-2" />
+  Upgrade
+  </Button>
+  )}
+  </div>
+  </div>
+  </div>
+  </header>
+  <main className="premium-content">
  {/* Stats Overview */}
  {stats && (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -1060,10 +1058,10 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  </div>
  </Card>
  </TabsContent>
- </Tabs>
- </div>
- </div>
- );
+  </Tabs>
+  </main>
+  </div>
+  );
 }
 
 

@@ -1,0 +1,27 @@
+
+Path                                                                    LineNumber Line                                                                                                  
+----                                                                    ---------- ----                                                                                                  
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx                     233           onEditProfile={() => setCurrentScreen('recruiter-profile-editor')}                          
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx                     312   case 'recruiter-profile-editor':                                                                    
+E:\hirevify-next\src\hirevify-app\components\CandidateDashboard.tsx            325                   {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}           
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx        571  <Label>First Name {renderRequiredBadge()}</Label>                                                    
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx        575  <Label>Last Name {renderRequiredBadge()}</Label>                                                     
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx            398                       {isRecruiterProfileComplete ? 'Company profile ready' : 'Complete your profile'}
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx            416                 {isRecruiterProfileComplete ? 'Edit Profile' : 'Complete Profile'}                    
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx        538  <Label htmlFor="firstName">First Name</Label>                                                        
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx        549  <Label htmlFor="lastName">Last Name</Label>                                                          
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx        601  <Label htmlFor="bio">Professional Bio</Label>                                                        
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx        620  <Label htmlFor="Link">Link Profile</Label>                                                           
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx        632  <Label htmlFor="website">Personal Website</Label>                                                    
+E:\hirevify-next\src\hirevify-app\hooks\useAppNavigation.ts                    432     navigateToRecruiterProfileEditor: () => setCurrentScreen('recruiter-profile-editor'),             
+E:\hirevify-next\src\hirevify-app\types\app.ts                                 115   | 'recruiter-profile-editor'                                                                        
+E:\hirevify-next\src\hirevify-app\types\navigation.ts                           22   | 'recruiter-profile-editor' | 'recruiter-settings'                                                 
+E:\hirevify-next\src\hirevify-app\utils\ai\applicationPredictor.tsx            704  'Personal website builders',                                                                         
+E:\hirevify-next\src\hirevify-app\utils\ai\resumeAnalysisService.tsx           243  recommendations.push('Add Link profile to enhance professional presence');                           
+E:\hirevify-next\src\hirevify-app\utils\ats\accuracyBenchmark.tsx              118  name: 'Link Profile Extraction',                                                                     
+E:\hirevify-next\src\hirevify-app\utils\navigation.ts                          245   if (!this.requireAuth('edit profile', 'recruiter')) return;                                         
+E:\hirevify-next\src\hirevify-app\utils\navigation.ts                          246   this.setCurrentScreen('recruiter-profile-editor');                                                  
+E:\hirevify-next\src\hirevify-app\utils\navigation.ts                          255   if (!this.requireAuth('edit profile', 'candidate')) return;                                         
+
+
+

@@ -1,0 +1,18 @@
+
+Path                                                        LineNumber Line                                                                 
+----                                                        ---------- ----                                                                 
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx          62 // Define the navigation methods that we expect from useAppNavigation
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx          63 interface NavigationMethods {                                        
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx          84   navigateToRecruiterProfileEditor: () => void;                      
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx          85   navigateToCandidateProfileEditor: () => void;                      
+E:\hirevify-next\src\hirevify-app\components\AppRouter.tsx         176   navigation: NavigationMethods;                                     
+E:\hirevify-next\src\hirevify-app\hooks\useAppNavigation.ts         11 interface UseAppNavigationProps {                                    
+E:\hirevify-next\src\hirevify-app\hooks\useAppNavigation.ts         28 export const useAppNavigation = ({                                   
+E:\hirevify-next\src\hirevify-app\hooks\useAppNavigation.ts         39 }: UseAppNavigationProps) => {                                       
+E:\hirevify-next\src\hirevify-app\utils\navigation.ts              244   navigateToRecruiterProfileEditor = () => {                         
+E:\hirevify-next\src\hirevify-app\utils\navigation.ts              254   navigateToCandidateProfileEditor = () => {                         
+E:\hirevify-next\src\hirevify-app\App.tsx                            6 import { useAppNavigation } from './hooks/useAppNavigation';         
+E:\hirevify-next\src\hirevify-app\App.tsx                          252   const navigation = useAppNavigation({                              
+
+
+

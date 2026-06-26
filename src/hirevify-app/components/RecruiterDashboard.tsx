@@ -231,7 +231,7 @@ export function RecruiterDashboard({
     {
       key: 'projects',
       title: 'Projects',
-      subtitle: 'Job and project applications',
+      subtitle: 'Job project assignments',
       count: applicants.length,
       icon: Briefcase,
       accent: 'bg-emerald-50 text-emerald-600',
@@ -242,7 +242,7 @@ export function RecruiterDashboard({
     {
       key: 'experience_builder',
       title: 'Experience Builder',
-      subtitle: 'Portfolio sprint applicants',
+      subtitle: 'Posted experience tasks',
       count: growthApplicationCountByType('experience_builder'),
       icon: Target,
       accent: 'bg-blue-50 text-blue-600',
@@ -252,8 +252,8 @@ export function RecruiterDashboard({
     },
     {
       key: 'micro_internship',
-      title: 'Micro-Internships',
-      subtitle: 'Short assignment applicants',
+      title: 'Micro Internship',
+      subtitle: 'Short internship posts',
       count: growthApplicationCountByType('micro_internship'),
       icon: Clock,
       accent: 'bg-amber-50 text-amber-600',
@@ -278,7 +278,7 @@ export function RecruiterDashboard({
         candidate: latestApplicationLabel(application),
         source: application.opportunity?.title || 'Career growth opportunity',
         status: application.status || 'applied',
-        category: application.opportunity?.type === 'experience_builder'? 'Experience Builder': 'Micro-Internship',
+        category: application.opportunity?.type === 'experience_builder'? 'Experience Builder': 'Micro Internship',
       })),
   ].slice(0, 5);
   const formatMessageTime = (dateString: string) => {
@@ -424,7 +424,7 @@ export function RecruiterDashboard({
         <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[
             { label: 'Jobs', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, color: 'text-blue-600 bg-blue-50' },
-            { label: 'Ongoing Projects', value: applicants.filter((a) => a.status === 'assigned').length, icon: Briefcase, action: onViewOngoingProjects || onViewATS, color: 'text-teal-600 bg-teal-50' },
+            { label: 'All Projects', value: applicants.filter((a) => a.status === 'assigned').length, icon: Briefcase, action: onViewOngoingProjects || onViewATS, color: 'text-teal-600 bg-teal-50' },
             { label: 'Applications', value: totalApplicationCount, icon: Users, action: onViewATS, color: 'text-emerald-600 bg-emerald-50' },
             { label: 'Hire Rate', value: stats?.hireRate || 'N/A', icon: TrendingUp, action: onViewAnalytics, color: 'text-violet-600 bg-violet-50' },
           ].map((item) => {
@@ -477,7 +477,7 @@ export function RecruiterDashboard({
                 className="h-14 rounded-xl border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
               >
                 <Briefcase className="mr-2 h-5 w-5" />
-                Post Project Only
+                Post Project
               </Button>
             </div>
           </div>
@@ -494,7 +494,7 @@ export function RecruiterDashboard({
               <p className="text-sm text-slate-500">Review and manage applications by category.</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
             {applicationSections.map((section) => {
               const Icon = section.icon;
               return (

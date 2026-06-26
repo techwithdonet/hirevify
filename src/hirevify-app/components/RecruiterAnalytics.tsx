@@ -7,7 +7,7 @@ import { MetricsCards } from './analytics/MetricsCards';
 import { HiringFunnel } from './analytics/HiringFunnel';
 import { SourceEffectiveness } from './analytics/SourceEffectiveness';
 import { DiversityMetrics } from './analytics/DiversityMetrics';
-import { dashboardTheme } from '../theme/dashboardTheme';
+
 
 interface RecruiterAnalyticsProps {
  onBack: () => void;
@@ -16,10 +16,10 @@ interface RecruiterAnalyticsProps {
 
 export function RecruiterAnalytics({ onBack, onUpgrade }: RecruiterAnalyticsProps) {
  return (
- <div className={dashboardTheme.page}>
+<div className="premium-page">
  {/* Header */}
- <header className="border-b border-border bg-card">
- <div className="px-6 py-4">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <div className="flex items-center justify-between">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
@@ -42,11 +42,11 @@ export function RecruiterAnalytics({ onBack, onUpgrade }: RecruiterAnalyticsProp
  Upgrade to Unlock
  </Button>
  </div>
- </div>
+</div>
  </div>
  </header>
-
- <main className="max-w-7xl mx-auto px-6 py-8">
+ 
+ <main className="premium-content">
  {/* Overview Cards */}
  <MetricsCards />
 

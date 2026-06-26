@@ -10,6 +10,7 @@ import {
  Loader,
  Plus,
  Save,
+ Upload,
  User,
  X
 } from 'lucide-react';
@@ -23,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from './AuthProvider';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { toast } from 'sonner';
 import { dashboardTheme } from '../theme/dashboardTheme';
 
@@ -65,6 +67,13 @@ const workArrangements = ['Remote', 'Hybrid', 'On-site'];
 const noticePeriods = ['Immediate', '1 week', '2 weeks', '1 month', '2 months', '3 months'];
 const timezones = ['IST', 'UTC', 'GST', 'EST', 'CST', 'MST', 'PST', 'GMT', 'CET'];
 const currencies = ['USD', 'INR', 'EUR', 'GBP', 'CAD', 'AUD', 'QAR'];
+const ACCEPTED_CV_TYPES = [
+ 'application/pdf',
+ 'application/msword',
+ 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+const ACCEPTED_CV_EXTENSIONS = '.pdf,.doc,.docx';
+const MAX_CV_BYTES = 10 * 1024 * 1024;
 
 export function CandidateProfileEditor({ onBack }: CandidateProfileEditorProps) {
  const { user } = useAuth();
@@ -74,6 +83,7 @@ const [currentStep, setCurrentStep] = useState(0);
  const [isLoading, setIsLoading] = useState(false);
  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
  const [newSkill, setNewSkill] = useState('');
+ const [cvFile, setCvFile] = useState<File | null>(null);
 
  const [profileData, setProfileData] = useState<ProfileData>({
  firstName: user?.name?.split(' ')[0] || '',
@@ -107,7 +117,7 @@ const [currentStep, setCurrentStep] = useState(0);
  { title: 'Basic Profile', description: 'Your identity and headline', icon: User },
  { title: 'Skills', description: 'Your core skills and experience', icon: Briefcase },
  { title: 'Preferences', description: 'Work type, salary and availability', icon: Briefcase },
- { title: 'Portfolio', description: 'Resume and professional links', icon: FileText },
+ { title: 'CV / Portfolio', description: 'CV file and professional links', icon: FileText },
  { title: 'Review', description: 'Complete and become visible', icon: CheckCircle2 },
  ];
 
@@ -136,14 +146,40 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  return noticePeriod.toLowerCase();
  };
 
- const hasPortfolioOrResume = () => {
- return Boolean(
- profileData.resumeUrl.trim() ||
- profileData.portfolio.trim() ||
- profileData.website.trim() ||
- profileData.GitBranch.trim() ||
- profileData.Link.trim()
- );
+ const hasCv = () => Boolean(cvFile || profileData.resumeUrl.trim());
+
+ const getStoredCvName = () => {
+ if (cvFile) return cvFile.name;
+ const value = profileData.resumeUrl.trim();
+ if (!value) return '';
+ const lastPart = value.split('/').pop() || value;
+ return lastPart.replace(/^\d+_/, '');
+ };
+
+ const handleCvFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+ const file = event.target.files?.[0];
+ if (!file) return;
+
+ const fileName = file.name.toLowerCase();
+ const isAcceptedType =
+ ACCEPTED_CV_TYPES.includes(file.type) ||
+ fileName.endsWith('.pdf') ||
+ fileName.endsWith('.doc') ||
+ fileName.endsWith('.docx');
+
+ if (!isAcceptedType) {
+ toast.error('Upload a PDF, DOC, or DOCX CV.');
+ event.target.value = '';
+ return;
+ }
+
+ if (file.size > MAX_CV_BYTES) {
+ toast.error('CV must be under 10 MB.');
+ event.target.value = '';
+ return;
+ }
+
+ setCvFile(file);
  };
 
  const getMissingFields = () => {
@@ -164,7 +200,7 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  
  
  if (!skillsPreferences.currency.trim()) missing.push('Currency');
- if (!hasPortfolioOrResume()) missing.push('Resume, portfolio, GitHub, LinkedIn, or website');
+ if (!hasCv()) missing.push('CV file');
 
  return missing;
  };
@@ -186,7 +222,7 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  
  
  Boolean(skillsPreferences.currency.trim()),
- hasPortfolioOrResume(),
+ hasCv(),
  ];
 
  const completed = checks.filter(Boolean).length;
@@ -198,7 +234,7 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  isComplete: missing.length === 0,
  missing,
  };
- }, [profileData, skillsPreferences]);
+ }, [profileData, skillsPreferences, cvFile]);
 
  const validateCurrentStep = () => {
  if (currentStep === 0) {
@@ -251,8 +287,8 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  }
 
  if (currentStep === 3) {
- if (!hasPortfolioOrResume()) {
- toast.error('Add at least one: resume, portfolio, GitHub, LinkedIn, or website');
+ if (!hasCv()) {
+ toast.error('Upload your CV before continuing');
  return false;
  }
  }
@@ -358,6 +394,19 @@ const { data: candidateProfile, error: candidateError } = await supabase
  const profileCompleted = markComplete && completion.isComplete;
  const profileCompleteness = profileCompleted? 100: completion.percentage;
  const now = new Date().toISOString();
+ let savedResumeUrl = profileData.resumeUrl.trim();
+
+ if (cvFile) {
+ const upload = await applicationsService.uploadCV(authData.user.id, cvFile);
+
+ if (upload.error || !upload.path) {
+ throw new Error(upload.error?.message || 'CV upload failed. Please try again.');
+ }
+
+ savedResumeUrl = upload.path;
+ setProfileData((current) => ({ ...current, resumeUrl: upload.path || '' }));
+ setCvFile(null);
+ }
 
  const profileUpdate = {
  full_name: fullName,
@@ -394,7 +443,7 @@ const { data: candidateProfile, error: candidateError } = await supabase
  portfolio_url: profileData.portfolio.trim() || profileData.website.trim() || null,
  github_url: profileData.GitBranch.trim() || null,
  linkedin_url: profileData.Link.trim() || null,
- resume_url: profileData.resumeUrl.trim() || null,
+ resume_url: savedResumeUrl || null,
  profile_completeness: profileCompleteness,
  profile_completed: profileCompleted,
  updated_at: now,
@@ -773,13 +822,41 @@ if (!markComplete && existingProfile?.id) {
  return (
  <Card className="border border-emerald-100 shadow-sm">
  <CardHeader>
- <CardTitle>Step 4: Resume / Portfolio</CardTitle>
- <p className="text-sm text-muted-foreground">At least one link is required to become visible to recruiters.</p>
+ <CardTitle>Step 4: CV / Portfolio</CardTitle>
+ <p className="text-sm text-muted-foreground">Upload your CV file. Portfolio links are optional but help recruiters verify your work.</p>
  </CardHeader>
  <CardContent className="space-y-5">
  <div>
- <Label>Resume URL</Label>
- <Input value={profileData.resumeUrl} onChange={(event) => setProfileData({...profileData, resumeUrl: event.target.value })} placeholder="https://..." />
+ <Label>CV {renderRequiredBadge()}</Label>
+ <div className="mt-2 flex flex-wrap items-center gap-3">
+ <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100">
+ <Upload className="h-4 w-4" />
+ Attach CV
+ <input
+ type="file"
+ accept={ACCEPTED_CV_EXTENSIONS}
+ className="hidden"
+ onChange={handleCvFileChange}
+ />
+ </label>
+ {hasCv() && (
+ <div className="flex max-w-full items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+ <FileText className="h-4 w-4 shrink-0 text-slate-500" />
+ <span className="truncate">{getStoredCvName() || 'CV uploaded'}</span>
+ {cvFile && (
+ <button
+ type="button"
+ onClick={() => setCvFile(null)}
+ className="text-slate-400 transition hover:text-slate-700"
+ aria-label="Remove selected CV"
+ >
+ <X className="h-3.5 w-3.5" />
+ </button>
+ )}
+ </div>
+ )}
+ </div>
+ <p className="mt-2 text-xs text-muted-foreground">PDF, DOC, or DOCX. Max 10 MB.</p>
  </div>
 
  <div>
@@ -802,10 +879,10 @@ if (!markComplete && existingProfile?.id) {
  <Input value={profileData.website} onChange={(event) => setProfileData({...profileData, website: event.target.value })} placeholder="https://yourwebsite.com" />
  </div>
 
- {!hasPortfolioOrResume() && (
+ {!hasCv() && (
  <Alert>
  <AlertCircle className="h-4 w-4" />
- <AlertDescription>Add at least one link before continuing.</AlertDescription>
+ <AlertDescription>Upload your CV before continuing.</AlertDescription>
  </Alert>
  )}
  </CardContent>

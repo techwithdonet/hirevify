@@ -1029,44 +1029,43 @@ const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
  };
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <div className="border-b bg-card">
- <div className="container mx-auto px-4 py-6">
- <div className="flex items-center justify-between">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" size="sm" onClick={onBack}>
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back
- </Button>
- <div>
- <h1 className="text-2xl font-bold">
- {userType === 'recruiter'? 'Assessment Management': 'Skills Assessments'}
- </h1>
- <p className="text-muted-foreground">
- {userType === 'recruiter'? 'Create, assign, and manage skills assessments for candidates': 'Demonstrate your skills and earn certificates through comprehensive assessments'
- }
- </p>
- </div>
- </div>
- {userType === 'recruiter' && (
- <div className="flex items-center space-x-2">
- <Badge variant="outline" className="bg-primary/10">
- <Settings className="w-3 h-3 mr-1" />
- Management Portal
- </Badge>
- </div>
- )}
- </div>
- </div>
- </div>
-
- {/* Content */}
- <div className="container mx-auto px-4 py-8">
- {userType === 'recruiter'? renderRecruiterView(): renderCandidateView()}
- </div>
- </div>
- );
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center space-x-4">
+  <Button variant="ghost" size="sm" onClick={onBack}>
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back
+  </Button>
+  <div>
+  <h1 className="text-2xl font-bold">
+  {userType === 'recruiter'? 'Assessment Management': 'Skills Assessments'}
+  </h1>
+  <p className="text-muted-foreground">
+  {userType === 'recruiter'? 'Create, assign, and manage skills assessments for candidates': 'Demonstrate your skills and earn certificates through comprehensive assessments'
+  }
+  </p>
+  </div>
+  </div>
+  {userType === 'recruiter' && (
+  <div className="flex items-center space-x-2">
+  <Badge variant="outline" className="bg-primary/10">
+  <Settings className="w-3 h-3 mr-1" />
+  Management Portal
+  </Badge>
+  </div>
+  )}
+  </div>
+  </div>
+  </header>
+  <main className="premium-content">
+  <div className="container mx-auto px-4 py-8">
+  {userType === 'recruiter'? renderRecruiterView(): renderCandidateView()}
+  </div>
+  </main>
+  </div>
+  );
 }
 
 

@@ -57,6 +57,10 @@ export interface JobFilter {
 class JobsService {
  private supabase = createSupabaseBrowserClient();
 
+ private isProjectOnlyRow(job: Partial<Job>) {
+ return Boolean(job.has_project) && job.job_type === 'freelance';
+ }
+
  /**
  * Get all published jobs with optional filters
  */
@@ -97,7 +101,7 @@ class JobsService {
  return { data: [], error, count: 0 };
  }
 
- return { data: data || [], error: null, count: count || 0 };
+ return { data: (data || []).filter((job) => !this.isProjectOnlyRow(job)), error: null, count: count || 0 };
  }
 
  /**
@@ -109,6 +113,10 @@ class JobsService {
  if (error) {
  console.error('Error fetching job:', error);
  return { data: null, error };
+ }
+
+ if (data && this.isProjectOnlyRow(data)) {
+ return { data: null, error: { message: 'This project-only post is not a job.' } as PostgrestError };
  }
 
  return { data, error: null };
@@ -131,7 +139,7 @@ class JobsService {
  return { data: [], error };
  }
 
- return { data: data || [], error: null };
+ return { data: (data || []).filter((job) => !this.isProjectOnlyRow(job)), error: null };
  }
 
  /**
@@ -195,7 +203,7 @@ class JobsService {
  return { data: [], error };
  }
 
- return { data: data || [], error: null };
+ return { data: (data || []).filter((job) => !this.isProjectOnlyRow(job)), error: null };
  }
 
  /**
@@ -209,11 +217,12 @@ class JobsService {
  return { data: null, error: jobsError };
  }
 
+ const jobRows = (jobs || []).filter((job) => !this.isProjectOnlyRow(job as Partial<Job>));
  const stats = {
- totalJobs: jobs?.length || 0,
- publishedJobs: jobs?.filter((j) => j.status === 'published').length || 0,
- draftJobs: jobs?.filter((j) => j.status === 'draft').length || 0,
- totalApplications: jobs?.reduce((sum, j) => sum + j.applications_count, 0) || 0,
+ totalJobs: jobRows.length,
+ publishedJobs: jobRows.filter((j) => j.status === 'published').length,
+ draftJobs: jobRows.filter((j) => j.status === 'draft').length,
+ totalApplications: jobRows.reduce((sum, j) => sum + j.applications_count, 0) || 0,
  };
 
  return { data: stats, error: null };

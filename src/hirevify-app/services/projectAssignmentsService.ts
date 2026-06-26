@@ -107,11 +107,18 @@ class ProjectAssignmentsService {
    * Get all assignments for a candidate
    */
   async getCandidateAssignments(candidateId: string) {
+    const { data: profileRow } = await this.supabase
+      .from('profiles')
+      .select('id')
+      .or(`id.eq.${candidateId},auth_user_id.eq.${candidateId}`)
+      .maybeSingle();
+    const resolvedCandidateId = profileRow?.id || candidateId;
+
     const { data, error } = await this.supabase.from('job_project_assignments').select(`
       *,
       job:job_id(id, title, recruiter_id, recruiter_profile:recruiter_id(company_name)),
       project:project_id(id, title, description, skills)
-    `).eq('candidate_id', candidateId).order('created_at', { ascending: false }).returns<AssignmentWithDetails[]>();
+    `).eq('candidate_id', resolvedCandidateId).order('created_at', { ascending: false }).returns<AssignmentWithDetails[]>();
 
     if (error) {
       console.error('Error fetching candidate assignments:', error);

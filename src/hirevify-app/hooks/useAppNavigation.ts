@@ -336,7 +336,7 @@ const navigateToEmployerEducation = useCallback(() => {
   }, [requireAuth, setCurrentScreen]);
 
   const navigateToOngoingProjects = useCallback(() => {
-  if (!requireAuth('access ongoing projects', 'recruiter')) return;
+ if (!requireAuth('access all projects', 'recruiter')) return;
   setCurrentScreen('recruiter-ongoing-projects');
   }, [requireAuth, setCurrentScreen]);
 

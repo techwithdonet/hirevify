@@ -579,11 +579,11 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  }
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto">
- <div className="flex items-center justify-between mb-6">
+  <div className="premium-page">
+  {/* Header */}
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between mb-6">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack} className="hover:bg-muted">
  <ArrowLeft className="w-4 h-4 mr-2" />
@@ -823,13 +823,13 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  <p className="text-sm text-muted-foreground">{stat.label}</p>
  </div>
  </div>
- ))}
- </div>
- </div>
- </header>
+  ))}
+  </div>
+  </div>
+  </header>
 
- {/* Content */}
- <div className="max-w-7xl mx-auto p-6">
+  {/* Content */}
+  <main className="premium-content">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
  {/* Category Tabs */}
  <div className="flex flex-wrap gap-2">
@@ -982,7 +982,7 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  ))}
  </div>
  </Tabs>
- </div>
+ </main>
 
  {/* Connection Dialog */}
  <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
@@ -1068,18 +1068,8 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  </div>
  </div>
  </DialogContent>
- </Dialog>
- )}
- </div>
- );
+  </Dialog>
+  )}
+  </div>
+  );
 }
-
-
-
-
-
-
-
-
-
-

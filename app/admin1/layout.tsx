@@ -146,29 +146,24 @@ export default function Admin1Layout({ children }: { children: ReactNode }) {
 
 return (
   <AuthProvider>
-    <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <div className="premium-page">
+      <div className="premium-header">
+        <div className="premium-header-inner">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-              HireVify Admin
-            </p>
-            <p className="text-sm text-slate-500">
-              Admin panel access enabled
-            </p>
+            <p className="premium-eyebrow text-emerald-700">HireVify Admin</p>
+            <p className="text-sm text-slate-500">Admin panel access enabled</p>
           </div>
 
           <button
             type="button"
             onClick={handleAdminLogout}
-            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-red-700"
+            className="premium-btn-danger"
           >
             Logout
           </button>
         </div>
       </div>
-
-      {children}
+      <main className="premium-content">{children}</main>
     </div>
   </AuthProvider>
 );

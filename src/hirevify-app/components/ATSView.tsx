@@ -79,6 +79,8 @@ interface Job {
 
 interface AssignmentRecord {
   id: string;
+  applicationId: string | null;
+  candidateId: string;
   candidateName: string;
   candidateEmail: string;
   assignmentStatus: AssignmentStatus;
@@ -99,6 +101,20 @@ interface ATSViewProps {
 
 const isProjectOnlyJobRow = (job: any) => job?.job_type === 'freelance' && job?.has_project === true;
 
+const mapAssignmentRecord = (assignment: any): AssignmentRecord => ({
+  id: assignment.id,
+  applicationId: assignment.application_id || null,
+  candidateId: assignment.candidate_id,
+  candidateName: assignment.candidate_profile?.full_name || 'Candidate',
+  candidateEmail: assignment.candidate_profile?.email || '',
+  assignmentStatus: assignment.assignment_status,
+  assignedAt: assignment.created_at,
+  respondedAt: assignment.assignment_status !== 'pending' ? assignment.updated_at : undefined,
+  projectSubmissionUrl: assignment.project_submission_url || null,
+  videoSubmissionUrl: assignment.video_submission_url || null,
+  submissionNotes: assignment.submission_notes || null,
+});
+
 export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoingProjects, selectedCandidate }: ATSViewProps) {
   const { user } = useAuth();
   const [recruiterId, setRecruiterId] = useState<string | null>(null);
@@ -107,12 +123,15 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Set<string>>(new Set());
   const [assignments, setAssignments] = useState<AssignmentRecord[]>([]);
-  // Tracks which application IDs already have an assignment ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â these are read-only
+  const [allProjectAssignments, setAllProjectAssignments] = useState<AssignmentRecord[]>([]);
+  const [assignedApplicationIds, setAssignedApplicationIds] = useState<Set<string>>(new Set());
   const [assignedCandidateIds, setAssignedCandidateIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [matchFilter, setMatchFilter] = useState<'all' | '70plus' | 'below'>('all');
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState<'active' | 'rejected' | 'all'>('active');
+  const [assignmentFilter, setAssignmentFilter] = useState<'pending' | 'assigned'>('pending');
   const [showAssignmentPanel, setShowAssignmentPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'applicants' | 'projects'>('applicants');
 
@@ -154,8 +173,10 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
         if (error) throw error;
 
+        const realJobs = (data || []).filter((job: any) => !isProjectOnlyJobRow(job));
+
         // Get application counts per job
-        const jobIds = (data || []).map((j: any) => j.id);
+        const jobIds = realJobs.map((j: any) => j.id);
         let appCounts: Record<string, number> = {};
         if (jobIds.length > 0) {
           const { data: apps } = await supabase
@@ -167,16 +188,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
           });
         }
 
-        setJobs((data || []).filter((job: any) => !isProjectOnlyJobRow(job)).map((j: any) => ({
+        setJobs(realJobs.map((j: any) => ({
           ...j,
           applicationCount: appCounts[j.id] || 0,
         })));
 
         // Auto-select first job or passed-in job
-        if (selectedCandidate?.job_id) {
+        const selectedCandidateJob = realJobs.find((job: any) => job.id === selectedCandidate?.job_id);
+        if (selectedCandidateJob) {
           setSelectedJobId(selectedCandidate.job_id);
-        } else if ((data || []).length > 0) {
-          setSelectedJobId((data as any[])[0].id);
+        } else if (realJobs.length > 0) {
+          setSelectedJobId(realJobs[0].id);
+        } else {
+          setSelectedJobId(null);
         }
       } catch (err) {
         console.error('Error loading jobs:', err);
@@ -293,11 +317,31 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     loadApplications();
   }, [recruiterId, selectedJobId, jobs]);
 
+  useEffect(() => {
+    if (!recruiterId) {
+      setAllProjectAssignments([]);
+      return;
+    }
+
+    const loadAllProjectAssignments = async () => {
+      const { data, error } = await projectAssignmentsService.getRecruiterAssignments(recruiterId);
+      if (error) {
+        console.error('Error loading all project assignments:', error);
+        return;
+      }
+
+      setAllProjectAssignments((data || []).map(mapAssignmentRecord));
+    };
+
+    void loadAllProjectAssignments();
+  }, [recruiterId]);
+
   // Load assignments for selected job
   useEffect(() => {
     setSelectedCandidateIds(new Set()); // reset selections when switching jobs
     if (!selectedJobId) {
       setAssignments([]);
+      setAssignedApplicationIds(new Set());
       setAssignedCandidateIds(new Set());
       return;
     }
@@ -306,20 +350,10 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
         const { data, error } = await projectAssignmentsService.getJobAssignments(selectedJobId);
         if (error) throw error;
 
-        setAssignments((data || []).map((a: any) => ({
-          id: a.id,
-          candidateName: a.candidate_profile?.full_name || 'Candidate',
-          candidateEmail: a.candidate_profile?.email || '',
-          assignmentStatus: a.assignment_status,
-          assignedAt: a.created_at,
-          respondedAt: a.assignment_status !== 'pending' ? a.updated_at : undefined,
-          projectSubmissionUrl: a.project_submission_url || null,
-          videoSubmissionUrl: a.video_submission_url || null,
-          submissionNotes: a.submission_notes || null,
-        })));
+        setAssignments((data || []).map(mapAssignmentRecord));
 
-        // Build a set of already-assigned application IDs so we can lock those cards
-        setAssignedCandidateIds(new Set((data || []).map((a: any) => a.application_id).filter(Boolean)));
+        setAssignedApplicationIds(new Set((data || []).map((a: any) => a.application_id).filter(Boolean)));
+        setAssignedCandidateIds(new Set((data || []).map((a: any) => a.candidate_id).filter(Boolean)));
       } catch (err) {
         console.error('Error loading assignments:', err);
       }
@@ -327,8 +361,18 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     loadAssignments();
   }, [selectedJobId]);
 
+  useEffect(() => {
+    setSelectedCandidateIds(new Set());
+  }, [assignmentFilter]);
+
   const filteredApplications = useMemo(() => {
     let result = applications;
+
+    if (applicationStatusFilter === 'active') {
+      result = result.filter((application) => application.status !== 'rejected' && application.status !== 'withdrawn');
+    } else if (applicationStatusFilter === 'rejected') {
+      result = result.filter((application) => application.status === 'rejected' || application.status === 'withdrawn');
+    }
 
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
@@ -347,22 +391,31 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     }
 
     return result;
-  }, [applications, searchTerm, matchFilter]);
+  }, [applications, applicationStatusFilter, searchTerm, matchFilter]);
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId);
-  const selectedJobApplications = filteredApplications;
   // High-match list for display ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â includes assigned so recruiter can see the stats
-  const highMatchApps = applications.filter((a) => a.matchScore >= 70);
+  const isAlreadyAssignedApplication = (application: JobApplication) =>
+    assignedApplicationIds.has(application.applicationId) ||
+    assignedApplicationIds.has(application.id) ||
+    assignedCandidateIds.has(application.candidateId);
+  const pendingApplications = filteredApplications.filter((application) => !isAlreadyAssignedApplication(application));
+  const assignedApplications = filteredApplications.filter((application) => isAlreadyAssignedApplication(application));
+  const selectedJobApplications = assignmentFilter === 'assigned' ? assignedApplications : pendingApplications;
+  const highMatchApps = selectedJobApplications.filter((a) => a.matchScore >= 70);
   // Selectable high-match = exclude already-assigned (already shown as locked cards)
-  const selectableHighMatch = highMatchApps.filter((a) => !assignedCandidateIds.has(a.id));
+  const selectableHighMatch = highMatchApps.filter((a) => !isAlreadyAssignedApplication(a));
   // Only count selectable (unassigned) candidates in the selected count
   const selectedCount = Array.from(selectedCandidateIds).filter(
-    (id) => !assignedCandidateIds.has(id)
+    (id) => {
+      const application = applications.find((item) => item.id === id);
+      return application ? !isAlreadyAssignedApplication(application) : false;
+    }
   ).length;
-
   const toggleCandidate = (id: string) => {
     // Already-assigned candidates cannot be re-assigned
-    if (assignedCandidateIds.has(id)) return;
+    const application = applications.find((item) => item.id === id);
+    if (application && isAlreadyAssignedApplication(application)) return;
     setSelectedCandidateIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -374,7 +427,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   const selectAllHighMatch = () => {
     // Only select high-match candidates that aren't already assigned
     const selectable = highMatchApps
-      .filter((a) => !assignedCandidateIds.has(a.id))
+      .filter((a) => !isAlreadyAssignedApplication(a))
       .map((a) => a.id);
     setSelectedCandidateIds(new Set(selectable));
   };
@@ -425,9 +478,14 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             .eq('id', app.applicationId);
 
           // Send notification to candidate
+          const { data: candidateProfile } = await supabase
+            .from('profiles')
+            .select('auth_user_id')
+            .eq('id', app.candidateId)
+            .maybeSingle();
           await supabase.from('notifications').insert([
             {
-              user_id: app.candidateId,
+              user_id: candidateProfile?.auth_user_id || app.candidateId,
               type: 'assignment',
               title: 'New Project Assignment',
               message: `You have been assigned to "${selectedJob?.title}". Please review and accept or decline.`,
@@ -442,16 +500,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       toast.success(`${createdCount} candidate${createdCount === 1 ? '' : 's'} assigned successfully`);
       setSelectedCandidateIds(new Set());
 
-      // Refresh assignments
-      const { data } = await projectAssignmentsService.getJobAssignments(selectedJobId);
-      setAssignments((data || []).map((a: any) => ({
-        id: a.id,
-        candidateName: a.candidate_profile?.full_name || 'Candidate',
-        candidateEmail: a.candidate_profile?.email || '',
-        assignmentStatus: a.assignment_status,
-        assignedAt: a.created_at,
-        respondedAt: a.assignment_status !== 'pending' ? a.updated_at : undefined,
-      })));
+      await refreshProjectAssignments();
 
       // Refresh applications
       const { data: updatedApps } = await supabase
@@ -503,6 +552,105 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     } finally {
       setSending(false);
     }
+  };
+
+  const handleRejectApplication = async (application: JobApplication) => {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase
+      .from('applications')
+      .update({ status: 'rejected' })
+      .eq('id', application.applicationId);
+
+    if (error) {
+      toast.error(error.message || 'Could not reject application.');
+      return;
+    }
+
+    await notifyCandidate(
+      application.candidateId,
+      'Application rejected',
+      `Your application for "${selectedJob?.title || application.jobTitle}" was not selected.`,
+    );
+
+    setApplications((current) =>
+      current.map((item) =>
+        item.applicationId === application.applicationId ? { ...item, status: 'rejected' } : item,
+      ),
+    );
+    setSelectedCandidateIds((current) => {
+      const next = new Set(current);
+      next.delete(application.id);
+      return next;
+    });
+    toast.success('Application rejected.');
+  };
+
+  const refreshProjectAssignments = async () => {
+    if (recruiterId) {
+      const { data } = await projectAssignmentsService.getRecruiterAssignments(recruiterId);
+      setAllProjectAssignments((data || []).map(mapAssignmentRecord));
+    }
+
+    if (selectedJobId) {
+      const { data } = await projectAssignmentsService.getJobAssignments(selectedJobId);
+      setAssignments((data || []).map(mapAssignmentRecord));
+      setAssignedApplicationIds(new Set((data || []).map((a: any) => a.application_id).filter(Boolean)));
+      setAssignedCandidateIds(new Set((data || []).map((a: any) => a.candidate_id).filter(Boolean)));
+    }
+  };
+
+  const openSubmissionUrl = (url: string | null | undefined) => {
+    if (!url) return;
+    const firstUrl = url.split(',').map((value) => value.trim()).filter(Boolean)[0];
+    if (!firstUrl) return;
+    window.open(firstUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const notifyCandidate = async (candidateProfileId: string, title: string, message: string) => {
+    const supabase = createSupabaseBrowserClient();
+    const { data: candidateProfile } = await supabase
+      .from('profiles')
+      .select('auth_user_id')
+      .eq('id', candidateProfileId)
+      .maybeSingle();
+
+    await supabase.from('notifications').insert([
+      {
+        user_id: candidateProfile?.auth_user_id || candidateProfileId,
+        type: 'assignment',
+        title,
+        message,
+        read: false,
+      },
+    ]);
+  };
+
+  const updateApplicationFromAssignment = async (assignment: AssignmentRecord, status: CandidateStatus) => {
+    if (!assignment.applicationId) return;
+    const supabase = createSupabaseBrowserClient();
+    await supabase.from('applications').update({ status }).eq('id', assignment.applicationId);
+  };
+
+  const handleAssignmentDecision = async (
+    assignment: AssignmentRecord,
+    status: AssignmentStatus,
+    notificationTitle: string,
+    notificationMessage: string,
+    applicationStatus?: CandidateStatus,
+  ) => {
+    const { error } = await projectAssignmentsService.updateAssignmentStatus(assignment.id, status);
+    if (error) {
+      toast.error(error.message || 'Could not update assignment.');
+      return;
+    }
+
+    if (applicationStatus) {
+      await updateApplicationFromAssignment(assignment, applicationStatus);
+    }
+
+    await notifyCandidate(assignment.candidateId, notificationTitle, notificationMessage);
+    await refreshProjectAssignments();
+    toast.success(notificationTitle);
   };
 
   const getMatchColor = (score: number) => {
@@ -594,10 +742,10 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                 }`}
               >
                 <FileCheck className="h-4 w-4" />
-                Ongoing Projects
-                {assignments.filter(a => ['submitted', 'under_review'].includes(a.assignmentStatus)).length > 0 && (
+                All Projects
+                {allProjectAssignments.length > 0 && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white">
-                    {assignments.filter(a => ['submitted', 'under_review'].includes(a.assignmentStatus)).length}
+                    {allProjectAssignments.length}
                   </span>
                 )}
               </button>
@@ -668,56 +816,100 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
         {selectedJobId && (
           <>
+            <div className="mb-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-950">Candidate assignment status</p>
+                <p className="text-xs text-slate-500">
+                  Pending candidates can be selected and assigned. Assigned candidates are locked.
+                </p>
+              </div>
+              <div className="flex rounded-lg bg-slate-100 p-1">
+                {[
+                  { value: 'pending' as const, label: `Pending (${pendingApplications.length})` },
+                  { value: 'assigned' as const, label: `Assigned (${assignedApplications.length})` },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setAssignmentFilter(option.value)}
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                      assignmentFilter === option.value
+                        ? 'bg-white text-emerald-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-950'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Assignment Action Bar */}
-            <div className="mb-6 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-white p-4 shadow-sm">
+            <div className={`mb-6 rounded-lg border p-4 shadow-sm ${
+              assignmentFilter === 'assigned'
+                ? 'border-teal-200 bg-teal-50'
+                : 'border-blue-200 bg-gradient-to-r from-blue-50 to-white'
+            }`}>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={selectAllHighMatch}
-                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                    disabled={selectableHighMatch.length === 0}
-                  >
-                    <CheckSquare className="mr-1.5 h-4 w-4" />
-                    Select All (70%+)
-                    {selectableHighMatch.length > 0 && (
-                      <Badge className="ml-1.5 bg-blue-600 text-white">{selectableHighMatch.length}</Badge>
-                    )}
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={deselectAll}
-                    className="border-slate-300 text-slate-600 hover:bg-slate-100"
-                    disabled={selectedCount === 0}
-                  >
-                    <Square className="mr-1.5 h-4 w-4" />
-                    Deselect All
-                  </Button>
-
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <span className="font-medium">{selectedCount}</span>
-                    <span>candidates selected</span>
+                {assignmentFilter === 'assigned' ? (
+                  <div className="flex items-center gap-3 text-teal-800">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Project already assigned</p>
+                      <p className="text-xs text-teal-700">These candidates already have this project assigned.</p>
+                    </div>
                   </div>
-
-                  {selectedCount > 0 && (
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={handleSendAssignment}
-                      disabled={sending}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      variant="outline"
+                      onClick={selectAllHighMatch}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                      disabled={selectableHighMatch.length === 0}
                     >
-                      {sending ? (
-                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="mr-1.5 h-4 w-4" />
+                      <CheckSquare className="mr-1.5 h-4 w-4" />
+                      Select All (70%+)
+                      {selectableHighMatch.length > 0 && (
+                        <Badge className="ml-1.5 bg-blue-600 text-white">{selectableHighMatch.length}</Badge>
                       )}
-                      Send Assignment
                     </Button>
-                  )}
-                </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={deselectAll}
+                      className="border-slate-300 text-slate-600 hover:bg-slate-100"
+                      disabled={selectedCount === 0}
+                    >
+                      <Square className="mr-1.5 h-4 w-4" />
+                      Deselect All
+                    </Button>
+
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <span className="font-medium">{selectedCount}</span>
+                      <span>candidates selected</span>
+                    </div>
+
+                    {selectedCount > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={handleSendAssignment}
+                        disabled={sending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        {sending ? (
+                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="mr-1.5 h-4 w-4" />
+                        )}
+                        Send Assignment
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-3 text-sm text-slate-600">
                   {selectableHighMatch.length > 0 && (
@@ -726,7 +918,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       {selectableHighMatch.length} selectable (70%+)
                     </span>
                   )}
-                  {assignedCandidateIds.size > 0 && (
+                  {assignmentFilter === 'assigned' && assignedCandidateIds.size > 0 && (
                     <span className="flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-teal-700">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       {assignedCandidateIds.size} already assigned
@@ -753,6 +945,23 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                     />
                   </div>
                   <div className="flex gap-2">
+                    {([
+                      { value: 'active' as const, label: 'Active' },
+                      { value: 'rejected' as const, label: 'Rejected' },
+                      { value: 'all' as const, label: 'All' },
+                    ]).map((filter) => (
+                      <button
+                        key={filter.value}
+                        onClick={() => setApplicationStatusFilter(filter.value)}
+                        className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                          applicationStatusFilter === filter.value
+                            ? 'border-slate-400 bg-slate-900 text-white'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
                     {(['all', '70plus', 'below'] as const).map((f) => (
                       <button
                         key={f}
@@ -778,12 +987,16 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                   <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
                     <Briefcase className="mx-auto mb-3 h-10 w-10 text-slate-300" />
                     <p className="font-semibold text-slate-700">
-                      {searchTerm || matchFilter !== 'all'
+                      {assignmentFilter === 'pending' && assignedApplications.length > 0
+                        ? 'All visible candidates are already assigned'
+                        : searchTerm || matchFilter !== 'all'
                         ? 'No applications match your filters'
                         : 'No applications for this job yet'}
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      {searchTerm || matchFilter !== 'all'
+                      {assignmentFilter === 'pending' && assignedApplications.length > 0
+                        ? 'Switch to Assigned to view project status and submissions.'
+                        : searchTerm || matchFilter !== 'all'
                         ? 'Try adjusting your search or filter'
                         : 'Candidates will appear here when they apply'}
                     </p>
@@ -793,7 +1006,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                     {selectedJobApplications.map((app) => {
                       const isSelected = selectedCandidateIds.has(app.id);
                       const isHighMatch = app.matchScore >= 70;
-                      const isAlreadyAssigned = assignedCandidateIds.has(app.id);
+                      const isAlreadyAssigned = isAlreadyAssignedApplication(app);
 
                       return (
                         <Card
@@ -900,6 +1113,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                 <p className="mt-1 text-xs text-slate-400">
                                   {app.scoreSource === 'openai' ? 'AI analysis' : app.scoreSource === 'stored' ? 'Saved' : 'Keyword'}
                                 </p>
+                                {!isAlreadyAssigned && app.status !== 'rejected' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-2 border-red-200 text-red-600 hover:bg-red-50"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      void handleRejectApplication(app);
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </CardContent>
@@ -1075,10 +1301,10 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Projects', value: assignments.length, color: 'border-slate-200 bg-white', textColor: 'text-slate-700' },
-                { label: 'Submitted', value: assignments.filter(a => a.assignmentStatus === 'submitted').length, color: 'border-blue-200 bg-blue-50', textColor: 'text-blue-700' },
-                { label: 'Under Review', value: assignments.filter(a => a.assignmentStatus === 'under_review').length, color: 'border-purple-200 bg-purple-50', textColor: 'text-purple-700' },
-                { label: 'Completed', value: assignments.filter(a => ['hired', 'not_selected'].includes(a.assignmentStatus)).length, color: 'border-emerald-200 bg-emerald-50', textColor: 'text-emerald-700' },
+                { label: 'Total Projects', value: allProjectAssignments.length, color: 'border-slate-200 bg-white', textColor: 'text-slate-700' },
+                { label: 'Submitted', value: allProjectAssignments.filter(a => a.assignmentStatus === 'submitted').length, color: 'border-blue-200 bg-blue-50', textColor: 'text-blue-700' },
+                { label: 'Under Review', value: allProjectAssignments.filter(a => a.assignmentStatus === 'under_review').length, color: 'border-purple-200 bg-purple-50', textColor: 'text-purple-700' },
+                { label: 'Completed', value: allProjectAssignments.filter(a => ['hired', 'not_selected'].includes(a.assignmentStatus)).length, color: 'border-emerald-200 bg-emerald-50', textColor: 'text-emerald-700' },
               ].map((stat) => (
                 <div key={stat.label} className={`rounded-lg border p-4 ${stat.color}`}>
                   <p className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
@@ -1092,10 +1318,10 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
               <h3 className="text-lg font-semibold text-slate-950 mb-4">Recruitment Pipeline</h3>
               <div className="flex items-center justify-between">
                 {[
-                  { phase: 'Submitted', icon: FileCheck, color: 'bg-blue-500', count: assignments.filter(a => a.assignmentStatus === 'submitted').length },
-                  { phase: 'Under Review', icon: RefreshCw, color: 'bg-purple-500', count: assignments.filter(a => a.assignmentStatus === 'under_review').length },
-                  { phase: 'Approved', icon: CheckCircle2, color: 'bg-emerald-500', count: assignments.filter(a => a.assignmentStatus === 'hired').length },
-                  { phase: 'Hired', icon: Crown, color: 'bg-amber-500', count: assignments.filter(a => a.assignmentStatus === 'hired').length },
+                  { phase: 'Submitted', icon: FileCheck, color: 'bg-blue-500', count: allProjectAssignments.filter(a => a.assignmentStatus === 'submitted').length },
+                  { phase: 'Under Review', icon: RefreshCw, color: 'bg-purple-500', count: allProjectAssignments.filter(a => a.assignmentStatus === 'under_review').length },
+                  { phase: 'Approved', icon: CheckCircle2, color: 'bg-emerald-500', count: allProjectAssignments.filter(a => a.assignmentStatus === 'hired').length },
+                  { phase: 'Hired', icon: Crown, color: 'bg-amber-500', count: allProjectAssignments.filter(a => a.assignmentStatus === 'hired').length },
                 ].map((phase, idx) => {
                   const Icon = phase.icon;
                   return (
@@ -1119,17 +1345,17 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             </div>
 
             {/* Candidate List with Progress */}
-            {assignments.length === 0 ? (
+            {allProjectAssignments.length === 0 ? (
               <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
                 <FileCheck className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-                <p className="font-semibold text-slate-700">No ongoing projects</p>
-                <p className="mt-1 text-sm text-slate-500">Assign candidates to jobs to start tracking their progress here</p>
+                <p className="font-semibold text-slate-700">No projects yet</p>
+                <p className="mt-1 text-sm text-slate-500">Assign candidates to jobs to start tracking all project statuses here.</p>
                 {onViewOngoingProjects && (
                   <button
                     onClick={onViewOngoingProjects}
                     className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
                   >
-                    View All Ongoing Projects
+                    Open All Projects
                   </button>
                 )}
               </div>
@@ -1146,7 +1372,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                     </button>
                   )}
                 </div>
-                {assignments.map((assignment) => {
+                {allProjectAssignments.map((assignment) => {
                   const phaseIndex = ['submitted', 'under_review', 'hired', 'not_selected'].indexOf(assignment.assignmentStatus);
                   const progress = assignment.assignmentStatus === 'pending' ? 0 : 
                                    assignment.assignmentStatus === 'accepted' ? 1 :
@@ -1198,27 +1424,14 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       {/* Action Buttons */}
                       <div className="flex gap-2">
                         {assignment.assignmentStatus === 'submitted' && (
-                          <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={() => {
-                            // Update status to under_review
-                            projectAssignmentsService.updateAssignmentStatus(assignment.id, 'under_review');
-                            // Refresh assignments
-                            const loadAssignments = async () => {
-                              const { data } = await projectAssignmentsService.getJobAssignments(selectedJobId!);
-                              if (data) {
-                                setAssignments(data.map((a: any) => ({
-                                  id: a.id,
-                                  candidateName: a.candidate_profile?.full_name || 'Candidate',
-                                  candidateEmail: a.candidate_profile?.email || '',
-                                  assignmentStatus: a.assignment_status,
-                                  assignedAt: a.created_at,
-                                  respondedAt: a.assignment_status !== 'pending' ? a.updated_at : undefined,
-                                  projectSubmissionUrl: a.project_submission_url || null,
-                                  videoSubmissionUrl: a.video_submission_url || null,
-                                  submissionNotes: a.submission_notes || null,
-                                })));
-                              }
-                            };
-                            loadAssignments();
+                          <Button size="sm" className="bg-purple-600 hover:bg-purple-700" onClick={async () => {
+                            await handleAssignmentDecision(
+                              assignment,
+                              'under_review',
+                              'Project review started',
+                              'Your project submission is now under recruiter review.',
+                              'in_progress',
+                            );
                           }}>
                             <RefreshCw className="w-4 h-4 mr-1" />
                             Start Review
@@ -1226,24 +1439,51 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                         )}
                         {assignment.assignmentStatus === 'under_review' && (
                           <>
-                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
-                              projectAssignmentsService.updateAssignmentStatus(assignment.id, 'hired');
-                              window.location.reload();
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={async () => {
+                              await handleAssignmentDecision(
+                                assignment,
+                                'under_review',
+                                'First level passed',
+                                'Your project has passed the first review level. The recruiter can now make a hiring decision.',
+                                'interview',
+                              );
                             }}>
                               <Check className="w-4 h-4 mr-1" />
-                              Approve & Hire
+                              Passed
                             </Button>
-                            <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => {
-                              projectAssignmentsService.updateAssignmentStatus(assignment.id, 'not_selected');
-                              window.location.reload();
+                            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={async () => {
+                              await handleAssignmentDecision(
+                                assignment,
+                                'hired',
+                                'You are hired',
+                                'Congratulations. The recruiter selected you after reviewing your project.',
+                                'hired',
+                              );
+                            }}>
+                              <Crown className="w-4 h-4 mr-1" />
+                              Hired
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={async () => {
+                              await handleAssignmentDecision(
+                                assignment,
+                                'not_selected',
+                                'Project not selected',
+                                'The recruiter reviewed your project and decided not to move forward this time.',
+                                'rejected',
+                              );
                             }}>
                               <X className="w-4 h-4 mr-1" />
-                              Not Selected
+                              Reject
                             </Button>
                           </>
                         )}
                         {(assignment.projectSubmissionUrl || assignment.videoSubmissionUrl) && (
-                          <Button size="sm" variant="outline" className="border-purple-200 text-purple-600">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-purple-200 text-purple-600"
+                            onClick={() => openSubmissionUrl(assignment.projectSubmissionUrl || assignment.videoSubmissionUrl)}
+                          >
                             <PlayCircle className="w-4 h-4 mr-1" />
                             View Submission
                           </Button>

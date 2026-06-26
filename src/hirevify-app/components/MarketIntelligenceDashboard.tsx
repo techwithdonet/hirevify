@@ -207,46 +207,45 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
  };
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <div className="bg-card border-b border-border">
- <div className="max-w-7xl mx-auto px-6 py-4">
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4" />
- </Button>
- <div>
- <h1 className="text-2xl font-semibold flex items-center gap-2">
- <BarChart3 className="w-6 h-6 text-primary" />
- Market Intelligence
- </h1>
- <p className="text-sm text-muted-foreground">
- Real-time hiring trends and salary intelligence
- </p>
- </div>
- </div>
- 
- <div className="flex items-center gap-3">
- <Button variant="outline" onClick={refreshData} disabled={isRefreshing}>
- <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing? 'animate-spin': ''}`} />
- Refresh Data
- </Button>
- <Button variant="outline" onClick={exportReport}>
- <Download className="w-4 h-4 mr-2" />
- Export Report
- </Button>
- {onUpgrade && (
- <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
- <Zap className="w-4 h-4 mr-2" />
- Upgrade
- </Button>
- )}
- </div>
- </div>
- 
- {/* Filters */}
- <div className="mt-4 flex items-center gap-4">
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center gap-4">
+  <Button variant="ghost" onClick={onBack}>
+  <ArrowLeft className="w-4 h-4" />
+  </Button>
+  <div>
+  <h1 className="text-2xl font-semibold flex items-center gap-2">
+  <BarChart3 className="w-6 h-6 text-primary" />
+  Market Intelligence
+  </h1>
+  <p className="text-sm text-muted-foreground">
+  Real-time hiring trends and salary intelligence
+  </p>
+  </div>
+  </div>
+  
+  <div className="flex items-center gap-3">
+  <Button variant="outline" onClick={refreshData} disabled={isRefreshing}>
+  <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing? 'animate-spin': ''}`} />
+  Refresh Data
+  </Button>
+  <Button variant="outline" onClick={exportReport}>
+  <Download className="w-4 h-4 mr-2" />
+  Export Report
+  </Button>
+  {onUpgrade && (
+  <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-600 to-pink-600">
+  <Zap className="w-4 h-4 mr-2" />
+  Upgrade
+  </Button>
+  )}
+  </div>
+  </div>
+  
+  {/* Filters */}
+  <div className="mt-4 flex items-center gap-4">
  <Select value={selectedRole} onValueChange={setSelectedRole}>
  <SelectTrigger className="w-48">
  <SelectValue />
@@ -283,12 +282,11 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
  <SelectItem value="6months">6 Months</SelectItem>
  <SelectItem value="1year">1 Year</SelectItem>
  </SelectContent>
- </Select>
- </div>
- </div>
- </div>
-
- <div className="max-w-7xl mx-auto px-6 py-8">
+  </Select>
+  </div>
+  </div>
+  </header>
+  <main className="premium-content">
  {/* Quick Stats */}
  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
  <Card className="p-6">
@@ -826,12 +824,12 @@ export function MarketIntelligenceDashboard({ onBack, onUpgrade }: MarketIntelli
  </Card>
  )}
  </TabsContent>
- </Tabs>
- </div>
- </div>
- );
+  </Tabs>
+  </main>
+  </div>
+  );
 
- function getTrendIcon(trend: string) {
+  function getTrendIcon(trend: string) {
  switch (trend) {
  case 'hot': return <Star className="w-4 h-4 text-red-500" />;
  case 'rising': return <TrendingUp className="w-4 h-4 text-green-500" />;

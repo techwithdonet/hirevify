@@ -290,29 +290,28 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
  );
  }
 
- return (
- <div className="hv-page-shell">
- {/* Header */}
- <header className="hv-dashboard-header">
- <div className="hv-container py-4">
- <div className="flex items-center gap-4">
- <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
- <ArrowLeft className="w-5 h-5" />
- </Button>
- <div className="flex min-w-0 items-center gap-3">
- <HireVifyLogo size="lg" className="h-16" />
- <div className="min-w-0">
- <h1 className="text-xl font-semibold tracking-normal text-slate-950">HireVify Pricing</h1>
- <p className="text-sm text-slate-600">
- Choose the right plan for {userType === 'recruiter'? 'your company': 'your career'}
- </p>
- </div>
- </div>
- </div>
- </div>
- </header>
+return (
+    <div className="premium-page">
+      {/* Header */}
+      <header className="premium-header">
+        <div className="premium-header-inner">
+          <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Back
+          </Button>
+          <div className="flex min-w-0 items-center gap-3">
+            <HireVifyLogo size="lg" className="h-16" />
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-slate-950">HireVify Pricing</h1>
+              <p className="text-sm text-slate-500">
+                Choose the right plan for {userType === 'recruiter' ? 'your company' : 'your career'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
 
- <main className="hv-container py-10 sm:py-12">
+      <main className="premium-content">
  {/* Development Mode Banner */}
  {developmentMode && (
  <Alert className="mb-8 border-blue-200 bg-blue-50">

@@ -806,25 +806,25 @@ export function EnhancedVideoInterview({
  );
 
  return (
- <div className="min-h-screen bg-background">
+ <div className="premium-page">
  {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto flex items-center justify-between">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack}>
  <ArrowLeft className="w-4 h-4 mr-2" />
  Back
  </Button>
  <div>
- <h1 className="text-2xl font-bold text-foreground">
+ <h1 className="text-2xl font-bold text-slate-950">
  {mode === 'recruiter-review'? `${candidateName}'s Interview`: 'Video Interview'}
  </h1>
- <p className="text-sm text-muted-foreground">
+ <p className="text-sm text-slate-500">
  {mode === 'recruiter-review'? positionTitle: interviewTemplate.title}
  </p>
  </div>
  </div>
- 
+
  {currentPhase === 'interview' && (
  <div className="flex items-center space-x-4">
  <Badge variant="outline">
@@ -838,7 +838,7 @@ export function EnhancedVideoInterview({
  </div>
  </header>
 
- <main className="max-w-7xl mx-auto p-6">
+ <main className="premium-content">
  {currentPhase === 'setup' && renderSetup()}
  {currentPhase === 'instructions' && renderInstructions()}
  {currentPhase === 'interview' && renderInterview()}

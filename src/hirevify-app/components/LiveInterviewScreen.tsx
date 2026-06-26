@@ -125,21 +125,19 @@ export function LiveInterviewScreen({ onEndInterview }: LiveInterviewScreenProps
  };
 
  return (
- <div className="min-h-screen bg-background flex flex-col">
+ <div className="premium-page flex flex-col">
  {/* Header with Recording Banner */}
- <header className="bg-card border-b border-border">
- <div className="px-6 py-4">
- <div className="flex items-center justify-between">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <div className="flex items-center space-x-3">
  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
  </div>
- 
+
  {/* Recording Indicator */}
  <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
  <Circle className="w-2 h-2 mr-2 fill-current animate-pulse" />
  This session is being recorded
  </Badge>
- </div>
  </div>
  </header>
 

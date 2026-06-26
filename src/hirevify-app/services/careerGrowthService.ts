@@ -71,6 +71,43 @@ export interface CareerGrowthApplication {
  };
 }
 
+export interface CareerGrowthSubmission {
+ id: string;
+ application_id: string;
+ candidate_profile_id: string;
+ submission_text: string | null;
+ submission_url: string | null;
+ file_url: string | null;
+ video_url: string | null;
+ status: string;
+ submitted_at: string;
+ reviewed_at?: string | null;
+ recruiter_feedback?: string | null;
+ created_at: string;
+ updated_at: string;
+}
+
+export interface CareerGrowthReview {
+ score?: number;
+ certificateIssued?: boolean;
+ certificateIssuedAt?: string;
+ note?: string;
+}
+
+export function parseCareerGrowthReview(notes?: string | null): CareerGrowthReview {
+ if (!notes) return {};
+ try {
+ const parsed = JSON.parse(notes);
+ return typeof parsed === 'object' && parsed ? parsed : { note: notes };
+ } catch {
+ return { note: notes };
+ }
+}
+
+function serializeCareerGrowthReview(review: CareerGrowthReview) {
+ return JSON.stringify(review);
+}
+
 export type CareerGrowthOpportunityInput = Partial<
  Omit<CareerGrowthOpportunity, 'id' | 'created_at' | 'updated_at' | 'metadata'>
 > & {
@@ -257,6 +294,29 @@ class CareerGrowthService {
  return { data, error: null };
  }
 
+ async reviewCareerGrowthApplication(
+ applicationId: string,
+ input: { score: number; note?: string; certificateIssued?: boolean },
+ ) {
+ const review = {
+ score: Math.max(0, Math.min(100, Math.round(input.score))),
+ note: input.note || '',
+ certificateIssued: Boolean(input.certificateIssued),
+ certificateIssuedAt: input.certificateIssued ? new Date().toISOString() : undefined,
+ };
+
+ const { data, error } = await this.supabase.from('career_growth_applications').update({
+ status: 'completed',
+ recruiter_notes: serializeCareerGrowthReview(review),
+ }).eq('id', applicationId).select().single<CareerGrowthApplication>();
+
+ if (error) {
+ return { data: null, error: normalizeCareerGrowthError(error) };
+ }
+
+ return { data, error: null };
+ }
+
  async assignCareerGrowthOpportunity(applicationId: string) {
  const { data, error } = await this.supabase.from('career_growth_applications').update({
  status: 'assigned',
@@ -291,13 +351,59 @@ class CareerGrowthService {
  video_url: payload.video_url || null,
  status: payload.status || 'submitted',
  },
- ]).select().single();
+ ]).select().single<CareerGrowthSubmission>();
 
  if (error) {
  return { data: null, error: normalizeCareerGrowthError(error) };
  }
 
  return { data, error: null };
+ }
+
+ async getSubmissionsForApplications(applicationIds: string[]) {
+ if (applicationIds.length === 0) return { data: [], error: null };
+
+ const { data, error } = await this.supabase
+ .from('career_growth_submissions')
+ .select('*')
+ .in('application_id', applicationIds)
+ .order('submitted_at', { ascending: false })
+ .returns<CareerGrowthSubmission[]>();
+
+ if (error) {
+ return { data: [], error: normalizeCareerGrowthError(error) };
+ }
+
+ return { data: data || [], error: null };
+ }
+
+ async uploadCareerGrowthFile(candidateProfileId: string, file: File) {
+ const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+ const path = `career-growth/${candidateProfileId}/${Date.now()}_${safeName}`;
+ const { error } = await this.supabase.storage
+ .from('project-files')
+ .upload(path, file, { upsert: true, contentType: file.type });
+
+ if (error) {
+ return { path: null, error: normalizeCareerGrowthError(error) };
+ }
+
+ return { path: `project-files::${path}`, error: null };
+ }
+
+ async getCareerGrowthFileUrl(path: string, expiresIn = 60 * 60) {
+ if (/^https?:\/\//i.test(path)) return { url: path, error: null };
+ const separator = path.indexOf('::');
+ const bucket = separator > 0 ? path.slice(0, separator) : 'project-files';
+ const objectPath = separator > 0 ? path.slice(separator + 2) : path;
+
+ const { data, error } = await this.supabase.storage.from(bucket).createSignedUrl(objectPath, expiresIn);
+
+ if (error) {
+ return { url: null, error: normalizeCareerGrowthError(error) };
+ }
+
+ return { url: data?.signedUrl || null, error: null };
  }
 
  getRecruiterCareerGrowthOpportunities(recruiterId: string, type?: CareerGrowthType) {
@@ -322,6 +428,10 @@ class CareerGrowthService {
 
  updateCareerGrowthApplicationStatus(applicationId: string, status: CareerGrowthStatus, notes?: string) {
  return this.updateGrowthApplicationStatus(applicationId, status, notes);
+ }
+
+ reviewApplication(applicationId: string, input: { score: number; note?: string; certificateIssued?: boolean }) {
+ return this.reviewCareerGrowthApplication(applicationId, input);
  }
 
  getCandidateCareerGrowthApplications(candidateProfileId: string) {

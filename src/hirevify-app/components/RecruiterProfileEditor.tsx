@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
-import { dashboardTheme } from '../theme/dashboardTheme';
+
 
 interface RecruiterProfileEditorProps {
  onBack: () => void;
@@ -534,33 +534,32 @@ export function RecruiterProfileEditor({ onBack, onUpgrade }: RecruiterProfileEd
  }
  };
 
- return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-6xl mx-auto flex items-center justify-between">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <div>
- <h1 className="text-2xl font-bold text-foreground">Recruiter Settings</h1>
- <p className="text-sm text-muted-foreground">Manage your account, company, and team settings</p>
- </div>
- </div>
- 
- {hasUnsavedChanges && (
- <Alert className="w-auto">
- <AlertDescription className="text-sm">
- You have unsaved changes
- </AlertDescription>
- </Alert>
- )}
- </div>
- </header>
+  return (
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex min-w-0 items-center gap-4">
+  <Button variant="ghost" onClick={onBack} className="premium-btn-ghost">
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Dashboard
+  </Button>
+  <div>
+  <p className="premium-eyebrow text-emerald-600">Recruiter</p>
+  <h1 className="premium-title">Recruiter Settings</h1>
+  <p className="premium-subtitle">Manage your account, company, and team settings</p>
+  </div>
+  </div>
+  {hasUnsavedChanges && (
+  <Alert className="w-auto">
+  <AlertDescription className="text-sm">
+  You have unsaved changes
+  </AlertDescription>
+  </Alert>
+  )}
+  </div>
+  </header>
 
- <main className="max-w-6xl mx-auto p-6">
+  <main className="premium-content">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
  <TabsList className="grid w-full grid-cols-3">
  <TabsTrigger value="profile">Profile</TabsTrigger>

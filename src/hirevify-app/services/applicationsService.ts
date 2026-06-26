@@ -5,6 +5,30 @@
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 
+const DEFAULT_CV_BUCKETS = [
+  process.env.NEXT_PUBLIC_CANDIDATE_CV_BUCKET,
+  'resumes',
+  'portfolio-files',
+  'make-d4feca44-resumes',
+  'application-files',
+].filter(Boolean) as string[];
+
+function parseStoredCvPath(value: string) {
+  const separator = value.indexOf('::');
+
+  if (separator > 0) {
+    return {
+      bucket: value.slice(0, separator),
+      path: value.slice(separator + 2),
+    };
+  }
+
+  return {
+    bucket: null,
+    path: value,
+  };
+}
+
 export interface Application {
  id: string;
  job_id: string;
@@ -69,6 +93,30 @@ class ApplicationsService {
  if (error) {
  console.error('Error submitting application:', error);
  return { data: null, error };
+ }
+
+ const { data: jobRow } = await this.supabase
+ .from('jobs')
+ .select('title, recruiter_id')
+ .eq('id', jobId)
+ .maybeSingle();
+
+ if (jobRow?.recruiter_id) {
+ const { data: recruiterProfile } = await this.supabase
+ .from('profiles')
+ .select('auth_user_id')
+ .eq('id', jobRow.recruiter_id)
+ .maybeSingle();
+
+ await this.supabase.from('notifications').insert([
+ {
+ user_id: recruiterProfile?.auth_user_id || jobRow.recruiter_id,
+ type: 'new_application',
+ title: 'New application received',
+ message: `A candidate applied for "${jobRow.title || 'your job'}".`,
+ read: false,
+ },
+ ]);
  }
 
  return { data, error: null };
@@ -188,14 +236,15 @@ class ApplicationsService {
  */
  async getRecruiterApplications(recruiterId: string) {
  // Step 1: Get recruiter's jobs first
- const { data: jobs, error: jobsError } = await this.supabase.from('jobs').select('id, title, recruiter_id').eq('recruiter_id', recruiterId);
+ const { data: jobs, error: jobsError } = await this.supabase.from('jobs').select('id, title, recruiter_id, job_type, has_project').eq('recruiter_id', recruiterId);
 
  if (jobsError) {
  console.error('Error fetching recruiter jobs for applications:', jobsError);
  return { data: [], error: jobsError };
  }
 
- const jobIds = (jobs || []).map((job) => job.id);
+ const realJobs = (jobs || []).filter((job: any) => !(job.has_project === true && job.job_type === 'freelance'));
+ const jobIds = realJobs.map((job) => job.id);
 
  if (jobIds.length === 0) {
  return { data: [], error: null };
@@ -210,7 +259,7 @@ class ApplicationsService {
  }
 
  const applicationsWithJobs = (data || []).map((application) => {
- const job = jobs?.find((j) => j.id === application.job_id);
+ const job = realJobs.find((j) => j.id === application.job_id);
 
  return {...application,
  job: job? {
@@ -239,7 +288,28 @@ class ApplicationsService {
  * Get application stats for recruiter
  */
  async getRecruiterApplicationStats(recruiterId: string) {
- const { data, error } = await this.supabase.from('applications').select('status, job_id, job:job_id(recruiter_id)').eq('job.recruiter_id', recruiterId).returns<any[]>();
+ const { data: jobs, error: jobsError } = await this.supabase
+ .from('jobs')
+ .select('id, recruiter_id, job_type, has_project')
+ .eq('recruiter_id', recruiterId);
+
+ if (jobsError) {
+ console.error('Error fetching recruiter jobs for application stats:', jobsError);
+ return { data: null, error: jobsError };
+ }
+
+ const jobIds = (jobs || [])
+ .filter((job: any) => !(job.has_project === true && job.job_type === 'freelance'))
+ .map((job) => job.id);
+
+ if (jobIds.length === 0) {
+ return {
+ data: { total: 0, applied: 0, screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 },
+ error: null,
+ };
+ }
+
+ const { data, error } = await this.supabase.from('applications').select('status, job_id').in('job_id', jobIds).returns<any[]>();
 
  if (error) {
  console.error('Error fetching application stats:', error);
@@ -288,43 +358,88 @@ class ApplicationsService {
   }
 
   /**
-   * Upload a CV file to the private `application-files` storage bucket
-   * at path: <authUserId>/cv/<timestamp>_<originalName>
+   * Upload a CV file to the existing candidate file storage bucket
+   * at path: resumes/<authUserId>/cv/<timestamp>_<originalName>
    * Returns the storage path (not a public URL â€” caller must use
    * `getApplicationFileSignedUrl` to fetch a temporary link).
    */
   async uploadCV(authUserId: string, file: File) {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
-    const path = `${authUserId}/cv/${Date.now()}_${safeName}`;
+    const path = `resumes/${authUserId}/cv/${Date.now()}_${safeName}`;
+    const attemptedBuckets: string[] = [];
 
-    const { error } = await this.supabase.storage
-      .from('application-files')
-      .upload(path, file, { upsert: true, contentType: file.type });
+    for (const bucket of DEFAULT_CV_BUCKETS) {
+      attemptedBuckets.push(bucket);
+      const { error } = await this.supabase.storage
+        .from(bucket)
+        .upload(path, file, { upsert: true, contentType: file.type });
 
-    if (error) {
-      console.error('CV upload failed:', error);
-      return { path: null, error };
+      if (!error) {
+        return { path: `${bucket}::${path}`, error: null };
+      }
+
+      const message = String(error.message || '').toLowerCase();
+      const shouldTryNextBucket =
+        message.includes('bucket not found') ||
+        message.includes('not found') ||
+        message.includes('does not exist');
+
+      if (!shouldTryNextBucket) {
+        console.error('CV upload failed:', error);
+        return { path: null, error };
+      }
     }
 
-    return { path, error: null };
+    const error = {
+      message: `CV upload bucket not found. Tried: ${attemptedBuckets.join(', ')}.`,
+    } as any;
+
+    console.error('CV upload failed:', error);
+    return { path: null, error };
   }
 
   /**
-   * Returns a short-lived signed URL for a file in `application-files`.
-   * Buckets are private; this is how recruiters (or the candidate) will
-   * fetch the actual CV / project file.
+   * Returns a short-lived signed URL for a file in the resumes bucket.
    */
   async getApplicationFileSignedUrl(path: string, expiresIn = 60 * 60) {
-    const { data, error } = await this.supabase.storage
-      .from('application-files')
-      .createSignedUrl(path, expiresIn);
-
-    if (error) {
-      console.error('Could not sign application file URL:', error);
-      return { url: null, error };
+    if (/^https?:\/\//i.test(path)) {
+      return { url: path, error: null };
     }
 
-    return { url: data?.signedUrl ?? null, error: null };
+    const parsed = parseStoredCvPath(path);
+    const bucketsToTry = parsed.bucket
+      ? [parsed.bucket]
+      : DEFAULT_CV_BUCKETS;
+
+    for (const bucket of bucketsToTry) {
+      const { data, error } = await this.supabase.storage
+        .from(bucket)
+        .createSignedUrl(parsed.path, expiresIn);
+
+      if (!error && data?.signedUrl) {
+        return { url: data.signedUrl, error: null };
+      }
+
+      const message = String(error?.message || '').toLowerCase();
+      const bucketMissing =
+        message.includes('bucket not found') ||
+        message.includes('not found') ||
+        message.includes('does not exist');
+
+      if (!bucketMissing) {
+        const publicUrl = this.supabase.storage.from(bucket).getPublicUrl(parsed.path).data?.publicUrl;
+        if (publicUrl) {
+          return { url: publicUrl, error: null };
+        }
+      }
+
+      if (parsed.bucket && error) {
+        console.error('Could not sign application file URL:', error);
+        return { url: null, error };
+      }
+    }
+
+    return { url: null, error: null };
   }
 }
 

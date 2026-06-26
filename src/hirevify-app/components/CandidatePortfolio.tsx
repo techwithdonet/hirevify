@@ -10,7 +10,7 @@ import { AddPortfolioForm } from './portfolio/AddPortfolioForm';
 import { useAuth } from './AuthProvider';
 import { portfolioService } from '../services/portfolioService';
 import { toast } from 'sonner';
-import { dashboardTheme } from '../theme/dashboardTheme';
+
 
 interface CandidatePortfolioProps {
  onBack: () => void;
@@ -162,9 +162,9 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
  };
 
  return (
- <div className={dashboardTheme.page}>
- <header className="border-b border-border bg-card">
- <div className="px-6 py-4">
+<div className="premium-page">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <div className="flex items-center justify-between">
  <div className="flex items-center space-x-4">
  <Button
@@ -204,10 +204,10 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
  </Button>
  </div>
  </div>
- </div>
+</div>
  </header>
-
- <main className="max-w-6xl mx-auto px-6 py-8">
+ 
+ <main className="premium-content">
  <div className="flex items-center justify-between mb-8">
  <div>
  <h1 className="text-2xl text-foreground mb-2">Your Portfolio</h1>

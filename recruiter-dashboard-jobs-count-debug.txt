@@ -1,0 +1,22 @@
+
+LineNumber Line                                                                                                                                                  
+---------- ----                                                                                                                                                  
+        41 import { jobsService } from '@/src/hirevify-app/services/jobsService';                                                                                
+       115   const [postedJobs, setPostedJobs] = useState<any[]>([]);                                                                                            
+       118   const [stats, setStats] = useState<any>(null);                                                                                                      
+       177         // Load posted jobs                                                                                                                           
+       178         const jobsData = await jobsService.getRecruiterJobs(recruiterId);                                                                             
+       179         if (jobsData.data) {                                                                                                                          
+       180           setPostedJobs(jobsData.data);                                                                                                               
+       197         // Load stats                                                                                                                                 
+       198         const statsData = await jobsService.getRecruiterStats(recruiterId);                                                                           
+       199         if (statsData.data) {                                                                                                                         
+       200           setStats(statsData.data);                                                                                                                   
+       405                       : 'Add your company details to start posting jobs and receiving applications.'                                                  
+       421         {/* Stats Grid */}                                                                                                                            
+       424             { label: 'Jobs', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, color: 'text-blue-600 bg-blue-50' },                 
+       427             { label: 'Hire Rate', value: stats?.hireRate || 'N/A', icon: TrendingUp, action: onViewAnalytics, color: 'text-violet-600 bg-violet-50' },
+       454               <h2 className="mt-1 text-xl font-semibold text-white">Post Jobs and Source Candidates</h2>                                              
+
+
+

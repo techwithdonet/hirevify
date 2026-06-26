@@ -1,0 +1,64 @@
+
+LineNumber Line                                                                                                                                 
+---------- ----                                                                                                                                 
+         8   Download,                                                                                                                          
+        21   Phone,                                                                                                                             
+        56   const [isLoading, setIsLoading] = useState(false);                                                                                 
+        68     emailEnabled: true,                                                                                                              
+        81     showPhone: false,                                                                                                                
+        82     showEmail: false,                                                                                                                
+        86   // Load recruiter profile data                                                                                                     
+        88     const loadRecruiterData = async () => {                                                                                          
+        94         // Load subscription                                                                                                         
+       102         // Load profile data                                                                                                         
+       103         const { data: profile } = await supabase.from('profiles').select('*').eq('auth_user_id', user.id).maybeSingle();             
+       104         const { data: recruiterProfile } = await supabase.from('recruiter_profiles').select('*').eq('id', profile?.id).maybeSingle();
+       111         console.error('Error loading recruiter settings data:', error);                                                              
+       115     loadRecruiterData();                                                                                                             
+       118   const handleSaveNotifications = async () => {                                                                                      
+       119     setIsLoading(true);                                                                                                              
+       121       // Simulate save - in real implementation would save to database                                                               
+       123       toast.success('Notification preferences saved');                                                                               
+       125       toast.error('Failed to save notification preferences');                                                                        
+       127       setIsLoading(false);                                                                                                           
+       131   const handleSaveHiringPreferences = async () => {                                                                                  
+       132     setIsLoading(true);                                                                                                              
+       135       toast.success('Hiring preferences saved');                                                                                     
+       137       toast.error('Failed to save hiring preferences');                                                                              
+       139       setIsLoading(false);                                                                                                           
+       143   const handleSaveMessagingPreferences = async () => {                                                                               
+       144     setIsLoading(true);                                                                                                              
+       147       toast.success('Messaging preferences saved');                                                                                  
+       149       toast.error('Failed to save messaging preferences');                                                                           
+       151       setIsLoading(false);                                                                                                           
+       159         email: user?.email,                                                                                                          
+       175     a.download = `hirevify-recruiter-data-${new Date().toISOString().split('T')[0]}.json`;                                           
+       228                     <Label className="text-muted-foreground">Email</Label>                                                           
+       229                     <p className="font-medium">{user?.email || 'Not set'}</p>                                                        
+       389                         <Label>Email Notifications</Label>                                                                           
+       390                         <p className="text-sm text-muted-foreground">Receive notifications via email</p>                             
+       394                       checked={notifications.emailEnabled}                                                                           
+       395                       onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, emailEnabled: checked }))}                  
+       414                 <Button onClick={handleSaveNotifications} disabled={isLoading} className="w-full md:w-auto">                         
+       415                   {isLoading ? 'Saving...' : 'Save Notification Settings'}                                                           
+       473                       <SelectItem value="both">Allow both email and phone</SelectItem>                                               
+       474                       <SelectItem value="email">Email only</SelectItem>                                                              
+       475                       <SelectItem value="phone">Phone only</SelectItem>                                                              
+       481                 <Button onClick={handleSaveHiringPreferences} disabled={isLoading} className="w-full md:w-auto">                     
+       482                   {isLoading ? 'Saving...' : 'Save Hiring Preferences'}                                                              
+       499                       <Label>Show Phone to Candidates</Label>                                                                        
+       500                       <p className="text-sm text-muted-foreground">Display your phone number on job postings</p>                     
+       503                       checked={messagingPreferences.showPhone}                                                                       
+       504                       onCheckedChange={(checked) => setMessagingPreferences(prev => ({ ...prev, showPhone: checked }))}              
+       512                       <Label>Show Company Email to Candidates</Label>                                                                
+       513                       <p className="text-sm text-muted-foreground">Display your company email on job postings</p>                    
+       516                       checked={messagingPreferences.showEmail}                                                                       
+       517                       onCheckedChange={(checked) => setMessagingPreferences(prev => ({ ...prev, showEmail: checked }))}              
+       535                 <Button onClick={handleSaveMessagingPreferences} disabled={isLoading} className="w-full md:w-auto">                  
+       536                   {isLoading ? 'Saving...' : 'Save Messaging Preferences'}                                                           
+       577                         <p className="font-medium">Storage & Uploads</p>                                                             
+       611                       Download all your data including jobs, applications, and settings                                              
+       615                     <Download className="w-4 h-4 mr-2" />                                                                            
+
+
+

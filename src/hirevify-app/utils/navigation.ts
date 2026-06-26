@@ -135,7 +135,7 @@ navigateToEmployerEducation = () => {
   };
 
   navigateToOngoingProjects = () => {
-  if (!this.requireAuth('access ongoing projects', 'recruiter')) return;
+  if (!this.requireAuth('access all projects', 'recruiter')) return;
   this.setCurrentScreen('recruiter-ongoing-projects');
   };
 

@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, Zap, Video, CheckCircle, PlayCircle } from 'lucide-react';
+import { Search, Filter, MapPin, DollarSign, Clock, Bookmark, BookmarkCheck, Star, Zap, Video, CheckCircle, PlayCircle, ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
@@ -16,8 +16,6 @@ import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { savedJobsService } from '../services/savedJobsService';
-import { DashboardPageLayout } from './shared/DashboardPageLayout';
-import { dashboardTheme } from '../theme/dashboardTheme';
 
 // Local types to avoid API dependency issues
 interface Project {
@@ -79,7 +77,7 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
  
  const openApplicationDialog = (projectToApply: Project | null) => {
  if (!projectToApply?.id) {
- toast.error('Please select a project first.');
+ toast.error('Please select a job first.');
  return;
  }
 
@@ -123,7 +121,22 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
  return;
  }
 
- const jobIds = (jobs || []).map((job: any) => String(job.id)).filter(Boolean);
+ const publishedJobRows = (jobs || []).filter((job: any) => {
+ const title = String(job.title || '').trim().toLowerCase();
+ const projectTitle = String(job.project_title || '').trim().toLowerCase();
+ const description = String(job.description || '').trim().toLowerCase();
+ const projectDescription = String(job.project_description || '').trim().toLowerCase();
+ const looksLikeStandaloneProject =
+ Boolean(job.has_project) &&
+ job.job_type === 'freelance' &&
+ (!job.location || job.location === 'Not specified') &&
+ (!projectTitle || projectTitle === title) &&
+ (!projectDescription || projectDescription === description);
+
+ return !looksLikeStandaloneProject;
+ });
+
+ const jobIds = publishedJobRows.map((job: any) => String(job.id)).filter(Boolean);
  let appliedJobIdsFromDb = new Set<string>();
 
  try {
@@ -201,9 +214,9 @@ setAppliedProjectIds(appliedJobIdsFromDb);
   } catch (savedLoadError) {
   console.warn('Failed to hydrate saved jobs:', savedLoadError);
   }
- const mappedProjects = (jobs || []).map((job: any) => ({
+ const mappedProjects = publishedJobRows.map((job: any) => ({
  id: job.id,
- title: job.title || 'Untitled Project',
+ title: job.title || 'Untitled Job',
  description: job.description || '',
  company: job.company_name || 'Company',
  companyName: job.company_name || 'Company',
@@ -532,7 +545,7 @@ const toggleBookmark = async (projectId: string) => {
 
 const applyToProject = async () => {
  if (!selectedProject) {
- toast.error('Please select a project first.');
+ toast.error('Please select a job first.');
  return;
  }
 
@@ -586,7 +599,7 @@ const applyToProject = async () => {
  const { data: existing } = await supabase.from('applications').select('id').eq('job_id', selectedProject.id).eq('candidate_id', candidateOwnerProfileId).maybeSingle();
 
  if (existing) {
- toast.error('You have already applied to this project.');
+ toast.error('You have already applied to this job.');
  const markSelectedProjectApplied = () => {
  if (!selectedProject?.id) return;
 
@@ -849,7 +862,7 @@ const { error: appError } = await supabase.from('applications').insert({
 
  {/* Project Description */}
  <div>
- <h4 className="font-semibold mb-2">Project Description</h4>
+ <h4 className="font-semibold mb-2">Job Description</h4>
  <p className="text-muted-foreground">{project.description}</p>
  </div>
 
@@ -897,7 +910,7 @@ const { error: appError } = await supabase.from('applications').insert({
  {/* Project Details */}
  <div className="grid grid-cols-2 gap-6">
  <div>
- <h4 className="font-semibold mb-2">Project Details</h4>
+ <h4 className="font-semibold mb-2">Job Details</h4>
  <div className="space-y-2 text-sm">
  <div className="flex justify-between">
  <span className="text-muted-foreground">Budget:</span>
@@ -967,7 +980,7 @@ const { error: appError } = await supabase.from('applications').insert({
 
  {/* Project Type */}
  <Card className="p-4">
- <h3 className="font-medium mb-3">Project Type</h3>
+ <h3 className="font-medium mb-3">Job Type</h3>
  <Select value={filters.type || 'all'} onValueChange={(value) => updateFilter('type', value === 'all'? undefined: value)}>
  <SelectTrigger>
  <SelectValue placeholder="All types" />
@@ -1022,34 +1035,59 @@ const { error: appError } = await supabase.from('applications').insert({
  }
 
   return (
-  <DashboardPageLayout
-  title="All Jobs"
-  subtitle="Browse open roles from real companies and apply in one click"
-  onBack={onBack}
-  backLabel="Back"
-  actions={(
-  <Button onClick={onUpgrade} className={dashboardTheme.buttonPrimary}>
-  <Zap className="w-4 h-4 mr-2" />
-  Upgrade for Premium Search
-  </Button>
-  )}
-  shellClassName="flex gap-6"
-  >
+  <div className="hv-candidate-shell min-h-screen">
+  {/* Candidate-dashboard-style gradient header */}
+  <div className="relative overflow-hidden bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] text-white">
+    <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
+    <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
+    <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
+      <button
+        onClick={onBack}
+        className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to dashboard
+      </button>
 
- {/* Sidebar Filters */}
- <div className="w-80 space-y-6">
- {/* Search */}
-  <Card className="p-4">
-  <div className="relative">
-  <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
-  <Input
-  placeholder="Search jobs..."
-  value={searchQuery}
-  onChange={(e) => setSearchQuery(e.target.value)}
-  className="pl-9"
-  />
+      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+            <Search className="h-3.5 w-3.5" />
+            Browse Jobs
+          </div>
+          <h1 className="text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+            All Jobs
+          </h1>
+          <p className="mt-2 text-sm text-emerald-50/90">
+            Browse open roles from real companies and apply in one click
+          </p>
+        </div>
+
+        <Button onClick={onUpgrade} className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20">
+          <Zap className="w-4 h-4 mr-2" />
+          Upgrade for Premium Search
+        </Button>
+      </div>
+    </div>
   </div>
-  </Card>
+
+  <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Main content - Jobs List */}
+      <div className="space-y-6 lg:col-span-2">
+
+        {/* Search Bar */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Search jobs, skills, or companies..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 text-base border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
 
  {/* AI Recommendations */}
  {showRecommendations && recommendations.length > 0 && (
@@ -1094,304 +1132,384 @@ const { error: appError } = await supabase.from('applications').insert({
     <SheetTitle>Filter Jobs</SheetTitle>
     </SheetHeader>
  <div className="mt-6">
- <FilterContent 
- filters={filters}
- updateFilter={updateFilter}
- skillsOptions={skillsOptions}
- />
- </div>
- </SheetContent>
- </Sheet>
-
- {/* Desktop Filters */}
- <div className="hidden lg:block">
- <FilterContent 
- filters={filters}
- updateFilter={updateFilter}
- skillsOptions={skillsOptions}
- />
- </div>
- </div>
-
- {/* Projects List */}
- <div className="flex-1">
- {isLoading? (
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- {Array.from({ length: 6 }).map((_, i) => (
- <Card key={i} className="p-6">
- <div className="animate-pulse space-y-4">
- <div className="h-4 bg-muted rounded w-3/4"></div>
- <div className="h-3 bg-muted rounded w-1/2"></div>
- <div className="space-y-2">
- <div className="h-3 bg-muted rounded"></div>
- <div className="h-3 bg-muted rounded w-5/6"></div>
- </div>
- </div>
- </Card>
- ))}
- </div>
-  ): filteredProjects.length === 0? (
-  <Card className="p-12 text-center">
-  <div className="max-w-md mx-auto">
-  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-  <h3 className="text-lg font-semibold mb-2">No jobs available</h3>
-  <p className="text-muted-foreground mb-4">
-  {!accessToken? 'Please sign in to view available jobs.': searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)? 'Try adjusting your search criteria or filters to find more jobs.': 'No jobs are currently available. Check back later for new opportunities.'
-  }
-  </p>
- {(searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)) && (
- <Button 
- variant="outline" 
- onClick={() => {
- setSearchQuery('');
- setFilters({ page: 1, limit: 20, sortBy: 'newest' });
- }}
- >
- Clear all filters
- </Button>
- )}
- </div>
- </Card>
- ): (
- <>
-  <div className="flex items-center justify-between mb-6">
-  <div>
-  <h2 className="text-lg font-semibold">
-  {filteredProjects.length} {filteredProjects.length === 1 ? 'job' : 'jobs'} found
-  </h2>
-  <p className="text-sm text-muted-foreground">
-  Showing personalized matches based on your skills
-  </p>
+  <FilterContent 
+  filters={filters}
+  updateFilter={updateFilter}
+  skillsOptions={skillsOptions}
+  />
   </div>
+  </SheetContent>
+  </Sheet>
+
+  {/* Desktop Filters */}
+  <div className="hidden lg:block">
+  <FilterContent 
+  filters={filters}
+  updateFilter={updateFilter}
+  skillsOptions={skillsOptions}
+  />
   </div>
+      </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- {filteredProjects.map((project) => {
- const matchScore = calculateMatchScore(project);
- return (
- <Card key={project.id} className="p-6 hover:shadow-md transition-shadow cursor-pointer">
- <div className="space-y-4">
- {/* Project Header */}
- <div className="flex items-start justify-between">
- <div className="flex-1">
- <div className="flex items-center gap-2 mb-2">
- <Badge 
- variant="outline" 
- className={getStatusColor(project.status)}
- >
- {appliedProjectIds.has(project.id) || project.status === 'applied'? 'Applied': getStatusText(project.status)}
- </Badge>
- <Badge 
- variant="outline" 
- className={`${getMatchScoreColor(matchScore)} border-current`}
- >
- <Star className="w-3 h-3 mr-1" />
- {matchScore}%
- </Badge>
- </div>
-  <h3
-  className="font-semibold text-lg hover:text-primary cursor-pointer"
-  onClick={() => {
-    if (onViewJob) {
-      onViewJob(project);
-      return;
-    }
-    setSelectedProject(project);
-    setShowProjectDetailsDialog(true);
-  }}
-  >
- {project.title}
- </h3>
- <p className="text-sm text-muted-foreground">{project.company}</p>
- </div>
- <Button
- variant="ghost"
- size="sm"
- onClick={() => toggleBookmark(project.id)}
- >
- {bookmarkedProjects.has(project.id)? (
- <BookmarkCheck className="w-4 h-4 text-amber-500" />
- ): (
- <Bookmark className="w-4 h-4" />
- )}
- </Button>
- </div>
+      {/* Sidebar */}
+      <aside className="space-y-4">
+        {/* AI Recommendations */}
+        {showRecommendations && recommendations.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <h3 className="font-semibold text-sm text-slate-950">AI Recommendations</h3>
+            </div>
+            <div className="space-y-2">
+              {recommendations.map((project) => (
+                <div
+                  key={project.id}
+                  className="p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
+                  onClick={() => {
+                    setSelectedProject(project);
+                    setShowProjectDetailsDialog(true);
+                  }}
+                >
+                  <h4 className="font-medium text-sm text-slate-950">{project.title}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">{project.company}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                      {calculateMatchScore(project)}% match
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
- {/* Project Description */}
- <p className="text-sm text-muted-foreground line-clamp-2">
- {project.description}
- </p>
+        {/* Quick Stats */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-950 mb-3">Quick Stats</h3>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Total Jobs</span>
+              <span className="font-semibold text-slate-950">{filteredProjects.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Applied</span>
+              <span className="font-semibold text-emerald-600">{appliedProjectIds.size}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-600">Saved</span>
+              <span className="font-semibold text-amber-600">{bookmarkedProjects.size}</span>
+            </div>
+          </div>
+        </div>
 
- {/* Project Details */}
- <div className="grid grid-cols-3 gap-4 text-sm">
- <div className="flex items-center gap-1">
- <MapPin className="w-3 h-3 text-muted-foreground" />
- <span className="text-muted-foreground">{project.location}</span>
- </div>
- <div className="flex items-center gap-1">
- <DollarSign className="w-3 h-3 text-muted-foreground" />
- <span className="text-muted-foreground">{project.budget}</span>
- </div>
- <div className="flex items-center gap-1">
- <Clock className="w-3 h-3 text-muted-foreground" />
- <span className="text-muted-foreground">{project.timeline}</span>
- </div>
- </div>
+        {/* Mobile Filter Button */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full lg:hidden bg-white border-slate-200">
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Filter Jobs</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <FilterContent 
+                filters={filters}
+                updateFilter={updateFilter}
+                skillsOptions={skillsOptions}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </aside>
+    </div>
 
- {/* Skills */}
- <div className="flex flex-wrap gap-1">
- {project.skills.slice(0, 3).map((skill) => (
- <Badge key={skill} variant="secondary" className="text-xs">
- {skill}
- </Badge>
- ))}
- {project.skills.length > 3 && (
- <Badge variant="secondary" className="text-xs">
- +{project.skills.length - 3} more
- </Badge>
- )}
- </div>
+        {/* Jobs List */}
+        <div className="space-y-4">
+          {isLoading? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-slate-200 rounded"></div>
+                      <div className="h-3 bg-slate-200 rounded w-5/6"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredProjects.length === 0? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 shadow-sm text-center">
+              <div className="max-w-md mx-auto">
+                <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-slate-950 mb-2">No jobs available</h3>
+                <p className="text-sm text-slate-500 mb-4">
+                  {!accessToken? 'Please sign in to view available jobs.': searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)? 'Try adjusting your search criteria or filters to find more jobs.': 'No jobs are currently available. Check back later for new opportunities.'}
+                </p>
+                {(searchQuery || filters.type || filters.location || (filters.skills && filters.skills.length > 0)) && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilters({ page: 1, limit: 20, sortBy: 'newest' });
+                    }}
+                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-950">
+                    {filteredProjects.length} {filteredProjects.length === 1 ? 'job' : 'jobs'} found
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    Showing personalized matches based on your skills
+                  </p>
+                </div>
+              </div>
 
- {/* Actions */}
- <div className="flex items-center justify-between pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredProjects.map((project) => {
+                  const matchScore = calculateMatchScore(project);
+                  return (
+                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                      <div className="space-y-4">
+                        {/* Project Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge 
+                                variant="outline" 
+                                className={getStatusColor(project.status)}
+                              >
+                                {appliedProjectIds.has(project.id) || project.status === 'applied'? 'Applied': getStatusText(project.status)}
+                              </Badge>
+                              <Badge 
+                                variant="outline" 
+                                className={`${getMatchScoreColor(matchScore)} border-current`}
+                              >
+                                <Star className="w-3 h-3 mr-1" />
+                                {matchScore}%
+                              </Badge>
+                            </div>
+                            <h3
+                              className="font-semibold text-lg text-slate-950 hover:text-emerald-600 cursor-pointer"
+                              onClick={() => {
+                                if (onViewJob) {
+                                  onViewJob(project);
+                                  return;
+                                }
+                                setSelectedProject(project);
+                                setShowProjectDetailsDialog(true);
+                              }}
+                            >
+                              {project.title}
+                            </h3>
+                            <p className="text-sm text-slate-500 mt-0.5">{project.company}</p>
+                          </div>
   <Button
-  variant="outline"
-  size="sm"
-  onClick={() => {
-    if (onViewJob) {
-      onViewJob(project);
-      return;
-    }
-    setSelectedProject(project);
-    setShowProjectDetailsDialog(true);
-  }}
-  >
-  View Details
-  </Button>
- 
-  {['available', 'published', 'open'].includes(String(project.status || 'available')) &&!appliedProjectIds.has(project.id)? (
-  <Button
-  size="sm"
-  onClick={() => {
-    if (onViewJob) {
-      // Open the dedicated job detail / apply page
-      onViewJob(project);
-      return;
-    }
-    openApplicationDialog(project);
-  }}
-  >
-  Apply Now
-  </Button>
- ): project.status && ['in-progress', 'completed'].includes(project.status) &&!project.hasVideoSubmission? (
- <Button 
- size="sm"
- className="bg-red-600 hover:bg-red-700"
- onClick={() => handleRecordVideo(project)}
- >
- <Video className="w-3 h-3 mr-1" />
- Record Video
- </Button>
- ): project.hasVideoSubmission? (
- <div className="flex items-center text-green-600 text-sm">
- <CheckCircle className="w-3 h-3 mr-1" />
- Video Submitted
- </div>
- ): (
- <Badge variant="secondary">
- {appliedProjectIds.has(project.id)? 'Applied': getStatusText(project.status)}
- </Badge>
- )}
- </div>
- </div>
- </Card>
- );
- })}
- </div>
- </>
- )}
- </div>
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleBookmark(project.id)}
+                            className="hover:bg-slate-100"
+                          >
+                            {bookmarkedProjects.has(project.id)? (
+                              <BookmarkCheck className="w-4 h-4 text-amber-500" />
+                            ): (
+                              <Bookmark className="w-4 h-4 text-slate-400" />
+                            )}
+                          </Button>
+                        </div>
 
- {/* Project Details Dialog */}
- <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
- <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
- <DialogHeader>
- <DialogTitle>{selectedProject?.title}</DialogTitle>
- <DialogDescription>
- Project details and requirements for {selectedProject?.company}
- </DialogDescription>
- </DialogHeader>
- {selectedProject && (
- <>
- <ProjectDetails
- project={selectedProject}
- matchScore={calculateMatchScore(selectedProject)}
- onRecordVideo={() => {
- setShowProjectDetailsDialog(false);
- handleRecordVideo(selectedProject);
- }}
- />
+                        {/* Project Description */}
+                        <p className="text-sm text-slate-600 line-clamp-2">
+                          {project.description}
+                        </p>
 
- {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) &&!appliedProjectIds.has(selectedProject.id)? (
- <Button 
- size="sm"
- onClick={() => {
+                        {/* Project Details */}
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            <span className="text-slate-600">{project.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3 text-slate-400" />
+                            <span className="text-slate-600">{project.budget}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            <span className="text-slate-600">{project.timeline}</span>
+                          </div>
+                        </div>
 
- openApplicationDialog(selectedProject);
- }}
- >
- {selectedProject?.status === 'applied'? 'Applied': 'Apply Now'}
- </Button>
-): (
- <Badge variant="secondary" className="bg-blue-100 text-blue-700">
- <CheckCircle className="w-3 h-3 mr-1" />
- Applied
- </Badge>
-)}
- </>
- )}
- </DialogContent>
- </Dialog>
+                        {/* Skills */}
+                        <div className="flex flex-wrap gap-2">
+                          {project.skills.slice(0, 3).map((skill) => (
+                            <span key={skill} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                              {skill}
+                            </span>
+                          ))}
+                          {project.skills.length > 3 && (
+                            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                              +{project.skills.length - 3} more
+                            </span>
+                          )}
+                        </div>
 
- {/* Application Dialog */}
- <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
- <DialogContent>
- <DialogHeader>
- <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
- <DialogDescription>
- Submit your application for this project. Include a cover letter explaining why you're the perfect fit.
- </DialogDescription>
- </DialogHeader>
- <div className="space-y-4">
- <div>
- <label className="text-sm font-medium mb-2 block">Cover Letter</label>
- <Textarea
- placeholder="Tell us why you're perfect for this project..."
- value={coverLetter}
- onChange={(e) => setCoverLetter(e.target.value)}
- rows={6}
- />
- </div>
- <div className="flex justify-end gap-2">
- <Button 
- variant="outline" 
- onClick={() => setShowApplicationDialog(false)}
- disabled={isApplying}
- >
- Cancel
- </Button>
- <Button 
- onClick={applyToProject}
- disabled={isApplying ||!coverLetter.trim()}
- >
- {isApplying? 'Submitting...': 'Submit Application'}
- </Button>
- </div>
- </div>
- </DialogContent>
- </Dialog>
- </DashboardPageLayout>
- );
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (onViewJob) {
+                                onViewJob(project);
+                                return;
+                              }
+                              setSelectedProject(project);
+                              setShowProjectDetailsDialog(true);
+                            }}
+                            className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                          >
+                            View Details
+                          </Button>
+  
+                          {['available', 'published', 'open'].includes(String(project.status || 'available')) &&!appliedProjectIds.has(project.id)? (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                if (onViewJob) {
+                                  // Open the dedicated job detail / apply page
+                                  onViewJob(project);
+                                  return;
+                                }
+                                openApplicationDialog(project);
+                              }}
+                              className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                            >
+                              Apply Now
+                            </Button>
+                          ): project.status && ['in-progress', 'completed'].includes(project.status) &&!project.hasVideoSubmission? (
+                            <Button 
+                              size="sm"
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                              onClick={() => handleRecordVideo(project)}
+                            >
+                              <Video className="w-3 h-3 mr-1" />
+                              Record Video
+                            </Button>
+                          ): project.hasVideoSubmission? (
+                            <div className="flex items-center text-emerald-600 text-sm font-medium">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Video Submitted
+                            </div>
+                          ): (
+                            <Badge variant="secondary" className="bg-slate-100 text-slate-600">
+                              {appliedProjectIds.has(project.id)? 'Applied': getStatusText(project.status)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    );
+                  })}
+                  </div>
+                </>
+              )}
+            </div>
+
+      {/* Project Details Dialog */}
+      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedProject?.title}</DialogTitle>
+            <DialogDescription>
+              Job details and requirements for {selectedProject?.company}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <>
+              <ProjectDetails
+                project={selectedProject}
+                matchScore={calculateMatchScore(selectedProject)}
+                onRecordVideo={() => {
+                  setShowProjectDetailsDialog(false);
+                  handleRecordVideo(selectedProject);
+                }}
+              />
+
+              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) &&!appliedProjectIds.has(selectedProject.id)? (
+                <Button 
+                  size="sm"
+                  onClick={() => {
+                    openApplicationDialog(selectedProject);
+                  }}
+                  className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                >
+                  {selectedProject?.status === 'applied'? 'Applied': 'Apply Now'}
+                </Button>
+              ) : (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Applied
+                </Badge>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Application Dialog */}
+      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
+            <DialogDescription>
+              Submit your application for this job. Include a cover letter explaining why you're the perfect fit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Cover Letter</label>
+              <Textarea
+                placeholder="Tell us why you're perfect for this job..."
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                rows={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowApplicationDialog(false)}
+                disabled={isApplying}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={applyToProject}
+                disabled={isApplying ||!coverLetter.trim()}
+                className="bg-emerald-600 text-white hover:bg-emerald-700"
+              >
+                {isApplying? 'Submitting...': 'Submit Application'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+  </main>
+  </div>
+  );
 }
 
 

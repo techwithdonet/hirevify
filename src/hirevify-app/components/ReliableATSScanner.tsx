@@ -181,7 +181,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  const supabase = createSupabaseBrowserClient();
  const { data, error } = await supabase
  .from('jobs')
- .select('id, title, description, requirements, skills, status, recruiter_profile:recruiter_id(company_name)')
+ .select('id, title, description, requirements, skills, status, job_type, has_project, recruiter_profile:recruiter_id(company_name)')
  .eq('status', 'published')
  .order('created_at', { ascending: false });
 
@@ -189,7 +189,9 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  throw new Error(error.message);
  }
 
- const mapped = (data || []).map((job: any) => ({
+ const mapped = (data || [])
+ .filter((job: any) => !(job.has_project === true && job.job_type === 'freelance'))
+ .map((job: any) => ({
  id: job.id,
  title: job.title || 'Untitled job',
  description: job.description || '',
@@ -771,7 +773,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
 
  const blob = await generateOptimizedCvPdfBlob();
  const path = `resumes/${authUserId}/hirevify-primary-cv-${Date.now()}.pdf`;
- const { error: uploadError } = await supabase.storage.from('make-d4feca44-resumes').upload(path, blob, {
+ const { error: uploadError } = await supabase.storage.from('resumes').upload(path, blob, {
  contentType: 'application/pdf',
  upsert: true,
  });
@@ -780,7 +782,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  throw new Error(uploadError.message);
  }
 
- const { data: urlData } = supabase.storage.from('make-d4feca44-resumes').getPublicUrl(path);
+ const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(path);
  const resumeUrl = urlData.publicUrl;
  const payload = { resume_url: resumeUrl };
  let result = existingProfile?.id
@@ -1608,6 +1610,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  </div>
  );
 }
+
 
 
 

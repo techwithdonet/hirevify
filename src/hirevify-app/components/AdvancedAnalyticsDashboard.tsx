@@ -465,10 +465,10 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
  );
 
  return (
- <div className={dashboardTheme.page}>
- {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto flex items-center justify-between">
+  <div className="premium-page">
+  {/* Header */}
+  <header className="premium-header">
+  <div className="premium-header-inner">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack}>
  <ArrowLeft className="w-4 h-4 mr-2" />
@@ -510,12 +510,12 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
  <SelectItem value="xlsx">Excel</SelectItem>
  <SelectItem value="pdf">PDF</SelectItem>
  </SelectContent>
- </Select>
- </div>
- </div>
- </header>
+  </Select>
+  </div>
+  </div>
+  </header>
 
- <main className="max-w-7xl mx-auto p-6">
+  <main className="premium-content">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
  <TabsList className="grid w-full grid-cols-5">
  <TabsTrigger value="overview">Overview</TabsTrigger>

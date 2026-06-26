@@ -185,7 +185,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
 
  const { data: jobRows, error: jobsError } = await supabase
  .from('jobs')
- .select('id, title, description, requirements, skills, experience_level, status, created_at')
+ .select('id, title, description, requirements, skills, experience_level, status, created_at, job_type, has_project')
  .eq('recruiter_id', recruiterId)
  .order('created_at', { ascending: false });
 
@@ -193,7 +193,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  throw new Error(jobsError.message);
  }
 
- const jobs = jobRows || [];
+ const jobs = (jobRows || []).filter((job: any) => !(job.has_project === true && job.job_type === 'freelance'));
  const jobIds = jobs.map((job: any) => job.id).filter(Boolean);
 
  if (jobIds.length === 0) {
@@ -370,20 +370,20 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  const eligibleMatches = useMemo(() => matches.filter((match) => match.score >= 70), [matches]);
 
  return (
- <div className={`${dashboardTheme.page} p-6`}>
- <div className="mx-auto max-w-7xl">
- <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
- <div className="flex items-center gap-4">
- <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
- <ArrowLeft className="h-4 w-4" />
- </Button>
- <div>
- <h1 className="flex items-center gap-3 text-3xl font-bold tracking-normal">
- <Brain className="h-8 w-8 text-emerald-700" />
- AI Matching System
- </h1>
- <p className="text-muted-foreground">
- Live candidate-project matching from your Supabase applications.
+  <div className="premium-page">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center gap-4">
+  <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
+  <ArrowLeft className="h-4 w-4" />
+  </Button>
+  <div>
+  <h1 className="flex items-center gap-3 text-3xl font-bold tracking-normal">
+  <Brain className="h-8 w-8 text-emerald-700" />
+  AI Matching System
+  </h1>
+  <p className="text-muted-foreground">
+  Live candidate-project matching from your Supabase applications.
  </p>
  {lastUpdated && (
  <p className="mt-1 text-xs text-slate-500">Last refreshed {new Date(lastUpdated).toLocaleString()}</p>
@@ -401,11 +401,13 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  <Zap className="mr-2 h-4 w-4" />
  Upgrade
  </Button>
- )}
- </div>
- </div>
+  )}
+  </div>
+  </div>
+  </header>
+  <main className="premium-content">
 
- {loadError && (
+  {loadError && (
  <Card className="mb-6 border-red-200 bg-red-50 p-4 text-red-800">
  <div className="flex items-start gap-3">
  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
@@ -650,10 +652,10 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  </div>
  </Card>
  </TabsContent>
- </Tabs>
- </div>
- </div>
- );
+  </Tabs>
+  </main>
+  </div>
+  );
 }
 
 function ActivityDot() {

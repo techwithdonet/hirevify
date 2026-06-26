@@ -45,7 +45,11 @@ interface CandidateJobApplyProps {
 }
 
 const MAX_COVER_LETTER = 2000;
-const ACCEPTED_CV_TYPES = ['application/pdf'];
+const ACCEPTED_CV_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 const MAX_CV_BYTES = 10 * 1024 * 1024; // 10 MB
 
 // Subset of `profiles` we care about for the review step
@@ -86,6 +90,7 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string } | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,6 +98,20 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   // candidate-specific extras (from `candidate_profiles`) from the
   // auth user. We need BOTH — `profiles` carries name/email/location,
   // `candidate_profiles` carries headline/skills/years.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const raw = window.sessionStorage.getItem(`hirevify_optimized_cv_${job.id}`);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed?.path && parsed?.fileName) {
+        setOptimizedCv({ path: parsed.path, fileName: parsed.fileName });
+      }
+    } catch {
+      setOptimizedCv(null);
+    }
+  }, [job.id]);
+
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -139,8 +158,15 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!ACCEPTED_CV_TYPES.includes(file.type)) {
-      toast.error('Please upload a PDF file.');
+    const fileName = file.name.toLowerCase();
+    const accepted =
+      ACCEPTED_CV_TYPES.includes(file.type) ||
+      fileName.endsWith('.pdf') ||
+      fileName.endsWith('.doc') ||
+      fileName.endsWith('.docx');
+
+    if (!accepted) {
+      toast.error('Please upload a PDF, DOC, or DOCX file.');
       e.target.value = '';
       return;
     }
@@ -165,14 +191,24 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
       toast.error(`Cover letter is too long (max ${MAX_COVER_LETTER} characters).`);
       return;
     }
+    if (!cvFile && !optimizedCv && !extras?.resume_url) {
+      toast.error('Upload a CV in profile completion before applying.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       let cvPath: string | null = null;
       let cvFileName: string | null = null;
+      const { data: authData } = await supabase.auth.getUser();
+      const authUserId = authData?.user?.id;
+
+      if (!authUserId) {
+        throw new Error('Please login again before applying.');
+      }
 
       if (cvFile) {
-        const upload = await applicationsService.uploadCV(user.id, cvFile);
+        const upload = await applicationsService.uploadCV(authUserId, cvFile);
         if (upload.error || !upload.path) {
           throw new Error(
             upload.error?.message || 'CV upload failed. Please try again.',
@@ -180,6 +216,12 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
         }
         cvPath = upload.path;
         cvFileName = cvFile.name;
+      } else if (optimizedCv) {
+        cvPath = optimizedCv.path;
+        cvFileName = optimizedCv.fileName;
+      } else if (extras?.resume_url) {
+        cvPath = extras.resume_url;
+        cvFileName = extras.resume_url.split('/').pop()?.replace(/^\d+_/, '') || 'Profile CV';
       }
 
       const { error } = await applicationsService.submitApplication(
@@ -195,6 +237,9 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
 
       setStep('success');
       toast.success('Application submitted!');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(`hirevify_optimized_cv_${job.id}`);
+      }
     } catch (err: any) {
       console.error('Application submit error', err);
       toast.error(err?.message || 'Could not submit your application.');
@@ -359,18 +404,10 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
                 <p className="mt-1 text-sm text-slate-600">
                   {job.location || 'Location not specified'}
                 </p>
-                {extras?.resume_url && (
+                {(optimizedCv || extras?.resume_url) && (
                   <p className="mt-2 inline-flex items-center gap-1 text-xs text-slate-500">
                     <FileText className="h-3.5 w-3.5" />
-                    Resume on file:{' '}
-                    <a
-                      href={extras.resume_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-700 underline"
-                    >
-                      view
-                    </a>
+                    {optimizedCv ? `Optimized CV ready: ${optimizedCv.fileName}` : 'Resume on file'}
                   </p>
                 )}
               </div>
@@ -429,10 +466,15 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
                     {(cvFile.size / 1024 / 1024).toFixed(2)} MB
                   </span>
                 </div>
+              ) : optimizedCv ? (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                  <Sparkles className="h-4 w-4 flex-shrink-0 text-emerald-700" />
+                  <span className="truncate">{optimizedCv.fileName}</span>
+                  <span className="ml-auto text-xs text-emerald-700">Optimized</span>
+                </div>
               ) : (
                 <p className="text-sm italic text-slate-400">
-                  No CV attached for this application. (Your existing resume
-                  on file will still be visible to the recruiter.)
+                  Your current profile CV will be attached to this application.
                 </p>
               )}
             </section>
@@ -449,7 +491,7 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
               </div>
               <p className="mt-2 text-xs text-slate-600">
                 Once submitted, the recruiter will be notified and can review
-                your profile and any attached CV. You can't edit this
+                your profile and attached CV. You can't edit this
                 application after sending.
               </p>
               <Button
@@ -516,7 +558,7 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   return (
     <DashboardPageLayout
       title={`Apply: ${job.title}`}
-      subtitle="Your profile is auto-attached. Add a CV to stand out and write a short note."
+      subtitle="Your profile and CV are auto-attached. Add a short note before applying."
       onBack={onBack}
       backLabel="Back to job"
       eyebrow="Step 1 of 2"
@@ -547,20 +589,18 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
           {/* CV upload */}
           <div className={dashboardTheme.panel}>
             <h3 className="text-sm font-semibold text-slate-950">
-              CV (optional, PDF)
+              CV (PDF, DOC, or DOCX)
             </h3>
             <p className="mt-1 text-xs text-slate-500">
-              Upload a PDF version of your resume. Max 10 MB. If you skip
-              this, your existing resume on file stays visible to the
-              recruiter.
+              Your profile CV is attached by default. Upload another file only if you want to override it for this application.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <Upload className="h-4 w-4" />
-                Choose PDF
+                Choose CV
                 <input
                   type="file"
-                  accept="application/pdf"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   className="hidden"
                   onChange={handleCvChange}
                 />

@@ -58,6 +58,7 @@ export function JobApplicants({ job, onBack, onViewCandidate }: JobApplicantsPro
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedCvUrl, setSelectedCvUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!job?.id) return;
@@ -82,6 +83,31 @@ export function JobApplicants({ job, onBack, onViewCandidate }: JobApplicantsPro
 
     void loadApplications();
   }, [job?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCvUrl = async () => {
+      const rawUrl = selectedApplication?.cv_url || (selectedApplication?.candidate_details as any)?.resume_url || null;
+      setSelectedCvUrl(null);
+
+      if (!rawUrl) return;
+
+      if (/^https?:\/\//i.test(rawUrl)) {
+        setSelectedCvUrl(rawUrl);
+        return;
+      }
+
+      const { url } = await applicationsService.getApplicationFileSignedUrl(rawUrl);
+      if (!cancelled) setSelectedCvUrl(url || null);
+    };
+
+    void loadCvUrl();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedApplication]);
 
   const filteredApplications = applications.filter((app) => {
     if (statusFilter !== 'all' && app.status !== statusFilter) {
@@ -301,7 +327,7 @@ export function JobApplicants({ job, onBack, onViewCandidate }: JobApplicantsPro
         const candidateDetails = selectedApplication.candidate_details as any;
         const candidateName = candidateProfile?.full_name || 'Unknown Candidate';
         const candidateEmail = candidateProfile?.email || 'No email';
-        const resumeUrl = candidateDetails?.resume_url || (selectedApplication as any).resume_url;
+        const resumeUrl = selectedCvUrl;
         const skills = Array.isArray(candidateDetails?.skills) ? candidateDetails.skills : [];
 
         return (

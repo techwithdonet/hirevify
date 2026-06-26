@@ -590,10 +590,11 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
  );
 
  return (
- <div className="min-h-screen bg-background">
- {/* Header */}
- <header className="bg-card border-b border-border p-6">
- <div className="max-w-7xl mx-auto flex items-center justify-between">
+  <div className="premium-page">
+  {/* Header */}
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center justify-between">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack}>
  <ArrowLeft className="w-4 h-4 mr-2" />
@@ -627,12 +628,13 @@ export function CustomAssessmentBuilder({ onBack, existingAssessment, onSave }: 
  <Button onClick={publishAssessment} disabled={assessment.questions.length < 5}>
  <CheckCircle className="w-4 h-4 mr-2" />
  Publish
- </Button>
- </div>
- </div>
- </header>
+  </Button>
+  </div>
+  </div>
+  </div>
+  </header>
 
- <main className="max-w-7xl mx-auto p-6">
+  <main className="premium-content">
  <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
  {/* Main Content */}
  <div className="xl:col-span-3">

@@ -1,0 +1,29 @@
+
+LineNumber Line                                                                                                                    
+---------- ----                                                                                                                    
+         7 import { ArrowLeft, Mail, Calendar, MapPin, FileText, Loader2, Briefcase, User, Eye, Edit, Search } from 'lucide-react';
+        27   onViewCandidate?: (application: ApplicationWithDetails) => void;                                                      
+        28   onEditCandidate?: (application: ApplicationWithDetails) => void;                                                      
+        34   interview: 'bg-purple-50 text-purple-700 border-purple-200',                                                          
+        47   interview: 'Interview',                                                                                               
+        57 export function JobApplicants({ job, onBack, onViewCandidate, onEditCandidate }: JobApplicantsProps) {                  
+        93       const name = app.candidate_profile?.full_name?.toLowerCase() || '';                                               
+        94       const email = app.candidate_profile?.email?.toLowerCase() || '';                                                  
+       121           <Button variant="ghost" onClick={onBack} className="flex items-center gap-2 mb-4">                            
+       126             <h3 className="text-lg font-semibold text-gray-900 mb-2">No job selected</h3>                               
+       127             <p className="text-gray-500">Please select a job from the list to view its applicants.</p>                  
+       139           <Button variant="ghost" onClick={onBack} className="flex items-center gap-2 mb-4">                            
+       178                 <option value="interview">Interview</option>                                                            
+       211               const candidateName = application.candidate_profile?.full_name || 'Unknown Candidate';                    
+       212               const candidateEmail = application.candidate_profile?.email || 'No email';                                
+       213               const skills = application.candidate_details?.skills || [];                                               
+       242                           {application.candidate_details?.headline && (                                                 
+       243                             <p className="text-sm text-gray-600 mb-2">{application.candidate_details.headline}</p>      
+       282                             onClick={() => onViewCandidate?.(application)}                                              
+       286                             View                                                                                        
+       291                             onClick={() => onEditCandidate?.(application)}                                              
+       294                             <Edit className="w-4 h-4 mr-1" />                                                           
+       295                             Edit                                                                                        
+
+
+
