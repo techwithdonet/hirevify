@@ -6,15 +6,17 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { ModernField, ModernFormSection, ModernFormShell, FormSuggestionCard } from './common/ModernForm';
+import { ModernField, ModernFormSection, ModernFormShell } from './common/ModernForm';
 import { SkillMultiSelect } from './common/SkillMultiSelect';
 import { useAuth } from './AuthProvider';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
 import {
  careerGrowthService,
+ parseCareerGrowthReview,
  type CareerGrowthApplication,
  type CareerGrowthOpportunity,
+ type CareerGrowthSubmission,
  type CareerGrowthStatus,
  type CareerGrowthType,
 } from '../services/careerGrowthService';
@@ -48,7 +50,7 @@ type RecruiterGrowthPostType = Extract<CareerGrowthType, 'experience_builder' | 
 
 const growthTypeLabels: Record<RecruiterGrowthPostType, string> = {
  experience_builder: 'Experience Builder',
- micro_internship: 'Micro-Internship',
+ micro_internship: 'Micro Internship',
 };
 
 const durationOptions: Record<RecruiterGrowthPostType, Array<{ label: string; value: number; unit: 'day' | 'week' | 'month' }>> = {
@@ -102,6 +104,29 @@ const emptyGrowthForm = (type: RecruiterGrowthPostType) => ({
  videoRequired: true,
 });
 
+const mapOpportunityToGrowthForm = (opportunity: CareerGrowthOpportunity, type: RecruiterGrowthPostType) => ({
+ type,
+ title: opportunity.title || '',
+ description: opportunity.description || '',
+ skills: opportunity.skills || [],
+ requirements: (opportunity.requirements || []).join('\n'),
+ responsibilities: (opportunity.responsibilities || []).join('\n'),
+ deliverables: (opportunity.deliverables || []).join('\n'),
+ durationLabel: opportunity.duration_label || durationOptions[type][0].label,
+ location: opportunity.location || 'Remote',
+ remoteType: opportunity.remote_type || 'remote',
+ difficulty: opportunity.difficulty || 'Beginner',
+ slots: opportunity.slots ? String(opportunity.slots) : '',
+ applicationDeadline: opportunity.application_deadline || '',
+ startDate: opportunity.start_date || '',
+ endDate: opportunity.end_date || '',
+ compensationType: opportunity.compensation_type || '',
+ compensationAmount: opportunity.compensation_amount ? String(opportunity.compensation_amount) : '',
+ currency: opportunity.currency || 'INR',
+ submissionRequired: opportunity.submission_required ?? true,
+ videoRequired: opportunity.video_required ?? true,
+});
+
 export function ProjectManagement({
  onBack,
  onEditProject,
@@ -116,8 +141,13 @@ export function ProjectManagement({
  const [careerGrowthOnlyType, setCareerGrowthOnlyType] = useState<RecruiterGrowthPostType | null>(null);
  const [growthOpportunities, setGrowthOpportunities] = useState<CareerGrowthOpportunity[]>([]);
  const [growthApplications, setGrowthApplications] = useState<CareerGrowthApplication[]>([]);
+ const [growthSubmissions, setGrowthSubmissions] = useState<CareerGrowthSubmission[]>([]);
  const [isGrowthLoading, setIsGrowthLoading] = useState(false);
  const [growthForm, setGrowthForm] = useState(emptyGrowthForm('experience_builder'));
+ const [showGrowthForm, setShowGrowthForm] = useState(false);
+ const [editingGrowthId, setEditingGrowthId] = useState<string | null>(null);
+ const [expandedGrowthId, setExpandedGrowthId] = useState<string | null>(null);
+ const [scoreByApplicationId, setScoreByApplicationId] = useState<Record<string, string>>({});
 
  useEffect(() => {
  if (typeof window === 'undefined') return;
@@ -128,6 +158,9 @@ export function ProjectManagement({
 
  setCareerGrowthOnlyType(selectedGrowthType);
  setGrowthForm(emptyGrowthForm(selectedGrowthType));
+ setShowGrowthForm(false);
+ setEditingGrowthId(null);
+ setExpandedGrowthId(null);
  window.localStorage.removeItem('hirevify_growth_post_type');
  }, []);
 
@@ -149,6 +182,12 @@ export function ProjectManagement({
 
  setGrowthOpportunities(opportunityResult.data.filter((opportunity) => opportunity.type === type));
  setGrowthApplications(applicationResult.data);
+ const submissionResult = await careerGrowthService.getSubmissionsForApplications(applicationResult.data.map((application) => application.id));
+ if (submissionResult.error) {
+ toast.error(submissionResult.error.message);
+ } else {
+ setGrowthSubmissions(submissionResult.data);
+ }
  setIsGrowthLoading(false);
  };
 
@@ -187,6 +226,7 @@ export function ProjectManagement({
  setJobs([]);
  setGrowthOpportunities([]);
  setGrowthApplications([]);
+ setGrowthSubmissions([]);
  } finally {
  setIsLoading(false);
  setIsGrowthLoading(false);
@@ -204,6 +244,9 @@ export function ProjectManagement({
  if (current.type === careerGrowthOnlyType) return current;
  return emptyGrowthForm(careerGrowthOnlyType);
  });
+ setShowGrowthForm(false);
+ setEditingGrowthId(null);
+ setExpandedGrowthId(null);
  }, [careerGrowthOnlyType]);
 
  const filteredGrowthOpportunities = useMemo(() => {
@@ -238,7 +281,7 @@ export function ProjectManagement({
  return;
  }
 
- const { error } = await careerGrowthService.createCareerGrowthOpportunity({
+ const payload = {
  type: careerGrowthOnlyType,
  title: growthForm.title.trim(),
  description: growthForm.description.trim(),
@@ -268,16 +311,43 @@ export function ProjectManagement({
  metadata: {
  category: growthTypeLabels[careerGrowthOnlyType],
  },
- });
+ };
+
+ const { error } = editingGrowthId
+ ? await careerGrowthService.updateCareerGrowthOpportunity(editingGrowthId, payload)
+ : await careerGrowthService.createCareerGrowthOpportunity(payload);
 
  if (error) {
  toast.error(error.message);
  return;
  }
 
- toast.success(`${growthTypeLabels[careerGrowthOnlyType]} published.`);
+ toast.success(`${growthTypeLabels[careerGrowthOnlyType]} ${editingGrowthId ? 'updated' : 'published'}.`);
  setGrowthForm(emptyGrowthForm(careerGrowthOnlyType));
+ setEditingGrowthId(null);
+ setShowGrowthForm(false);
  await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
+ };
+
+ const startNewGrowthOpportunity = () => {
+ if (!careerGrowthOnlyType) return;
+ setGrowthForm(emptyGrowthForm(careerGrowthOnlyType));
+ setEditingGrowthId(null);
+ setShowGrowthForm(true);
+ };
+
+ const editGrowthOpportunity = (opportunity: CareerGrowthOpportunity) => {
+ if (!careerGrowthOnlyType) return;
+ setGrowthForm(mapOpportunityToGrowthForm(opportunity, careerGrowthOnlyType));
+ setEditingGrowthId(opportunity.id);
+ setShowGrowthForm(true);
+ };
+
+ const cancelGrowthForm = () => {
+ if (!careerGrowthOnlyType) return;
+ setGrowthForm(emptyGrowthForm(careerGrowthOnlyType));
+ setEditingGrowthId(null);
+ setShowGrowthForm(false);
  };
 
  const deleteGrowthOpportunity = async (opportunityId: string) => {
@@ -308,6 +378,45 @@ export function ProjectManagement({
  await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
  };
 
+ const acceptGrowthApplication = async (applicationId: string) => {
+ await updateGrowthStatus(applicationId, 'accepted');
+ };
+
+ const reviewGrowthApplication = async (applicationId: string) => {
+ if (!recruiterProfileId || !careerGrowthOnlyType) return;
+ const score = Number(scoreByApplicationId[applicationId]);
+ if (!Number.isFinite(score) || score < 0 || score > 100) {
+ toast.error('Enter a score from 0 to 100.');
+ return;
+ }
+
+ const { error } = await careerGrowthService.reviewApplication(applicationId, {
+ score,
+ certificateIssued: true,
+ note: 'Certificate issued by recruiter.',
+ });
+
+ if (error) {
+ toast.error(error.message);
+ return;
+ }
+
+ toast.success('Score saved and certificate issued.');
+ await loadGrowthData(recruiterProfileId, careerGrowthOnlyType);
+ };
+
+ const getApplicationSubmission = (applicationId: string) =>
+ growthSubmissions.find((submission) => submission.application_id === applicationId);
+
+ const openSubmissionFile = async (path: string) => {
+ const { url, error } = await careerGrowthService.getCareerGrowthFileUrl(path);
+ if (error || !url) {
+ toast.error(error?.message || 'Could not open submitted file.');
+ return;
+ }
+ window.open(url, '_blank', 'noopener,noreferrer');
+ };
+
  const mapJobToProject = (job: JobRow) => ({
  id: job.id,
  title: job.title || '',
@@ -335,13 +444,14 @@ export function ProjectManagement({
  <div>
  <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Career Growth</p>
  <h1 className="text-3xl font-bold text-gray-900">
- {careerGrowthOnlyType === 'experience_builder'? 'Post Experience Builder Project': 'Post Micro-Internship'}
+ {label}
  </h1>
- <p className="text-gray-600">Manage only {label} opportunities here. Normal jobs/projects are kept separate.</p>
+ <p className="text-gray-600">Manage active posts and applications.</p>
  </div>
  </div>
- <Button variant="outline" onClick={onBack}>
- Close
+ <Button onClick={startNewGrowthOpportunity} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ <Plus className="w-4 h-4 mr-2" />
+ Add new {label}
  </Button>
  </div>
 
@@ -353,38 +463,20 @@ export function ProjectManagement({
  <Briefcase className="w-5 h-5 text-emerald-600" />
  {label} Opportunities
  </CardTitle>
- <p className="text-sm text-gray-500 mt-1">
- {careerGrowthOnlyType === 'experience_builder'? 'Duration must be between 1 week and 1 month.': 'Duration must be between 1 day and 1 week.'}
- </p>
+ <p className="text-sm text-gray-500 mt-1">Active and posted opportunities</p>
  </div>
  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">
- {filteredGrowthOpportunities.length} live
+ {filteredGrowthOpportunities.length} posted
  </Badge>
  </div>
  </CardHeader>
 
  <CardContent className="space-y-6 bg-slate-50/70">
- <ModernFormShell
- aside={(
+ {showGrowthForm && (
  <>
- <FormSuggestionCard
- title="Suggested fields to add next"
- items={[
- 'Success metric or expected outcome',
- 'Candidate evaluation rubric',
- 'Screening questions',
- 'Portfolio or GitHub link required',
- 'Interview availability window',
- ]}
- />
- <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-slate-700">
- <p className="font-semibold text-slate-950">Form format standard</p>
- <p className="mt-2">Use this layout for every major HireVify form: grouped cards, two-column fields, dropdown choices, and skill chips.</p>
- </div>
- </>
- )}
+ <ModernFormShell
  >
- <ModernFormSection eyebrow="Step 1" title="Opportunity Basics" description="Keep the title specific and the description outcome-focused.">
+ <ModernFormSection eyebrow={editingGrowthId ? 'Edit' : 'New'} title={`${editingGrowthId ? 'Edit' : 'Add'} ${label}`} description="">
  <ModernField label="Title" className="md:col-span-2">
  <Input
  value={growthForm.title}
@@ -426,7 +518,7 @@ export function ProjectManagement({
  </ModernField>
  </ModernFormSection>
 
- <ModernFormSection eyebrow="Step 2" title="Schedule and Location" description="Make the time commitment clear before candidates apply.">
+ <ModernFormSection eyebrow="Schedule" title="Schedule and Location" description="">
  <ModernField label="Duration">
  <Select value={growthForm.durationLabel} onValueChange={(value) => setGrowthForm((current) => ({...current, durationLabel: value }))}>
  <SelectTrigger className="bg-white">
@@ -487,7 +579,7 @@ export function ProjectManagement({
  </ModernField>
  </ModernFormSection>
 
- <ModernFormSection eyebrow="Step 3" title="Compensation" description="Use clear ranges and currency so candidates can self-select.">
+ <ModernFormSection eyebrow="Pay" title="Compensation" description="">
  <ModernField label="Compensation Type">
  <Select value={growthForm.compensationType || 'stipend'} onValueChange={(value) => setGrowthForm((current) => ({...current, compensationType: value }))}>
  <SelectTrigger className="bg-white">
@@ -529,7 +621,7 @@ export function ProjectManagement({
  </div>
  </ModernFormSection>
 
- <ModernFormSection eyebrow="Step 4" title="Skills and Candidate Instructions" description="Skills are selected from a shared catalog and can be reused in filters and ATS matching.">
+ <ModernFormSection eyebrow="Details" title="Skills and Instructions" description="">
  <ModernField label="Skills" hint="Select up to 12 core skills." className="md:col-span-2">
  <SkillMultiSelect
  value={growthForm.skills}
@@ -585,12 +677,17 @@ export function ProjectManagement({
  </ModernFormSection>
  </ModernFormShell>
 
- <div className="flex justify-end border-t border-slate-200 pt-5">
+ <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
+ <Button variant="outline" onClick={cancelGrowthForm}>
+ Cancel
+ </Button>
  <Button onClick={createGrowthOpportunity} className="bg-emerald-600 px-6 text-white hover:bg-emerald-700">
  <Plus className="w-4 h-4 mr-2" />
- Publish {label}
+ {editingGrowthId ? 'Save Changes' : `Publish ${label}`}
  </Button>
  </div>
+ </>
+ )}
 
  {isGrowthLoading || isLoading? (
  <div className="py-12 flex flex-col items-center justify-center text-center">
@@ -628,44 +725,128 @@ export function ProjectManagement({
  {applicants.length} applicant{applicants.length === 1? '': 's'} - {opportunity.duration_label || 'Duration not set'}
  </div>
  </div>
- <Button variant="outline" onClick={() => deleteGrowthOpportunity(opportunity.id)}>
+ <div className="flex flex-wrap gap-2">
+ <Button variant="outline" onClick={() => setExpandedGrowthId((current) => current === opportunity.id ? null : opportunity.id)}>
+ <Eye className="w-4 h-4 mr-2" />
+ View Details
+ </Button>
+ <Button variant="outline" onClick={() => editGrowthOpportunity(opportunity)}>
+ <Edit className="w-4 h-4 mr-2" />
+ Edit
+ </Button>
+ <Button variant="outline" onClick={() => deleteGrowthOpportunity(opportunity.id)} className="text-red-600 hover:text-red-700">
  <Trash2 className="w-4 h-4 mr-2" />
  Delete
  </Button>
  </div>
+ </div>
+
+ {expandedGrowthId === opportunity.id && (
+ <div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 text-sm text-gray-600 md:grid-cols-2">
+ <div>
+ <p className="font-semibold text-gray-900">Schedule</p>
+ <p>{opportunity.duration_label || 'Duration not set'} - {opportunity.location || 'Remote'}</p>
+ </div>
+ <div>
+ <p className="font-semibold text-gray-900">Dates</p>
+ <p>{opportunity.start_date || 'Start not set'} to {opportunity.end_date || 'End not set'}</p>
+ </div>
+ {(opportunity.requirements || []).length > 0 && (
+ <div>
+ <p className="font-semibold text-gray-900">Requirements</p>
+ <p>{opportunity.requirements.slice(0, 3).join(', ')}</p>
+ </div>
+ )}
+ {(opportunity.deliverables || []).length > 0 && (
+ <div>
+ <p className="font-semibold text-gray-900">Deliverables</p>
+ <p>{(opportunity.deliverables ?? []).slice(0, 3).join(', ')}</p>
+ </div>
+ )}
+ </div>
+ )}
 
  {applicants.length > 0 && (
  <div className="mt-4 border-t border-gray-100 pt-4">
  <h4 className="text-sm font-semibold text-gray-900 mb-3">Applicants</h4>
  <div className="space-y-3">
- {applicants.map((application) => (
- <div key={application.id} className="flex flex-col gap-3 rounded-lg bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
- <div>
+ {applicants.map((application) => {
+ const submission = getApplicationSubmission(application.id);
+ const review = parseCareerGrowthReview(application.recruiter_notes);
+ const progress = application.status === 'completed' ? 100 : submission ? 66 : ['accepted', 'assigned', 'in_progress'].includes(application.status) ? 33 : 12;
+
+ return (
+ <div key={application.id} className="rounded-lg bg-slate-50 p-3">
+ <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+ <div className="min-w-0 flex-1">
  <p className="text-sm font-medium text-gray-900">
  {application.candidate_profile?.full_name || application.candidate_profile?.email || 'Candidate'}
  </p>
  <p className="text-xs text-gray-500">
  Applied {new Date(application.created_at).toLocaleDateString()} - Status: {application.status}
  </p>
+ <div className="mt-3 max-w-md">
+ <div className="mb-1 flex justify-between text-[11px] font-medium text-slate-500">
+ <span>Applied</span>
+ <span>Accepted</span>
+ <span>Submitted</span>
  </div>
- <Select
- value={application.status}
- onValueChange={(value) => updateGrowthStatus(application.id, value as CareerGrowthStatus)}
- >
- <SelectTrigger className="w-44 bg-white">
- <SelectValue />
- </SelectTrigger>
- <SelectContent>
- <SelectItem value="applied">Applied</SelectItem>
- <SelectItem value="reviewing">Reviewing</SelectItem>
- <SelectItem value="shortlisted">Shortlisted</SelectItem>
- <SelectItem value="assigned">Assigned</SelectItem>
- <SelectItem value="completed">Completed</SelectItem>
- <SelectItem value="rejected">Rejected</SelectItem>
- </SelectContent>
- </Select>
+ <div className="h-2 overflow-hidden rounded-full bg-white">
+ <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
  </div>
- ))}
+ </div>
+ {submission && (
+ <div className="mt-3 space-y-1 rounded-md border border-blue-100 bg-white p-3 text-xs text-slate-600">
+ <p className="font-semibold text-slate-900">Submitted work</p>
+ {submission.submission_text && <p>{submission.submission_text}</p>}
+ {submission.submission_url && (
+ <a href={submission.submission_url} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+ Open project link
+ </a>
+ )}
+ {submission.file_url && (
+ <button type="button" onClick={() => openSubmissionFile(submission.file_url!)} className="block text-blue-700 underline">
+ Open attached file
+ </button>
+ )}
+ </div>
+ )}
+ {review.score !== undefined && (
+ <p className="mt-2 text-xs font-semibold text-emerald-700">Score: {review.score}% - Certificate issued</p>
+ )}
+ </div>
+ <div className="flex flex-col gap-2 sm:min-w-[220px]">
+ {application.status === 'applied' && (
+ <Button size="sm" onClick={() => acceptGrowthApplication(application.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ Accept Application
+ </Button>
+ )}
+ {submission && application.status !== 'completed' && (
+ <div className="flex gap-2">
+ <Input
+ type="number"
+ min="0"
+ max="100"
+ placeholder="Score"
+ value={scoreByApplicationId[application.id] || ''}
+ onChange={(event) => setScoreByApplicationId((current) => ({ ...current, [application.id]: event.target.value }))}
+ className="bg-white"
+ />
+ <Button size="sm" onClick={() => reviewGrowthApplication(application.id)}>
+ Issue
+ </Button>
+ </div>
+ )}
+ {application.status !== 'completed' && (
+ <Button size="sm" variant="outline" onClick={() => updateGrowthStatus(application.id, 'rejected')}>
+ Reject
+ </Button>
+ )}
+ </div>
+ </div>
+ </div>
+ );
+ })}
  </div>
  </div>
  )}
@@ -795,6 +976,7 @@ export function ProjectManagement({
  </div>
  );
 }
+
 
 
 

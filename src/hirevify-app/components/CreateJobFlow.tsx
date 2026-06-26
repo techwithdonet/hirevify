@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -92,25 +92,25 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
  onLinkGenerated(generatedLink);
  };
 
- return (
- <div className="min-h-screen bg-background">
- <header className="border-b border-border bg-card">
- <div className="max-w-4xl mx-auto px-6 py-4">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
- <ArrowLeft className="w-5 h-5" />
+return (
+ <div className="premium-page">
+ <header className="premium-header">
+ <div className="premium-header-inner">
+ <Button variant="ghost" onClick={onBack}>
+ <ArrowLeft className="w-4 h-4 mr-2" />
+ Back to Dashboard
  </Button>
- <div className="flex items-center space-x-3">
+ <div className="flex items-center gap-3">
  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
- <Briefcase className="w-5 h-5 text-primary-foreground" />
+ <Briefcase className="w-5 h-5 text-white" />
  </div>
- <h1 className="text-xl text-foreground">HireVify</h1>
- </div>
+ <h1 className="text-xl font-semibold text-slate-950">HireVify</h1>
  </div>
  </div>
  </header>
 
- <main className="max-w-2xl mx-auto px-6 py-8">
+ <main className="premium-content">
+ <div className="max-w-2xl mx-auto">
  {step === 'job-details' && (
  <Card className="border border-border">
  <CardHeader>
@@ -237,7 +237,8 @@ export function CreateJobFlow({ onBack, onLinkGenerated, existingJob }: CreateJo
  </CardContent>
  </Card>
  )}
- </main>
  </div>
+ </main>
+  </div>
  );
 }

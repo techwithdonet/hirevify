@@ -1,4 +1,5 @@
-﻿/**
+﻿import { ArrowLeft } from 'lucide-react';
+/**
  * Production-Ready ATS Scanner
  * 
  * Focus: ACTUAL FUNCTIONALITY over error suppression
@@ -495,25 +496,22 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
  );
  }
 
- return (
+return (
  <div className={dashboardTheme.page}>
- <div className="bg-white border-b border-gray-200">
- <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
- <div className="flex items-center justify-between h-16">
- <div className="flex items-center space-x-4">
+ <header className="premium-header">
+ <div className="premium-header-inner">
  <Button variant="ghost" size="sm" onClick={onBack}>
+ <ArrowLeft className="w-4 h-4 mr-2" />
  Back to Dashboard
  </Button>
  <div>
- <h1 className="text-xl font-semibold flex items-center">
- <FileText className="w-6 h-6 mr-2 text-primary" />
+ <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
+ <FileText className="w-6 h-6 text-primary" />
  Production ATS Scanner
  <Badge className="ml-2 bg-green-100 text-green-800">Live Results</Badge>
  </h1>
- <p className="text-sm text-gray-500">Real data extraction and accurate scoring</p>
+ <p className="text-sm text-slate-500">Real data extraction and accurate scoring</p>
  </div>
- </div>
- 
  <div className="flex items-center space-x-3">
  <label htmlFor="resume-upload">
  <Button asChild className="cursor-pointer" disabled={isProcessing}>
@@ -533,10 +531,10 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
  />
  </div>
  </div>
- </div>
- </div>
+ </header>
 
- <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+ <main className="premium-content">
+ <div className="max-w-7xl mx-auto">
  {/* Statistics */}
  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
  <Card>
@@ -674,15 +672,17 @@ export function ProductionATSScanner({ onBack, jobDescription }: ProductionATSSc
  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
  <h3 className="text-lg font-medium mb-4">Analyzing Resume</h3>
  <Progress value={progress} className="mb-2" />
- <p className="text-sm text-gray-500">Extracting data and calculating scores...</p>
- </CardContent>
- </Card>
- </div>
- )}
- </div>
- </div>
- );
+<p className="text-sm text-gray-500">Extracting data and calculating scores...</p>
+  </CardContent>
+  </Card>
+  </div>
+  )}
+  </div>
+  </main>
+  </div>
+  );
 }
+
 
 
 
