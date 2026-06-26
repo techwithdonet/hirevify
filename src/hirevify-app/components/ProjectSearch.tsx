@@ -839,7 +839,7 @@ const { error: appError } = await supabase.from('applications').insert({
  <div className="space-y-6">
  {/* Project Header */}
  <div className="flex items-start justify-between">
- <div className="flex-1">
+ <div className="mx-auto w-full max-w-5xl">
  <div className="flex items-center gap-2 mb-2">
  <Badge 
  variant="outline" 
@@ -1040,7 +1040,7 @@ const { error: appError } = await supabase.from('applications').insert({
   <div className="relative overflow-hidden bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] text-white">
     <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
     <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-sky-300/20 blur-3xl" />
-    <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
+    <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
       <button
         onClick={onBack}
         className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20"
@@ -1049,13 +1049,13 @@ const { error: appError } = await supabase.from('applications').insert({
         Back to dashboard
       </button>
 
-      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
             <Search className="h-3.5 w-3.5" />
             Browse Jobs
           </div>
-          <h1 className="text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+          <h1 className="text-2xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
             All Jobs
           </h1>
           <p className="mt-2 text-sm text-emerald-50/90">
@@ -1071,10 +1071,15 @@ const { error: appError } = await supabase.from('applications').insert({
     </div>
   </div>
 
-  <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Main content - Jobs List */}
-      <div className="space-y-6 lg:col-span-2">
+  <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      {/* Left sidebar: search, filters and stats */}
+      <aside className="order-1 space-y-5 lg:sticky lg:top-6 lg:self-start">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-base font-bold text-slate-950">Find the right job</h2>
+          <p className="mt-1 text-sm text-slate-500">Search and filter roles by type, location and skills.</p>
+        </div>
+        <div className="space-y-4">
 
         {/* Search Bar */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -1122,7 +1127,7 @@ const { error: appError } = await supabase.from('applications').insert({
  {/* Mobile Filter Sheet */}
  <Sheet>
  <SheetTrigger asChild>
- <Button variant="outline" className="w-full lg:hidden">
+ <Button variant="outline" className="hidden">
  <Filter className="w-4 h-4 mr-2" />
  Filters
  </Button>
@@ -1142,7 +1147,7 @@ const { error: appError } = await supabase.from('applications').insert({
   </Sheet>
 
   {/* Desktop Filters */}
-  <div className="hidden lg:block">
+  <div className="block">
   <FilterContent 
   filters={filters}
   updateFilter={updateFilter}
@@ -1150,9 +1155,7 @@ const { error: appError } = await supabase.from('applications').insert({
   />
   </div>
       </div>
-
-      {/* Sidebar */}
-      <aside className="space-y-4">
+        <div className="space-y-4">
         {/* AI Recommendations */}
         {showRecommendations && recommendations.length > 0 && (
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1205,7 +1208,7 @@ const { error: appError } = await supabase.from('applications').insert({
         {/* Mobile Filter Button */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="w-full lg:hidden bg-white border-slate-200">
+            <Button variant="outline" className="hidden">
               <Filter className="w-4 h-4 mr-2" />
               Filters
             </Button>
@@ -1223,13 +1226,12 @@ const { error: appError } = await supabase.from('applications').insert({
             </div>
           </SheetContent>
         </Sheet>
+        </div>
       </aside>
-    </div>
-
-        {/* Jobs List */}
-        <div className="space-y-4">
+      {/* Job results */}
+      <section className="order-2 min-w-0 space-y-4 lg:order-2">
           {isLoading? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="animate-pulse space-y-4">
@@ -1278,15 +1280,15 @@ const { error: appError } = await supabase.from('applications').insert({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                 {filteredProjects.map((project) => {
                   const matchScore = calculateMatchScore(project);
                   return (
-                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                    <div key={project.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6 cursor-pointer">
                       <div className="space-y-4">
                         {/* Project Header */}
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
+                          <div className="mx-auto w-full max-w-5xl">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge 
                                 variant="outline" 
@@ -1426,91 +1428,19 @@ const { error: appError } = await supabase.from('applications').insert({
                   </div>
                 </>
               )}
-            </div>
-
-      {/* Project Details Dialog */}
-      <Dialog open={showProjectDetailsDialog} onOpenChange={setShowProjectDetailsDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedProject?.title}</DialogTitle>
-            <DialogDescription>
-              Job details and requirements for {selectedProject?.company}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedProject && (
-            <>
-              <ProjectDetails
-                project={selectedProject}
-                matchScore={calculateMatchScore(selectedProject)}
-                onRecordVideo={() => {
-                  setShowProjectDetailsDialog(false);
-                  handleRecordVideo(selectedProject);
-                }}
-              />
-
-              {['available', 'published', 'open'].includes(String(selectedProject?.status || 'available')) &&!appliedProjectIds.has(selectedProject.id)? (
-                <Button 
-                  size="sm"
-                  onClick={() => {
-                    openApplicationDialog(selectedProject);
-                  }}
-                  className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
-                >
-                  {selectedProject?.status === 'applied'? 'Applied': 'Apply Now'}
-                </Button>
-              ) : (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Applied
-                </Badge>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Application Dialog */}
-      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Apply to {selectedProject?.title}</DialogTitle>
-            <DialogDescription>
-              Submit your application for this job. Include a cover letter explaining why you're the perfect fit.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Cover Letter</label>
-              <Textarea
-                placeholder="Tell us why you're perfect for this job..."
-                value={coverLetter}
-                onChange={(e) => setCoverLetter(e.target.value)}
-                rows={6}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowApplicationDialog(false)}
-                disabled={isApplying}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={applyToProject}
-                disabled={isApplying ||!coverLetter.trim()}
-                className="bg-emerald-600 text-white hover:bg-emerald-700"
-              >
-                {isApplying? 'Submitting...': 'Submit Application'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      </section>
+    </div>
   </main>
   </div>
   );
 }
+
+
+
+
+
+
+
 
 
 
