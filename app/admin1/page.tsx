@@ -276,7 +276,7 @@ function AdminPanel() {
         return { rows: [] as Row[], warning: `${table}: ${tableError.message}` };
       }
 
-      return { rows: (rows || []) as Row[], warning: "" };
+      return { rows: (rows || []) as unknown as Row[], warning: "" };
     },
     [supabase],
   );
@@ -1021,5 +1021,6 @@ function PreviewCard({ icon: Icon, title, detail, onClick }: { icon: typeof Brie
 export default function Admin1Page() {
   return <AdminPanel />;
 }
+
 
 
