@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -98,8 +98,101 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
  };
 
  const handleSubscribe = async (plan: SubscriptionPlan) => {
-  alert(`${plan.name} plan payments are coming soon. For now, please contact admin to activate Pro.`);
-};
+ if (!user ||!accessToken) {
+ toast.error('Please sign in to subscribe');
+ return;
+ }
+
+ if (plan.price === 0) {
+ toast.info('You are already on the free plan');
+ return;
+ }
+
+ if (currentSubscription?.planId === plan.id) {
+ toast.info('You are already subscribed to this plan');
+ return;
+ }
+
+ try {
+ setProcessingPayment(true);
+ setSelectedPlan(plan.id);
+
+ // Create Razorpay order
+ const order = await PaymentsAPI.createSubscriptionOrder(plan.id, accessToken);
+
+ // Show development mode info if applicable
+ if (developmentMode) {
+ toast.success('Development Mode: Subscription activated!', {
+ description: 'This is a test subscription. Real payments require Razorpay setup.'
+ });
+ 
+ // In development mode, simulate immediate success
+ setTimeout(async () => {
+ try {
+ const mockPaymentResponse = {
+ razorpay_payment_id: `pay_mock_${Date.now()}`,
+ razorpay_order_id: order.id,
+ razorpay_signature: `mock_signature_${Date.now()}`
+ };
+
+ const subscription = await PaymentsAPI.verifyPaymentAndActivateSubscription(
+ mockPaymentResponse,
+ plan.id,
+ accessToken
+ );
+
+ setCurrentSubscription(subscription);
+ toast.success('Development subscription activated!');
+ setTimeout(() => onManageSubscription(), 1500);
+ } catch (error) {
+ toast.error('Failed to activate development subscription');
+ }
+ }, 1000);
+ return;
+ }
+
+ // Production Razorpay checkout
+ await PaymentsAPI.initiateCheckout(
+ order,
+ {
+ name: user.name,
+ email: user.email,
+ contact: (user as any).phone || ""
+ },
+ async (response: RazorpayPaymentResponse) => {
+ try {
+ const subscription = await PaymentsAPI.verifyPaymentAndActivateSubscription(
+ response,
+ plan.id,
+ accessToken
+ );
+
+ setCurrentSubscription(subscription);
+ toast.success('Subscription activated successfully!', {
+ description: `Welcome to ${plan.name}! Your subscription is now active.`
+ });
+
+ setTimeout(() => onManageSubscription(), 2000);
+
+ } catch (error) {
+ console.error('Payment verification failed:', error);
+ toast.error('Payment completed but verification failed. Please contact support.');
+ }
+ },
+ (error: any) => {
+ console.error('Payment failed:', error);
+ toast.error('Payment failed. Please try again.');
+ }
+ );
+
+ } catch (error) {
+ console.error('Subscription error:', error);
+ toast.error(error instanceof Error? error.message: 'Failed to start subscription process');
+ } finally {
+ setProcessingPayment(false);
+ setSelectedPlan(null);
+ }
+ };
 
  // Function to get the current price based on billing period
  const getCurrentPrice = (plan: SubscriptionPlan) => {
@@ -563,8 +656,6 @@ return (
  </div>
  );
 }
-
-
 
 
 

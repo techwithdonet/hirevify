@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 export function PremiumTestingPanel() {
  const { user } = useAuth();
  const { getSubscription, isTestAccount } = usePremiumAccess();
- const [selectedTier, setSelectedTier] = useState<'free' | 'pro' | 'enterprise'>('free');
+ const [selectedTier, setSelectedTier] = useState<'free' | 'pro'>('free');
  const [isVisible, setIsVisible] = useState(false);
 
  // Hidden while premium is disabled app-wide (see PREMIUM_ENABLED in utils/premium.ts)
@@ -134,7 +134,6 @@ export function PremiumTestingPanel() {
  <SelectContent>
  <SelectItem value="free">Free Tier</SelectItem>
  <SelectItem value="pro">Pro Tier</SelectItem>
- <SelectItem value="enterprise">Enterprise Tier</SelectItem>
  </SelectContent>
  </Select>
  </div>

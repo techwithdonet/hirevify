@@ -192,8 +192,8 @@ export function RecruiterDashboard({
         if (growthAppData.data) {
           setGrowthApplicants(growthAppData.data);
         }
-        if (growthAppData.error && Object.keys(growthAppData.error).length > 0) {
-          console.error('Error loading career growth applications:', growthAppData.error);
+        if (growthAppData.error?.message) {
+          console.warn('Career growth applications were not loaded:', growthAppData.error.message);
         }
 
         // Load stats

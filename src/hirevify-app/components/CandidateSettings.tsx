@@ -10,6 +10,8 @@ import { Separator } from './ui/separator';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { getPasswordResetRedirectUrl } from '@/src/lib/appUrl';
+import { BillingSettingsCard } from './BillingSettingsCard';
 
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 
@@ -116,7 +118,9 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
   const sendPasswordReset = async () => {
     if (!user?.email) return;
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: getPasswordResetRedirectUrl(),
+    });
     if (error) {
       toast.error(error.message);
       return;
@@ -161,9 +165,10 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
 
       <main className="premium-content">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6 grid w-full grid-cols-3">
+          <TabsList className="mb-6 grid w-full grid-cols-4">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
           </TabsList>
 
@@ -246,6 +251,10 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
                 <Button onClick={handleSaveNotifications}>Save notification settings</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="billing" className="space-y-6">
+            <BillingSettingsCard profileId={profileId} userEmail={user?.email} />
           </TabsContent>
 
           <TabsContent value="privacy" className="space-y-6">

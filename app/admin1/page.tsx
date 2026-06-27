@@ -1,156 +1,978 @@
-﻿"use client";
+"use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/src/hirevify-app/components/AuthProvider";
 import { Button } from "@/src/hirevify-app/components/ui/button";
 import { Toaster } from "@/src/hirevify-app/components/ui/sonner";
+import { createSupabaseBrowserClient } from "@/src/lib/supabase";
 import {
+  Activity,
   ArrowRight,
+  BarChart3,
   BriefcaseBusiness,
+  CheckCircle2,
+  ClipboardCheck,
   ClipboardList,
+  Copy,
+  Database,
   GraduationCap,
+  HeartPulse,
+  Home,
   LayoutDashboard,
+  Loader2,
+  RefreshCw,
+  Search,
   ShieldCheck,
+  Star,
+  Trophy,
+  Users,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
+type SectionId = "dashboard" | "top" | "reports" | "plans" | "assessments" | "health" | "preview";
+type Row = Record<string, unknown>;
+type HealthStatus = "healthy" | "warning" | "error";
+
+type AdminData = {
+  profiles: Row[];
+  candidateProfiles: Row[];
+  recruiterProfiles: Row[];
+  jobs: Row[];
+  applications: Row[];
+  assessments: Row[];
+  subscriptions: Row[];
+  warnings: string[];
+};
+
+type HealthCheck = {
+  name: string;
+  status: HealthStatus;
+  detail: string;
+};
+
+type TableHealth = HealthCheck & {
+  rowCount: number | null;
+};
+
+type StorageHealth = HealthCheck & {
+  bucket: string;
+};
+
+type HealthResponse = {
+  checkedAt: string;
+  coreServices: {
+    database: HealthCheck;
+    auth: HealthCheck;
+    storage: HealthCheck;
+    ai: HealthCheck;
+  };
+  tables: TableHealth[];
+  storageBuckets: StorageHealth[];
+  environment: {
+    nextRuntime: string;
+    supabaseConfigured: boolean;
+    aiProvider: string;
+  };
+  errors: string[];
+};
+
+type RecruiterPerformance = {
+  id: string;
+  name: string;
+  company: string;
+  jobsPosted: number;
+  applicationsReceived: number;
+  hiredCandidates: number;
+  score: number;
+};
+
+type CandidatePerformance = {
+  id: string;
+  name: string;
+  experience: string;
+  skills: string;
+  applicationsCount: number;
+  averageScore: number;
+  highestScore: number;
+  bestStatus: string;
+};
+
+type JobPerformance = {
+  id: string;
+  title: string;
+  company: string;
+  recruiterId: string;
+  applicationsCount: number;
+  averageScore: number;
+  above70: number;
+  hiredCount: number;
+  hasProject: boolean;
+  conversionRate: number;
+};
+
+const sections: { id: SectionId; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "top", label: "Top Performers", icon: Trophy },
+  { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "plans", label: "Pro Plans", icon: Star },
+  { id: "assessments", label: "Assessments", icon: ClipboardList },
+  { id: "health", label: "System Health", icon: HeartPulse },
+  { id: "preview", label: "Quick Preview", icon: ShieldCheck },
+];
+
+const initialData: AdminData = {
+  profiles: [],
+  candidateProfiles: [],
+  recruiterProfiles: [],
+  jobs: [],
+  applications: [],
+  assessments: [],
+  subscriptions: [],
+  warnings: [],
+};
+
+function text(row: Row | undefined, keys: string[], fallback = "Unknown") {
+  if (!row) return fallback;
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number") return String(value);
+  }
+  return fallback;
+}
+
+function bool(row: Row, key: string) {
+  return row[key] === true || row[key] === "true";
+}
+
+function num(row: Row | undefined, keys: string[], fallback = 0) {
+  if (!row) return fallback;
+  for (const key of keys) {
+    const value = row[key];
+    const parsed = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function idOf(row: Row | undefined) {
+  return text(row, ["id", "profile_id", "auth_user_id", "user_id"], "");
+}
+
+function listText(value: unknown) {
+  if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean).slice(0, 5).join(", ");
+  if (typeof value === "string" && value.trim()) return value;
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>)
+      .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .map((item) => String(item))
+      .filter(Boolean)
+      .slice(0, 5)
+      .join(", ");
+  }
+  return "Not listed";
+}
+
+function pct(value: number) {
+  return `${Math.round(value)}%`;
+}
+
+function average(values: number[]) {
+  const valid = values.filter((value) => Number.isFinite(value));
+  if (valid.length === 0) return 0;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+}
+
+function normalizeStatus(value: unknown) {
+  return String(value || "unknown").toLowerCase();
+}
+
+function statusRank(status: string) {
+  const normalized = normalizeStatus(status);
+  if (normalized === "hired") return 5;
+  if (normalized === "shortlisted") return 4;
+  if (normalized === "interview" || normalized === "screening") return 3;
+  if (normalized === "reviewing") return 2;
+  if (normalized === "applied") return 1;
+  return 0;
+}
+
+function statusBadgeClass(status: HealthStatus) {
+  if (status === "healthy") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "warning") return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-red-200 bg-red-50 text-red-700";
+}
+
+function isPermissionWarning(warning: string) {
+  return /permission denied|row-level security|rls/i.test(warning);
+}
+
 function AdminPanel() {
   const { signIn, setUser } = useAuth();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
+  const [data, setData] = useState<AdminData>(initialData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [report, setReport] = useState("platform");
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [planUpdatingId, setPlanUpdatingId] = useState<string | null>(null);
+
+  const fetchRows = useCallback(
+    async (table: string, orderColumn?: string) => {
+      let request = supabase.from(table).select("*").limit(500);
+      if (orderColumn) request = request.order(orderColumn, { ascending: false });
+      const { data: rows, error: tableError } = await request;
+      if (tableError) {
+        if (isPermissionWarning(tableError.message || "")) {
+          return { rows: [] as Row[], warning: "" };
+        }
+        return { rows: [] as Row[], warning: `${table}: ${tableError.message}` };
+      }
+      return { rows: (rows || []) as Row[], warning: "" };
+    },
+    [supabase],
+  );
+
+  const loadAdminData = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [
+        profiles,
+        candidateProfiles,
+        recruiterProfiles,
+        jobs,
+        applications,
+        subscriptions,
+        skillAssessments,
+        assessments,
+      ] = await Promise.all([
+        fetchRows("profiles", "created_at"),
+        fetchRows("candidate_profiles", "created_at"),
+        fetchRows("recruiter_profiles", "created_at"),
+        fetchRows("jobs", "created_at"),
+        fetchRows("applications", "created_at"),
+        fetchRows("subscriptions", "created_at"),
+        fetchRows("skills_assessments", "created_at"),
+        fetchRows("assessments", "created_at"),
+      ]);
+
+      setData({
+        profiles: profiles.rows,
+        candidateProfiles: candidateProfiles.rows,
+        recruiterProfiles: recruiterProfiles.rows,
+        jobs: jobs.rows,
+        applications: applications.rows,
+        subscriptions: subscriptions.rows,
+        assessments: skillAssessments.rows.length > 0 ? skillAssessments.rows : assessments.rows,
+        warnings: [
+          profiles.warning,
+          activeSection === "plans" ? "" : candidateProfiles.warning,
+          recruiterProfiles.warning,
+          jobs.warning,
+          applications.warning,
+          activeSection === "plans" ? "" : subscriptions.warning,
+          skillAssessments.rows.length > 0 ? "" : assessments.warning,
+        ].filter(Boolean),
+      });
+    } catch (loadError) {
+      console.error("Failed to load admin analytics:", loadError);
+      setError(loadError instanceof Error ? loadError.message : "Failed to load admin analytics.");
+    } finally {
+      setLoading(false);
+    }
+  }, [activeSection, fetchRows]);
+
+  useEffect(() => {
+    void loadAdminData();
+  }, [loadAdminData]);
+
+  const recruiterById = useMemo(() => {
+    const map = new Map<string, Row>();
+    [...data.recruiterProfiles, ...data.profiles].forEach((row) => {
+      const id = idOf(row);
+      if (id) map.set(id, row);
+    });
+    return map;
+  }, [data.profiles, data.recruiterProfiles]);
+
+  const candidateById = useMemo(() => {
+    const map = new Map<string, Row>();
+    [...data.candidateProfiles, ...data.profiles].forEach((row) => {
+      const id = idOf(row);
+      if (id) map.set(id, row);
+    });
+    return map;
+  }, [data.candidateProfiles, data.profiles]);
+
+  const analytics = useMemo(() => {
+    const activeJobs = data.jobs.filter((job) => normalizeStatus(job.status) === "published").length;
+    const hired = data.applications.filter((application) => normalizeStatus(application.status) === "hired").length;
+    const scores = data.applications.map((application) => num(application, ["match_score", "ats_score", "score"], Number.NaN));
+    const totalApplications = data.applications.length;
+    const averageScore = average(scores);
+    const above70 = data.applications.filter((application) => num(application, ["match_score", "ats_score", "score"]) >= 70).length;
+    const projectJobs = data.jobs.filter((job) => bool(job, "has_project")).length;
+    const conversionRate = totalApplications > 0 ? (hired / totalApplications) * 100 : 0;
+
+    return {
+      totalRecruiters: data.recruiterProfiles.length || data.profiles.filter((profile) => text(profile, ["role", "user_type"], "").includes("recruiter")).length,
+      totalCandidates: data.candidateProfiles.length || data.profiles.filter((profile) => text(profile, ["role", "user_type"], "").includes("candidate")).length,
+      activeJobs,
+      totalApplications,
+      averageScore,
+      above70,
+      projectJobs,
+      hired,
+      conversionRate,
+    };
+  }, [data]);
+
+  const topRecruiters = useMemo<RecruiterPerformance[]>(() => {
+    const recruiterIds = new Set<string>();
+    data.recruiterProfiles.forEach((row) => recruiterIds.add(idOf(row)));
+    data.jobs.forEach((job) => recruiterIds.add(text(job, ["recruiter_id", "profile_id"], "")));
+
+    return [...recruiterIds]
+      .filter(Boolean)
+      .map((id) => {
+        const row = recruiterById.get(id);
+        const jobs = data.jobs.filter((job) => text(job, ["recruiter_id", "profile_id"], "") === id);
+        const jobIds = new Set(jobs.map((job) => idOf(job)));
+        const applications = data.applications.filter((application) => jobIds.has(text(application, ["job_id", "project_id"], "")));
+        const hired = applications.filter((application) => normalizeStatus(application.status) === "hired").length;
+        const score = jobs.length * 12 + applications.length * 3 + hired * 20;
+        return {
+          id,
+          name: text(row, ["full_name", "name", "email"], "Recruiter"),
+          company: text(row, ["company_name", "company"], "Company not set"),
+          jobsPosted: jobs.length,
+          applicationsReceived: applications.length,
+          hiredCandidates: hired,
+          score,
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+  }, [data.applications, data.jobs, data.recruiterProfiles, recruiterById]);
+
+  const topCandidates = useMemo<CandidatePerformance[]>(() => {
+    const candidateIds = new Set<string>();
+    data.candidateProfiles.forEach((row) => candidateIds.add(idOf(row)));
+    data.applications.forEach((application) => candidateIds.add(text(application, ["candidate_id", "applicant_id", "profile_id"], "")));
+
+    return [...candidateIds]
+      .filter(Boolean)
+      .map((id) => {
+        const row = candidateById.get(id);
+        const applications = data.applications.filter((application) => text(application, ["candidate_id", "applicant_id", "profile_id"], "") === id);
+        const scores = applications.map((application) => num(application, ["match_score", "ats_score", "score"], Number.NaN));
+        const bestStatus = applications
+          .map((application) => normalizeStatus(application.status))
+          .sort((a, b) => statusRank(b) - statusRank(a))[0] || "none";
+
+        return {
+          id,
+          name: text(row, ["full_name", "name", "email"], "Candidate"),
+          experience: text(row, ["experience_level", "seniority", "experience"], "Not set"),
+          skills: listText(row?.skills || row?.technical_skills),
+          applicationsCount: applications.length,
+          averageScore: average(scores),
+          highestScore: Math.max(0, ...scores.filter(Number.isFinite)),
+          bestStatus,
+        };
+      })
+      .sort((a, b) => b.averageScore + b.highestScore + b.applicationsCount - (a.averageScore + a.highestScore + a.applicationsCount))
+      .slice(0, 10);
+  }, [candidateById, data.applications, data.candidateProfiles]);
+
+  const topJobs = useMemo<JobPerformance[]>(() => {
+    return data.jobs
+      .map((job) => {
+        const jobId = idOf(job);
+        const applications = data.applications.filter((application) => text(application, ["job_id", "project_id"], "") === jobId);
+        const scores = applications.map((application) => num(application, ["match_score", "ats_score", "score"], Number.NaN));
+        const hiredCount = applications.filter((application) => normalizeStatus(application.status) === "hired").length;
+        const recruiterId = text(job, ["recruiter_id", "profile_id"], "");
+        return {
+          id: jobId,
+          title: text(job, ["title", "job_title", "project_title"], "Untitled job"),
+          company: text(job, ["company_name", "company"], text(recruiterById.get(recruiterId), ["company_name", "company"], "Company")),
+          recruiterId,
+          applicationsCount: applications.length,
+          averageScore: average(scores),
+          above70: applications.filter((application) => num(application, ["match_score", "ats_score", "score"]) >= 70).length,
+          hiredCount,
+          hasProject: bool(job, "has_project"),
+          conversionRate: applications.length > 0 ? (hiredCount / applications.length) * 100 : 0,
+        };
+      })
+      .sort((a, b) => b.applicationsCount + b.averageScore + b.hiredCount * 5 - (a.applicationsCount + a.averageScore + a.hiredCount * 5))
+      .slice(0, 10);
+  }, [data.applications, data.jobs, recruiterById]);
+
+  const filteredJobs = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return topJobs;
+    return topJobs.filter((job) => `${job.title} ${job.company}`.toLowerCase().includes(term));
+  }, [query, topJobs]);
+
+  const planRows = useMemo(() => {
+    const subscriptionByUserId = new Map(data.subscriptions.map((subscription) => [text(subscription, ["user_id"], ""), subscription]));
+
+    return data.profiles
+      .map((profile) => {
+        const profileId = idOf(profile);
+        const subscription = subscriptionByUserId.get(profileId);
+
+        return {
+          id: profileId,
+          name: text(profile, ["full_name", "name", "email"], "User"),
+          email: text(profile, ["email"], "No email"),
+          role: text(profile, ["role", "user_type"], "unknown"),
+          tier: text(subscription, ["tier"], "free"),
+          status: text(subscription, ["status"], "active"),
+          expiresAt: text(subscription, ["expires_at"], ""),
+        };
+      })
+      .filter((profile) => profile.id);
+  }, [data.profiles, data.subscriptions]);
 
   const openDashboard = (type: "recruiter" | "candidate") => {
     localStorage.setItem("hirevify_admin_auto_open", type);
     window.location.href = "/";
   };
 
-  const handleRecruiter = async () => {
-    const result = await signIn("recruiter@hirevify.com", "TestPassword123!");
+  const handlePreviewLogin = async (type: "recruiter" | "candidate") => {
+    const email = type === "recruiter" ? "recruiter@hirevify.com" : "candidate@hirevify.com";
+    const result = await signIn(email, "TestPassword123!");
 
     if (result.success && result.user) {
-      const recruiterUser = {
+      const previewUser = {
         ...result.user,
-        email: "recruiter@hirevify.com",
-        userType: "recruiter" as const,
+        email,
+        userType: type,
         profileComplete: true,
       };
 
-      setUser(recruiterUser);
-      localStorage.setItem("hirevify_user", JSON.stringify(recruiterUser));
-      localStorage.setItem("hirevify_access_token", recruiterUser.accessToken || "");
-      openDashboard("recruiter");
+      setUser(previewUser);
+      localStorage.setItem("hirevify_user", JSON.stringify(previewUser));
+      localStorage.setItem("hirevify_access_token", previewUser.accessToken || "");
+      openDashboard(type);
     } else {
-      toast.error(result.message || "Recruiter login failed");
+      toast.error(result.message || `${type} login failed`);
     }
   };
 
-  const handleCandidate = async () => {
-    const result = await signIn("candidate@hirevify.com", "TestPassword123!");
-
-    if (result.success && result.user) {
-      const candidateUser = {
-        ...result.user,
-        email: "candidate@hirevify.com",
-        userType: "candidate" as const,
-        profileComplete: true,
-      };
-
-      setUser(candidateUser);
-      localStorage.setItem("hirevify_user", JSON.stringify(candidateUser));
-      localStorage.setItem("hirevify_access_token", candidateUser.accessToken || "");
-      openDashboard("candidate");
-    } else {
-      toast.error(result.message || "Candidate login failed");
+  const runHealthCheck = async () => {
+    setHealthLoading(true);
+    try {
+      const response = await fetch("/api/admin/health", { cache: "no-store" });
+      const result = (await response.json()) as HealthResponse;
+      setHealth(result);
+      if (!response.ok) toast.error("Health check completed with errors");
+    } catch (healthError) {
+      console.error("Admin health check failed:", healthError);
+      toast.error("Health check failed");
+    } finally {
+      setHealthLoading(false);
     }
   };
+
+  const copyErrorReport = async () => {
+    if (!health) {
+      toast.error("Run a health check first");
+      return;
+    }
+    const lines = [
+      `HireVify Admin Health Report`,
+      `Last checked: ${health.checkedAt}`,
+      `Database: ${health.coreServices.database.status} - ${health.coreServices.database.detail}`,
+      `Auth: ${health.coreServices.auth.status} - ${health.coreServices.auth.detail}`,
+      `Storage: ${health.coreServices.storage.status} - ${health.coreServices.storage.detail}`,
+      `AI: ${health.coreServices.ai.status} - ${health.coreServices.ai.detail}`,
+      ...health.tables.map((table) => `${table.name}: ${table.status}${table.rowCount !== null ? ` (${table.rowCount} rows)` : ""} - ${table.detail}`),
+      ...health.storageBuckets.map((bucket) => `${bucket.bucket}: ${bucket.status} - ${bucket.detail}`),
+      ...health.errors.map((item) => `Error: ${item}`),
+    ];
+    await navigator.clipboard.writeText(lines.join("\n"));
+    toast.success("Error report copied");
+  };
+
+  const updateUserPlan = async (profileId: string, tier: "free" | "pro") => {
+    setPlanUpdatingId(profileId);
+    try {
+      const expiresAt = tier === "free" ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const { error: planError } = await supabase.from("subscriptions").upsert(
+        {
+          user_id: profileId,
+          tier,
+          status: "active",
+          expires_at: expiresAt,
+          auto_renew: tier === "pro",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+
+      if (planError) {
+        throw planError;
+      }
+
+      toast.success(tier === "free" ? "User moved to Free" : "User upgraded to Pro");
+      await loadAdminData();
+    } catch (updateError) {
+      console.error("Admin subscription update failed:", updateError);
+      toast.error(updateError instanceof Error ? updateError.message : "Plan update failed. Check subscriptions RLS policies.");
+    } finally {
+      setPlanUpdatingId(null);
+    }
+  };
+
+  const kpis = [
+    { label: "Total Recruiters", value: analytics.totalRecruiters, icon: BriefcaseBusiness, accent: "text-emerald-700", hint: "Recruiter profiles" },
+    { label: "Total Candidates", value: analytics.totalCandidates, icon: GraduationCap, accent: "text-blue-700", hint: "Candidate profiles" },
+    { label: "Active Jobs", value: analytics.activeJobs, icon: ClipboardCheck, accent: "text-cyan-700", hint: "Published jobs" },
+    { label: "Total Applications", value: analytics.totalApplications, icon: Users, accent: "text-indigo-700", hint: "All application rows" },
+    { label: "Average ATS Score", value: pct(analytics.averageScore), icon: Star, accent: "text-amber-700", hint: "Mean match score" },
+    { label: "Above 70% Match", value: analytics.above70, icon: Trophy, accent: "text-lime-700", hint: "Strong matches" },
+    { label: "Jobs With Project", value: analytics.projectJobs, icon: BriefcaseBusiness, accent: "text-fuchsia-700", hint: "Project assignments" },
+    { label: "Hired Candidates", value: analytics.hired, icon: CheckCircle2, accent: "text-green-700", hint: "Status hired" },
+    { label: "Conversion Rate", value: pct(analytics.conversionRate), icon: Activity, accent: "text-rose-700", hint: "Hired / applications" },
+  ];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ecfdf5_0%,#f8fafc_38%,#eef2f7_100%)] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-7xl">
-        <section className="mb-8 overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-xl shadow-slate-200/60">
-          <div className="grid gap-0 lg:grid-cols-[1.25fr_0.75fr]">
-            <div className="p-8 sm:p-10">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
-                <ShieldCheck className="h-4 w-4" />
-                Secure admin workspace
-              </div>
-
-              <h1 className="max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                HireVify Admin Panel
-              </h1>
-
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                Manage testing access, skills assessments, and admin tools from one clean workspace.
-              </p>
-
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Button
-                  onClick={handleRecruiter}
-                  className="h-12 rounded-2xl bg-emerald-600 px-5 font-bold text-white shadow-lg shadow-emerald-900/15 hover:bg-emerald-700"
-                >
-                  <BriefcaseBusiness className="mr-2 h-5 w-5" />
-                  Open Recruiter
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={handleCandidate}
-                  className="h-12 rounded-2xl border-slate-200 bg-white px-5 font-bold text-slate-800 hover:bg-slate-50"
-                >
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Open Candidate
-                </Button>
-              </div>
+    <main className="min-h-screen bg-[#f6f8fb] text-slate-950">
+      <div className="mx-auto flex max-w-[1500px] flex-col gap-6 px-4 py-6 lg:flex-row lg:px-8">
+        <aside className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-72">
+          <div className="mb-4 rounded-2xl bg-slate-950 p-5 text-white">
+            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-200">
+              <ShieldCheck className="h-6 w-6" />
             </div>
+            <p className="text-lg font-black">Admin Analytics</p>
+            <p className="mt-1 text-sm text-slate-300">Platform performance and diagnostics.</p>
+          </div>
 
-            <div className="border-t border-emerald-100 bg-gradient-to-br from-emerald-600 to-teal-700 p-8 text-white lg:border-l lg:border-t-0 sm:p-10">
-              <div className="flex h-full flex-col justify-between gap-10">
-                <div>
-                  <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-                    <LayoutDashboard className="h-7 w-7" />
-                  </div>
-                  <h2 className="text-2xl font-black">Admin control center</h2>
-                  <p className="mt-3 text-sm leading-6 text-emerald-50/90">
-                    Use this area only for admin-side testing and content management.
-                  </p>
-                </div>
+          <nav className="grid gap-1">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold transition ${
+                    activeSection === section.id
+                      ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {section.label}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-white/12 p-4 ring-1 ring-white/15">
-                    <p className="text-2xl font-black">2</p>
-                    <p className="text-xs font-semibold text-emerald-50/80">Test logins</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/12 p-4 ring-1 ring-white/15">
-                    <p className="text-2xl font-black">1</p>
-                    <p className="text-xs font-semibold text-emerald-50/80">Manage module</p>
-                  </div>
-                </div>
+        <section className="min-w-0 flex-1 space-y-6">
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-5 p-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-emerald-700">HireVify Control Center</p>
+                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  Analytics, reports, and system health
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                  Real Supabase metrics for platform growth, hiring outcomes, project conversion, and operational diagnostics.
+                </p>
               </div>
+              <Button
+                type="button"
+                onClick={() => void loadAdminData()}
+                variant="outline"
+                className="h-11 rounded-2xl border-slate-200 bg-white font-bold"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Refresh data
+              </Button>
+              <Link
+                href="/"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                <Home className="mr-2 h-4 w-4" />
+                Home
+              </Link>
             </div>
           </div>
+
+          {error && <AlertPanel tone="error" title="Analytics load failed" message={error} />}
+          {data.warnings.length > 0 && <AlertPanel tone="warning" title="Some data sources returned warnings" message={data.warnings.join(" | ")} />}
+
+          {activeSection === "dashboard" && (
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {kpis.map((kpi) => {
+                  const Icon = kpi.icon;
+                  return (
+                    <div key={kpi.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-slate-500">{kpi.label}</p>
+                          <p className="mt-3 text-3xl font-black text-slate-950">{kpi.value}</p>
+                          <p className="mt-1 text-xs font-semibold text-slate-400">{kpi.hint}</p>
+                        </div>
+                        <div className={`rounded-2xl bg-slate-50 p-3 ${kpi.accent}`}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+                <SummaryCard title="Hiring Funnel" value={`${analytics.hired}/${analytics.totalApplications}`} detail={`${pct(analytics.conversionRate)} conversion rate`} />
+                <SummaryCard title="Project Coverage" value={analytics.projectJobs} detail="Jobs with attached project work" />
+                <SummaryCard title="Match Quality" value={pct(analytics.averageScore)} detail={`${analytics.above70} candidates at or above 70%`} />
+              </div>
+            </div>
+          )}
+
+          {activeSection === "top" && (
+            <div className="grid gap-6 xl:grid-cols-2">
+              <DataPanel title="Top Recruiters" empty="No recruiter activity found.">
+                <SimpleTable
+                  headers={["Recruiter", "Jobs", "Applications", "Hired", "Score"]}
+                  rows={topRecruiters.map((item) => [item.company || item.name, item.jobsPosted, item.applicationsReceived, item.hiredCandidates, item.score])}
+                />
+              </DataPanel>
+              <DataPanel title="Top Candidates" empty="No candidate activity found.">
+                <SimpleTable
+                  headers={["Candidate", "Avg ATS", "High ATS", "Apps", "Best status"]}
+                  rows={topCandidates.map((item) => [item.name, pct(item.averageScore), pct(item.highestScore), item.applicationsCount, item.bestStatus])}
+                />
+              </DataPanel>
+              <DataPanel title="Top Jobs" empty="No job activity found.">
+                <SimpleTable
+                  headers={["Job", "Applications", "Avg ATS", "Hired"]}
+                  rows={topJobs.map((item) => [item.title, item.applicationsCount, pct(item.averageScore), item.hiredCount])}
+                />
+              </DataPanel>
+              <DataPanel title="Top Project Jobs" empty="No project jobs found.">
+                <SimpleTable
+                  headers={["Project Job", "Applications", "Above 70%", "Hired"]}
+                  rows={topJobs.filter((item) => item.hasProject).map((item) => [item.title, item.applicationsCount, item.above70, item.hiredCount])}
+                />
+              </DataPanel>
+            </div>
+          )}
+
+          {activeSection === "reports" && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+                {[
+                  ["platform", "Platform Performance"],
+                  ["recruiters", "Recruiter Performance"],
+                  ["candidates", "Candidate Performance"],
+                  ["jobs", "Job & Project Conversion"],
+                ].map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setReport(id)}
+                    className={`rounded-2xl px-4 py-2 text-sm font-bold transition ${report === id ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {report === "platform" && (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {kpis.slice(0, 7).map((kpi) => <SummaryCard key={kpi.label} title={kpi.label} value={kpi.value} detail={kpi.hint} />)}
+                </div>
+              )}
+              {report === "recruiters" && (
+                <DataPanel title="Recruiter Performance Report" empty="No recruiter rows.">
+                  <SimpleTable headers={["Recruiter / Company", "Jobs", "Applications", "Hired", "Activity"]} rows={topRecruiters.map((item) => [item.company, item.jobsPosted, item.applicationsReceived, item.hiredCandidates, item.score])} />
+                </DataPanel>
+              )}
+              {report === "candidates" && (
+                <DataPanel title="Candidate Performance Report" empty="No candidate rows.">
+                  <SimpleTable headers={["Candidate", "Experience", "Skills", "Apps", "Avg", "High", "Status"]} rows={topCandidates.map((item) => [item.name, item.experience, item.skills, item.applicationsCount, pct(item.averageScore), pct(item.highestScore), item.bestStatus])} />
+                </DataPanel>
+              )}
+              {report === "jobs" && (
+                <DataPanel
+                  title="Job & Project Conversion Report"
+                  empty="No job rows."
+                  action={
+                    <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <Search className="h-4 w-4 text-slate-400" />
+                      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search jobs" className="w-40 bg-transparent text-sm outline-none" />
+                    </label>
+                  }
+                >
+                  <SimpleTable headers={["Job", "Company", "Apps", "Avg ATS", "Above 70", "Project", "Hired", "Conv."]} rows={filteredJobs.map((item) => [item.title, item.company, item.applicationsCount, pct(item.averageScore), item.above70, item.hasProject ? "Yes" : "No", item.hiredCount, pct(item.conversionRate)])} />
+                </DataPanel>
+              )}
+            </div>
+          )}
+
+          {activeSection === "plans" && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div>
+                  <div>
+                    <h2 className="text-2xl font-black">Pro Plan Controls</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Manually switch users between Free and Pro while payments are pending. Razorpay can later write to this same subscriptions table.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <DataPanel title="User Plans" empty="No users found.">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
+                    <thead>
+                      <tr>
+                        {["User", "Role", "Current plan", "Expires", "Actions"].map((header) => (
+                          <th key={header} className="border-b border-slate-100 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-400">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {planRows.map((row) => (
+                        <tr key={row.id} className="hover:bg-slate-50">
+                          <td className="border-b border-slate-100 px-4 py-3">
+                            <p className="font-black text-slate-800">{row.name}</p>
+                            <p className="text-xs font-semibold text-slate-400">{row.email}</p>
+                          </td>
+                          <td className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-600">{row.role}</td>
+                          <td className="border-b border-slate-100 px-4 py-3">
+                            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-700">
+                              {row.tier} / {row.status}
+                            </span>
+                          </td>
+                          <td className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-600">
+                            {row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : "No expiry"}
+                          </td>
+                          <td className="border-b border-slate-100 px-4 py-3">
+                            <div className="flex flex-wrap gap-2">
+                              {(["free", "pro"] as const).map((tier) => (
+                                <button
+                                  key={tier}
+                                  type="button"
+                                  onClick={() => void updateUserPlan(row.id, tier)}
+                                  disabled={planUpdatingId === row.id}
+                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black uppercase text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {planUpdatingId === row.id ? "Saving" : tier}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </DataPanel>
+            </div>
+          )}
+
+          {activeSection === "assessments" && (
+            <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-black">Assessments Management</h2>
+                    <p className="mt-2 text-sm text-slate-600">Existing assessment module remains available for managing questions and assessments.</p>
+                  </div>
+                  <Link href="/admin1/assessments" className="inline-flex h-11 items-center rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white">
+                    Open
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+              <SummaryCard title="Assessment Rows" value={data.assessments.length} detail="Loaded from existing assessment tables" />
+            </div>
+          )}
+
+          {activeSection === "health" && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black">System Health</h2>
+                    <p className="mt-2 text-sm text-slate-600">Check database, auth, tables, storage buckets, AI provider, and environment status.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" onClick={() => void runHealthCheck()} className="rounded-2xl bg-emerald-600 font-bold hover:bg-emerald-700" disabled={healthLoading}>
+                      {healthLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <HeartPulse className="mr-2 h-4 w-4" />}
+                      Run Health Check
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => void copyErrorReport()} className="rounded-2xl border-slate-200 font-bold">
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy Error Report
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {health && (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {Object.entries(health.coreServices).map(([key, item]) => (
+                      <HealthCard key={key} label={key} check={item} />
+                    ))}
+                  </div>
+                  <DataPanel title="Table Health" empty="Run health check to inspect tables.">
+                    <SimpleTable headers={["Table", "Status", "Rows", "Detail"]} rows={health.tables.map((table) => [table.name, table.status, table.rowCount ?? "n/a", table.detail])} />
+                  </DataPanel>
+                  <DataPanel title="Storage Bucket Status" empty="No bucket checks returned.">
+                    <SimpleTable headers={["Bucket", "Status", "Detail"]} rows={health.storageBuckets.map((bucket) => [bucket.bucket, bucket.status, bucket.detail])} />
+                  </DataPanel>
+                  <AlertPanel
+                    tone={health.errors.length > 0 ? "warning" : "success"}
+                    title={`Last checked ${new Date(health.checkedAt).toLocaleString()}`}
+                    message={health.errors.length > 0 ? health.errors.join(" | ") : "No failed checks were reported."}
+                  />
+                </>
+              )}
+            </div>
+          )}
+
+          {activeSection === "preview" && (
+            <div className="grid gap-4 md:grid-cols-3">
+              <PreviewCard icon={BriefcaseBusiness} title="Open Recruiter" detail="Preview recruiter dashboard with existing test account." onClick={() => void handlePreviewLogin("recruiter")} />
+              <PreviewCard icon={GraduationCap} title="Open Candidate" detail="Preview candidate dashboard with existing test account." onClick={() => void handlePreviewLogin("candidate")} />
+              <Link href="/admin1/assessments" className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                <ClipboardList className="h-7 w-7 text-violet-700" />
+                <h3 className="mt-5 text-lg font-black">Assessments Management</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Manage questions and assessment content.</p>
+                <p className="mt-5 inline-flex items-center text-sm font-black text-violet-700">Open module <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></p>
+              </Link>
+            </div>
+          )}
+
+          {loading && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-600" />
+              <p className="mt-4 text-sm font-bold text-slate-500">Loading admin analytics...</p>
+            </div>
+          )}
         </section>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <a
-            href="/admin1/assessments"
-            className="group flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-slate-200/70"
-          >
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
-              <ClipboardList className="h-7 w-7" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <h3 className="font-black text-slate-950">Skills Assessments</h3>
-              <p className="mt-1 text-sm text-slate-500">Manage questions and assessments</p>
-              <p className="mt-2 text-xs font-bold text-violet-700">
-                Manage assessments
-              </p>
-            </div>
-
-            <ArrowRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:translate-x-1 group-hover:text-violet-600" />
-          </a>
-        </div>
       </div>
-
       <Toaster />
     </main>
+  );
+}
+
+function AlertPanel({ tone, title, message }: { tone: "error" | "warning" | "success"; title: string; message: string }) {
+  const className =
+    tone === "error"
+      ? "border-red-200 bg-red-50 text-red-800"
+      : tone === "warning"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : "border-emerald-200 bg-emerald-50 text-emerald-800";
+  return (
+    <div className={`rounded-3xl border p-4 shadow-sm ${className}`}>
+      <p className="font-black">{title}</p>
+      <p className="mt-1 text-sm leading-6">{message}</p>
+    </div>
+  );
+}
+
+function SummaryCard({ title, value, detail }: { title: string; value: string | number; detail: string }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold text-slate-500">{title}</p>
+      <p className="mt-3 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-sm text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function DataPanel({ title, empty, action, children }: { title: string; empty: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl font-black">{title}</h2>
+        {action}
+      </div>
+      <div className="p-3">
+        {children || <p className="p-6 text-sm text-slate-500">{empty}</p>}
+      </div>
+    </div>
+  );
+}
+
+function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
+  if (rows.length === 0) {
+    return <p className="p-6 text-sm font-semibold text-slate-500">No data available.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[640px] border-separate border-spacing-0 text-left text-sm">
+        <thead>
+          <tr>
+            {headers.map((header) => (
+              <th key={header} className="border-b border-slate-100 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-400">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={`${rowIndex}-${row.join("-")}`} className="hover:bg-slate-50">
+              {row.map((cell, cellIndex) => (
+                <td key={`${cellIndex}-${String(cell)}`} className="border-b border-slate-100 px-4 py-3 font-semibold text-slate-700">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function HealthCard({ label, check }: { label: string; check: HealthCheck }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="capitalize text-sm font-black text-slate-500">{label}</p>
+        <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black ${statusBadgeClass(check.status)}`}>
+          {check.status === "error" ? <XCircle className="mr-1 h-3 w-3" /> : <CheckCircle2 className="mr-1 h-3 w-3" />}
+          {check.status}
+        </span>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-600">{check.detail}</p>
+    </div>
+  );
+}
+
+function PreviewCard({ icon: Icon, title, detail, onClick }: { icon: typeof BriefcaseBusiness; title: string; detail: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="group rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+      <Icon className="h-7 w-7 text-emerald-700" />
+      <h3 className="mt-5 text-lg font-black">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+      <p className="mt-5 inline-flex items-center text-sm font-black text-emerald-700">Open preview <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></p>
+    </button>
   );
 }
 

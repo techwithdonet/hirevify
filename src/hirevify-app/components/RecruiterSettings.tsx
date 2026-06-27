@@ -10,6 +10,8 @@ import { Separator } from './ui/separator';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { getPasswordResetRedirectUrl } from '@/src/lib/appUrl';
+import { BillingSettingsCard } from './BillingSettingsCard';
 
 
 interface RecruiterSettingsProps {
@@ -22,6 +24,7 @@ const NOTIFICATION_STORAGE_KEY = 'hirevify_recruiter_notification_settings';
 export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState('');
   const [profileCompleteness, setProfileCompleteness] = useState(0);
   const [notifications, setNotifications] = useState({
@@ -53,6 +56,7 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
         .maybeSingle();
 
       if (!profileRow?.id) return;
+      setProfileId(profileRow.id);
 
       const { data: recruiterProfile } = await supabase
         .from('recruiter_profiles')
@@ -78,7 +82,9 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
   const sendPasswordReset = async () => {
     if (!user?.email) return;
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: getPasswordResetRedirectUrl(),
+    });
     if (error) {
       toast.error(error.message);
       return;
@@ -123,9 +129,10 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
 
       <main className="premium-content">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6 grid w-full grid-cols-3">
+          <TabsList className="mb-6 grid w-full grid-cols-4">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
 
@@ -206,6 +213,10 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
                 <Button onClick={handleSaveNotifications}>Save notification settings</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="billing" className="space-y-6">
+            <BillingSettingsCard profileId={profileId} userEmail={user?.email} />
           </TabsContent>
 
           <TabsContent value="data" className="space-y-6">

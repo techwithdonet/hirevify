@@ -14,7 +14,7 @@ export const getTestingPremiumAccess = () => {
  
  const getTestingSubscription = (): SubscriptionStatus => ({
  isActive: true,
- tier: 'enterprise',
+ tier: 'pro',
  expiresAt: null,
  trialEndsAt: null
  });

@@ -23,8 +23,8 @@ interface HomepageProps {
  onFindProject: () => void;
 }
 
-export function Homepage({ onSelectUserType, onPostProject, onFindProject }: HomepageProps) {
- const { signIn, user, setUser } = useAuth();
+export function Homepage({ onPostProject, onFindProject }: HomepageProps) {
+ const { user } = useAuth();
  const [authModalOpen, setAuthModalOpen] = useState(false);
  const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signin');
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -62,72 +62,6 @@ export function Homepage({ onSelectUserType, onPostProject, onFindProject }: Hom
  }
  };
 
- // Test account login handlers
-const handleTestRecruiterLogin = async () => {
- try {
- toast.info('Signing in as test recruiter...');
-
- const result = await signIn('recruiter@hirevify.com', 'TestPassword123!');
-
- if (result.success && result.user) {
- const recruiterUser = {...result.user,
- name: result.user.name || 'Test Recruiter',
- email: 'recruiter@hirevify.com',
- userType: 'recruiter' as const,
- profileComplete: true,
- };
-
- setUser(recruiterUser);
-
- localStorage.setItem('hirevify_user', JSON.stringify(recruiterUser));
- localStorage.setItem('hirevify_access_token', recruiterUser.accessToken || '');
-
- toast.success('Successfully signed in as recruiter!');
-
- setTimeout(() => {
- onSelectUserType('recruiter');
- }, 300);
- } else {
- toast.error(result.message || 'Failed to sign in as test recruiter');
- }
- } catch (error) {
- console.error('Test recruiter login error:', error);
- toast.error('Failed to sign in as test recruiter');
- }
-};
-
-const handleTestCandidateLogin = async () => {
- try {
- toast.info('Signing in as test candidate...');
-
- const result = await signIn('candidate@hirevify.com', 'TestPassword123!');
-
- if (result.success && result.user) {
- const candidateUser = {...result.user,
- name: result.user.name || 'Test Candidate',
- email: 'candidate@hirevify.com',
- userType: 'candidate' as const,
- profileComplete: true,
- };
-
- setUser(candidateUser);
-
- localStorage.setItem('hirevify_user', JSON.stringify(candidateUser));
- localStorage.setItem('hirevify_access_token', candidateUser.accessToken || '');
-
- toast.success('Successfully signed in as candidate!');
-
- setTimeout(() => {
- onSelectUserType('candidate');
- }, 300);
- } else {
- toast.error(result.message || 'Failed to sign in as test candidate');
- }
- } catch (error) {
- console.error('Test candidate login error:', error);
- toast.error('Failed to sign in as test candidate');
- }
-};
  return (
  <div className="min-h-screen bg-white">
  {/* Header */}
@@ -180,14 +114,6 @@ const handleTestCandidateLogin = async () => {
  Login
  </Button>
 
- <a
- href="/admin1"
- target="_blank"
- rel="noopener noreferrer"
- className="rounded-full px-3 py-2 text-xs font-semibold text-lime-100/75 transition hover:bg-white/10 hover:text-lime-200"
- >
- Admin
- </a>
  </div>
 
  {/* Mobile Actions */}
@@ -240,14 +166,6 @@ const handleTestCandidateLogin = async () => {
  >
  Testimonials
  </Button>
- <a
- href="/admin1"
- target="_blank"
- rel="noopener noreferrer"
- className="rounded-xl px-3 py-2 text-sm font-semibold text-lime-100/80 hover:bg-white/10 hover:text-lime-200"
- >
- Admin
- </a>
  </div>
  </nav>
  )}

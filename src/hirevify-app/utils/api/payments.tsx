@@ -1,6 +1,6 @@
-﻿import { projectId, publicAnonKey } from '../supabase/info';
+﻿import { publicAnonKey } from '../supabase/info';
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`;
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || '/api').replace(/\/$/, '');
 
 // Razorpay-specific interfaces
 export interface RazorpayOrder {
@@ -162,7 +162,7 @@ export class PaymentsAPI {
 
  const result = await response.json();
  if (!response.ok) {
- throw new Error(result.error || 'Failed to create subscription order');
+ throw new Error(result.message || result.error || result?.razorpayError?.error?.description || 'Failed to create subscription order');
  }
 
  return result;
@@ -633,6 +633,9 @@ export const getSubscriptionStatusText = (status: string): string => {
  default: return 'Unknown Status';
  }
 };
+
+
+
 
 
 

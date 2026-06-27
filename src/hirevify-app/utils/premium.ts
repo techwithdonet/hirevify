@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 
 export interface SubscriptionStatus {
  isActive: boolean;
- tier: 'free' | 'pro' | 'enterprise';
+ tier: 'free' | 'pro';
  expiresAt: string | null;
  trialEndsAt: string | null;
 }
@@ -227,7 +227,7 @@ export const hasPremiumAccess = (
  }
 
  // Check tier requirements
- const tierHierarchy = { 'free': 0, 'pro': 1, 'enterprise': 2 };
+ const tierHierarchy = { 'free': 0, 'pro': 1 };
  const userTierLevel = tierHierarchy[subscription.tier];
  const requiredTierLevel = tierHierarchy[feature.requiredTier];
 
@@ -274,7 +274,7 @@ export const usePremiumAccess = () => {
 /**
  * Utility to set subscription status for testing
  */
-export const setTestSubscription = (tier: 'free' | 'pro' | 'enterprise') => {
+export const setTestSubscription = (tier: 'free' | 'pro') => {
  const subscription = {
  isActive: tier!== 'free',
  tier,
