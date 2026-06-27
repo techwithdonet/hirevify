@@ -268,23 +268,27 @@ export function RecruiterDashboard({
     // Mentorship and Career Switch removed from recruiter portal
   ];
   const recentApplications = [
-    ...applicants.slice(0, 3).map((application) => ({
+    ...applicants.map((application) => ({
       id: application.id,
       candidate: latestApplicationLabel(application),
       source: application.job?.title || application.job_title || 'Job',
       status: application.status || 'applied',
       category: 'Job Application',
+      createdAt: application.created_at || '',
     })),
     ...growthApplicants
       .filter((application) => application.opportunity?.type && ['experience_builder', 'micro_internship'].includes(application.opportunity.type))
-      .slice(0, 3).map((application) => ({
+      .map((application) => ({
         id: application.id,
         candidate: latestApplicationLabel(application),
         source: application.opportunity?.title || 'Career growth opportunity',
         status: application.status || 'applied',
         category: application.opportunity?.type === 'experience_builder'? 'Experience Builder': 'Micro Internship',
+        createdAt: application.created_at || '',
       })),
-  ].slice(0, 5);
+  ]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
   const formatMessageTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();

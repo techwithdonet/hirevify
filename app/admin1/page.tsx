@@ -35,7 +35,6 @@ function AdminPanel() {
       setUser(recruiterUser);
       localStorage.setItem("hirevify_user", JSON.stringify(recruiterUser));
       localStorage.setItem("hirevify_access_token", recruiterUser.accessToken || "");
-      toast.success("Opening recruiter dashboard...");
       openDashboard("recruiter");
     } else {
       toast.error(result.message || "Recruiter login failed");
@@ -56,7 +55,6 @@ function AdminPanel() {
       setUser(candidateUser);
       localStorage.setItem("hirevify_user", JSON.stringify(candidateUser));
       localStorage.setItem("hirevify_access_token", candidateUser.accessToken || "");
-      toast.success("Opening candidate dashboard...");
       openDashboard("candidate");
     } else {
       toast.error(result.message || "Candidate login failed");

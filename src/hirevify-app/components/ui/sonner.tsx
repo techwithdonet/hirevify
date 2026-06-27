@@ -13,9 +13,12 @@ const Toaster = ({ toastOptions, ...props }: ToasterProps) => {
  className="toaster group"
  position="top-right"
  richColors
- visibleToasts={4}
+ visibleToasts={2}
+ duration={1600}
+ closeButton
  toastOptions={{
  ...toastOptions,
+ duration: toastOptions?.duration ?? 1600,
  classNames: {
  toast: "group-[.toaster]:rounded-xl group-[.toaster]:border group-[.toaster]:px-4 group-[.toaster]:py-3 group-[.toaster]:shadow-lg group-[.toaster]:shadow-emerald-950/10",
  success: "group-[.toaster]:border-emerald-200 group-[.toaster]:bg-emerald-50 group-[.toaster]:text-emerald-900",

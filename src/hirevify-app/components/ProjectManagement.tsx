@@ -148,6 +148,7 @@ export function ProjectManagement({
  const [editingGrowthId, setEditingGrowthId] = useState<string | null>(null);
  const [expandedGrowthId, setExpandedGrowthId] = useState<string | null>(null);
  const [growthReviewMode, setGrowthReviewMode] = useState(false);
+ const [growthView, setGrowthView] = useState<'programs' | 'applications'>('programs');
  const [scoreByApplicationId, setScoreByApplicationId] = useState<Record<string, string>>({});
 
  useEffect(() => {
@@ -162,7 +163,9 @@ export function ProjectManagement({
  setShowGrowthForm(false);
  setEditingGrowthId(null);
  setExpandedGrowthId(null);
- setGrowthReviewMode(window.localStorage.getItem('hirevify_growth_review_mode') === 'applications');
+ const shouldOpenApplications = window.localStorage.getItem('hirevify_growth_review_mode') === 'applications';
+ setGrowthReviewMode(shouldOpenApplications);
+ setGrowthView(shouldOpenApplications ? 'applications' : 'programs');
  window.localStorage.removeItem('hirevify_growth_post_type');
  window.localStorage.removeItem('hirevify_growth_review_mode');
  }, []);
@@ -344,6 +347,7 @@ export function ProjectManagement({
  if (!careerGrowthOnlyType) return;
  setGrowthForm(emptyGrowthForm(careerGrowthOnlyType));
  setEditingGrowthId(null);
+ setGrowthView('programs');
  setShowGrowthForm(true);
  };
 
@@ -351,6 +355,7 @@ export function ProjectManagement({
  if (!careerGrowthOnlyType) return;
  setGrowthForm(mapOpportunityToGrowthForm(opportunity, careerGrowthOnlyType));
  setEditingGrowthId(opportunity.id);
+ setGrowthView('programs');
  setShowGrowthForm(true);
  };
 
@@ -499,6 +504,10 @@ export function ProjectManagement({
 
  if (careerGrowthOnlyType) {
  const label = growthTypeLabels[careerGrowthOnlyType];
+ const applicationOpportunities = filteredGrowthOpportunities.filter((opportunity) =>
+ growthApplications.some((application) => application.opportunity_id === opportunity.id)
+ );
+ const visibleApplicationOpportunities = applicationOpportunities.length > 0 ? applicationOpportunities : filteredGrowthOpportunities;
 
  return (
  <div className={dashboardTheme.page}>
@@ -523,24 +532,68 @@ export function ProjectManagement({
  </Button>
  </div>
 
+ <div className="mb-5 grid gap-3 sm:grid-cols-2">
+ <button
+ type="button"
+ onClick={() => {
+ setGrowthView('programs');
+ setExpandedGrowthId(null);
+ }}
+ className={`rounded-xl border p-4 text-left transition ${
+ growthView === 'programs'
+ ? 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-sm'
+ : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200'
+ }`}
+ >
+ <div className="flex items-center justify-between gap-3">
+ <div>
+ <p className="font-semibold">View Active Programs</p>
+ <p className="mt-1 text-sm text-slate-500">Edit, delete, and check posted programs.</p>
+ </div>
+ <Badge variant="secondary">{filteredGrowthOpportunities.length}</Badge>
+ </div>
+ </button>
+ <button
+ type="button"
+ onClick={() => setGrowthView('applications')}
+ className={`rounded-xl border p-4 text-left transition ${
+ growthView === 'applications'
+ ? 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-sm'
+ : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-200'
+ }`}
+ >
+ <div className="flex items-center justify-between gap-3">
+ <div>
+ <p className="font-semibold">View Applications</p>
+ <p className="mt-1 text-sm text-slate-500">Open each program and review candidates.</p>
+ </div>
+ <Badge variant="secondary">{growthApplications.length}</Badge>
+ </div>
+ </button>
+ </div>
+
  <Card className="border border-gray-100 bg-white shadow-sm">
  <CardHeader>
  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
  <div>
  <CardTitle className="flex items-center gap-2 text-gray-900">
  <Briefcase className="w-5 h-5 text-emerald-600" />
- {label} Opportunities
+ {growthView === 'programs' ? `${label} Programs` : `${label} Applications`}
  </CardTitle>
- <p className="text-sm text-gray-500 mt-1">Active and posted opportunities</p>
+ <p className="text-sm text-gray-500 mt-1">
+ {growthView === 'programs' ? 'Active and posted programs' : 'Select a program to view candidate applications'}
+ </p>
  </div>
  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">
- {filteredGrowthOpportunities.length} posted
+ {growthView === 'programs'
+ ? `${filteredGrowthOpportunities.length} posted`
+ : `${growthApplications.length} application${growthApplications.length === 1 ? '' : 's'}`}
  </Badge>
  </div>
  </CardHeader>
 
  <CardContent className="space-y-6 bg-slate-50/70">
- {showGrowthForm && (
+ {growthView === 'programs' && showGrowthForm && (
  <>
  <ModernFormShell
  >
@@ -762,12 +815,12 @@ export function ProjectManagement({
  <Loader className="w-8 h-8 animate-spin text-emerald-600 mb-3" />
  <p className="text-gray-600">Loading {label} opportunities...</p>
  </div>
- ): filteredGrowthOpportunities.length === 0? (
+ ): growthView === 'programs' && filteredGrowthOpportunities.length === 0? (
  <div className="text-center py-10">
  <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-2" />
  <p className="text-sm text-gray-500">No {label} opportunities yet</p>
  </div>
- ): (
+ ): growthView === 'programs' ? (
  <div className="space-y-4">
  {filteredGrowthOpportunities.map((opportunity) => {
  const applicants = growthApplications.filter((application) => application.opportunity_id === opportunity.id);
@@ -834,7 +887,7 @@ export function ProjectManagement({
  </div>
  )}
 
- {applicants.length > 0 && (
+ {false && applicants.length > 0 && (
  <div className="mt-4 border-t border-gray-100 pt-4">
  <h4 className="text-sm font-semibold text-gray-900 mb-3">Applicants</h4>
  <div className="space-y-3">
@@ -937,6 +990,147 @@ export function ProjectManagement({
  );
  })}
  </div>
+ </div>
+ )}
+ </div>
+ );
+ })}
+ </div>
+ ) : visibleApplicationOpportunities.length === 0 ? (
+ <div className="text-center py-10">
+ <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+ <p className="text-sm text-gray-500">No applications yet</p>
+ </div>
+ ) : (
+ <div className="space-y-4">
+ {visibleApplicationOpportunities.map((opportunity) => {
+ const applicants = growthApplications.filter((application) => application.opportunity_id === opportunity.id);
+
+ return (
+ <div key={opportunity.id} className="rounded-xl border border-gray-100 bg-white p-5">
+ <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+ <div className="flex-1">
+ <div className="flex flex-wrap items-center gap-2 mb-2">
+ <h3 className="text-lg font-bold text-gray-900">{opportunity.title}</h3>
+ <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">{label}</Badge>
+ <Badge variant="secondary">{applicants.length} application{applicants.length === 1 ? '' : 's'}</Badge>
+ </div>
+ <p className="text-sm text-gray-600 line-clamp-2">{opportunity.description}</p>
+ </div>
+ <Button variant="outline" onClick={() => setExpandedGrowthId((current) => current === opportunity.id ? null : opportunity.id)}>
+ <Eye className="w-4 h-4 mr-2" />
+ View Applications
+ </Button>
+ </div>
+
+ {expandedGrowthId === opportunity.id && (
+ <div className="mt-4 border-t border-gray-100 pt-4">
+ {applicants.length === 0 ? (
+ <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+ No candidates have applied to this program yet.
+ </div>
+ ) : (
+ <div className="space-y-3">
+ {applicants.map((application) => {
+ const submission = getApplicationSubmission(application.id);
+ const review = parseCareerGrowthReview(application.recruiter_notes);
+ const progress = application.status === 'completed' || application.status === 'rejected' ? 100 : submission ? 66 : ['accepted', 'assigned', 'in_progress'].includes(application.status) ? 33 : 12;
+ const canDecideApplication = ['applied', 'reviewing', 'screening', 'shortlisted'].includes(application.status);
+ const canReviewSubmission = Boolean(submission) && !['completed', 'rejected'].includes(application.status);
+
+ return (
+ <div key={application.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+ <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+ <div className="min-w-0 flex-1">
+ <div className="flex flex-wrap items-center gap-2">
+ <p className="text-sm font-semibold text-slate-950">
+ {application.candidate_profile?.full_name || application.candidate_profile?.email || 'Candidate'}
+ </p>
+ <Badge className={
+ application.status === 'accepted' || application.status === 'assigned'
+ ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+ : application.status === 'rejected'
+ ? 'border-red-200 bg-red-50 text-red-700'
+ : application.status === 'completed'
+ ? 'border-blue-200 bg-blue-50 text-blue-700'
+ : 'border-slate-200 bg-slate-50 text-slate-700'
+ } variant="outline">
+ {application.status.replace('_', ' ')}
+ </Badge>
+ </div>
+ <p className="mt-1 text-xs text-slate-500">
+ Applied {new Date(application.created_at).toLocaleDateString()}
+ </p>
+ <div className="mt-3 max-w-md">
+ <div className="mb-1 flex justify-between text-[11px] font-medium text-slate-500">
+ <span>Applied</span>
+ <span>Assigned</span>
+ <span>Submitted</span>
+ <span>Completed</span>
+ </div>
+ <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+ <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
+ </div>
+ </div>
+ {submission && (
+ <div className="mt-3 space-y-1 rounded-md border border-blue-100 bg-white p-3 text-xs text-slate-600">
+ <p className="font-semibold text-slate-900">Submitted work</p>
+ {submission.submission_text && <p>{submission.submission_text}</p>}
+ {submission.submission_url && (
+ <a href={submission.submission_url} target="_blank" rel="noreferrer" className="text-blue-700 underline">
+ Open project link
+ </a>
+ )}
+ {submission.file_url && (
+ <button type="button" onClick={() => openSubmissionFile(submission.file_url!)} className="block text-blue-700 underline">
+ Open attached file
+ </button>
+ )}
+ </div>
+ )}
+ {review.score !== undefined && (
+ <p className="mt-2 text-xs font-semibold text-emerald-700">Score: {review.score}% - Certificate issued</p>
+ )}
+ </div>
+ <div className="flex flex-col gap-2 sm:min-w-[220px]">
+ {canDecideApplication && (
+ <Button size="sm" onClick={() => acceptGrowthApplication(application)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ Assign Candidate
+ </Button>
+ )}
+ {canReviewSubmission && (
+ <div className="flex gap-2">
+ <Input
+ type="number"
+ min="0"
+ max="100"
+ placeholder="Score"
+ value={scoreByApplicationId[application.id] || ''}
+ onChange={(event) => setScoreByApplicationId((current) => ({ ...current, [application.id]: event.target.value }))}
+ className="bg-white"
+ />
+ <Button size="sm" onClick={() => reviewGrowthApplication(application.id)}>
+ Approve
+ </Button>
+ </div>
+ )}
+ {canDecideApplication && (
+ <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => rejectGrowthApplication(application)}>
+ Reject
+ </Button>
+ )}
+ {canReviewSubmission && (
+ <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => rejectGrowthApplication(application)}>
+ Reject Submission
+ </Button>
+ )}
+ </div>
+ </div>
+ </div>
+ );
+ })}
+ </div>
+ )}
  </div>
  )}
  </div>

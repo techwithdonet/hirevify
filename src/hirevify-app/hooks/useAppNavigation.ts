@@ -67,7 +67,7 @@ export const useAppNavigation = ({
  setSelectedProject(null);
  setSelectedApplication(null);
  setSelectedConversationId(null);
- toast.success('Logged out successfully');
+ toast.success('Logged out successfully', { id: 'auth-logout-success' });
  } catch (error) {
  console.error('Logout error:', error);
  toast.error('Failed to logout. Please try again.');

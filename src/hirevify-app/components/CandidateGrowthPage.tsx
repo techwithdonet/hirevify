@@ -507,6 +507,7 @@ export function CandidateGrowthPage({
  <span>Applied</span>
  <span>Assigned</span>
  <span>Submitted</span>
+ <span>Completed</span>
  </div>
  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
  <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />

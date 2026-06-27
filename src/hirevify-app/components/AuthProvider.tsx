@@ -302,7 +302,6 @@ if (profileError) {
  try {
  await supabase.auth.signOut();
  setUserWithTokenSync(null);
- toast.success("Signed out successfully");
  } catch (error) {
  console.error("Sign out error:", error);
  setUserWithTokenSync(null);
