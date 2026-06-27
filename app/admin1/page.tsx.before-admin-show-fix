@@ -285,6 +285,13 @@ function AdminPanel() {
     setError("");
 
     try {
+      const analyticsSections = ["dashboard", "top", "reports"];
+      const shouldLoadAnalyticsData = analyticsSections.includes(activeSection);
+      const shouldLoadPlansData = activeSection === "plans";
+      const shouldLoadAssessmentData = activeSection === "assessments";
+
+      const empty = { rows: [] as Row[], warning: "" };
+
       const [
         profiles,
         candidateProfiles,
@@ -295,14 +302,14 @@ function AdminPanel() {
         skillAssessments,
         assessments,
       ] = await Promise.all([
-        fetchRows("profiles", "created_at"),
-        fetchRows("candidate_profiles", "created_at"),
-        fetchRows("recruiter_profiles", "created_at"),
-        fetchRows("jobs", "created_at"),
-        fetchRows("applications", "created_at"),
-        fetchRows("subscriptions", "created_at"),
-        fetchRows("skills_assessments", "created_at"),
-        fetchRows("assessments", "created_at"),
+        shouldLoadAnalyticsData || shouldLoadPlansData ? fetchRows("profiles", "created_at") : Promise.resolve(empty),
+        shouldLoadAnalyticsData ? fetchRows("candidate_profiles", "created_at") : Promise.resolve(empty),
+        shouldLoadAnalyticsData ? fetchRows("recruiter_profiles", "created_at") : Promise.resolve(empty),
+        shouldLoadAnalyticsData ? fetchRows("jobs", "created_at") : Promise.resolve(empty),
+        shouldLoadAnalyticsData ? fetchRows("applications", "created_at") : Promise.resolve(empty),
+        shouldLoadPlansData ? fetchRows("subscriptions", "created_at") : Promise.resolve(empty),
+        shouldLoadAssessmentData ? fetchRows("skills_assessments", "created_at") : Promise.resolve(empty),
+        shouldLoadAssessmentData ? fetchRows("assessments", "created_at") : Promise.resolve(empty),
       ]);
 
       setData({
@@ -329,7 +336,7 @@ function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  }, [fetchRows]);
+  }, [activeSection, fetchRows]);
   useEffect(() => {
     void loadAdminData();
   }, [loadAdminData]);
@@ -1021,5 +1028,4 @@ function PreviewCard({ icon: Icon, title, detail, onClick }: { icon: typeof Brie
 export default function Admin1Page() {
   return <AdminPanel />;
 }
-
 
