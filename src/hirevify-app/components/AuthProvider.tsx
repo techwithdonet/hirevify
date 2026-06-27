@@ -127,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
  setConnectionStatus("error");
  } finally {
  setIsLoading(false);
+ setAuthInitialized(true);
  }
  }, [loadUserFromSession]);
 
@@ -150,16 +151,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
  await loadUserFromSession(session);
  });
 
- // Mark auth as initialized after initial setup
- const timeout = setTimeout(() => {
- if (active) {
- setAuthInitialized(true);
- }
- }, 500);
-
  return () => {
  active = false;
- clearTimeout(timeout);
  subscription.unsubscribe();
  };
  }, [initializeAuth, loadUserFromSession, setUserWithTokenSync]);

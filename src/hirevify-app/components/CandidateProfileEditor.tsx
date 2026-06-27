@@ -423,7 +423,7 @@ const { data: candidateProfile, error: candidateError } = await supabase
  }
 
  const payload: Record<string, any> = {
- user_id: profileRow.id,
+ user_id: authData.user.id,
  full_name: fullName,
  phone: profileData.phone.trim(),
  location: profileData.location.trim(),

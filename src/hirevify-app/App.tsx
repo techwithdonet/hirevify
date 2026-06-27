@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
@@ -132,21 +134,10 @@ function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate
  return screen.startsWith('recruiter-');
 }
 
-function HireVifyApp() {
+function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
  const { user, signOut, authInitialized } = useAuth();
- const [hasResolvedInitialScreen, setHasResolvedInitialScreen] = useState(false);
   const [currentScreen, setCurrentScreenState] = useState<Screen>(() => {
-    // Restore from localStorage immediately to prevent homepage flash on refresh.
-    // The flash happens because useState lazily runs this initializer only once
-    // on mount, before auth resolves. By reading localStorage synchronously here
-    // we render the correct screen from the very first frame.
-    if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem(SCREEN_STORAGE_KEY);
-      if (isScreen(stored)) return stored;
-      const urlScreen = new URL(window.location.href).searchParams.get('screen');
-      if (isScreen(urlScreen)) return urlScreen;
-    }
-    return 'homepage';
+    return initialScreen;
   });
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -202,8 +193,6 @@ function HireVifyApp() {
  ...(window.history.state || {}),
  [HISTORY_SCREEN_KEY]: initialScreen,
  }, '', getUrlForScreen(initialScreen));
- setHasResolvedInitialScreen(true);
-
  const handlePopState = (event: PopStateEvent) => {
  const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
  const nextScreen = isScreen(stateScreen)? stateScreen: readScreenFromLocation();
@@ -294,10 +283,6 @@ const effectiveScreen = useMemo<Screen>(() => {
   return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
   }, [currentScreen, user, authInitialized]);
 
-  if (!hasResolvedInitialScreen) {
-  return <div className="min-h-screen bg-white" aria-hidden="true" />;
-  }
-
  return (
  <div className="min-h-screen">
   <AppRouter
@@ -324,11 +309,13 @@ const effectiveScreen = useMemo<Screen>(() => {
  );
 }
 
-export default function App() {
+export default function App({ initialScreen }: { initialScreen?: unknown }) {
+ const safeInitialScreen = isScreen(initialScreen) ? initialScreen : 'homepage';
+
  return (
  <ErrorBoundary>
  <AuthProvider>
- <HireVifyApp />
+ <HireVifyApp initialScreen={safeInitialScreen} />
  </AuthProvider>
  </ErrorBoundary>
  );
