@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { ArrowLeft, CheckCircle2, Briefcase, Plus, MapPin, DollarSign, Clock, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Briefcase, Plus, MapPin, DollarSign, Clock, X, Paperclip, FileText, Trash2 } from 'lucide-react';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
@@ -30,9 +30,20 @@ interface JobData {
   has_project?: boolean;
   project_title?: string | null;
   project_description?: string | null;
-  project_skills?: string[];
+project_skills?: string[];
   project_timeline?: string | null;
   project_budget_range?: string | null;
+  project_attachment_url?: string | null;
+  project_attachment_name?: string | null;
+  project_attachment_size?: number | null;
+  project_attachment_type?: string | null;
+}
+
+interface ProjectAttachmentMeta {
+  url: string;
+  name: string;
+  size: number;
+  type: string;
 }
 
 
@@ -45,6 +56,10 @@ type ActiveProjectOption = {
   project_skills?: string[] | null;
   project_timeline?: string | null;
   project_budget_range?: string | null;
+  project_attachment_url?: string | null;
+  project_attachment_name?: string | null;
+  project_attachment_size?: number | null;
+  project_attachment_type?: string | null;
 };
 interface JobPostingFlowProps {
   onBack: () => void;
@@ -81,13 +96,24 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
   const [budgetCurrency, setBudgetCurrency] = useState<string>(existingJob?.budget_currency || 'USD');
   const [status, setStatus] = useState<JobData['status']>(existingJob?.status || 'published');
 
-  // Add Project for this Job
-  const [showProjectSection, setShowProjectSection] = useState<boolean>(Boolean(existingJob?.has_project));
+// Add Project for this Job
+  const [showProjectSection, setShowProjectSection] = useState<boolean>(false);
   const [projectTitle, setProjectTitle] = useState(existingJob?.project_title || '');
   const [projectDescription, setProjectDescription] = useState(existingJob?.project_description || '');
   const [projectSkills, setProjectSkills] = useState<string[]>(existingJob?.project_skills || []);
   const [projectTimeline, setProjectTimeline] = useState(existingJob?.project_timeline || '');
-  const [projectBudgetRange, setProjectBudgetRange] = useState(existingJob?.project_budget_range || '');
+  const [projectAttachment, setProjectAttachment] = useState<ProjectAttachmentMeta | null>(
+    existingJob?.project_attachment_url
+      ? {
+          url: existingJob.project_attachment_url,
+          name: existingJob.project_attachment_name || 'attachment',
+          size: existingJob.project_attachment_size || 0,
+          type: existingJob.project_attachment_type || 'application/octet-stream',
+        }
+      : null
+  );
+  const [projectAttachmentFile, setProjectAttachmentFile] = useState<File | null>(null);
+  const [projectAttachmentUploading, setProjectAttachmentUploading] = useState(false);
   const [activeProjects, setActiveProjects] = useState<ActiveProjectOption[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [extraAttachedProjects, setExtraAttachedProjects] = useState<ActiveProjectOption[]>([]);
@@ -116,6 +142,9 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
         }
       }
 
+// Query only the columns that always exist in the schema.
+      // The new attachment columns will be loaded once the migration is applied.
+      // The new attachment columns will be loaded once the migration is applied.
       let query = supabase
         .from('jobs')
         .select('id, title, status, job_type, recruiter_id, project_title, project_description, project_skills, project_timeline, project_budget_range')
@@ -134,17 +163,11 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error loading active projects for job edit:', {
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint,
-          code: error?.code,
-          raw: error,
-        });
+        // Typically means the schema hasn't been updated yet — ignore, project list will be empty.
         return;
       }
 
-      setActiveProjects((data || []) as ActiveProjectOption[]);
+      setActiveProjects((data || []) as unknown as ActiveProjectOption[]);
     };
 
     loadActiveProjectsForJobEdit();
@@ -173,13 +196,23 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
       return;
     }
 
-    // If no project exists yet, make the selected project the main associated project.
+// If no project exists yet, make the selected project the main associated project.
     setShowProjectSection(true);
     setProjectTitle(selectedProject.project_title || selectedProject.title || '');
     setProjectDescription(selectedProject.project_description || '');
     setProjectSkills(Array.isArray(selectedProject.project_skills) ? selectedProject.project_skills : []);
     setProjectTimeline(selectedProject.project_timeline || '');
-    setProjectBudgetRange(selectedProject.project_budget_range || '');
+    setProjectAttachment(
+      selectedProject.project_attachment_url
+        ? {
+            url: selectedProject.project_attachment_url,
+            name: selectedProject.project_attachment_name || 'attachment',
+            size: selectedProject.project_attachment_size || 0,
+            type: selectedProject.project_attachment_type || 'application/octet-stream',
+          }
+        : null
+    );
+    setProjectAttachmentFile(null);
   };
 
   const removeExtraAttachedProject = (projectId: string) => {
@@ -187,14 +220,98 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
     setRemovedExtraProjectIds((prev) => [...new Set([...prev, projectId])]);
   };
 
-  const removeAssociatedProject = () => {
+const removeAssociatedProject = () => {
     setSelectedProjectId('');
     setShowProjectSection(false);
     setProjectTitle('');
     setProjectDescription('');
     setProjectSkills([]);
     setProjectTimeline('');
-    setProjectBudgetRange('');
+    setProjectAttachment(null);
+    setProjectAttachmentFile(null);
+  };
+
+  // Project attachment (max 20 MB, any file type)
+  const MAX_PROJECT_ATTACHMENT_SIZE = 20 * 1024 * 1024;
+  const formatBytes = (bytes: number): string => {
+    if (!bytes) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let i = 0;
+    let value = bytes;
+    while (value >= 1024 && i < units.length - 1) {
+      value /= 1024;
+      i += 1;
+    }
+    return `${value.toFixed(value < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+  };
+
+  const handleProjectAttachmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // Reset the input so picking the same file twice still fires onChange
+    event.target.value = '';
+
+    if (!file) return;
+
+    if (file.size > MAX_PROJECT_ATTACHMENT_SIZE) {
+      toast.error(`File is too large. Maximum size is 20 MB.`);
+      return;
+    }
+
+    setProjectAttachmentFile(file);
+    setProjectAttachment({
+      url: '', // will be filled after upload on save
+      name: file.name,
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+    });
+  };
+
+  const removeProjectAttachment = () => {
+    setProjectAttachment(null);
+    setProjectAttachmentFile(null);
+  };
+
+  // When editing a job, switch from viewing the attached project to the project form
+  const handleCreateNewProject = () => {
+    // Clear fields so the form is ready for a fresh project entry
+    setProjectTitle('');
+    setProjectDescription('');
+    setProjectSkills([]);
+    setProjectTimeline('');
+    setProjectAttachment(null);
+    setProjectAttachmentFile(null);
+    setShowProjectSection(true);
+  };
+
+  // Cancel creating/editing the project and collapse the form (keeps the existing associated project)
+  const handleCancelProjectEdit = () => {
+    // If there was an existing project attached to the job, restore its data
+    if (existingJob?.has_project) {
+      setProjectTitle(existingJob.project_title || '');
+      setProjectDescription(existingJob.project_description || '');
+      setProjectSkills(existingJob.project_skills || []);
+      setProjectTimeline(existingJob.project_timeline || '');
+      setProjectAttachment(
+        existingJob.project_attachment_url
+          ? {
+              url: existingJob.project_attachment_url,
+              name: existingJob.project_attachment_name || 'attachment',
+              size: existingJob.project_attachment_size || 0,
+              type: existingJob.project_attachment_type || 'application/octet-stream',
+            }
+          : null
+      );
+      setProjectAttachmentFile(null);
+    } else {
+      // No project ever existed — clear everything and collapse
+      setProjectTitle('');
+      setProjectDescription('');
+      setProjectSkills([]);
+      setProjectTimeline('');
+      setProjectAttachment(null);
+      setProjectAttachmentFile(null);
+    }
+    setShowProjectSection(false);
   };
 
   useEffect(() => {
@@ -292,9 +409,46 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
     const min = budgetMin.trim() === '' ? null : Number(budgetMin);
     const max = budgetMax.trim() === '' ? null : Number(budgetMax);
 
-    const hasProject = Boolean(
+const hasProject = Boolean(
       showProjectSection && projectTitle.trim() && projectDescription.trim()
     );
+
+    // Upload the new attachment file (if any) BEFORE saving the job row,
+    // so we can persist the resulting public URL on the same write.
+    let resolvedAttachment: ProjectAttachmentMeta | null = hasProject ? projectAttachment : null;
+    if (hasProject && projectAttachmentFile) {
+      setProjectAttachmentUploading(true);
+      try {
+        const safeName = projectAttachmentFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const objectPath = `${profileRow.id}/pending/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('job-project-attachments')
+          .upload(objectPath, projectAttachmentFile, {
+            contentType: projectAttachmentFile.type || 'application/octet-stream',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(uploadError.message || 'Failed to upload project attachment.');
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('job-project-attachments')
+          .getPublicUrl(objectPath);
+
+        resolvedAttachment = {
+          url: urlData.publicUrl,
+          name: projectAttachmentFile.name,
+          size: projectAttachmentFile.size,
+          type: projectAttachmentFile.type || 'application/octet-stream',
+        };
+      } catch (err) {
+        setProjectAttachmentUploading(false);
+        throw err instanceof Error ? err : new Error('Failed to upload project attachment.');
+      }
+      setProjectAttachmentUploading(false);
+    }
 
     const payload: Record<string, any> = {
       recruiter_id: profileRow.id,
@@ -316,7 +470,10 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
       project_description: hasProject ? projectDescription.trim() : null,
       project_skills: hasProject ? projectSkills : [],
       project_timeline: hasProject ? projectTimeline.trim() || null : null,
-      project_budget_range: hasProject ? projectBudgetRange.trim() || null : null,
+      project_attachment_url: hasProject && resolvedAttachment ? resolvedAttachment.url : null,
+      project_attachment_name: hasProject && resolvedAttachment ? resolvedAttachment.name : null,
+      project_attachment_size: hasProject && resolvedAttachment ? resolvedAttachment.size : null,
+      project_attachment_type: hasProject && resolvedAttachment ? resolvedAttachment.type : null,
       updated_at: new Date().toISOString(),
     };
 
@@ -669,7 +826,7 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                                     {extraAttachedProjects.length > 0 && (
                     <div className="mb-4 space-y-2">
                       <p className="text-sm font-medium text-gray-700">Extra attached projects</p>
-                      {extraAttachedProjects.map((project) => (
+{extraAttachedProjects.map((project) => (
                         <div key={project.id} className="flex items-start justify-between gap-3 rounded-xl border border-white bg-white p-4">
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{project.project_title || project.title}</p>
@@ -679,8 +836,18 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                             {project.project_timeline && (
                               <p className="mt-2 text-xs text-gray-500">Timeline: {project.project_timeline}</p>
                             )}
-                            {project.project_budget_range && (
-                              <p className="text-xs text-gray-500">Budget: {project.project_budget_range}</p>
+                            {project.project_attachment_url && (
+                              <p className="mt-1 text-xs text-gray-500">
+                                Attachment:{' '}
+                                <a
+                                  href={project.project_attachment_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  {project.project_attachment_name || 'view file'}
+                                </a>
+                              </p>
                             )}
                           </div>
                           <Button type="button" variant="outline" size="sm" onClick={() => removeExtraAttachedProject(project.id)}>
@@ -699,8 +866,19 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                       {projectTimeline && (
                         <p className="mt-2 text-xs text-gray-500">Timeline: {projectTimeline}</p>
                       )}
-                      {projectBudgetRange && (
-                        <p className="text-xs text-gray-500">Budget: {projectBudgetRange}</p>
+                      {projectAttachment && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Attachment:{' '}
+                          <a
+                            href={projectAttachment.url || undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {projectAttachment.name}
+                          </a>
+                          {' '}({formatBytes(projectAttachment.size)})
+                        </p>
                       )}
                     </div>
                   ) : (
@@ -709,7 +887,7 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                     </div>
                   )}
 
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
+<label className="mb-2 block text-sm font-medium text-gray-700">
                     Add project from active projects
                   </label>
                   <select
@@ -724,12 +902,22 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                       </option>
                     ))}
                   </select>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCreateNewProject}
+                    className="mt-2 w-full border-dashed text-muted-foreground hover:border-primary hover:text-foreground"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create new project
+                  </Button>
                 </div>
               )}
 
 
                 
-                {showProjectSection && !isEditing && (
+{showProjectSection && (
                   <div className="mt-4 space-y-4 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground">
                       Attach a project that matched candidates will work on after being selected.
@@ -768,7 +956,7 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                         />
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <Label htmlFor="project-timeline" className="text-foreground text-sm">Project Timeline</Label>
                           <div className="relative">
@@ -784,16 +972,71 @@ export function JobPostingFlow({ onBack, existingJob }: JobPostingFlowProps) {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="project-budget" className="text-foreground text-sm">Project Budget Range</Label>
-                          <Input
-                            id="project-budget"
-                            value={projectBudgetRange}
-                            onChange={(e) => setProjectBudgetRange(e.target.value)}
-                            placeholder="e.g. $1,500 - $3,000"
-                            className="bg-input-background border-border text-foreground"
-                          />
+                          <Label className="text-foreground text-sm">Attachment</Label>
+                          {projectAttachment ? (
+                            <div className="flex items-center gap-2 rounded-md border border-border bg-input-background px-3 py-2">
+                              <FileText className="w-4 h-4 shrink-0 text-muted-foreground" />
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={projectAttachment.url || undefined}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block truncate text-sm text-foreground hover:underline"
+                                  title={projectAttachment.name}
+                                >
+                                  {projectAttachment.name}
+                                </a>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatBytes(projectAttachment.size)}
+                                  {projectAttachmentFile ? ' • ready to upload' : ''}
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={removeProjectAttachment}
+                                disabled={projectAttachmentUploading}
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                aria-label="Remove attachment"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <label
+                              htmlFor="project-attachment"
+                              className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-input-background px-3 py-2 text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                            >
+                              <Paperclip className="w-4 h-4 shrink-0" />
+                              <span className="truncate">Upload any file (max 20 MB)</span>
+                              <Input
+                                id="project-attachment"
+                                type="file"
+                                onChange={handleProjectAttachmentChange}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Any file type. Max 20 MB. Optional — only attach if it helps candidates understand the work.
+                          </p>
                         </div>
                       </div>
+
+                      {isEditing && (
+                        <div className="pt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCancelProjectEdit}
+                            disabled={isSubmitting}
+                            className="w-full"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
