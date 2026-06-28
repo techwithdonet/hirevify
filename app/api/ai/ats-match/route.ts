@@ -41,8 +41,8 @@ async function verifySupabaseSession(request: NextRequest) {
 }
 
 function buildPrompt(job: AtsJobInput, candidate: AtsCandidateInput, fallback: AtsMatchResult) {
- return `
-You are HireVify's ATS matching analyst. Improve the provided deterministic keyword score only when the candidate data supports it.
+  return `
+You are HireVify's ATS matching analyst. Score the candidate against the job using both keyword/skill match AND profile quality (experience, degree, credentials, resume depth).
 
 Return ONLY valid JSON:
 {
@@ -52,11 +52,14 @@ Return ONLY valid JSON:
   "explanation": string
 }
 
-Rules:
+Scoring rules:
+- Profile quality base (0 to 50): award when the candidate shows substantive work history (job titles + date ranges in the resume), a recognized degree (bachelor/master/PhD/MBA/etc.), 3+ listed skills, years of experience, and a meaningful summary. Strong candidates should reach the 50 floor from quality alone.
+- Keyword/skill match bonus (0 to 50): scale from the ratio of matched job keywords + required skills vs required. Full match = 50, partial = proportional, zero = 0.
+- Final score = base + bonus, capped at 100.
 - Do not invent candidate skills, experience, resume content, employers, or credentials.
 - Use only the job, candidate, cover letter, resume text, and fallback keyword match below.
-- Score must be 0 to 100.
-- If evidence is thin, keep the score close to the fallback score.
+- Score must be 0 to 100. Example: a candidate with degree + work experience (base 50) and 2 of 5 keywords (40% match, bonus 20) should score 70.
+- If evidence is thin on both axes, score close to the fallback.
 - Explanation must be one short recruiter-facing sentence.
 
 Job:

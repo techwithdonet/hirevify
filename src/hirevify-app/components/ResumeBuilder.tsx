@@ -15,7 +15,9 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 import { profilesService } from '../services/profilesService';
+import { applicationsService } from '../services/applicationsService';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { extractResumeText } from '../utils/ats/resumeTextExtractor';
 
 const cleanBrokenText = (value: string) => {
  return String(value || '').replace(/<pad>/gi, '').replace(/<\/?pad>/gi, '').replace(/(<pad>\s*)+/gi, '').replace(/\u00e2\u20ac\u00a2/g, '').replace(/\u00e2\u20ac\u00a6/g, '...').replace(/\u00e2\u20ac\u201c/g, '-').replace(/\u00e2\u20ac\u201d/g, '-').replace(/\u00e2\u20ac\u02dc/g, "'").replace(/\u00e2\u20ac\u2122/g, "'").replace(/\u00e2\u20ac\u0153/g, '"').replace(/\u00e2\u20ac\u009d/g, '"').replace(/\u00c2\u00a0/g, ' ').replace(/\u00c2/g, '').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
@@ -122,11 +124,12 @@ const templates = [
 export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  const { user } = useAuth();
  const [currentStep, setCurrentStep] = useState<Step>('welcome');
- const [isLoadingProfile, setIsLoadingProfile] = useState(false);
- const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
- const [isDownloading, setIsDownloading] = useState(false);
- const [isFixingResumeWithAI, setIsFixingResumeWithAI] = useState(false);
- const [isRewritingResume, setIsRewritingResume] = useState(false);
+const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+const [isDownloading, setIsDownloading] = useState(false);
+const [isFixingResumeWithAI, setIsFixingResumeWithAI] = useState(false);
+const [isRewritingResume, setIsRewritingResume] = useState(false);
+const [isImportingFromCv, setIsImportingFromCv] = useState(false);
  const resumePreviewRef = useRef<HTMLDivElement>(null);
 
  const [resumeData, setResumeData] = useState<ResumeData>({
@@ -582,37 +585,37 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  throw new Error('Resume preview not available.');
  }
 
- const canvas = await html2canvas(pdfTarget, {
- scale: 3, // High-res for crisp text
- useCORS: true,
- backgroundColor: '#ffffff',
- logging: false,
- foreignObjectRendering: false
- });
+const canvas = await html2canvas(pdfTarget, {
+  scale: 2, // 2x is plenty for crisp text without bloating file size
+  useCORS: true,
+  backgroundColor: '#ffffff',
+  logging: false,
+  foreignObjectRendering: false
+});
 
- const imgData = canvas.toDataURL('image/png');
- const pdf = new jsPDF({
- orientation: 'portrait',
- unit: 'mm',
- format: 'a4'
- });
+const imgData = canvas.toDataURL('image/jpeg', 0.85);
+const pdf = new jsPDF({
+  orientation: 'portrait',
+  unit: 'mm',
+  format: 'a4'
+});
 
- const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
- const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
- const canvasRatio = canvas.height / canvas.width;
- const imgHeight = pdfWidth * canvasRatio;
+const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+const canvasRatio = canvas.height / canvas.width;
+const imgHeight = pdfWidth * canvasRatio;
 
- // If content exceeds one page, split across pages
- if (imgHeight <= pdfHeight) {
- pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
- } else {
- let yOffset = 0;
- while (yOffset < imgHeight) {
- pdf.addImage(imgData, 'PNG', 0, -yOffset, pdfWidth, imgHeight);
- yOffset += pdfHeight;
- if (yOffset < imgHeight) pdf.addPage();
- }
- }
+// If content exceeds one page, split across pages
+if (imgHeight <= pdfHeight) {
+  pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+} else {
+  let yOffset = 0;
+  while (yOffset < imgHeight) {
+    pdf.addImage(imgData, 'JPEG', 0, -yOffset, pdfWidth, imgHeight);
+    yOffset += pdfHeight;
+    if (yOffset < imgHeight) pdf.addPage();
+  }
+}
 
  const fileName = resumeData.contactInfo.fullName? `${resumeData.contactInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`: 'resume.pdf';
 
@@ -783,14 +786,145 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  }));
 
  toast.success('Resume rewritten with AI. Review it, then download the new version.', { id: toastId });
- setCurrentStep('review');
- } catch (err: any) {
- console.error('AI resume rewrite failed:', err);
- toast.error(err instanceof Error? err.message: 'AI resume rewrite failed.', { id: toastId });
- } finally {
- setIsRewritingResume(false);
- }
- };
+setCurrentStep('review');
+  } catch (err: any) {
+  console.error('AI resume rewrite failed:', err);
+  toast.error(err instanceof Error? err.message: 'AI resume rewrite failed.', { id: toastId });
+  } finally {
+  setIsRewritingResume(false);
+  }
+  };
+
+  const importFromUploadedCv = async (target: 'experience' | 'education') => {
+  if (isImportingFromCv) return;
+  setIsImportingFromCv(true);
+  const toastId = toast.loading(`Reading your uploaded CV to fill ${target}...`);
+
+  try {
+  const supabase = createSupabaseBrowserClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user?.id) throw new Error('Please sign in to import from your CV.');
+
+  const { data: profileRow } = await supabase
+  .from('profiles')
+  .select('id')
+  .eq('auth_user_id', authData.user.id)
+  .maybeSingle();
+
+  const candidateIds = [profileRow?.id, authData.user.id].filter(Boolean) as string[];
+  const { data: extrasRow } = await supabase
+  .from('candidate_profiles')
+  .select('resume_url')
+  .in('user_id', candidateIds)
+  .order('updated_at', { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+  if (!extrasRow?.resume_url) {
+  throw new Error('Upload a CV in profile completion first, then come back here to import.');
+  }
+
+  const resumePath = String(extrasRow.resume_url);
+  let signedUrl = resumePath;
+  if (!/^https?:\/\//i.test(resumePath)) {
+  const { url } = await applicationsService.getApplicationFileSignedUrl(resumePath);
+  if (!url) throw new Error('Could not access your uploaded CV.');
+  signedUrl = url;
+  }
+
+  toast.loading('Extracting text from your CV...', { id: toastId });
+  const downloadResponse = await fetch(signedUrl);
+  if (!downloadResponse.ok) throw new Error('Could not download your uploaded CV.');
+  const blob = await downloadResponse.blob();
+  const file = new File([blob], 'uploaded-cv', { type: blob.type || 'application/pdf' });
+  const { text } = await extractResumeText(file);
+  if (!text || !text.trim()) throw new Error('No readable text found in your uploaded CV.');
+
+  toast.loading(`AI is parsing your ${target}...`, { id: toastId });
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session?.access_token) throw new Error('Please sign in again to import.');
+
+  const aiResponse = await fetch('/api/ai/parse-resume', {
+  method: 'POST',
+  headers: {
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${sessionData.session.access_token}`,
+  },
+  body: JSON.stringify({
+  rawResumeText: text,
+  }),
+  });
+
+  const rawAi = await aiResponse.text();
+  let aiPayload: any = {};
+  try {
+  aiPayload = rawAi ? JSON.parse(rawAi) : {};
+  } catch {
+  throw new Error('AI parse returned an invalid response.');
+  }
+
+  if (!aiResponse.ok) {
+  throw new Error(aiPayload?.error || 'AI could not parse your CV.');
+  }
+
+  const parsed = aiPayload?.resumeData || {};
+
+  if (target === 'experience') {
+  const newExperience: WorkExperience[] = Array.isArray(parsed.experience)
+  ? parsed.experience.map((exp: any, index: number) => ({
+  id: `${Date.now()}-exp-${index}`,
+  jobTitle: cleanBrokenText(String(exp.jobTitle || '')),
+  companyName: cleanBrokenText(String(exp.companyName || '')),
+  city: cleanBrokenText(String(exp.city || '')),
+  state: cleanBrokenText(String(exp.state || '')),
+  startDate: cleanBrokenText(String(exp.startDate || '')),
+  endDate: cleanBrokenText(String(exp.endDate || '')),
+  isCurrentJob: Boolean(exp.isCurrentJob),
+  description: Array.isArray(exp.description)
+  ? exp.description.map((line: any) => cleanBrokenText(String(line || ''))).filter(Boolean)
+  : [],
+  }))
+  : [];
+
+  if (newExperience.length === 0) {
+  toast.error('No work experience found in your uploaded CV. Add it manually.', { id: toastId });
+  return;
+  }
+
+  setResumeData(prev => ({ ...prev, experience: newExperience }));
+  toast.success(`Imported ${newExperience.length} work experience entr${newExperience.length === 1 ? 'y' : 'ies'} from your CV.`, { id: toastId });
+  return;
+  }
+
+  if (target === 'education') {
+  const newEducation: Education[] = Array.isArray(parsed.education)
+  ? parsed.education.map((edu: any, index: number) => ({
+  id: `${Date.now()}-edu-${index}`,
+  degree: cleanBrokenText(String(edu.degree || '')),
+  university: cleanBrokenText(String(edu.university || '')),
+  city: cleanBrokenText(String(edu.city || '')),
+  state: cleanBrokenText(String(edu.state || '')),
+  graduationDate: cleanBrokenText(String(edu.graduationDate || '')),
+  gpa: cleanBrokenText(String(edu.gpa || '')),
+  }))
+  : [];
+
+  if (newEducation.length === 0) {
+  toast.error('No education found in your uploaded CV. Add it manually.', { id: toastId });
+  return;
+  }
+
+  setResumeData(prev => ({ ...prev, education: newEducation }));
+  toast.success(`Imported ${newEducation.length} education entr${newEducation.length === 1 ? 'y' : 'ies'} from your CV.`, { id: toastId });
+  return;
+  }
+  } catch (err) {
+  console.error('Import from uploaded CV failed:', err);
+  toast.error(err instanceof Error ? err.message : 'Could not import from your uploaded CV.', { id: toastId });
+  } finally {
+  setIsImportingFromCv(false);
+  }
+  };
 
  const fixResumeWithHireVify = async () => {
  setIsFixingResumeWithAI(true);
@@ -1180,14 +1314,24 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  </div>
  );
 
- case 'experience':
- return (
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
- <div>
- <div className="flex items-center justify-between mb-6">
- <h2 className="text-2xl font-bold text-foreground">Work Experience</h2>
- <Button onClick={addExperience}>Add Experience</Button>
- </div>
+case 'experience':
+  return (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div>
+  <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <h2 className="text-2xl font-bold text-foreground">Work Experience</h2>
+  <div className="flex flex-wrap gap-2">
+  <Button
+  variant="outline"
+  onClick={() => importFromUploadedCv('experience')}
+  disabled={isImportingFromCv}
+  >
+  <Sparkles className="mr-2 h-4 w-4" />
+  Import from my CV
+  </Button>
+  <Button onClick={addExperience}>Add Experience</Button>
+  </div>
+  </div>
  <div className="space-y-6">
  {resumeData.experience.map((exp) => (
  <Card key={exp.id}>
@@ -1293,14 +1437,24 @@ export function ResumeBuilder({ onBack, onUpgrade }: ResumeBuilderProps) {
  </div>
  );
 
- case 'education':
- return (
- <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
- <div>
- <div className="flex items-center justify-between mb-6">
- <h2 className="text-2xl font-bold text-foreground">Education</h2>
- <Button onClick={addEducation}>Add Education</Button>
- </div>
+case 'education':
+  return (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div>
+  <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+  <h2 className="text-2xl font-bold text-foreground">Education</h2>
+  <div className="flex flex-wrap gap-2">
+  <Button
+  variant="outline"
+  onClick={() => importFromUploadedCv('education')}
+  disabled={isImportingFromCv}
+  >
+  <Sparkles className="mr-2 h-4 w-4" />
+  Import from my CV
+  </Button>
+  <Button onClick={addEducation}>Add Education</Button>
+  </div>
+  </div>
  <div className="space-y-6">
  {resumeData.education.map((edu) => (
  <Card key={edu.id}>

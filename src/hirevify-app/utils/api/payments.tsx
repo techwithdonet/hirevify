@@ -473,47 +473,47 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
  '100MB file storage'
  ]
  },
- {
- id: 'pro-monthly',
- name: 'Professional',
- price: 1999, // 1,999 per month
- interval: 'month',
- razorpayPlanId: 'plan_pro_monthly_india',
- description: 'Advanced features for growing teams',
- popular: true,
- features: [
- 'Unlimited project postings',
- 'Unlimited candidate searches',
- 'Advanced skills assessments',
- 'AI-powered matching',
- 'Video interview recording',
- 'Priority support',
- '10GB file storage',
- 'Advanced analytics',
- 'Skills-first hiring tools'
- ]
- },
- {
- id: 'pro-yearly',
- name: 'Professional (Annual)',
- price: 19990, // 19,990 per year (2 months free)
- interval: 'year',
- razorpayPlanId: 'plan_pro_yearly_india',
- description: 'Best value with 2 months free',
- discountPercentage: 17, // 2 months free = ~17% discount
- features: [
- 'Unlimited project postings',
- 'Unlimited candidate searches',
- 'Advanced skills assessments',
- 'AI-powered matching',
- 'Video interview recording',
- 'Priority support',
- '10GB file storage',
- 'Advanced analytics',
- 'Skills-first hiring tools',
- '2 months free!'
- ]
- }
+{
+  id: 'pro-monthly',
+  name: 'Professional',
+  price: 1199, // 1,199 per month
+  interval: 'month',
+  razorpayPlanId: 'plan_pro_monthly_india',
+  description: 'Advanced features for growing teams',
+  popular: true,
+  features: [
+  'Unlimited project postings',
+  'Unlimited candidate searches',
+  'Advanced skills assessments',
+  'AI-powered matching',
+  'Video interview recording',
+  'Priority support',
+  '10GB file storage',
+  'Advanced analytics',
+  'Skills-first hiring tools'
+  ]
+  },
+  {
+  id: 'pro-yearly',
+  name: 'Professional (Annual)',
+  price: 12999, // 12,999 per year (1 month free)
+  interval: 'year',
+  razorpayPlanId: 'plan_pro_yearly_india',
+  description: 'Best value with 1 month free',
+  discountPercentage: 10, // ~1 month free = ~10% discount
+  features: [
+  'Unlimited project postings',
+  'Unlimited candidate searches',
+  'Advanced skills assessments',
+  'AI-powered matching',
+  'Video interview recording',
+  'Priority support',
+  '10GB file storage',
+  'Advanced analytics',
+  'Skills-first hiring tools',
+  '1 month free!'
+  ]
+  }
 ];
 
 // Candidate plans with Indian pricing
@@ -532,43 +532,43 @@ export const CANDIDATE_SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
  'Email notifications'
  ]
  },
- {
- id: 'candidate-pro-monthly',
- name: 'Professional',
- price: 249, // 249 per month
- interval: 'month',
- razorpayPlanId: 'plan_candidate_pro_monthly_india',
- description: 'Premium features to stand out',
- popular: true,
- features: [
- 'Advanced resume builder',
- 'Portfolio showcase',
- 'Priority applications',
- 'Keyword optimization',
- 'Application analytics',
- 'Premium badge visibility',
- 'Skills certifications'
- ]
- },
- {
- id: 'candidate-pro-yearly',
- name: 'Professional (Annual)',
- price: 1999, // 1,999 per year (5 months free)
- interval: 'year',
- razorpayPlanId: 'plan_candidate_pro_yearly_india',
- description: 'Best value with 5 months free',
- discountPercentage: 33, // 5 months free = ~33% discount
- features: [
- 'Advanced resume builder',
- 'Portfolio showcase',
- 'Priority applications',
- 'Keyword optimization',
- 'Application analytics',
- 'Premium badge visibility',
- 'Skills certifications',
- '5 months free!'
- ]
- }
+{
+  id: 'candidate-pro-monthly',
+  name: 'Professional',
+  price: 449, // 449 per month
+  interval: 'month',
+  razorpayPlanId: 'plan_candidate_pro_monthly_india',
+  description: 'Premium features to stand out',
+  popular: true,
+  features: [
+  'Advanced resume builder',
+  'Portfolio showcase',
+  'Priority applications',
+  'Keyword optimization',
+  'Application analytics',
+  'Premium badge visibility',
+  'Skills certifications'
+  ]
+  },
+  {
+  id: 'candidate-pro-yearly',
+  name: 'Professional (Annual)',
+  price: 3999, // 3,999 per year (3 months free)
+  interval: 'year',
+  razorpayPlanId: 'plan_candidate_pro_yearly_india',
+  description: 'Best value with 3 months free',
+  discountPercentage: 26, // ~3 months free = ~26% discount
+  features: [
+  'Advanced resume builder',
+  'Portfolio showcase',
+  'Priority applications',
+  'Keyword optimization',
+  'Application analytics',
+  'Premium badge visibility',
+  'Skills certifications',
+  '3 months free!'
+  ]
+  }
 ];
 
 // Feature access mapping

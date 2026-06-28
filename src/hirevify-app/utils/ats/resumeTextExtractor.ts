@@ -6,6 +6,7 @@ export type ResumeTextExtractionResult = {
 
 export const RESUME_UPLOAD_MAX_SIZE_MB = 30;
 export const RESUME_UPLOAD_MAX_SIZE_BYTES = RESUME_UPLOAD_MAX_SIZE_MB * 1024 * 1024;
+export const RESUME_EXTRACT_MAX_CHARS = 30000;
 
 function cleanExtractedText(text: string) {
   return String(text || '')
@@ -64,8 +65,11 @@ async function extractPdf(file: File) {
 async function extractBinaryFallback(file: File) {
   const buffer = await file.arrayBuffer();
   const text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
-  const useful = text.match(/[A-Za-z0-9@.,;:()/'"+#&\-\s]{20,}/g) || [];
-  return cleanExtractedText(useful.join(' '));
+  // Limit matches considered so a 30MB PDF binary doesn't produce megabytes of pseudo-text.
+  const limitedSlice = text.slice(0, 2 * 1024 * 1024);
+  const useful = limitedSlice.match(/[A-Za-z0-9@.,;:()/'"+#&\-\s]{20,}/g) || [];
+  const joined = useful.join(' ').slice(0, RESUME_EXTRACT_MAX_CHARS);
+  return cleanExtractedText(joined);
 }
 
 export async function extractResumeText(file: File): Promise<ResumeTextExtractionResult> {
@@ -100,7 +104,7 @@ export async function extractResumeText(file: File): Promise<ResumeTextExtractio
 
       if (text && text.replace(/\s/g, '').length >= 40) {
         return {
-          text,
+          text: text.slice(0, RESUME_EXTRACT_MAX_CHARS),
           method: attempt.method,
           warnings
         };

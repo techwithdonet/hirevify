@@ -101,33 +101,32 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
   alert(`${plan.name} plan payments are coming soon. For now, please contact admin to activate Pro.`);
 };
 
- // Function to get the current price based on billing period
- const getCurrentPrice = (plan: SubscriptionPlan) => {
- if (plan.price === 0) {
- return 'Free';
- }
- 
- // For yearly plans, show monthly equivalent
- if (plan.interval === 'year') {
- const monthlyPrice = Math.round(plan.price / 12);
- return formatIndianCurrency(monthlyPrice);
- }
- 
- return formatIndianCurrency(plan.price);
- };
+  // Function to get the current price based on billing period
+  const getCurrentPrice = (plan: SubscriptionPlan) => {
+  if (plan.price === 0) {
+  return 'Free';
+  }
+  
+  // For yearly plans, show annual price
+  if (plan.interval === 'year') {
+  return formatIndianCurrency(plan.price);
+  }
+  
+  return formatIndianCurrency(plan.price);
+  };
 
- // Function to get the billing period text
- const getBillingText = (plan: SubscriptionPlan) => {
- if (plan.price === 0) {
- return '';
- }
- 
- if (plan.interval === 'year') {
- return '/month (billed annually)';
- }
- 
- return '/month';
- };
+  // Function to get the billing period text
+  const getBillingText = (plan: SubscriptionPlan) => {
+  if (plan.price === 0) {
+  return '';
+  }
+  
+  if (plan.interval === 'year') {
+  return '/year';
+  }
+  
+  return '/month';
+  };
 
  // Get discount savings text
  const getSavingsText = (plan: SubscriptionPlan) => {
@@ -269,10 +268,10 @@ return (
  onClick={() => setIsAnnual(true)}
  className={`px-6 ${isAnnual? 'bg-background shadow-sm': 'hover:bg-transparent'}`}
  >
- Annual
- <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700 text-xs">
- Save up to 33%
- </Badge>
+Annual
+  <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700 text-xs">
+  Save up to 26%
+  </Badge>
  </Button>
  </div>
 
@@ -344,21 +343,21 @@ return (
  </div>
  )}
  
- <CardHeader className="text-center pb-6">
- <CardTitle className="text-foreground text-2xl mb-2">{plan.name}</CardTitle>
- <div className="mb-4">
- <span className="text-4xl text-foreground">{getCurrentPrice(plan)}</span>
- <span className="text-muted-foreground">{getBillingText(plan)}</span>
- {plan.interval === 'year' && plan.price > 0 && (
- <div className="text-sm text-muted-foreground mt-1">
- Total: {formatIndianCurrency(plan.price)} per year
- </div>
- )}
- </div>
- <CardDescription className="text-muted-foreground">
- {plan.description}
- </CardDescription>
- </CardHeader>
+  <CardHeader className="text-center pb-6">
+  <CardTitle className="text-foreground text-2xl mb-2">{plan.name}</CardTitle>
+  <div className="mb-4">
+  <span className="text-4xl text-foreground">{getCurrentPrice(plan)}</span>
+  <span className="text-muted-foreground">{getBillingText(plan)}</span>
+  {plan.discountPercentage && (
+  <div className="text-sm font-medium text-green-600 mt-1">
+  {plan.discountPercentage}% off
+  </div>
+  )}
+  </div>
+  <CardDescription className="text-muted-foreground">
+  {plan.description}
+  </CardDescription>
+  </CardHeader>
  
  <CardContent className="space-y-6">
  <ul className="space-y-3">

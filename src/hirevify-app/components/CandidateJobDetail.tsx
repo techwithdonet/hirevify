@@ -75,6 +75,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
   const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string; preview: string; projectedScore: number } | null>(null);
   const [isOptimizingCv, setIsOptimizingCv] = useState(false);
   const [optimizationProgressText, setOptimizationProgressText] = useState('');
+  const [jobOnlyChosen, setJobOnlyChosen] = useState(false);
 
   // Resolve candidate profile from auth
   const [candidateProfileId, setCandidateProfileId] = useState<string | null>(null);
@@ -279,10 +280,6 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
       toast.error('Check your CV match before optimizing.');
       return;
     }
-    if (cvMatch.score < 70) {
-      toast.error('Your CV match is below 70%. Update your profile CV before applying.');
-      return;
-    }
     if (!authUserId) {
       toast.error('Please sign in again.');
       return;
@@ -320,7 +317,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         },
         body: JSON.stringify({
           resumeData,
-          rawResumeText: resumeText,
+          rawResumeText: resumeText.length > 20000 ? `${resumeText.slice(0, 20000)}\n\n[Truncated for AI context]` : resumeText,
           targetJobDescription: [job.title, job.description, ...(job.requirements || []), ...(job.skills || [])].filter(Boolean).join('\n'),
           atsScore: cvMatch?.score,
         }),
@@ -377,12 +374,19 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
     }
 
     setCandidateExtras((current) => current ? { ...current, resume_url: optimizedCv.path } : current);
+    setJobOnlyChosen(true);
     toast.success('Your profile CV was replaced with the optimized CV.');
+  };
+
+  const handleUseForThisJobOnly = () => {
+    if (!optimizedCv) return;
+    setJobOnlyChosen(true);
+    toast.success('Got it — your profile CV stays as is. The optimized CV will be sent with this application.');
   };
 
   const budgetText = formatBudget(job);
   const isCvBelowThreshold = Boolean(cvMatch && cvMatch.score < 70);
-  const canOptimizeCv = Boolean(cvMatch && cvMatch.score >= 70);
+  const canOptimizeCv = Boolean(cvMatch);
 
   return (
     <div className="hv-candidate-shell min-h-screen">
@@ -580,7 +584,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                           <div className="flex gap-2">
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                             <p>
-                              Your CV match is below 70%, so you cannot apply for this job yet. Update your CV in profile completion and check again.
+                              Your CV match is below 70%, so you cannot apply for this job yet. Use the HireVify optimizer below to improve your match score, or update your CV in profile completion.
                             </p>
                           </div>
                         </div>
@@ -627,7 +631,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                     </div>
                   )}
 
-                  {optimizedCv && (
+                  {optimizedCv && !jobOnlyChosen && (
                     <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
                       <p className="text-xs font-semibold text-slate-950">Optimized CV ready</p>
                       <p className="mt-1 text-xs text-slate-600">
@@ -640,10 +644,25 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                         <Button type="button" size="sm" onClick={handleReplaceCurrentCv} className="bg-emerald-600 text-white hover:bg-emerald-700">
                           Yes, replace
                         </Button>
-                        <Button type="button" size="sm" variant="outline">
+                        <Button type="button" size="sm" variant="outline" onClick={handleUseForThisJobOnly}>
                           No, this job only
                         </Button>
                       </div>
+                    </div>
+                  )}
+
+                  {optimizedCv && jobOnlyChosen && (
+                    <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-xs font-semibold text-emerald-800">
+                        {candidateExtras?.resume_url === optimizedCv.path
+                          ? 'Profile CV updated.'
+                          : 'Using optimized CV for this job only.'}
+                      </p>
+                      <p className="mt-1 text-xs text-emerald-700">
+                        {candidateExtras?.resume_url === optimizedCv.path
+                          ? 'Your profile CV was replaced. Click Apply to send it with this application.'
+                          : 'Your profile CV stays as is. Click Apply to send the optimized version with this application.'}
+                      </p>
                     </div>
                   )}
                 </div>
