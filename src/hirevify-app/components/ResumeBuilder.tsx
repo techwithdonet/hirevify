@@ -808,7 +808,7 @@ setCurrentStep('review');
   const { data: profileRow } = await supabase
   .from('profiles')
   .select('id')
-  .eq('auth_user_id', authData.user.id)
+  .or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`)
   .maybeSingle();
 
   const candidateIds = [profileRow?.id, authData.user.id].filter(Boolean) as string[];

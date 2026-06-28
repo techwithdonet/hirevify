@@ -307,7 +307,7 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  throw new Error('No active Supabase login found.');
  }
 
- const { data: profileRow, error: profileError } = await supabase.from('profiles').select('*').eq('auth_user_id', authData.user.id).maybeSingle();
+  const { data: profileRow, error: profileError } = await supabase.from('profiles').select('*').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).maybeSingle();
 
  if (profileError) {
  throw new Error(profileError.message);
@@ -381,15 +381,15 @@ const { data: candidateProfile, error: candidateError } = await supabase
  throw new Error('No active Supabase login found. Please login again.');
  }
 
- const { data: profileRow, error: profileError } = await supabase.from('profiles').select('id, auth_user_id, email, role').eq('auth_user_id', authData.user.id).maybeSingle();
+  const { data: profileRow, error: profileError } = await supabase.from('profiles').select('id, auth_user_id, email, role').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).maybeSingle();
 
- if (profileError) {
- throw new Error(profileError.message);
- }
+  if (profileError) {
+  throw new Error(profileError.message);
+  }
 
- if (!profileRow?.id) {
- throw new Error('Main profile row not found. Please login again.');
- }
+  if (!profileRow?.id) {
+  throw new Error('Main profile row not found. Please login again.');
+  }
 
  const profileCompleted = markComplete && completion.isComplete;
  const profileCompleteness = profileCompleted? 100: completion.percentage;

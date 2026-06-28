@@ -144,12 +144,12 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
  const authUserId = authData?.user?.id;
  const candidateIds = new Set<string>();
 
- if (authUserId) {
- candidateIds.add(String(authUserId));
+  if (authUserId) {
+  candidateIds.add(String(authUserId));
 
- const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').eq('auth_user_id', authUserId).maybeSingle();
+  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
 
- if (profileRow?.id) candidateIds.add(String(profileRow.id));
+  if (profileRow?.id) candidateIds.add(String(profileRow.id));
  if (profileRow?.auth_user_id) candidateIds.add(String(profileRow.auth_user_id));
 
  const candidateProfileFilters = [`user_id.eq.${authUserId}`];
@@ -191,7 +191,7 @@ setAppliedProjectIds(appliedJobIdsFromDb);
   const { data: profileRow } = await supabase
   .from('profiles')
   .select('id, auth_user_id')
-  .eq('auth_user_id', authUserId)
+  .or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`)
   .maybeSingle();
 
   // saved_jobs.candidate_id is the candidate's profiles.id when available
@@ -571,7 +571,7 @@ const applyToProject = async () => {
  return;
  }
 
- const { data: candidateProfile } = await supabase.from('profiles').select('id, full_name, email, role').eq('auth_user_id', authData.user.id).single();
+  const { data: candidateProfile } = await supabase.from('profiles').select('id, full_name, email, role').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).single();
 
  if (!candidateProfile || candidateProfile.role!== 'candidate') {
  toast.error('Only candidates can apply.');
@@ -587,7 +587,7 @@ const applyToProject = async () => {
  return;
  }
 
- const { data: applicationProfileRow, error: applicationProfileError } = await supabase.from('profiles').select('id, auth_user_id, full_name').eq('auth_user_id', currentAuthUserId).maybeSingle();
+  const { data: applicationProfileRow, error: applicationProfileError } = await supabase.from('profiles').select('id, auth_user_id, full_name').or(`auth_user_id.eq.${currentAuthUserId},id.eq.${currentAuthUserId}`).maybeSingle();
 
  if (applicationProfileError ||!applicationProfileRow?.id) {
  toast.error(applicationProfileError?.message || 'Candidate profile not found. Please complete your profile first.');
@@ -711,7 +711,7 @@ const { error: appError } = await supabase.from('applications').insert({
 
  if (!authUserId) return;
 
- const { data: ownerProfile } = await supabaseForAppliedState.from('profiles').select('id, auth_user_id').eq('auth_user_id', authUserId).maybeSingle();
+  const { data: ownerProfile } = await supabaseForAppliedState.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
 
  const candidateIds = [ownerProfile?.id, authUserId].filter(Boolean) as string[];
  const projectIds = projects.map((project) => project.id).filter(Boolean);
@@ -753,9 +753,9 @@ const { error: appError } = await supabase.from('applications').insert({
 
  if (!authUserId) return;
 
- const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').eq('auth_user_id', authUserId).maybeSingle();
+  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
 
- const { data: candidateProfileRow } = await supabase.from('candidate_profiles').select('id, user_id').or(`user_id.eq.${authUserId}${profileRow?.id? `,user_id.eq.${profileRow.id}`: ''}`).maybeSingle();
+  const { data: candidateProfileRow } = await supabase.from('candidate_profiles').select('id, user_id').or(`user_id.eq.${authUserId}${profileRow?.id? `,user_id.eq.${profileRow.id}`: ''}`).maybeSingle();
 
  const candidateIds = Array.from(
  new Set(

@@ -100,7 +100,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         const { data: profileRow } = await supabase
           .from('profiles')
           .select('id')
-          .eq('auth_user_id', authData.user.id)
+          .or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`)
           .maybeSingle();
         if (profileRow?.id) setCandidateProfileId(profileRow.id);
 

@@ -58,7 +58,7 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
       const { data: profileRow } = await supabase
         .from('profiles')
         .select('id')
-        .eq('auth_user_id', currentAuthId)
+        .or(`auth_user_id.eq.${currentAuthId},id.eq.${currentAuthId}`)
         .maybeSingle();
 
       setProfileId(profileRow?.id || null);
