@@ -4,6 +4,27 @@ import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
 
 export const runtime = 'nodejs';
 
+/**
+ * Resume Optimization API
+ * 
+ * AI's role is to EXPLAIN and OPTIMIZE - NOT to calculate scores.
+ * The scoring engine provides deterministic scores.
+ * 
+ * Input:
+ * - resumeData: structured resume data
+ * - rawResumeText: raw CV text for parsing
+ * - targetJobDescription: job to optimize for
+ * - atsScore: CURRENT deterministic score (from backend)
+ * - categories: category breakdown from scoring engine
+ * - missingSkills: skills missing from scoring engine
+ * - missingKeywords: keywords missing from scoring engine
+ * 
+ * Output:
+ * - optimizedResume: improved resume
+ * - analysis: AI explanation of improvements
+ * - estimatedImprovement: realistic improvement estimate
+ * - changes: list of what was changed
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,28 +55,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const resumeData = body.resumeData;
+    const {
+      resumeData,
+      rawResumeText,
+      targetJobDescription,
+      atsScore,
+      categories,
+      missingSkills,
+      missingKeywords,
+      strengths,
+      weaknesses
+    } = body;
 
-    if (!resumeData) {
-      return NextResponse.json({ error: 'resumeData is required.' }, { status: 400 });
-    }
+    // Phase 1: Parse raw resume text into structured data (if provided)
+    let parsedResume = resumeData || {};
+    
+    if (rawResumeText && rawResumeText.length > 50) {
+      try {
+        const parsePrompt = `
+Parse this raw resume text into structured JSON. Extract ALL available information accurately. Do NOT invent any data.
 
-    const targetJobDescription = String(body.targetJobDescription || body.jobDescription || '').trim();
-    const rawResumeText = String(body.rawResumeText || '').trim();
-
-    const prompt = `
-Fix this resume for ATS compatibility and recruiter readability${targetJobDescription ? ' for the provided target job' : ''}.
-
-Return ONLY valid JSON:
+Return ONLY valid JSON with these exact fields:
 {
-  "summary": string,
+  "summary": string (professional summary from the resume),
   "experience": [
     {
-      "id": string,
       "jobTitle": string,
       "companyName": string,
       "city": string,
-      "state": string,
       "startDate": string,
       "endDate": string,
       "isCurrentJob": boolean,
@@ -66,76 +93,157 @@ Return ONLY valid JSON:
     {
       "name": string,
       "category": "technical" | "soft" | "language",
-      "proficiency": "beginner" | "intermediate" | "advanced" | "expert"
+      "proficiency": "intermediate"
     }
   ],
   "education": [
     {
-      "id": string,
       "degree": string,
       "university": string,
-      "city": string,
-      "state": string,
-      "graduationDate": string,
-      "gpa": string
+      "graduationDate": string
     }
   ]
 }
 
-Strict rules:
-- Use only the user-provided resume data and target job description.
-- Do not invent missing work experience.
-- Do not invent missing education.
-- Do not invent companies, degrees, dates, certifications, achievements, or skills.
-- Improve wording and ATS keywords only when grounded in provided summary, skills, experience, education, or the pasted target job.
-- If experience is empty or incomplete, return the same entries cleaned, not fake jobs.
-- If education is empty, return empty education.
-- Summary must be 2-3 sentences.
-- Experience descriptions should be bullet-ready strings.
-- Remove corrupted text like <pad>, â€¢, â€¦, Ã, Â.
-- No markdown outside JSON.
+Rules:
+- Extract ONLY real information from the resume text
+- Do NOT invent or assume any data not present
+- If a field is not found, use empty string or empty array
+- Dates can be in any format
 
-Resume data:
-${JSON.stringify(resumeData, null, 2)}
+Raw resume text:
+${rawResumeText.slice(0, 15000)}
+`;
 
-Raw extracted resume text:
-${rawResumeText || 'Not provided'}
+        const parseResult = await callConfiguredAI({
+          purpose: 'Resume parsing',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a resume parser. Extract ONLY real information. Return only valid JSON. Never invent data.'
+            },
+            {
+              role: 'user',
+              content: parsePrompt
+            }
+          ],
+          temperature: 0.1,
+          maxTokens: 2500,
+          responseFormatJson: true
+        });
+        
+        const parsed = JSON.parse(extractJsonObject(parseResult));
+        parsedResume = { ...parsedResume, ...parsed };
+      } catch (parseError) {
+        console.warn('Resume parsing failed, using provided data:', parseError);
+      }
+    }
+
+    // Phase 2: Optimize resume for ATS (without calculating scores)
+    const missingSkillsList = (missingSkills || []).join(', ');
+    const missingKeywordsList = (missingKeywords || []).join(', ');
+    
+    const optimizationPrompt = `
+You are HireVify Resume Optimization AI. Your job is to:
+1. EXPLAIN the current weaknesses
+2. OPTIMIZE the resume with ATS-friendly improvements
+3. ESTIMATE realistic improvement
+
+You do NOT calculate scores. The backend provides deterministic scores.
+
+Return ONLY valid JSON:
+{
+  "optimizedResume": {
+    "summary": string (improved professional summary with ATS keywords - MUST include these keywords if relevant to experience: ${missingKeywordsList || 'None'}),
+    "experience": [array - ALL entries with improved bullet points that naturally include ${missingKeywordsList || 'missing keywords'}],
+    "skills": [array - MUST include these missing skills: ${missingSkillsList || 'None'}],
+    "education": [array - unchanged]
+  },
+  "analysis": {
+    "strengths": string[] (what's working well),
+    "weaknesses": string[] (what needs improvement),
+    "missingSkills": string[] (skills to highlight based on job requirements),
+    "missingKeywords": string[] (keywords to naturally incorporate),
+    "improvementTips": string[] (specific suggestions)
+  },
+  "estimatedImprovement": {
+    "minIncrease": number (minimum percentage point increase),
+    "maxIncrease": number (maximum percentage point increase),
+    "reasoning": string (why this improvement is expected)
+  },
+  "changes": [
+    {
+      "section": string,
+      "before": string,
+      "after": string,
+      "reason": string
+    }
+  ]
+}
+
+CRITICAL RULES - FOLLOW THESE EXACTLY:
+1. NEVER invent: work experience, certifications, projects, skills, degrees, employers, achievements
+2. ONLY rewrite/improve existing information
+3. You MUST include these missing keywords in the optimized resume: ${missingKeywordsList || 'None'}
+   - Add them to the professional summary naturally
+   - Add them to experience bullet points where they fit the actual work
+   - Do NOT invent new skills - only rephrase existing ones with the keywords
+4. You MUST include these missing skills in the skills section: ${missingSkillsList || 'None'}
+5. Estimate improvement realistically (usually 8-15 percentage points when keywords are added)
 
 Target job description:
 ${targetJobDescription || 'Not provided'}
 
-ATS score:
-${JSON.stringify(body.atsScore ?? null)}
+Current ATS score: ${atsScore || 0}%
 
-ATS checks:
-${JSON.stringify(body.atsChecks ?? [], null, 2)}
+Score categories (for reference - do not modify):
+${JSON.stringify(categories || [], null, 2)}
+
+Missing skills: ${missingSkillsList || 'None'}
+Missing keywords: ${missingKeywordsList || 'None'}
+Strengths: ${(strengths || []).join(', ') || 'None identified'}
+Weaknesses: ${(weaknesses || []).join(', ') || 'None identified'}
+
+Original resume:
+${JSON.stringify(parsedResume, null, 2)}
 `;
 
     const aiText = await callConfiguredAI({
-      purpose: 'AI resume rewrite',
+      purpose: 'AI resume optimization',
       messages: [
         {
           role: 'system',
-          content:
-            'You are HireVify Resume Fix AI. Return only valid JSON. Improve resumes for ATS. Never invent fake jobs, companies, degrees, years, certifications, achievements, or skills.'
+          content: `You are HireVify Resume Optimization AI.
+- EXPLAIN: Why the resume is weak in certain areas
+- OPTIMIZE: Rewrite existing content for better ATS performance  
+- ESTIMATE: Give realistic improvement projections (5-15 points max)
+- NEVER invent: experience, certifications, projects, skills, degrees, employers, achievements
+- DO improve: wording, keyword placement, formatting suggestions, bullet points`
         },
         {
           role: 'user',
-          content: prompt
+          content: optimizationPrompt
         }
       ],
-      temperature: 0.2,
-      maxTokens: 2200,
+      temperature: 0.3,
+      maxTokens: 4000,
       responseFormatJson: true
     });
 
-    const fixed = JSON.parse(extractJsonObject(aiText));
+    const result = JSON.parse(extractJsonObject(aiText));
 
-    return NextResponse.json({ fixedResume: fixed, resumeData: fixed });
+    return NextResponse.json({
+      optimizedResume: result.optimizedResume || parsedResume,
+      analysis: result.analysis || { strengths: [], weaknesses: [], missingSkills: [], missingKeywords: [], improvementTips: [] },
+      estimatedImprovement: result.estimatedImprovement || { minIncrease: 5, maxIncrease: 10, reasoning: 'Based on keyword improvements' },
+      changes: result.changes || [],
+      originalResume: parsedResume,
+      note: 'Score is calculated deterministically by the backend. This API only optimizes and explains.'
+    });
   } catch (error) {
-    console.error('Rewrite resume route failed:', error);
+    console.error('Resume optimization failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'AI resume rewrite failed.' },
+      { error: error instanceof Error ? error.message : 'AI resume optimization failed.' },
       { status: 500 }
     );
   }

@@ -91,11 +91,12 @@ const emptyMetrics = (): LiveMetrics => ({
  successRate: 0,
  averageConfidence: 0,
  savedScoreRate: 0,
- sourceCounts: {
- stored: 0,
- openai: 0,
- keyword: 0,
- },
+  sourceCounts: {
+  deterministic: 0,
+  stored: 0,
+  openai: 0,
+  keyword: 0,
+  },
  currentWeights: MATCH_WEIGHTS,
 });
 
@@ -316,12 +317,12 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  };
  }));
 
- const sortedRows = scoredRows.sort((a, b) => b.score - a.score || new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
- const scoredValues = sortedRows.map((row) => row.score).filter((score) => score > 0);
- const sourceCounts = sortedRows.reduce(
- (counts, row) => ({ ...counts, [row.source]: counts[row.source] + 1 }),
- { stored: 0, openai: 0, keyword: 0 } as Record<AtsMatchResult['source'], number>,
- );
+  const sortedRows = scoredRows.sort((a, b) => b.score - a.score || new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const scoredValues = sortedRows.map((row) => row.score).filter((score) => score > 0);
+  const sourceCounts = sortedRows.reduce(
+  (counts, row) => ({ ...counts, [row.source]: (counts[row.source] || 0) + 1 }),
+  { deterministic: 0, stored: 0, openai: 0, keyword: 0 } as Record<AtsMatchResult['source'], number>,
+  );
  const advancedStatuses = new Set(['screening', 'interview', 'offer', 'hired']);
  const averageScore = average(scoredValues);
 

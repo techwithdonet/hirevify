@@ -90,7 +90,7 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string } | null>(null);
+  const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string; projectedScore?: number } | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,7 +105,11 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
     try {
       const parsed = JSON.parse(raw);
       if (parsed?.path && parsed?.fileName) {
-        setOptimizedCv({ path: parsed.path, fileName: parsed.fileName });
+        setOptimizedCv({ 
+          path: parsed.path, 
+          fileName: parsed.fileName,
+          projectedScore: parsed.projectedScore 
+        });
       }
     } catch {
       setOptimizedCv(null);
@@ -250,6 +254,28 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
 
   // ─── Success state ────────────────────────────────────────────────────
   if (step === 'success') {
+    const [showCvPrompt, setShowCvPrompt] = useState(true);
+    const [isReplacingCv, setIsReplacingCv] = useState(false);
+
+    const handleReplaceCv = async () => {
+      if (!optimizedCv || !profile?.id) return;
+      setIsReplacingCv(true);
+      try {
+        const { error } = await supabase
+          .from('candidate_profiles')
+          .update({ resume_url: optimizedCv.path, updated_at: new Date().toISOString() })
+          .eq('user_id', user?.id);
+
+        if (error) throw error;
+        toast.success('Your profile CV has been updated with the optimized version!');
+        setShowCvPrompt(false);
+      } catch (err: any) {
+        toast.error(err?.message || 'Could not update your CV.');
+      } finally {
+        setIsReplacingCv(false);
+      }
+    };
+
     return (
       <DashboardPageLayout
         title="Application sent"
@@ -265,6 +291,47 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
             We'll let you know as soon as the recruiter takes a look. If they
             assign the project, you'll see it in your dashboard.
           </p>
+
+          {/* CV Replacement Prompt - only show if optimized CV scored >= 70% */}
+          {optimizedCv && optimizedCv.projectedScore && optimizedCv.projectedScore >= 70 && showCvPrompt && (
+            <div className="mx-auto mt-6 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
+              <div className="flex items-start gap-3">
+                <Sparkles className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-amber-900">Upgrade your profile CV?</h4>
+                  <p className="mt-1 text-xs text-amber-700">
+                    This optimized CV scored above 70% for this job. Would you like to make it your default CV in your profile?
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleReplaceCv}
+                      disabled={isReplacingCv}
+                      className="bg-amber-600 text-white hover:bg-amber-700"
+                    >
+                      {isReplacingCv ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Yes, update my CV'
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowCvPrompt(false)}
+                      className="text-amber-700 hover:bg-amber-100"
+                    >
+                      No, keep current
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 flex justify-center gap-2">
             <Button onClick={onBack} variant="ghost">
               View job

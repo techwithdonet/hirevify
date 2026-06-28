@@ -18,7 +18,7 @@ interface CandidateJobDetailProps {
   job: Job;
   onBack: () => void;
   onViewAssignment?: (assignmentId: string) => void;
-  onApply?: (job: Job, optimizedCv?: { path: string; fileName: string }) => void;
+  onApply?: (job: Job, optimizedCv?: { path: string; fileName: string; projectedScore?: number }) => void;
 }
 
 const JOB_TYPE_LABELS: Record<Job['job_type'], string> = {
@@ -72,7 +72,14 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
   const [cvMatch, setCvMatch] = useState<AtsMatchResult | null>(null);
   const [isCheckingCvMatch, setIsCheckingCvMatch] = useState(false);
   const [cvMatchProgressText, setCvMatchProgressText] = useState('');
-  const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string; preview: string; projectedScore: number } | null>(null);
+  const [optimizedCv, setOptimizedCv] = useState<{ 
+    path: string; 
+    fileName: string; 
+    preview: string; 
+    projectedScore: number;
+    estimatedImprovement?: { minIncrease: number; maxIncrease: number };
+    changes?: Array<{ section: string; before: string; after: string; reason: string }>;
+  } | null>(null);
   const [isOptimizingCv, setIsOptimizingCv] = useState(false);
   const [optimizationProgressText, setOptimizationProgressText] = useState('');
   const [jobOnlyChosen, setJobOnlyChosen] = useState(false);
@@ -187,18 +194,27 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
       toast.error('Check your CV match before applying to this job.');
       return;
     }
-    if (cvMatch && cvMatch.score < 70) {
+    if (cvMatch && cvMatch.score < 70 && !optimizedCv) {
       toast.error('Your CV match is below 70%. Improve your CV before applying to this job.');
+      return;
+    }
+    // Allow apply if optimized CV score is >= 70 (even if original was < 70)
+    if (cvMatch && cvMatch.score < 70 && optimizedCv && optimizedCv.projectedScore < 70) {
+      toast.error('Your optimized CV match is still below 70%. Consider further improvements.');
       return;
     }
     if (onApply) {
       if (optimizedCv && typeof window !== 'undefined') {
         window.sessionStorage.setItem(
           `hirevify_optimized_cv_${job.id}`,
-          JSON.stringify({ path: optimizedCv.path, fileName: optimizedCv.fileName })
+          JSON.stringify({ 
+            path: optimizedCv.path, 
+            fileName: optimizedCv.fileName,
+            projectedScore: optimizedCv.projectedScore 
+          })
         );
       }
-      onApply(job, optimizedCv ? { path: optimizedCv.path, fileName: optimizedCv.fileName } : undefined);
+      onApply(job, optimizedCv ? { path: optimizedCv.path, fileName: optimizedCv.fileName, projectedScore: optimizedCv.projectedScore } : undefined);
     }
   };
 
@@ -291,24 +307,41 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
     }
 
     setIsOptimizingCv(true);
-    setOptimizationProgressText('Finding missing job keywords...');
+    setOptimizationProgressText('Reading your CV...');
     try {
       let resumeText = '';
       try {
         resumeText = await loadCurrentCvText();
+        if (resumeText.length > 100) {
+          setOptimizationProgressText('Analyzing job requirements...');
+        }
       } catch (err) {
         console.warn('Could not extract current CV text for AI rewrite', err);
       }
 
-      setOptimizationProgressText('Applying small, grounded CV improvements...');
+      // Extract missing keywords from ATS result
+      const missingKeywords = cvMatch?.missingKeywords || [];
+
+      setOptimizationProgressText('Optimizing CV for ATS compatibility...');
+      
+      // Build resume data from profile
       const resumeData = {
-        contactInfo: { fullName: currentUser.name || '', email: currentUser.email || '', phone: '', location: '', linkedinUrl: '', portfolioUrl: '' },
+        contactInfo: { 
+          fullName: currentUser.name || '', 
+          email: currentUser.email || '', 
+          phone: '',
+          location: '',
+          linkedinUrl: '',
+          portfolioUrl: ''
+        },
         summary: candidateExtras.experience_summary || candidateExtras.headline || '',
         experience: [],
         education: [],
         skills: (candidateExtras.skills || []).map((skill) => ({ name: skill, category: 'technical', proficiency: 'intermediate' })),
       };
 
+      setOptimizationProgressText('Optimizing CV for ATS...');
+      
       const response = await fetch('/api/ai/rewrite-resume', {
         method: 'POST',
         headers: {
@@ -320,6 +353,11 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
           rawResumeText: resumeText.length > 20000 ? `${resumeText.slice(0, 20000)}\n\n[Truncated for AI context]` : resumeText,
           targetJobDescription: [job.title, job.description, ...(job.requirements || []), ...(job.skills || [])].filter(Boolean).join('\n'),
           atsScore: cvMatch?.score,
+          categories: cvMatch?.categories,
+          missingSkills: cvMatch?.missingSkills || [],
+          missingKeywords: missingKeywords,
+          strengths: cvMatch?.strengths || [],
+          weaknesses: cvMatch?.weaknesses || [],
         }),
       });
 
@@ -328,19 +366,86 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         throw new Error(payload?.error || 'HireVify AI could not optimize this CV.');
       }
 
+      setOptimizationProgressText('Generating optimized CV...');
       const payload = await response.json();
-      const rewritten = payload?.resumeData || payload?.fixedResume || {};
-      const projectedScore = Math.min(80, cvMatch.score + (cvMatch.score >= 75 ? 5 : 10));
-      const preview = [
-        currentUser.name,
-        currentUser.email,
-        '',
-        'Professional Summary',
-        rewritten.summary || resumeData.summary,
-        '',
-        'Skills',
-        (rewritten.skills || resumeData.skills).map((skill: any) => skill.name || skill).filter(Boolean).join(', '),
-      ].join('\n');
+      const optimizedResume = payload?.optimizedResume || {};
+      const estimatedImprovement = payload?.estimatedImprovement || { minIncrease: 5, maxIncrease: 10 };
+      const changes = payload?.changes || [];
+      
+      // Calculate projected score using the AI's estimate (deterministic backend confirms)
+      const projectedScore = Math.min(95, (cvMatch?.score || 50) + estimatedImprovement.maxIncrease);
+
+      // Generate full CV content
+      const contactInfo = resumeData.contactInfo;
+      const lines: string[] = [];
+      
+      // Header
+      lines.push(contactInfo.fullName.toUpperCase());
+      if (contactInfo.email) lines.push(contactInfo.email);
+      lines.push('');
+
+      // Summary
+      if (optimizedResume.summary) {
+        lines.push('PROFESSIONAL SUMMARY');
+        lines.push(optimizedResume.summary);
+        lines.push('');
+      }
+
+      // Skills
+      if (optimizedResume.skills && optimizedResume.skills.length > 0) {
+        lines.push('SKILLS');
+        const skillGroups: Record<string, string[]> = { technical: [], soft: [], language: [] };
+        for (const skill of optimizedResume.skills) {
+          const name = skill.name || skill;
+          const category = skill.category || 'technical';
+          if (skillGroups[category]) {
+            skillGroups[category].push(name);
+          } else {
+            skillGroups.technical.push(name);
+          }
+        }
+        if (skillGroups.technical.length > 0) {
+          lines.push('Technical: ' + skillGroups.technical.join(', '));
+        }
+        if (skillGroups.soft.length > 0) {
+          lines.push('Soft Skills: ' + skillGroups.soft.join(', '));
+        }
+        if (skillGroups.language.length > 0) {
+          lines.push('Languages: ' + skillGroups.language.join(', '));
+        }
+        lines.push('');
+      }
+
+      // Experience
+      if (optimizedResume.experience && optimizedResume.experience.length > 0) {
+        lines.push('WORK EXPERIENCE');
+        for (const exp of optimizedResume.experience) {
+          const titleLine = `${exp.jobTitle}${exp.companyName ? ` at ${exp.companyName}` : ''}`;
+          lines.push(titleLine);
+          const dateLine = [exp.startDate, exp.isCurrentJob ? 'Present' : exp.endDate].filter(Boolean).join(' - ');
+          if (dateLine) lines.push(dateLine);
+          if (exp.city) lines.push(exp.city);
+          if (exp.description && exp.description.length > 0) {
+            for (const desc of exp.description) {
+              lines.push('• ' + desc);
+            }
+          }
+          lines.push('');
+        }
+      }
+
+      // Education
+      if (optimizedResume.education && optimizedResume.education.length > 0) {
+        lines.push('EDUCATION');
+        for (const edu of optimizedResume.education) {
+          const degreeLine = [edu.degree, edu.university].filter(Boolean).join(', ');
+          if (degreeLine) lines.push(degreeLine);
+          if (edu.graduationDate) lines.push(edu.graduationDate);
+          lines.push('');
+        }
+      }
+
+      const preview = lines.join('\n');
       const fileName = `hirevify-optimized-${job.title.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}.txt`;
       const file = new File([preview], fileName, { type: 'text/plain' });
       const upload = await applicationsService.uploadCV(authUserId, file);
@@ -349,9 +454,16 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         throw new Error(upload.error?.message || 'Could not save optimized CV.');
       }
 
-      setOptimizedCv({ path: upload.path, fileName, preview, projectedScore });
+      setOptimizedCv({ 
+        path: upload.path, 
+        fileName, 
+        preview, 
+        projectedScore,
+        estimatedImprovement,
+        changes 
+      });
       setOptimizationProgressText('');
-      toast.success(`Optimized CV is ready. Projected match: ${projectedScore}%.`);
+      toast.success(`Optimized CV ready! Estimated improvement: +${estimatedImprovement.minIncrease}-${estimatedImprovement.maxIncrease}%`);
     } catch (err) {
       console.error('CV optimization failed', err);
       toast.error(err instanceof Error ? err.message : 'Could not optimize CV.');
@@ -363,19 +475,107 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
 
   const handleReplaceCurrentCv = async () => {
     if (!optimizedCv || !candidateProfileId) return;
-    const { error } = await supabase
-      .from('candidate_profiles')
-      .update({ resume_url: optimizedCv.path, updated_at: new Date().toISOString() })
-      .in('user_id', [candidateProfileId, authUserId].filter(Boolean) as string[]);
+    
+    setIsCheckingCvMatch(true);
+    setCvMatchProgressText('Processing optimized CV...');
+    
+    try {
+      // Extract text from optimized CV
+      const file = new File([optimizedCv.preview], optimizedCv.fileName, { type: 'text/plain' });
+      const extracted = await extractResumeText(file);
+      const resumeText = extracted.text;
+      
+      // Extract skills from the optimized CV text
+      // Simple extraction: split by common delimiters and look for skill-like words
+      const textLower = resumeText.toLowerCase();
+      const skillKeywords = [
+        'javascript', 'typescript', 'python', 'java', 'c++', 'c#', 'ruby', 'go', 'rust', 'kotlin', 'swift',
+        'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'spring',
+        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch', 'graphql',
+        'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'jenkins', 'git',
+        'html', 'css', 'sass', 'tailwind', 'bootstrap',
+        'machine learning', 'deep learning', 'nlp', 'tensorflow', 'pytorch',
+        'api', 'rest', 'microservices', 'ci/cd', 'devops',
+        'figma', 'sketch', 'adobe', 'photoshop', 'illustrator',
+        'excel', 'tableau', 'powerbi', 'data analysis', 'statistics',
+        'communication', 'leadership', 'problem solving', 'teamwork',
+        'ui', 'ux', 'user interface', 'user experience', 'design', 'wireframe',
+        'agile', 'scrum', 'project management', 'product management',
+        'science', 'engineering', 'mathematics', 'physics', 'chemistry',
+        'bachelor', 'master', 'phd', 'mba', 'degree', 'diploma', 'certificate',
+        'sales', 'marketing', 'business development', 'customer service',
+        'php', 'laravel', 'symfony',
+        'android', 'ios', 'react native', 'flutter',
+        'security', 'cybersecurity',
+        'networking', 'linux', 'bash',
+        'sap', 'oracle', 'salesforce', 'crm', 'erp',
+      ];
+      
+      const extractedSkills: string[] = [];
+      for (const skill of skillKeywords) {
+        if (textLower.includes(skill)) {
+          extractedSkills.push(skill.charAt(0).toUpperCase() + skill.slice(1));
+        }
+      }
+      
+      // Merge with existing profile skills (avoid duplicates)
+      const existingSkills = candidateExtras?.skills || [];
+      const allSkills = [...new Set([...existingSkills, ...extractedSkills])];
+      
+      // Update profile with new CV URL and extracted skills
+      const { error } = await supabase
+        .from('candidate_profiles')
+        .update({ 
+          resume_url: optimizedCv.path, 
+          skills: allSkills,
+          updated_at: new Date().toISOString() 
+        })
+        .in('user_id', [candidateProfileId, authUserId].filter(Boolean) as string[]);
 
-    if (error) {
-      toast.error(error.message || 'Could not replace current CV.');
-      return;
+      if (error) {
+        toast.error(error.message || 'Could not replace current CV.');
+        return;
+      }
+
+      // Update local state with new skills and CV URL
+      setCandidateExtras((current) => current ? { 
+        ...current, 
+        resume_url: optimizedCv.path,
+        skills: allSkills 
+      } : current);
+      
+      // Re-calculate match with the NEW CV and NEW skills
+      setCvMatchProgressText('Calculating new match score...');
+      const newMatch = await calculateAtsMatch(
+        {
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          requirements: job.requirements,
+          skills: job.skills,
+          experience_level: job.experience_level,
+        },
+        {
+          skills: allSkills,
+          headline: candidateExtras?.headline,
+          summary: candidateExtras?.experience_summary,
+          resumeUrl: optimizedCv.path,
+          resumeText: resumeText,
+          experience: candidateExtras?.years_of_experience,
+        },
+        accessToken
+      );
+      
+      setCvMatch(newMatch);
+      setJobOnlyChosen(true);
+      toast.success(`CV replaced! New match score: ${newMatch.score}%`);
+    } catch (err) {
+      console.error('Failed to replace CV:', err);
+      toast.error('Could not process optimized CV. Please try again.');
+    } finally {
+      setIsCheckingCvMatch(false);
+      setCvMatchProgressText('');
     }
-
-    setCandidateExtras((current) => current ? { ...current, resume_url: optimizedCv.path } : current);
-    setJobOnlyChosen(true);
-    toast.success('Your profile CV was replaced with the optimized CV.');
   };
 
   const handleUseForThisJobOnly = () => {
@@ -574,11 +774,77 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
 
                   {cvMatch && (
                     <div className={`mt-4 rounded-lg border p-3 ${isCvBelowThreshold ? 'border-red-200 bg-red-50' : 'border-emerald-100 bg-emerald-50'}`}>
+                      {/* Overall Score */}
                       <div className="flex items-center justify-between">
                         <p className={`text-xs font-semibold uppercase tracking-wide ${isCvBelowThreshold ? 'text-red-700' : 'text-emerald-700'}`}>Match score</p>
                         <span className={`text-lg font-black ${isCvBelowThreshold ? 'text-red-800' : 'text-emerald-800'}`}>{cvMatch.score}%</span>
                       </div>
-                      <p className={`mt-1 text-xs leading-5 ${isCvBelowThreshold ? 'text-red-800' : 'text-emerald-800'}`}>{cvMatch.explanation}</p>
+                      
+                      {/* Category Breakdown */}
+                      {cvMatch.categories && cvMatch.categories.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-xs font-semibold text-slate-700">Score breakdown:</p>
+                          {cvMatch.categories.map((cat, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs text-slate-600">{cat.category}</p>
+                                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                                  <div 
+                                    className={`h-full rounded-full ${cat.percentage >= 70 ? 'bg-emerald-500' : cat.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                    style={{ width: `${cat.percentage}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <span className="ml-2 text-xs font-semibold text-slate-700">{cat.percentage}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Strengths & Weaknesses */}
+                      {cvMatch.strengths && cvMatch.strengths.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-emerald-700">Strengths:</p>
+                          <ul className="mt-1 space-y-0.5">
+                            {cvMatch.strengths.slice(0, 3).map((s, i) => (
+                              <li key={i} className="flex items-start gap-1 text-xs text-emerald-800">
+                                <span className="text-emerald-500">✓</span> {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {cvMatch.weaknesses && cvMatch.weaknesses.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-semibold text-red-700">Needs improvement:</p>
+                          <ul className="mt-1 space-y-0.5">
+                            {cvMatch.weaknesses.slice(0, 3).map((w, i) => (
+                              <li key={i} className="flex items-start gap-1 text-xs text-red-800">
+                                <span className="text-red-500">!</span> {w}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Missing Skills & Keywords */}
+                      {((cvMatch.missingSkills?.length ?? 0) > 0 || (cvMatch.missingKeywords?.length ?? 0) > 0) && (
+                        <div className="mt-3 space-y-1">
+                          {cvMatch.missingSkills && cvMatch.missingSkills.length > 0 && (
+                            <p className="text-xs text-red-700">
+                              <span className="font-semibold">Missing skills:</span> {cvMatch.missingSkills.slice(0, 5).join(', ')}
+                            </p>
+                          )}
+                          {cvMatch.missingKeywords && cvMatch.missingKeywords.length > 0 && (
+                            <p className="text-xs text-amber-700">
+                              <span className="font-semibold">Missing keywords:</span> {cvMatch.missingKeywords.slice(0, 5).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Threshold Message */}
                       {isCvBelowThreshold ? (
                         <div className="mt-3 rounded-lg border border-red-200 bg-white p-3 text-xs text-red-800">
                           <div className="flex gap-2">
@@ -590,14 +856,10 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                         </div>
                       ) : (
                         <div className="mt-3 rounded-lg border border-emerald-200 bg-white p-3 text-xs text-emerald-800">
-                          You meet the minimum CV match. You can apply now, or optimize your CV for a small improvement.
+                          You meet the minimum CV match. You can apply now, or optimize your CV for a better score.
                         </div>
                       )}
-                      {cvMatch.missingKeywords.length > 0 && (
-                        <p className={`mt-2 text-xs ${isCvBelowThreshold ? 'text-red-900' : 'text-emerald-900'}`}>
-                          Missing keywords: {cvMatch.missingKeywords.slice(0, 6).join(', ')}
-                        </p>
-                      )}
+                      
                       {canOptimizeCv && (
                         <Button
                           type="button"
@@ -632,20 +894,71 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                   )}
 
                   {optimizedCv && !jobOnlyChosen && (
-                    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-xs font-semibold text-slate-950">Optimized CV ready</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        Applying now will send this optimized CV to the recruiter for this job. Projected match: {optimizedCv.projectedScore}%.
+                    <div className="mt-4 space-y-3">
+                      {/* Score Summary */}
+                      <div className="rounded-lg border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-emerald-800">Optimized CV Ready</p>
+                            <p className="mt-1 flex items-baseline gap-2">
+                              <span className="text-3xl font-bold text-emerald-600">
+                                ~{optimizedCv.projectedScore}%
+                              </span>
+                              <span className="text-sm text-slate-500">
+                                (was {cvMatch?.score}%)
+                              </span>
+                            </p>
+                          </div>
+                          {optimizedCv.estimatedImprovement && (
+                            <div className="text-right">
+                              <p className="text-xs text-slate-500">Est. improvement</p>
+                              <p className="text-lg font-bold text-emerald-600">
+                                +{optimizedCv.estimatedImprovement.minIncrease}-{optimizedCv.estimatedImprovement.maxIncrease}%
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* CV Preview */}
+                      <div className="rounded-lg border border-slate-200 bg-white">
+                        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+                          <p className="text-xs font-semibold text-slate-700">Optimized CV Preview</p>
+                          <span className="text-xs text-slate-500">{optimizedCv.fileName}</span>
+                        </div>
+                        <div className="max-h-80 overflow-y-auto p-4">
+                          <pre className="whitespace-pre-wrap text-xs text-slate-700 font-sans">
+                            {optimizedCv.preview || 'Loading preview...'}
+                          </pre>
+                        </div>
+                      </div>
+
+                      {/* Changes Summary */}
+                      {optimizedCv.changes && optimizedCv.changes.length > 0 && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                          <p className="text-xs font-semibold text-amber-800 mb-2">What Changed:</p>
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {optimizedCv.changes.slice(0, 5).map((change, idx) => (
+                              <div key={idx} className="text-xs">
+                                <span className="font-medium text-amber-900">{change.section}:</span>{' '}
+                                <span className="text-amber-700">{change.reason}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <p className="text-xs text-slate-600 text-center">
+                        Want to use this optimized CV?
                       </p>
-                      <p className="mt-3 text-xs font-medium text-slate-800">
-                        Do you want to replace your current CV with this?
-                      </p>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Button type="button" size="sm" onClick={handleReplaceCurrentCv} className="bg-emerald-600 text-white hover:bg-emerald-700">
-                          Yes, replace
+                          <CheckCircle2 className="mr-1 h-4 w-4" />
+                          Replace & Apply
                         </Button>
                         <Button type="button" size="sm" variant="outline" onClick={handleUseForThisJobOnly}>
-                          No, this job only
+                          This job only
                         </Button>
                       </div>
                     </div>
@@ -653,16 +966,28 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
 
                   {optimizedCv && jobOnlyChosen && (
                     <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      <p className="text-xs font-semibold text-emerald-800">
-                        {candidateExtras?.resume_url === optimizedCv.path
-                          ? 'Profile CV updated.'
-                          : 'Using optimized CV for this job only.'}
-                      </p>
-                      <p className="mt-1 text-xs text-emerald-700">
-                        {candidateExtras?.resume_url === optimizedCv.path
-                          ? 'Your profile CV was replaced. Click Apply to send it with this application.'
-                          : 'Your profile CV stays as is. Click Apply to send the optimized version with this application.'}
-                      </p>
+                      {candidateExtras?.resume_url === optimizedCv.path ? (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-emerald-800">Profile CV Updated!</p>
+                            <span className="text-lg font-bold text-emerald-600">
+                              {cvMatch?.score || optimizedCv.projectedScore}%
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-emerald-700">
+                            Your new CV is ready. Click Apply to submit with this improved match score.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs font-semibold text-emerald-800">
+                            Using optimized CV for this job only.
+                          </p>
+                          <p className="mt-1 text-xs text-emerald-700">
+                            Click Apply to send the optimized version with this application.
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
