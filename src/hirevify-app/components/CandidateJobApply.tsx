@@ -126,13 +126,14 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
     let cancelled = false;
     (async () => {
       try {
-        // 1) profiles row by auth_user_id
+        // 1) profiles row — try auth_user_id first, fallback to id
+        // (some profiles may have id = auth_user_id without auth_user_id column set)
         const { data: profileRow } = await supabase
           .from('profiles')
           .select(
             'id, auth_user_id, full_name, email, avatar_url, phone, location, bio, role',
           )
-          .eq('auth_user_id', user.id)
+          .or(`auth_user_id.eq.${user.id},id.eq.${user.id}`)
           .maybeSingle<ProfileRow>();
 
         if (cancelled) return;
