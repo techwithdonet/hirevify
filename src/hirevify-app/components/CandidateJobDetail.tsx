@@ -19,6 +19,7 @@ interface CandidateJobDetailProps {
   onBack: () => void;
   onViewAssignment?: (assignmentId: string) => void;
   onApply?: (job: Job, optimizedCv?: { path: string; fileName: string; projectedScore?: number }) => void;
+  onEditProfile?: () => void;
 }
 
 const JOB_TYPE_LABELS: Record<Job['job_type'], string> = {
@@ -59,7 +60,7 @@ function formatBudget(job: Job): string | null {
   return `${currency} ${min.toLocaleString()} – ${max.toLocaleString()}`;
 }
 
-export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: CandidateJobDetailProps) {
+export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onEditProfile }: CandidateJobDetailProps) {
   const { user, accessToken } = useAuth();
   const supabase = createSupabaseBrowserClient();
 
@@ -82,6 +83,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
     projectedScore: number;
     estimatedImprovement?: { minIncrease: number; maxIncrease: number };
     changes?: Array<{ section: string; before: string; after: string; reason: string }>;
+    projectedCategories?: Array<{ category: string; percentage: number }>;
   } | null>(null);
   const [isOptimizingCv, setIsOptimizingCv] = useState(false);
   const [optimizationProgressText, setOptimizationProgressText] = useState('');
@@ -157,19 +159,20 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
 
   useEffect(() => {
     const checkExistingApplication = async () => {
-      if (!candidateProfileId || !job.id) {
+      if (!authUserId || !job.id) {
         setIsCheckingApplication(false);
         return;
       }
       try {
+        // Use auth.users.id (authUserId) since that's what application.candidate_id stores
         const { hasApplied: applied, error } = await applicationsService.hasApplied(
           job.id,
-          candidateProfileId
+          authUserId!
         );
         if (!error) setHasApplied(Boolean(applied));
 
         if (applied) {
-          const { data: apps } = await applicationsService.getCandidateApplications(candidateProfileId);
+          const { data: apps } = await applicationsService.getCandidateApplications(candidateProfileId!, authUserId!);
           const found = (apps || []).find((a: any) => a.job_id === job.id) as ServiceApplication | undefined;
           if (found) setExistingApplication(found);
         }
@@ -179,7 +182,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
           .from('job_project_assignments')
           .select('id')
           .eq('job_id', job.id)
-          .eq('candidate_id', candidateProfileId)
+          .eq('candidate_id', authUserId!)
           .maybeSingle();
         if (assignmentRows?.id) setExistingAssignmentId(assignmentRows.id);
       } catch (err) {
@@ -189,7 +192,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
       }
     };
     checkExistingApplication();
-  }, [candidateProfileId, job.id, supabase]);
+  }, [candidateProfileId, authUserId, job.id, supabase]);
 
   const handleApplyClick = () => {
     if (!user) {
@@ -386,6 +389,45 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
       // Calculate projected score using the AI's estimate (deterministic backend confirms)
       const projectedScore = Math.min(95, (cvMatch?.score || 50) + estimatedImprovement.maxIncrease);
 
+      // Calculate projected categories based on optimization improvements
+      const projectedCategories = cvMatch?.categories?.map((cat) => {
+        const currentScore = cat.percentage;
+        // Categories that can improve: ATS Keywords (usually has missing keywords), 
+        // Required Skills (may have missing skills), Education (minor tweaks)
+        // Categories already at 100% stay the same
+        if (currentScore >= 100) {
+          return { category: cat.category, percentage: 100 };
+        }
+        
+        // For categories with room to improve, estimate the improvement
+        // ATS Keywords typically get the biggest boost from keyword optimization
+        // Skills categories get boosted when missing skills are added
+        const isAtsKeywords = cat.category.toLowerCase().includes('keyword') || cat.category.toLowerCase().includes('ats');
+        const isSkills = cat.category.toLowerCase().includes('skill');
+        const isEducation = cat.category.toLowerCase().includes('education');
+        const isExperience = cat.category.toLowerCase().includes('experience');
+        
+        let maxBoost = 0;
+        if (isAtsKeywords) {
+          maxBoost = 40; // Keywords can get a big boost
+        } else if (isSkills) {
+          maxBoost = 25; // Skills improvements
+        } else if (isEducation) {
+          maxBoost = 15; // Minor education tweaks
+        } else if (isExperience) {
+          maxBoost = 10; // Experience bullet rewording
+        } else {
+          maxBoost = 15; // Default boost for other categories
+        }
+        
+        // Scale boost based on estimated improvement
+        const improvementRatio = estimatedImprovement.maxIncrease / 15; // Normalize around 15%
+        const scaledBoost = maxBoost * improvementRatio;
+        const projectedScore = Math.min(100, currentScore + scaledBoost);
+        
+        return { category: cat.category, percentage: Math.round(projectedScore) };
+      }) || [];
+
       // Generate full CV content
       const contactInfo = resumeData.contactInfo;
       const lines: string[] = [];
@@ -471,7 +513,8 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         preview, 
         projectedScore,
         estimatedImprovement,
-        changes 
+        changes,
+        projectedCategories
       });
       setOptimizationProgressText('');
       toast.success(`Optimized CV ready! Estimated improvement: +${estimatedImprovement.minIncrease}-${estimatedImprovement.maxIncrease}%`);
@@ -798,13 +841,14 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                       Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
                       Complete at least 40% to apply for jobs.
                     </p>
-                    <a
-                      href="/candidate/settings"
+                    <button
+                      type="button"
+                      onClick={onEditProfile}
                       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
                     >
                       Complete your profile
                       <ArrowRight className="h-3 w-3" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -830,16 +874,31 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                           >
                             {getCvFileName()}
                           </a>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleCheckCvMatch}
-                            disabled={isCheckingCvMatch}
-                            className="mt-3 w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                          >
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            Check your CV match
-                          </Button>
+                          {profileCompleteness < 100 ? (
+                            <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
+                              <p className="text-xs text-amber-800">
+                                Complete your profile to check CV match.{' '}
+                                <button
+                                  type="button"
+                                  onClick={onEditProfile}
+                                  className="font-semibold underline hover:no-underline"
+                                >
+                                  Go to Profile →
+                                </button>
+                              </p>
+                            </div>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleCheckCvMatch}
+                              disabled={isCheckingCvMatch}
+                              className="mt-3 w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            >
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Check your CV match
+                            </Button>
+                          )}
                         </>
                       ) : (
                         <p className="mt-1 text-xs text-amber-700">
@@ -1014,6 +1073,35 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                             </div>
                           )}
                         </div>
+
+                        {/* Projected Score Breakdown */}
+                        {optimizedCv.projectedCategories && optimizedCv.projectedCategories.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-xs font-semibold text-slate-700">Score breakdown:</p>
+                            {optimizedCv.projectedCategories.map((cat, idx) => {
+                              const currentCat = cvMatch?.categories?.find(c => c.category === cat.category);
+                              const currentScore = currentCat?.percentage || 0;
+                              const improved = cat.percentage > currentScore;
+                              return (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs text-slate-600">{cat.category}</p>
+                                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                                      <div 
+                                        className={`h-full rounded-full ${cat.percentage >= 70 ? 'bg-emerald-500' : cat.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                        style={{ width: `${cat.percentage}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <span className={`ml-2 text-xs font-semibold ${improved ? 'text-emerald-600' : 'text-slate-700'}`}>
+                                    {cat.percentage}%
+                                    {improved && <span className="ml-1 text-emerald-500">↑</span>}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       {/* CV Preview */}
@@ -1041,6 +1129,39 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Strengths - What Improved */}
+                      {optimizedCv.projectedCategories && optimizedCv.projectedCategories.length > 0 && (
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                          <p className="text-xs font-semibold text-emerald-800 mb-2">Strengths:</p>
+                          <ul className="space-y-1">
+                            {optimizedCv.projectedCategories
+                              .filter(cat => {
+                                const current = cvMatch?.categories?.find(c => c.category === cat.category);
+                                return current && cat.percentage > current.percentage;
+                              })
+                              .slice(0, 3)
+                              .map((cat, idx) => (
+                                <li key={idx} className="flex items-start gap-1 text-xs text-emerald-800">
+                                  <span className="text-emerald-500">✓</span>
+                                  <span>
+                                    Strong match on {cat.category.toLowerCase()} ({cat.percentage}%)
+                                  </span>
+                                </li>
+                              ))}
+                            {cvMatch?.missingKeywords && cvMatch.missingKeywords.length > 0 && (
+                              <li className="flex items-start gap-1 text-xs text-emerald-800">
+                                <span className="text-emerald-500">✓</span>
+                                <span>Added missing keywords: {cvMatch.missingKeywords.slice(0, 3).join(', ')}</span>
+                              </li>
+                            )}
+                            <li className="flex items-start gap-1 text-xs text-emerald-800">
+                              <span className="text-emerald-500">✓</span>
+                              <span>Well-formatted resume with quality indicators</span>
+                            </li>
+                          </ul>
                         </div>
                       )}
 
@@ -1110,6 +1231,27 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                     </Button>
                     <p className="text-xs text-slate-500">
                       Your application is in. The recruiter will review your profile and may assign the project.
+                    </p>
+                  </div>
+                ) : profileCompleteness < 100 ? (
+                  <div className="space-y-2">
+                    <Button
+                      disabled
+                      className="w-full cursor-not-allowed bg-slate-200 font-bold text-slate-400 shadow-sm"
+                    >
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      Complete your profile to check CV match
+                    </Button>
+                    <p className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
+                      Your profile is only <span className="font-semibold">{profileCompleteness}%</span> complete.
+                      Please complete it before checking your CV match for this job.{' '}
+                      <button
+                        type="button"
+                        onClick={onEditProfile}
+                        className="font-semibold underline hover:no-underline"
+                      >
+                        Go to Profile →
+                      </button>
                     </p>
                   </div>
                 ) : (

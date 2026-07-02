@@ -78,22 +78,29 @@ class ApplicationsService {
   coverLetter?: string,
   extras?: { cvUrl?: string | null; cvFileName?: string | null }
   ) {
-  const { data, error } = await this.supabase.from('applications').insert([
-  {
+  // Build insert payload - only include cv_file_name if we have a value
+  const insertPayload: Record<string, unknown> = {
   job_id: jobId,
   candidate_id: candidateId,
   cover_letter: coverLetter || null,
   cv_url: extras?.cvUrl || null,
-  cv_file_name: extras?.cvFileName || null,
   cv_uploaded_at: extras?.cvUrl ? new Date().toISOString() : null,
   status: 'applied',
-  },
+  };
+  
+  // Only include cv_file_name if provided (column may not exist yet)
+  if (extras?.cvFileName) {
+  insertPayload.cv_file_name = extras.cvFileName;
+  }
+  
+  const { data, error } = await this.supabase.from('applications').insert([
+  insertPayload,
   ]).select().single<Application>();
 
- if (error) {
- console.error('Error submitting application:', error);
- return { data: null, error };
- }
+  if (error) {
+  console.error('Error submitting application:', JSON.stringify(error, null, 2));
+  return { data: null, error };
+  }
 
  const { data: jobRow } = await this.supabase
  .from('jobs')
@@ -127,21 +134,31 @@ class ApplicationsService {
  return { data, error: null };
  }
 
- /**
- * Get all applications for a candidate
- */
- async getCandidateApplications(candidateId: string) {
- // First try with relationship, fall back to simple query if it fails
- let { data, error } = await this.supabase.from('applications').select(
- `
- *,
- job:job_id(id, title, status, created_at, recruiter_id, recruiter_profile:recruiter_id(company_name))
- `
- ).eq('candidate_id', candidateId).order('submitted_at', { ascending: false }).returns<ApplicationWithDetails[]>();
+  /**
+  * Get all applications for a candidate
+  * @param candidateId - The auth.users.id of the candidate (used as candidate_id in applications)
+  * @param authUserId - Optional auth.users.id for querying; if provided, overrides candidateId for the query.
+  *                     Pass this when the caller has the auth user id but not the profiles.id.
+  */
+  async getCandidateApplications(candidateId: string, authUserId?: string) {
+  // Always query by auth.users.id (stored as candidate_id), not profiles.id.
+  // When authUserId is provided (the auth.users.id), use it directly.
+  // This fixes the mismatch where submitApplication stores auth.users.id but the query
+  // was passing profiles.id.
+  const queryCandidateId = authUserId || candidateId;
+
+  // First try with relationship, fall back to simple query if it fails
+  let { data, error } = await this.supabase.from('applications').select(
+  `
+  *,
+  job:job_id(id, title, status, created_at, recruiter_id, recruiter_profile:recruiter_id(company_name))
+  `
+  ).eq('candidate_id', queryCandidateId).order('submitted_at', { ascending: false }).returns<ApplicationWithDetails[]>();
 
  // If relationship query fails, try without relationships
  if (error && (error.code === 'PGRST200' || error.code === 'PGRST205' || error.code === '42501')) {
- const { data: simpleData, error: simpleError } = await this.supabase.from('applications').select('*').eq('candidate_id', candidateId).order('submitted_at', { ascending: false }).returns<Application[]>();
+  const { data: simpleData, error: simpleError } = await this.supabase.from('applications').select('*').eq('candidate_id', queryCandidateId).order('submitted_at', { ascending: false }).returns<Application[]>();
+
 
  if (simpleError) {
  // Return empty array as fallback

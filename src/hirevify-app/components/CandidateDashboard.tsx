@@ -32,6 +32,7 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { useAuth } from './AuthProvider';
+import { supabase } from '@/src/lib/supabase';
 import { HireVifyLogo } from './HireVifyLogo';
 import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsService';
 import { profilesService } from '@/src/hirevify-app/services/profilesService';
@@ -175,8 +176,9 @@ export function CandidateDashboard({
           setCandidateProfile(profileData.data);
         }
 
-        // Load applications
-        const appData = await applicationsService.getCandidateApplications(user.id);
+        // Load applications — use auth.users.id since that's what's stored as candidate_id
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const appData = await applicationsService.getCandidateApplications(user.id, authUser?.id);
         if (appData.data) {
           setApplications(appData.data);
         }

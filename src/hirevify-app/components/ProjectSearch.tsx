@@ -93,170 +93,143 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
 
  // Note: All mock data generation removed - using real API data only
 
- useEffect(() => {
- // Load real projects data only - no fake data fallback
- loadProjects();
- }, [accessToken, filters.page, filters.limit, filters.type, filters.sortBy]);
+  useEffect(() => {
+  // Load real projects data only - no fake data fallback
+  loadProjects();
+  }, [accessToken]);
 
- const loadProjects = async () => {
- if (!accessToken) {
- setIsLoading(false);
- console.log('ProjectSearch loaded');
- return;
- }
- 
- setIsLoading(true);
- 
- try {
- // Load real recruiter-posted projects from public.jobs
- const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
- const supabase = createSupabaseBrowserClient();
+  const loadProjects = async () => {
+  if (!accessToken) {
+  setIsLoading(false);
+  console.log('ProjectSearch loaded');
+  return;
+  }
 
- const { data: jobs, error } = await supabase.from('jobs').select('*').eq('status', 'published').order('created_at', { ascending: false });
+  setIsLoading(true);
 
- if (error) {
- console.error('Failed to load published jobs:', error);
- setProjects([]);
- setFilteredProjects([]);
- return;
- }
-
- const publishedJobRows = (jobs || []).filter((job: any) => {
- const title = String(job.title || '').trim().toLowerCase();
- const projectTitle = String(job.project_title || '').trim().toLowerCase();
- const description = String(job.description || '').trim().toLowerCase();
- const projectDescription = String(job.project_description || '').trim().toLowerCase();
- const looksLikeStandaloneProject =
- Boolean(job.has_project) &&
- job.job_type === 'freelance' &&
- (!job.location || job.location === 'Not specified') &&
- (!projectTitle || projectTitle === title) &&
- (!projectDescription || projectDescription === description);
-
- return !looksLikeStandaloneProject;
- });
-
- const jobIds = publishedJobRows.map((job: any) => String(job.id)).filter(Boolean);
- let appliedJobIdsFromDb = new Set<string>();
-
- try {
- const { data: authData } = await supabase.auth.getUser();
- const authUserId = authData?.user?.id;
- const candidateIds = new Set<string>();
-
-  if (authUserId) {
-  candidateIds.add(String(authUserId));
-
-  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
-
-  if (profileRow?.id) candidateIds.add(String(profileRow.id));
- if (profileRow?.auth_user_id) candidateIds.add(String(profileRow.auth_user_id));
-
- const candidateProfileFilters = [`user_id.eq.${authUserId}`];
- if (profileRow?.id) candidateProfileFilters.push(`user_id.eq.${profileRow.id}`);
-
- const { data: candidateProfileRows } = await supabase.from('candidate_profiles').select('id, user_id').or(candidateProfileFilters.join(','));
-
- (candidateProfileRows || []).forEach((row: any) => {
- if (row?.id) candidateIds.add(String(row.id));
- if (row?.user_id) candidateIds.add(String(row.user_id));
- });
- }
-
- if (jobIds.length && candidateIds.size) {
- const { data: applicationRows, error: applicationsError } = await supabase.from('applications').select('job_id').in('job_id', jobIds).in('candidate_id', Array.from(candidateIds));
-
- if (applicationsError) {
- console.error('Failed to load applied project ids:', applicationsError);
- } else {
- appliedJobIdsFromDb = new Set<string>(
- (applicationRows || []).map((row: any) => row.job_id).filter(Boolean).map(String)
- );
- }
- }
- } catch (appliedStatusError) {
- console.error('Failed to prepare applied project status:', appliedStatusError);
- }
-
-setAppliedProjectIds(appliedJobIdsFromDb);
-
-  // Load the candidate's saved jobs from the `saved_jobs` table so the
-  // bookmark icon stays in sync with whatever they've favourited before
-  // (across sessions, devices, and the dashboard's "Saved Jobs" tile).
   try {
+  // Load real recruiter-posted projects from public.jobs
+  const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+  const supabase = createSupabaseBrowserClient();
+
+  // STEP 1: Fetch jobs (must be first — everything else depends on this)
+  const { data: jobs, error } = await supabase.from('jobs').select('*').eq('status', 'published').order('created_at', { ascending: false });
+
+  if (error) {
+  console.error('Failed to load published jobs:', error);
+  setProjects([]);
+  setFilteredProjects([]);
+  return;
+  }
+
+  const publishedJobRows = (jobs || []).filter((job: any) => {
+  const title = String(job.title || '').trim().toLowerCase();
+  const projectTitle = String(job.project_title || '').trim().toLowerCase();
+  const description = String(job.description || '').trim().toLowerCase();
+  const projectDescription = String(job.project_description || '').trim().toLowerCase();
+  const looksLikeStandaloneProject =
+  Boolean(job.has_project) &&
+  job.job_type === 'freelance' &&
+  (!job.location || job.location === 'Not specified') &&
+  (!projectTitle || projectTitle === title) &&
+  (!projectDescription || projectDescription === description);
+
+  return !looksLikeStandaloneProject;
+  });
+
+  const jobIds = publishedJobRows.map((job: any) => String(job.id)).filter(Boolean);
+
+  // STEP 2: Get authUserId ONCE (was called twice before)
   const { data: authData } = await supabase.auth.getUser();
   const authUserId = authData?.user?.id;
 
-  if (authUserId) {
-  const { data: profileRow } = await supabase
-  .from('profiles')
-  .select('id, auth_user_id')
-  .or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`)
-  .maybeSingle();
+  // STEP 3: Fetch profiles, candidate_profiles, applications, and saved_jobs in PARALLEL
+  const [profileResult, savedResult] = await Promise.all([
+  (async () => {
+  if (!authUserId) return { profileRow: null, candidateIds: new Set<string>(), appliedJobIds: new Set<string>() };
 
-  // saved_jobs.candidate_id is the candidate's profiles.id when available
-  // (same shape the dashboard uses to count saved jobs).
+  const candidateIds = new Set<string>();
+  candidateIds.add(String(authUserId));
+
+  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
+  if (profileRow?.id) candidateIds.add(String(profileRow.id));
+  if (profileRow?.auth_user_id) candidateIds.add(String(profileRow.auth_user_id));
+
+  const candidateProfileFilters = [`user_id.eq.${authUserId}`];
+  if (profileRow?.id) candidateProfileFilters.push(`user_id.eq.${profileRow.id}`);
+
+  const { data: candidateProfileRows } = await supabase.from('candidate_profiles').select('id, user_id').or(candidateProfileFilters.join(','));
+  (candidateProfileRows || []).forEach((row: any) => {
+  if (row?.id) candidateIds.add(String(row.id));
+  if (row?.user_id) candidateIds.add(String(row.user_id));
+  });
+
+  let appliedJobIds = new Set<string>();
+  if (jobIds.length && candidateIds.size) {
+  const { data: applicationRows } = await supabase.from('applications').select('job_id').in('job_id', jobIds).in('candidate_id', Array.from(candidateIds));
+  appliedJobIds = new Set<string>((applicationRows || []).map((row: any) => String(row.job_id)).filter(Boolean));
+  }
+
+  return { profileRow, candidateIds, appliedJobIds };
+  })(),
+
+  (async () => {
+  if (!authUserId) return { savedIds: new Set<string>() };
+
+  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
   const candidateIdForSaved = profileRow?.id ?? authUserId;
-  const { data: savedRows, error: savedError } = await supabase
-  .from('saved_jobs')
-  .select('job_id')
-  .eq('candidate_id', candidateIdForSaved);
+  const { data: savedRows } = await supabase.from('saved_jobs').select('job_id').eq('candidate_id', candidateIdForSaved);
+  return { savedIds: new Set<string>((savedRows || []).map((row: any) => String(row.job_id)).filter(Boolean)) };
+  })(),
+  ]);
 
-  if (savedError && savedError.code !== 'PGRST116' && savedError.code !== '42P01' && savedError.code !== '42501') {
-  console.warn('Failed to load saved jobs for bookmarks:', savedError);
-  } else if (Array.isArray(savedRows)) {
-  const savedIds = new Set<string>(
-  savedRows.map((row: any) => String(row.job_id)).filter(Boolean)
-  );
+  const appliedJobIdsFromDb = profileResult.appliedJobIds;
+  const savedIds = savedResult.savedIds;
+
+  setAppliedProjectIds(appliedJobIdsFromDb);
   setBookmarkedProjects(savedIds);
-  }
-  }
-  } catch (savedLoadError) {
-  console.warn('Failed to hydrate saved jobs:', savedLoadError);
-  }
- const mappedProjects = publishedJobRows.map((job: any) => ({
- id: job.id,
- title: job.title || 'Untitled Job',
- description: job.description || '',
- company: job.company_name || 'Company',
- companyName: job.company_name || 'Company',
- skills: job.skills || [],
- budget: job.budget_min || job.budget_max? `${job.budget_currency || job.currency || 'USD'} ${job.budget_min || job.salary_min || 0} - ${job.budget_max || job.salary_max || job.budget_min || job.salary_min || 0}`: 'Not specified',
- budgetMin: Number(job.budget_min || job.salary_min || 0),
- budgetMax: Number(job.budget_max || job.salary_max || 0),
- currency: job.budget_currency || job.currency || 'USD',
- location: job.location || 'Not specified',
- type: job.job_type || 'freelance',
- jobType: job.job_type || 'freelance',
- remoteType: job.remote_type || 'remote',
- experienceLevel: job.experience_level || 'mid',
- status: appliedJobIdsFromDb.has(String(job.id))? 'applied': 'available',
- applications: job.applications_count || 0,
- applicationsCount: job.applications_count || 0,
- views: job.views_count || 0,
- viewsCount: job.views_count || 0,
- postedDate: job.created_at,
- createdAt: job.created_at,
- timeline: Array.isArray(job.requirements)? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, ''): '',
- requirements: job.requirements || [],
- matchScore: 85,
- }));
 
- setProjects(mappedProjects as any);
- setFilteredProjects(mappedProjects as any);
+  const mappedProjects = publishedJobRows.map((job: any) => ({
+  id: job.id,
+  title: job.title || 'Untitled Job',
+  description: job.description || '',
+  company: job.company_name || 'Company',
+  companyName: job.company_name || 'Company',
+  skills: job.skills || [],
+  budget: job.budget_min || job.budget_max? `${job.budget_currency || job.currency || 'USD'} ${job.budget_min || job.salary_min || 0} - ${job.budget_max || job.salary_max || job.budget_min || job.salary_min || 0}`: 'Not specified',
+  budgetMin: Number(job.budget_min || job.salary_min || 0),
+  budgetMax: Number(job.budget_max || job.salary_max || 0),
+  currency: job.budget_currency || job.currency || 'USD',
+  location: job.location || 'Not specified',
+  type: job.job_type || 'freelance',
+  jobType: job.job_type || 'freelance',
+  remoteType: job.remote_type || 'remote',
+  experienceLevel: job.experience_level || 'mid',
+  status: appliedJobIdsFromDb.has(String(job.id))? 'applied': 'available',
+  applications: job.applications_count || 0,
+  applicationsCount: job.applications_count || 0,
+  views: job.views_count || 0,
+  viewsCount: job.views_count || 0,
+  postedDate: job.created_at,
+  createdAt: job.created_at,
+  timeline: Array.isArray(job.requirements)? (job.requirements.find((item: string) => item.toLowerCase().startsWith('timeline:')) || '').replace(/^Timeline:\s*/i, ''): '',
+  requirements: job.requirements || [],
+  matchScore: 85,
+  }));
 
- // AI recommendations disabled for MVP until real AI backend is connected.
- // This prevents old Supabase Edge Function fetch errors.
-console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
- } catch (error) {
- console.error('Failed to load projects:', error);
- setProjects([]);
- setFilteredProjects([]);
- toast.error('Failed to load projects. Please check your connection and try again.');
- } finally {
- setIsLoading(false);
- }
- };
+  setProjects(mappedProjects as any);
+  setFilteredProjects(mappedProjects as any);
+
+  console.log(`Successfully loaded ${mappedProjects.length} published jobs from database`);
+  } catch (error) {
+  console.error('Failed to load projects:', error);
+  setProjects([]);
+  setFilteredProjects([]);
+  toast.error('Failed to load projects. Please check your connection and try again.');
+  } finally {
+  setIsLoading(false);
+  }
+  };
 
  const generateAIRecommendations = async (projectList: Project[]) => {
  if (!user?.id || projectList.length === 0) {

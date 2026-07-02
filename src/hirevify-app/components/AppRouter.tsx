@@ -604,6 +604,7 @@ case 'candidate-dashboard':
   onBack={navigation.navigateToProjectSearch}
   onViewAssignment={(assignmentId) => navigation.navigateToProjectAssignment(assignmentId)}
   onApply={navigation.navigateToJobApply}
+  onEditProfile={() => navigation.navigateToCandidateProfileEditor()}
   />
   ) : (
   <ProjectSearch

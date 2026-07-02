@@ -93,8 +93,6 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string; projectedScore?: number } | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-const [showCvPrompt, setShowCvPrompt] = useState(true);
-const [isReplacingCv, setIsReplacingCv] = useState(false);
 
   // Resolve the candidate's profile row (from `profiles`) and the
   // candidate-specific extras (from `candidate_profiles`) from the
@@ -271,14 +269,14 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       // Debug: log what's being submitted
       console.log('[Apply Debug] Submitting with:', {
         jobId: job.id,
-        candidateId: authUserId,
+        candidateId: profile.id,
         cvPath,
         cvFileName,
       });
 
       const { error } = await applicationsService.submitApplication(
         job.id,
-        authUserId,
+        profile.id,
         coverLetter.trim() || undefined,
         { cvUrl: cvPath, cvFileName },
       );
@@ -302,7 +300,8 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
 
   // ─── Success state ────────────────────────────────────────────────────
   if (step === 'success') {
-  
+    const [showCvPrompt, setShowCvPrompt] = useState(true);
+    const [isReplacingCv, setIsReplacingCv] = useState(false);
 
     const handleReplaceCv = async () => {
       if (!optimizedCv || !profile?.id) return;
@@ -806,5 +805,3 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
     </DashboardPageLayout>
   );
 }
-
-

@@ -46,6 +46,7 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { useAuth } from './AuthProvider';
+import { supabase } from '@/src/lib/supabase';
 import { applicationsService, type ApplicationWithDetails } from '../services/applicationsService';
 import { projectAssignmentsService, type AssignmentWithDetails } from '../services/projectAssignmentsService';
 import { profilesService } from '../services/profilesService';
@@ -227,7 +228,10 @@ export function CandidateAppliedJobs({
       // Find the candidate's `profiles.id` first — that's the value stored in
       // `applications.candidate_id` and `job_project_assignments.candidate_id`.
       // `getCandidateApplications` already does the candidate-id resolution.
-      const appsRes = await applicationsService.getCandidateApplications(user.id);
+      // Get auth.users.id for querying — applications are stored with candidate_id = auth.users.id,
+      // but user.id from AuthProvider is profiles.id, which may differ.
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const appsRes = await applicationsService.getCandidateApplications(user.id, authUser?.id);
       const apps = appsRes.data ?? [];
 
       // Pull assignments in parallel — same candidate.
