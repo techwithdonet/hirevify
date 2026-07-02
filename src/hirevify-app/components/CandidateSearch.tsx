@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart } from 'lucide-react';
+import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart, Link as LinkIcon, Building2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -97,9 +97,10 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  hasPortfolio: false
  });
 
- // Comprehensive candidate database with realistic profiles
- const [candidates, setCandidates] = useState<Candidate[]>([]);
- const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
+  // Comprehensive candidate database with realistic profiles
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(true);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
  // Load only completed candidate profiles from Supabase
  useEffect(() => {
@@ -202,8 +203,18 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  };
  });
 
- setCandidates(mapped as unknown as Candidate[]);
- setFilteredCandidates(mapped as unknown as Candidate[]);
+  setCandidates(mapped as unknown as Candidate[]);
+  setFilteredCandidates(mapped as unknown as Candidate[]);
+  
+  // Extract unique locations from candidates
+  const uniqueLocations = Array.from(
+  new Set(
+  mapped
+  .map((c: any) => c.location)
+  .filter((loc: any) => loc && loc !== 'Not specified')
+  )
+  ).sort() as string[];
+  setAvailableLocations(uniqueLocations);
  } catch (err) {
  console.error('Unexpected error loading completed candidates:', err);
  setCandidates([]);
@@ -227,11 +238,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  setFilteredCandidates(candidates);
 }, [candidates]);
 
- const locations = [
- 'San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX',
- 'Los Angeles, CA', 'Boston, MA', 'Denver, CO', 'Chicago, IL',
- 'Remote', 'United States', 'International'
- ];
+
 
  const timezones = [
  'PST', 'MST', 'CST', 'EST', 'GMT', 'CET', 'JST', 'IST'
@@ -476,192 +483,222 @@ const getAvailabilityBadge = (availability: string) => {
  });
  };
 
- const renderCandidateProfile = () => {
- if (!selectedCandidate) return null;
+  const renderCandidateProfile = () => {
+  if (!selectedCandidate) return null;
 
- return (
- <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
- <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
- <DialogHeader>
- <DialogTitle className="flex items-center space-x-3">
- <Avatar className="w-12 h-12">
- <AvatarFallback>{selectedCandidate.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
- </Avatar>
- <div>
- <div className="flex items-center space-x-2">
- <span>{selectedCandidate.name}</span>
- {selectedCandidate.isVerified && (
- <Badge className="bg-blue-100 text-blue-800">Verified</Badge>
- )}
- </div>
- <p className="text-sm text-muted-foreground">{selectedCandidate.title}</p>
- </div>
- </DialogTitle>
- </DialogHeader>
+  return (
+  <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
+  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+  <DialogTitle className="sr-only">{selectedCandidate.name} - {selectedCandidate.title}</DialogTitle>
+  {/* Light Header with Candidate Info */}
+  <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 p-6">
+  <div className="flex items-start gap-4">
+  <Avatar className="w-16 h-16 border-2 border-white shadow-md">
+  <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-bold">
+  {selectedCandidate.name.split(' ').map(n => n[0]).join('')}
+  </AvatarFallback>
+  </Avatar>
+  <div className="flex-1 min-w-0">
+  <div className="flex items-center gap-3 flex-wrap">
+  <h2 className="text-xl font-bold text-slate-900">{selectedCandidate.name}</h2>
+  {selectedCandidate.isVerified && (
+  <Badge className="bg-blue-100 text-blue-700 border border-blue-200">Verified</Badge>
+  )}
+  </div>
+  <p className="text-slate-600 mt-1">{selectedCandidate.title}</p>
+  <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
+  <span className="flex items-center gap-1">
+  <MapPin className="w-4 h-4" />
+  {selectedCandidate.location}
+  </span>
+  <span className="flex items-center gap-1">
+  <Globe className="w-4 h-4" />
+  {selectedCandidate.timezone}
+  </span>
+  </div>
+  </div>
+  {/* Match Score Badge - Large & Prominent */}
+  <div className="flex flex-col items-center">
+  <div className={`text-2xl font-black px-4 py-2 rounded-xl ${getMatchScoreColor(selectedCandidate.matchScore)}`}>
+  {selectedCandidate.matchScore}%
+  </div>
+  <p className="text-xs text-slate-500 mt-1 font-medium">Match Score</p>
+  </div>
+  </div>
+  </div>
 
- <div className="space-y-6">
- {/* Quick Stats */}
- <div className="grid grid-cols-4 gap-4">
- <div className="text-center">
- <div className={`text-lg font-bold px-3 py-1 rounded-full ${getMatchScoreColor(selectedCandidate.matchScore)}`}>
- {selectedCandidate.matchScore}%
- </div>
- <p className="text-xs text-muted-foreground mt-1">Match Score</p>
- </div>
- <div className="text-center">
- <div className="text-lg font-bold text-primary">{selectedCandidate.responseRate}%</div>
- <p className="text-xs text-muted-foreground">Response Rate</p>
- </div>
- <div className="text-center">
- <div className="text-lg font-bold text-primary">{selectedCandidate.portfolioItems}</div>
- <p className="text-xs text-muted-foreground">Portfolio Items</p>
- </div>
- <div className="text-center">
- <div className="text-lg font-bold text-primary">{selectedCandidate.yearsOfExperience}</div>
- <p className="text-xs text-muted-foreground">Years Exp.</p>
- </div>
- </div>
+  <div className="p-6 space-y-6">
+  {/* Quick Stats Row */}
+  <div className="grid grid-cols-4 gap-4 bg-slate-50 rounded-xl p-4">
+  <div className="text-center">
+  <div className="text-2xl font-bold text-emerald-600">{selectedCandidate.matchScore}%</div>
+  <p className="text-xs text-slate-500 mt-1">Match Score</p>
+  </div>
+  <div className="text-center">
+  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.responseRate}%</div>
+  <p className="text-xs text-slate-500 mt-1">Response Rate</p>
+  </div>
+  <div className="text-center">
+  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.portfolioItems}</div>
+  <p className="text-xs text-slate-500 mt-1">Portfolio Items</p>
+  </div>
+  <div className="text-center">
+  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.yearsOfExperience}</div>
+  <p className="text-xs text-slate-500 mt-1">Years Exp.</p>
+  </div>
+  </div>
 
- {/* Basic Info */}
- <div className="grid grid-cols-2 gap-6">
- <div>
- <h3 className="font-semibold mb-3">Professional Details</h3>
- <div className="space-y-2 text-sm">
- <div className="flex items-center space-x-2">
- <MapPin className="w-4 h-4 text-muted-foreground" />
- <span>{selectedCandidate.location}</span>
- </div>
- <div className="flex items-center space-x-2">
- <Briefcase className="w-4 h-4 text-muted-foreground" />
- <span>{selectedCandidate.experience}</span>
- </div>
- <div className="flex items-center space-x-2">
- <DollarSign className="w-4 h-4 text-muted-foreground" />
- <span>${selectedCandidate.salaryRange.min.toLocaleString()} - ${selectedCandidate.salaryRange.max.toLocaleString()}</span>
- </div>
- <div className="flex items-center space-x-2">
- <Globe className="w-4 h-4 text-muted-foreground" />
- <span>{selectedCandidate.timezone}</span>
- </div>
- </div>
- </div>
+  {/* Basic Info - 2 Column Grid */}
+  <div className="grid grid-cols-2 gap-6">
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <Briefcase className="w-4 h-4 text-slate-400" />
+  Professional Details
+  </h3>
+  <div className="space-y-2 text-sm">
+  <div className="flex items-center space-x-2">
+  <MapPin className="w-4 h-4 text-slate-400" />
+  <span className="text-slate-700">{selectedCandidate.location}</span>
+  </div>
+  <div className="flex items-center space-x-2">
+  <Briefcase className="w-4 h-4 text-slate-400" />
+  <span className="text-slate-700">{selectedCandidate.experience}</span>
+  </div>
+  <div className="flex items-center space-x-2">
+  <DollarSign className="w-4 h-4 text-slate-400" />
+  <span className="text-slate-700">${selectedCandidate.salaryRange.min.toLocaleString()} - ${selectedCandidate.salaryRange.max.toLocaleString()}</span>
+  </div>
+  <div className="flex items-center space-x-2">
+  <Globe className="w-4 h-4 text-slate-400" />
+  <span className="text-slate-700">{selectedCandidate.timezone}</span>
+  </div>
+  </div>
+  </div>
 
- <div>
- <h3 className="font-semibold mb-3">Availability & Preferences</h3>
- <div className="space-y-2">
- <Badge className={getAvailabilityBadge(selectedCandidate.availability).className}>
- {getAvailabilityBadge(selectedCandidate.availability).label}
- </Badge>
- <div className="flex flex-wrap gap-1">
- {selectedCandidate.preferredWorkType.map(type => (
- <Badge key={type} variant="outline" className="text-xs">
- {type}
- </Badge>
- ))}
- </div>
- </div>
- </div>
- </div>
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <Clock className="w-4 h-4 text-slate-400" />
+  Availability & Preferences
+  </h3>
+  <div className="space-y-2">
+  <Badge className={`${getAvailabilityBadge(selectedCandidate.availability).className} text-sm px-3 py-1`}>
+  {getAvailabilityBadge(selectedCandidate.availability).label}
+  </Badge>
+  <div className="flex flex-wrap gap-2">
+  {selectedCandidate.preferredWorkType.map(type => (
+  <Badge key={type} variant="outline" className="text-xs border-slate-300 text-slate-600">
+  {type}
+  </Badge>
+  ))}
+  </div>
+  </div>
+  </div>
+  </div>
 
- {/* Bio */}
- <div>
- <h3 className="font-semibold mb-2">About</h3>
- <p className="text-sm text-muted-foreground leading-relaxed">{selectedCandidate.bio}</p>
- </div>
+  {/* Experience */}
+  {selectedCandidate.previousCompanies.length > 0 && (
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <Building2 className="w-4 h-4 text-slate-400" />
+  Previous Companies
+  </h3>
+  <div className="flex flex-wrap gap-2">
+  {selectedCandidate.previousCompanies.map(company => (
+  <Badge key={company} variant="outline" className="border-slate-300 text-slate-600">
+  {company}
+  </Badge>
+  ))}
+  </div>
+  </div>
+  )}
 
- {/* Skills */}
- <div>
- <h3 className="font-semibold mb-3">Skills & Technologies</h3>
- <div className="flex flex-wrap gap-2">
- {selectedCandidate.skills.map(skill => (
- <Badge key={skill} variant="secondary">
- {skill}
- </Badge>
- ))}
- </div>
- </div>
+  {/* Achievements */}
+  {selectedCandidate.achievements.length > 0 && (
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <Award className="w-4 h-4 text-slate-400" />
+  Key Achievements
+  </h3>
+  <ul className="space-y-2">
+  {selectedCandidate.achievements.map((achievement, index) => (
+  <li key={index} className="flex items-start space-x-2">
+  <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+  <span className="text-sm text-slate-600">{achievement}</span>
+  </li>
+  ))}
+  </ul>
+  </div>
+  )}
 
- {/* Experience */}
- <div>
- <h3 className="font-semibold mb-3">Previous Companies</h3>
- <div className="flex flex-wrap gap-2">
- {selectedCandidate.previousCompanies.map(company => (
- <Badge key={company} variant="outline">
- {company}
- </Badge>
- ))}
- </div>
- </div>
+  {/* Education & Certifications */}
+  <div className="grid grid-cols-2 gap-4">
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+  <BookOpen className="w-4 h-4 text-slate-400" />
+  Education
+  </h3>
+  <p className="text-sm text-slate-600">{selectedCandidate.education || 'Not specified'}</p>
+  </div>
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
+  <Award className="w-4 h-4 text-slate-400" />
+  Certifications
+  </h3>
+  {selectedCandidate.certifications.length > 0 ? (
+  <div className="space-y-1">
+  {selectedCandidate.certifications.map(cert => (
+  <Badge key={cert} variant="outline" className="text-xs block w-fit border-slate-300 text-slate-600">
+  {cert}
+  </Badge>
+  ))}
+  </div>
+  ) : (
+  <p className="text-sm text-slate-400">None listed</p>
+  )}
+  </div>
+  </div>
 
- {/* Achievements */}
- <div>
- <h3 className="font-semibold mb-3">Key Achievements</h3>
- <ul className="space-y-2">
- {selectedCandidate.achievements.map((achievement, index) => (
- <li key={index} className="flex items-start space-x-2">
- <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
- <span className="text-sm">{achievement}</span>
- </li>
- ))}
- </ul>
- </div>
+  {/* Languages */}
+  {selectedCandidate.languages.length > 0 && (
+  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <Globe className="w-4 h-4 text-slate-400" />
+  Languages
+  </h3>
+  <div className="flex flex-wrap gap-2">
+  {selectedCandidate.languages.map(language => (
+  <Badge key={language} variant="outline" className="border-slate-300 text-slate-600">
+  {language}
+  </Badge>
+  ))}
+  </div>
+  </div>
+  )}
 
- {/* Education & Certifications */}
- <div className="grid grid-cols-2 gap-6">
- <div>
- <h3 className="font-semibold mb-2">Education</h3>
- <p className="text-sm text-muted-foreground">{selectedCandidate.education}</p>
- </div>
- <div>
- <h3 className="font-semibold mb-2">Certifications</h3>
- <div className="space-y-1">
- {selectedCandidate.certifications.map(cert => (
- <Badge key={cert} variant="outline" className="text-xs block w-fit">
- {cert}
- </Badge>
- ))}
- </div>
- </div>
- </div>
-
- {/* Languages */}
- <div>
- <h3 className="font-semibold mb-2">Languages</h3>
- <div className="flex flex-wrap gap-2">
- {selectedCandidate.languages.map(language => (
- <Badge key={language} variant="outline">
- {language}
- </Badge>
- ))}
- </div>
- </div>
-
- {/* Actions */}
- <div className="flex space-x-3 pt-4 border-t">
- <Button onClick={() => contactCandidate(selectedCandidate.id)} className="flex-1">
- <MessageCircle className="w-4 h-4 mr-2" />
- Send Message
- </Button>
- <Button 
- variant="outline" 
- onClick={() => saveCandidate(selectedCandidate.id)}
- className={savedCandidates.includes(selectedCandidate.id)? 'bg-red-50 text-red-600': ''}
- >
- <Heart className={`w-4 h-4 mr-2 ${savedCandidates.includes(selectedCandidate.id)? 'fill-current': ''}`} />
- {savedCandidates.includes(selectedCandidate.id)? 'Saved': 'Save'}
- </Button>
- {selectedCandidate.GitBranch && (
- <Button variant="outline" size="sm">
- <Eye className="w-4 h-4 mr-2" />
- GitBranch
- </Button>
- )}
- {selectedCandidate.Link && (
- <Button variant="outline" size="sm">
- <Eye className="w-4 h-4 mr-2" />
- Link
- </Button>
- )}
+  {/* Actions */}
+  <div className="flex gap-3 pt-4 border-t border-slate-200">
+  <Button onClick={() => contactCandidate(selectedCandidate.id)} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
+  <MessageCircle className="w-4 h-4 mr-2" />
+  Send Message
+  </Button>
+  <Button 
+  variant="outline" 
+  onClick={() => saveCandidate(selectedCandidate.id)}
+  className={`${savedCandidates.includes(selectedCandidate.id)? 'bg-red-50 text-red-600 border-red-200': 'border-slate-300 text-slate-600'}`}
+  >
+  <Heart className={`w-4 h-4 mr-2 ${savedCandidates.includes(selectedCandidate.id)? 'fill-current': ''}`} />
+  {savedCandidates.includes(selectedCandidate.id)? 'Saved': 'Save'}
+  </Button>
+  {selectedCandidate.GitBranch && (
+  <Button variant="outline" size="icon" className="border-slate-300">
+  <Eye className="w-4 h-4" />
+  </Button>
+  )}
+  {selectedCandidate.Link && (
+  <Button variant="outline" size="icon" className="border-slate-300">
+  <LinkIcon className="w-4 h-4" />
+  </Button>
+  )}
  </div>
  </div>
  </DialogContent>
@@ -695,21 +732,33 @@ const getAvailabilityBadge = (availability: string) => {
  />
  </div>
 
- {/* Location */}
- <div>
- <label className="text-sm font-medium mb-2 block">Location</label>
- <Select value={searchFilters.location} onValueChange={(value) => setSearchFilters(prev => ({...prev, location: value }))}>
- <SelectTrigger>
- <SelectValue placeholder="Any location" />
- </SelectTrigger>
- <SelectContent>
- <SelectItem value="any-location">Any location</SelectItem>
- {locations.map(location => (
- <SelectItem key={location} value={location}>{location}</SelectItem>
- ))}
- </SelectContent>
- </Select>
- </div>
+  {/* Location */}
+  <div>
+  <label className="text-sm font-medium mb-2 block">Location</label>
+  <div className="relative">
+  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+  <Input
+  placeholder="Kerala, Kochi, Mumbai, Bangalore..."
+  value={searchFilters.location}
+  onChange={(e) => setSearchFilters(prev => ({...prev, location: e.target.value }))}
+  className="pl-9"
+  />
+  {searchFilters.location && (
+  <button
+  type="button"
+  onClick={() => setSearchFilters(prev => ({...prev, location: ''}))}
+  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+  >
+  <X className="h-4 w-4" />
+  </button>
+  )}
+  </div>
+  <p className="mt-1 text-xs text-slate-500">
+  {availableLocations.length > 0 
+  ? `${availableLocations.length} locations available`
+  : 'Type to search any city or region'}
+  </p>
+  </div>
 
  {/* Skills */}
  <div>

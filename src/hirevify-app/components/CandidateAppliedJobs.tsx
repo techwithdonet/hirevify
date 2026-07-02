@@ -48,6 +48,7 @@ import { Input } from './ui/input';
 import { useAuth } from './AuthProvider';
 import { applicationsService, type ApplicationWithDetails } from '../services/applicationsService';
 import { projectAssignmentsService, type AssignmentWithDetails } from '../services/projectAssignmentsService';
+import { profilesService } from '../services/profilesService';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import type { Job, JobProjectAssignment } from '../types/app';
 import { toast } from 'sonner';
@@ -168,6 +169,55 @@ export function CandidateAppliedJobs({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'hired' | 'closed'>('all');
+  const [candidateProfile, setCandidateProfile] = useState<any>(null);
+
+  // Load candidate profile for completeness check
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+      try {
+        const profileData = await profilesService.getCandidateProfile(user.id);
+        if (profileData.data) {
+          setCandidateProfile(profileData.data);
+        }
+      } catch (err) {
+        console.warn('Could not load candidate profile', err);
+      }
+    };
+    loadProfile();
+  }, [user?.id]);
+
+  // Check profile before job search
+  const checkProfileForJobSearch = () => {
+    const completeness = Number(candidateProfile?.profile_completeness || 0);
+    const hasResume = Boolean(candidateProfile?.resume_url);
+    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
+    
+    if (!isProfileComplete || !hasResume) {
+      const missing: string[] = [];
+      if (!hasResume) missing.push('upload a CV');
+      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
+      
+      toast.error(
+        `Please ${missing.join(' and ')} before finding jobs and applying.`,
+        { 
+          action: {
+            label: 'Complete Profile',
+            onClick: onBack // Go back to dashboard where they can edit profile
+          },
+          duration: 8000
+        }
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleSearchProjects = () => {
+    if (checkProfileForJobSearch()) {
+      onSearchProjects();
+    }
+  };
 
   const loadApplications = useCallback(async () => {
     if (!user?.id) return;
@@ -253,7 +303,7 @@ export function CandidateAppliedJobs({
       onBack={onBack}
       backLabel="Back to Dashboard"
       actions={
-        <Button onClick={onSearchProjects} variant="outline">
+        <Button onClick={handleSearchProjects} variant="outline">
           <Search className="mr-2 h-4 w-4" />
           Browse more jobs
         </Button>
@@ -310,7 +360,7 @@ export function CandidateAppliedJobs({
       ) : filteredRows.length === 0 ? (
         <EmptyState
           hasAnyApplications={rows.length > 0}
-          onBrowseJobs={onSearchProjects}
+          onBrowseJobs={handleSearchProjects}
           onClearFilters={() => {
             setSearchQuery('');
             setStatusFilter('all');

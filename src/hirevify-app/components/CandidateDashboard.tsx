@@ -120,6 +120,40 @@ export function CandidateDashboard({
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [publishedJobsCount, setPublishedJobsCount] = useState<number>(0);
 
+  // Check profile completeness before allowing job search/apply
+  const checkProfileForJobSearch = () => {
+    const completeness = Number(candidateProfile?.profile_completeness || 0);
+    const hasResume = Boolean(candidateProfile?.resume_url);
+    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
+    
+    // Show warning if profile is incomplete or CV is missing
+    if (!isProfileComplete || !hasResume) {
+      const missing: string[] = [];
+      if (!hasResume) missing.push('upload a CV');
+      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
+      
+      toast.error(
+        `Please ${missing.join(' and ')} before finding jobs and applying.`,
+        { 
+          action: {
+            label: 'Complete Profile',
+            onClick: onEditProfile
+          },
+          duration: 8000
+        }
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Wrapper for onSearchProjects with profile check
+  const handleSearchProjects = () => {
+    if (checkProfileForJobSearch()) {
+      onSearchProjects();
+    }
+  };
+
   // Load all candidate data from Supabase
   useEffect(() => {
     const loadCandidateData = async () => {
@@ -362,7 +396,7 @@ export function CandidateDashboard({
 
         {/* Find Jobs Hero CTA */}
         <section
-          onClick={onSearchProjects}
+          onClick={handleSearchProjects}
           className="group relative mb-6 cursor-pointer overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-6 text-white shadow-lg transition-shadow hover:shadow-xl sm:p-8"
         >
           {/* Decorative glow */}
@@ -431,7 +465,7 @@ export function CandidateDashboard({
                     { label: 'Knowledge Assessment', description: 'Verify your skills', icon: Award, color: 'bg-emerald-50 text-emerald-600', action: onTakeKnowledgeAssessment },
                     { label: 'AI Resume Builder', description: 'Create your resume', icon: Brain, color: 'bg-blue-50 text-blue-600', action: onBuildResume },
                     { label: 'Portfolio', description: 'Showcase your work', icon: Sparkles, color: 'bg-violet-50 text-violet-600', action: onViewPortfolio },
-                    { label: 'Find Jobs', description: 'Browse opportunities', icon: Search, color: 'bg-amber-50 text-amber-600', action: onSearchProjects },
+                    { label: 'Find Jobs', description: 'Browse opportunities', icon: Search, color: 'bg-amber-50 text-amber-600', action: handleSearchProjects },
                   ].map((tool) => {
                     const Icon = tool.icon;
                     return (

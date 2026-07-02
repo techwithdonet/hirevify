@@ -23,6 +23,7 @@ import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { useAuth } from './AuthProvider';
 import { savedJobsService } from '../services/savedJobsService';
+import { profilesService } from '../services/profilesService';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { toast } from 'sonner';
 import type { Job } from '../types/app';
@@ -40,6 +41,55 @@ export function CandidateSavedJobs({ onBack, onViewJob, onBrowseJobs }: Candidat
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingUnsave, setPendingUnsave] = useState<string | null>(null);
+  const [candidateProfile, setCandidateProfile] = useState<any>(null);
+
+  // Load candidate profile for completeness check
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+      try {
+        const profileData = await profilesService.getCandidateProfile(user.id);
+        if (profileData.data) {
+          setCandidateProfile(profileData.data);
+        }
+      } catch (err) {
+        console.warn('Could not load candidate profile', err);
+      }
+    };
+    loadProfile();
+  }, [user?.id]);
+
+  // Check profile before job search
+  const checkProfileForJobSearch = () => {
+    const completeness = Number(candidateProfile?.profile_completeness || 0);
+    const hasResume = Boolean(candidateProfile?.resume_url);
+    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
+    
+    if (!isProfileComplete || !hasResume) {
+      const missing: string[] = [];
+      if (!hasResume) missing.push('upload a CV');
+      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
+      
+      toast.error(
+        `Please ${missing.join(' and ')} before finding jobs and applying.`,
+        { 
+          action: {
+            label: 'Complete Profile',
+            onClick: onBack
+          },
+          duration: 8000
+        }
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleBrowseJobs = () => {
+    if (checkProfileForJobSearch()) {
+      onBrowseJobs();
+    }
+  };
 
   const loadSavedJobs = useCallback(async () => {
     if (!user?.id) return;
@@ -107,7 +157,7 @@ export function CandidateSavedJobs({ onBack, onViewJob, onBrowseJobs }: Candidat
       onBack={onBack}
       backLabel="Back to Dashboard"
       actions={
-        <Button onClick={onBrowseJobs} variant="outline">
+        <Button onClick={handleBrowseJobs} variant="outline">
           <Search className="mr-2 h-4 w-4" />
           Browse jobs
         </Button>
@@ -149,7 +199,7 @@ export function CandidateSavedJobs({ onBack, onViewJob, onBrowseJobs }: Candidat
               <p className="mt-1 text-sm text-slate-500">
                 Tap the bookmark icon on any job to save it for later. Your saved jobs stay here until you remove them.
               </p>
-              <Button onClick={onBrowseJobs} className="mt-5">
+              <Button onClick={handleBrowseJobs} className="mt-5">
                 <Search className="mr-2 h-4 w-4" />
                 Browse jobs
               </Button>

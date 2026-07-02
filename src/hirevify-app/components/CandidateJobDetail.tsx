@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, CheckCircle2, Building2, Loader2, Users, Sparkles, ArrowRight, Lock, FileText, Wand2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, CheckCircle2, Building2, Loader2, Users, Sparkles, ArrowRight, Lock, FileText, Wand2, AlertTriangle, UserCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -47,6 +47,7 @@ interface CandidateExtras {
   experience_summary: string | null;
   years_of_experience: number | null;
   resume_url: string | null;
+  profile_completeness: number | null;
 }
 
 function formatBudget(job: Job): string | null {
@@ -65,6 +66,8 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
   const [hasApplied, setHasApplied] = useState(false);
   const [existingApplication, setExistingApplication] = useState<ServiceApplication | null>(null);
   const [isCheckingApplication, setIsCheckingApplication] = useState(true);
+  const [profileCompleteness, setProfileCompleteness] = useState<number>(0);
+  const [showProfileIncompleteModal, setShowProfileIncompleteModal] = useState(false);
   const [companyName, setCompanyName] = useState<string | null>(null);
   const [existingAssignmentId, setExistingAssignmentId] = useState<string | null>(null);
   const [candidateExtras, setCandidateExtras] = useState<CandidateExtras | null>(null);
@@ -107,12 +110,15 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         const candidateIds = [profileRow?.id, authData.user.id].filter(Boolean) as string[];
         const { data: extrasRow } = await supabase
           .from('candidate_profiles')
-          .select('headline, skills, experience_summary, years_of_experience, resume_url')
+          .select('headline, skills, experience_summary, years_of_experience, resume_url, profile_completeness')
           .in('user_id', candidateIds)
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle<CandidateExtras>();
         setCandidateExtras(extrasRow ?? null);
+        if (extrasRow?.profile_completeness !== null && extrasRow?.profile_completeness !== undefined) {
+          setProfileCompleteness(extrasRow.profile_completeness);
+        }
 
         if (extrasRow?.resume_url) {
           const value = String(extrasRow.resume_url);
@@ -188,6 +194,11 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
   const handleApplyClick = () => {
     if (!user) {
       toast.error('Please sign in to apply.');
+      return;
+    }
+    // Check profile completeness - show modal if below threshold
+    if (profileCompleteness < 40) {
+      setShowProfileIncompleteModal(true);
       return;
     }
     if (!cvMatch) {
@@ -544,6 +555,14 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
         skills: allSkills 
       } : current);
       
+      // Refresh the signed URL for the new CV so future checks use the updated file
+      if (/^https?:\/\//i.test(optimizedCv.path)) {
+        setCvSignedUrl(optimizedCv.path);
+      } else {
+        const signed = await applicationsService.getApplicationFileSignedUrl(optimizedCv.path);
+        if (signed.url) setCvSignedUrl(signed.url);
+      }
+      
       // Re-calculate match with the NEW CV and NEW skills
       setCvMatchProgressText('Calculating new match score...');
       const newMatch = await calculateAtsMatch(
@@ -587,6 +606,59 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
   const budgetText = formatBudget(job);
   const isCvBelowThreshold = Boolean(cvMatch && cvMatch.score < 70);
   const canOptimizeCv = Boolean(cvMatch);
+
+  // Profile Incomplete Modal
+  if (showProfileIncompleteModal) {
+    return (
+      <div className="hv-candidate-shell min-h-screen bg-slate-50">
+        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 py-12">
+          <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                <UserCircle className="h-10 w-10 text-amber-600" />
+              </div>
+            </div>
+            <h2 className="mb-2 text-center text-xl font-bold text-slate-950">
+              Complete your profile first
+            </h2>
+            <p className="mb-6 text-center text-sm text-slate-600">
+              Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
+              Recruiters can only see candidates with complete profiles. Please add more information before applying.
+            </p>
+            <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Profile completeness
+              </p>
+              <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                <div 
+                  className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                  style={{ width: `${profileCompleteness}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                Minimum 40% required to apply. Add your skills, experience, and resume to increase your profile strength.
+              </p>
+            </div>
+            <div className="space-y-3">
+              <a
+                href="/candidate/settings"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                <UserCircle className="h-4 w-4" />
+                Complete your profile
+              </a>
+              <button
+                onClick={() => setShowProfileIncompleteModal(false)}
+                className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="hv-candidate-shell min-h-screen">
@@ -713,6 +785,30 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
 
           {/* Sidebar */}
           <aside className="space-y-4">
+            {/* Profile Completeness Warning */}
+            {profileCompleteness < 40 && (
+              <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-sm">
+                <div className="flex items-start gap-3 p-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-950">Profile too incomplete</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
+                      Complete at least 40% to apply for jobs.
+                    </p>
+                    <a
+                      href="/candidate/settings"
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                    >
+                      Complete your profile
+                      <ArrowRight className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm">
               <div className="border-b border-emerald-100 bg-emerald-50/50 px-5 py-4">
                 <h3 className="text-base font-bold text-slate-950">Ready to apply?</h3>
@@ -1020,13 +1116,15 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply }: C
                   <Button
                     className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
                     onClick={handleApplyClick}
-                    disabled={!cvMatch || isCvBelowThreshold}
+                    disabled={profileCompleteness < 40 || !cvMatch || isCvBelowThreshold}
                   >
-                    {!cvMatch
-                      ? 'Check CV match to apply'
-                      : isCvBelowThreshold
-                        ? 'CV match too low to apply'
-                        : 'Apply for this job'}
+                    {profileCompleteness < 40
+                      ? 'Complete profile to apply'
+                      : !cvMatch
+                        ? 'Check CV match to apply'
+                        : isCvBelowThreshold
+                          ? 'CV match too low to apply'
+                          : 'Apply for this job'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 )}
