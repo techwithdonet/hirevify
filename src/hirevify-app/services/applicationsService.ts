@@ -4,6 +4,7 @@
  */
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+import { calculateDeterministicAtsMatch } from './deterministicAtsService';
 
 const DEFAULT_CV_BUCKETS = [
   process.env.NEXT_PUBLIC_CANDIDATE_CV_BUCKET,
@@ -76,8 +77,9 @@ class ApplicationsService {
   jobId: string,
   candidateId: string,
   coverLetter?: string,
-  extras?: { cvUrl?: string | null; cvFileName?: string | null }
+  extras?: { cvUrl?: string | null; cvFileName?: string | null; matchScore?: number | null }
   ) {
+  const submittedMatchScore = Number(extras?.matchScore);
   // Build insert payload - only include cv_file_name if we have a value
   const insertPayload: Record<string, unknown> = {
   job_id: jobId,
@@ -87,6 +89,10 @@ class ApplicationsService {
   cv_uploaded_at: extras?.cvUrl ? new Date().toISOString() : null,
   status: 'applied',
   };
+
+  if (Number.isFinite(submittedMatchScore) && submittedMatchScore > 0) {
+  insertPayload.match_score = Math.max(0, Math.min(100, Math.round(submittedMatchScore)));
+  }
   
   // Only include cv_file_name if provided (column may not exist yet)
   if (extras?.cvFileName) {
@@ -102,11 +108,73 @@ class ApplicationsService {
   return { data: null, error };
   }
 
- const { data: jobRow } = await this.supabase
- .from('jobs')
- .select('title, recruiter_id')
- .eq('id', jobId)
- .maybeSingle();
+  // ── Calculate and save match score if the apply flow did not pass one ──
+  if (!Number.isFinite(submittedMatchScore) || submittedMatchScore <= 0) {
+  try {
+    const { data: jobRow2 } = await this.supabase
+      .from('jobs')
+      .select('title, description, skills, requirements, experience_level, preferred_skills, certifications, education_level, years_experience_required')
+      .eq('id', jobId)
+      .maybeSingle();
+
+    if (jobRow2) {
+      // Get the candidate's profile (try profiles then candidate_profiles)
+      const { data: profileRow } = await this.supabase
+        .from('profiles')
+        .select('id, auth_user_id, full_name')
+        .or(`auth_user_id.eq.${candidateId},id.eq.${candidateId}`)
+        .maybeSingle();
+
+      const profileAuthId = profileRow?.auth_user_id || candidateId;
+
+      const { data: candidateRow } = await this.supabase
+        .from('candidate_profiles')
+        .select('headline, skills, experience_summary, years_of_experience, resume_url, profile_summary')
+        .eq('user_id', profileAuthId)
+        .maybeSingle();
+
+      if (candidateRow || profileRow) {
+        const skills = Array.isArray(candidateRow?.skills) ? candidateRow.skills : [];
+        const job = {
+          id: jobId,
+          title: jobRow2.title || '',
+          description: jobRow2.description || '',
+          requirements: Array.isArray(jobRow2.requirements) ? jobRow2.requirements : [],
+          skills: Array.isArray(jobRow2.skills) ? jobRow2.skills : [],
+          experience_level: jobRow2.experience_level || null,
+          preferred_skills: Array.isArray(jobRow2.preferred_skills) ? jobRow2.preferred_skills : [],
+          certifications: Array.isArray(jobRow2.certifications) ? jobRow2.certifications : [],
+          education_level: jobRow2.education_level || null,
+          years_experience_required: jobRow2.years_experience_required || null,
+        };
+        const candidate = {
+          name: profileRow?.full_name || 'Candidate',
+          skills,
+          headline: candidateRow?.headline || '',
+          summary: candidateRow?.profile_summary || candidateRow?.experience_summary || '',
+          experience: typeof candidateRow?.years_of_experience === 'number'
+            ? `${candidateRow.years_of_experience} year${candidateRow.years_of_experience === 1 ? '' : 's'} experience`
+            : 'Not specified',
+        };
+        const matchResult = calculateDeterministicAtsMatch(job, candidate);
+        if (matchResult.score > 0) {
+          await this.supabase
+            .from('applications')
+            .update({ match_score: matchResult.score })
+            .eq('id', data.id);
+        }
+      }
+    }
+  } catch (matchError) {
+    console.warn('Could not calculate match score at application time:', matchError);
+  }
+  }
+
+  const { data: jobRow } = await this.supabase
+  .from('jobs')
+  .select('title, recruiter_id')
+  .eq('id', jobId)
+  .maybeSingle();
 
  if (jobRow?.recruiter_id) {
  const { data: recruiterProfile } = await this.supabase

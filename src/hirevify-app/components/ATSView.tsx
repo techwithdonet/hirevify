@@ -2,7 +2,7 @@
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,12 +32,23 @@ import {
   Video,
   PlayCircle,
   FileCheck,
+  MapPin,
+  Award,
+  GraduationCap,
+  ExternalLink,
+  Download,
+  Star,
+  XIcon,
+  Phone,
+  Globe,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { calculateAtsMatch, type AtsMatchResult } from '@/src/hirevify-app/services/atsMatchingService';
 import { projectAssignmentsService } from '@/src/hirevify-app/services/projectAssignmentsService';
+import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
 
@@ -60,10 +71,26 @@ interface JobApplication {
   location: string;
   coverLetter?: string;
   resumeUrl?: string;
+  resumeFileName?: string | null;
+  avatarUrl?: string | null;
+  phone?: string | null;
   atsMatchedKeywords: string[];
   atsMissingKeywords: string[];
   atsExplanation: string;
   scoreSource: AtsMatchResult['source'];
+  // Extended profile fields for candidate profile modal
+  profileCompleteness?: number | null;
+  headline?: string | null;
+  profileSummary?: string | null;
+  yearsOfExperience?: number | null;
+  certifications?: string[] | null;
+  education?: string | null;
+  linkedinUrl?: string | null;
+  portfolioUrl?: string | null;
+  githubUrl?: string | null;
+  portfolioLinks?: string[];
+  cvSignedUrl?: string | null;
+  allAtsCategories?: AtsMatchResult['categories'];
 }
 
 interface Job {
@@ -134,6 +161,8 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   const [assignmentFilter, setAssignmentFilter] = useState<'pending' | 'assigned'>('pending');
   const [showAssignmentPanel, setShowAssignmentPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<'applicants' | 'projects'>('applicants');
+  const [selectedCandidateProfile, setSelectedCandidateProfile] = useState<JobApplication | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Load recruiter profile
   useEffect(() => {
@@ -225,60 +254,85 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
         const job = jobs.find((j) => j.id === selectedJobId);
         const { data: apps, error: appsError } = await supabase
           .from('applications')
-          .select('id, job_id, candidate_id, cover_letter, status, match_score, notes, created_at, updated_at')
+          .select('id, job_id, candidate_id, cover_letter, cv_url, cv_file_name, status, match_score, notes, created_at, updated_at')
           .eq('job_id', selectedJobId)
           .order('created_at', { ascending: false });
 
         if (appsError) throw appsError;
 
-        const candidateIds = (apps || []).map((a: any) => a.candidate_id).filter(Boolean);
+        const candidateIds = Array.from(new Set((apps || []).map((a: any) => a.candidate_id).filter(Boolean)));
         const { data: profiles } = candidateIds.length > 0
-          ? await supabase.from('profiles').select('id, auth_user_id, full_name, email, location').in('id', candidateIds)
+          ? await supabase
+            .from('profiles')
+            .select('id, auth_user_id, full_name, email, avatar_url, phone, location')
+            .or(`id.in.(${candidateIds.join(',')}),auth_user_id.in.(${candidateIds.join(',')})`)
           : { data: [] };
 
-        const profileAuthIds = (profiles || []).map((p: any) => p.auth_user_id).filter(Boolean);
-        const { data: candidateDetails } = profileAuthIds.length > 0
-          ? await supabase.from('candidate_profiles').select('*').in('user_id', profileAuthIds)
+        const profileAuthIds = (profiles || []).flatMap((p: any) => [p.id, p.auth_user_id]).filter(Boolean);
+        const candidateDetailIds = Array.from(new Set([...candidateIds, ...profileAuthIds]));
+        const { data: candidateDetails } = candidateDetailIds.length > 0
+          ? await supabase.from('candidate_profiles').select('*').in('user_id', candidateDetailIds)
+          : { data: [] };
+        const { data: portfolioItems } = candidateDetailIds.length > 0
+          ? await supabase.from('portfolio_items').select('user_id, title, project_url, live_url, github_url').in('user_id', candidateDetailIds)
           : { data: [] };
 
         const mapped: JobApplication[] = await Promise.all((apps || []).map(async (app: any) => {
-          const profile = (profiles || []).find((p: any) => p.id === app.candidate_id);
+          const profile = (profiles || []).find((p: any) => p.id === app.candidate_id || p.auth_user_id === app.candidate_id);
           const details = (candidateDetails || []).find(
-            (d: any) => d.user_id === profile?.id || d.user_id === profile?.auth_user_id
+            (d: any) => d.user_id === app.candidate_id || d.user_id === profile?.id || d.user_id === profile?.auth_user_id
           );
           const skills = Array.isArray(details?.skills) ? details.skills : [];
-          const resumeUrl = details?.resume_url || details?.resume_file_url || '';
+          const resumeUrl = app.cv_url || details?.resume_url || details?.resume_file_url || '';
+          const experience = details?.experience_summary ||
+            (typeof details?.years_of_experience === 'number'
+              ? `${details.years_of_experience} year${details.years_of_experience === 1 ? '' : 's'} experience`
+              : 'Not provided');
+          const storedScore = app.match_score === null || app.match_score === undefined ? null : Number(app.match_score);
+          const hasValidStoredScore = storedScore !== null && Number.isFinite(storedScore) && storedScore > 0;
+          const atsMatch = hasValidStoredScore
+            ? {
+              score: Math.round(storedScore),
+              matchedKeywords: [],
+              missingKeywords: [],
+              explanation: 'Saved match score from application time.',
+              source: 'stored' as AtsMatchResult['source'],
+              categories: [],
+              missingSkills: [],
+              strengths: [],
+              weaknesses: [],
+            }
+            : await calculateAtsMatch(
+              {
+                id: job?.id || selectedJobId,
+                title: job?.title || '',
+                description: job?.description || '',
+                requirements: Array.isArray(job?.requirements) ? job.requirements : [],
+                skills: Array.isArray(job?.skills) ? job.skills : [],
+                experience_level: job?.experience_level || null,
+              },
+              {
+                applicationId: app.id,
+                name: details?.full_name || profile?.full_name || 'Candidate',
+                skills,
+                headline: details?.headline || '',
+                summary: details?.profile_summary || details?.summary || details?.bio || '',
+                resumeUrl,
+                resumeText: details?.resume_text || details?.resume_content || '',
+                coverLetter: app.cover_letter || '',
+                experience,
+                storedScore: app.match_score,
+              },
+              authToken
+            );
 
-          const atsMatch = await calculateAtsMatch(
-            {
-              id: job?.id || selectedJobId,
-              title: job?.title || '',
-              description: job?.description || '',
-              requirements: Array.isArray(job?.requirements) ? job.requirements : [],
-              skills: Array.isArray(job?.skills) ? job.skills : [],
-              experience_level: job?.experience_level || null,
-            },
-            {
-              applicationId: app.id,
-              name: details?.full_name || profile?.full_name || 'Candidate',
-              skills,
-              headline: details?.headline || '',
-              summary: details?.profile_summary || details?.summary || details?.bio || '',
-              resumeUrl,
-              resumeText: details?.resume_text || details?.resume_content || '',
-              coverLetter: app.cover_letter || '',
-              experience: details?.experience_summary ||
-                (typeof details?.years_of_experience === 'number'
-                  ? `${details.years_of_experience} year${details.years_of_experience === 1 ? '' : 's'} experience`
-                  : 'Not specified'),
-              storedScore: app.match_score,
-            },
-            authToken
-          );
-
-          if ((app.match_score === null || app.match_score === undefined) && atsMatch.score > 0) {
+          if (!hasValidStoredScore && atsMatch.score > 0) {
             await supabase.from('applications').update({ match_score: atsMatch.score }).eq('id', app.id);
           }
+          const candidatePortfolioLinks = (portfolioItems || [])
+            .filter((item: any) => item.user_id === app.candidate_id || item.user_id === profile?.id || item.user_id === profile?.auth_user_id)
+            .flatMap((item: any) => [item.project_url, item.live_url, item.github_url])
+            .filter(Boolean);
 
           return {
             id: `app-${app.id}`,
@@ -292,17 +346,29 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             matchScore: atsMatch.score,
             appliedDate: app.created_at,
             skills,
-            experience: details?.experience_summary ||
-              (typeof details?.years_of_experience === 'number'
-                ? `${details.years_of_experience} year${details.years_of_experience === 1 ? '' : 's'} experience`
-                : 'Not specified'),
-            location: details?.location || profile?.location || 'Not specified',
+            experience,
+            location: details?.location || profile?.location || 'Not provided',
             coverLetter: app.cover_letter || '',
             resumeUrl,
+            resumeFileName: app.cv_file_name || details?.resume_file_name || null,
+            avatarUrl: profile?.avatar_url || details?.avatar_url || null,
+            phone: details?.phone || profile?.phone || null,
             atsMatchedKeywords: atsMatch.matchedKeywords,
             atsMissingKeywords: atsMatch.missingKeywords,
             atsExplanation: atsMatch.explanation,
             scoreSource: atsMatch.source,
+            profileCompleteness: details?.profile_completeness ?? null,
+            headline: details?.headline || null,
+            profileSummary: details?.profile_summary || details?.summary || details?.bio || null,
+            yearsOfExperience: typeof details?.years_of_experience === 'number' ? details.years_of_experience : null,
+            certifications: Array.isArray(details?.certifications) ? details.certifications : [],
+            education: details?.education || null,
+            linkedinUrl: details?.linkedin_url || null,
+            portfolioUrl: details?.portfolio_url || null,
+            githubUrl: details?.github_url || null,
+            portfolioLinks: Array.from(new Set([details?.portfolio_url, ...candidatePortfolioLinks].filter(Boolean))),
+            cvSignedUrl: null,
+            allAtsCategories: atsMatch.categories,
           };
         }));
 
@@ -520,40 +586,17 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
         .order('created_at', { ascending: false });
 
       if (updatedApps) {
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, auth_user_id, full_name, email, location')
-          .in('id', updatedApps.map((a: any) => a.candidate_id));
-
-        setApplications(
-          updatedApps.map((app: any) => {
-            const profile = (profiles || []).find((p: any) => p.id === app.candidate_id);
-            return {
-              ...app,
-              name: profile?.full_name || 'Candidate',
-              email: profile?.email || '',
-            };
-          }).map((app: any) => ({
-            id: `app-${app.id}`,
-            applicationId: app.id,
-            candidateId: app.candidate_id,
-            name: app.name,
-            email: app.email,
-            jobId: app.job_id,
-            jobTitle: selectedJob?.title || '',
-            status: (app.status || 'applied') as CandidateStatus,
-            matchScore: app.match_score || 0,
-            appliedDate: app.created_at,
-            skills: [],
-            experience: '',
-            location: 'Not specified',
-            coverLetter: '',
-            resumeUrl: '',
-            atsMatchedKeywords: [],
-            atsMissingKeywords: [],
-            atsExplanation: '',
-            scoreSource: 'stored' as AtsMatchResult['source'],
-          }))
+        setApplications((current) =>
+          current.map((item) => {
+            const updated = updatedApps.find((app: any) => app.id === item.applicationId);
+            return updated
+              ? {
+                ...item,
+                status: (updated.status || item.status) as CandidateStatus,
+                matchScore: updated.match_score ?? item.matchScore,
+              }
+              : item;
+          }),
         );
       }
     } catch (err) {
@@ -741,6 +784,25 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   const getInitials = (name: string) =>
     name.split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2).toUpperCase() || 'C';
 
+  const notProvided = (value?: string | number | null) =>
+    value === null || value === undefined || String(value).trim() === '' ? 'Not provided' : String(value);
+
+  const openCandidateResume = async (application: JobApplication) => {
+    if (!application.resumeUrl) {
+      toast.error('Resume/CV not provided');
+      return;
+    }
+
+    const { url } = await applicationsService.getApplicationFileSignedUrl(application.resumeUrl);
+    window.open(url || application.resumeUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const openExternalUrl = (url?: string | null) => {
+    if (!url) return;
+    const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    window.open(normalized, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className={dashboardTheme.page}>
       {/* Header */}
@@ -792,6 +854,141 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
           </div>
         </div>
       </header>
+
+      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+          {selectedCandidateProfile && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidate Profile</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-5">
+                <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 gap-4">
+                    <Avatar className="h-16 w-16 shrink-0">
+                      {selectedCandidateProfile.avatarUrl && (
+                        <AvatarImage src={selectedCandidateProfile.avatarUrl} alt={selectedCandidateProfile.name} />
+                      )}
+                      <AvatarFallback className="bg-emerald-100 text-lg font-semibold text-emerald-700">
+                        {getInitials(selectedCandidateProfile.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h2 className="truncate text-xl font-semibold text-slate-950">
+                        {notProvided(selectedCandidateProfile.name)}
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-600">{notProvided(selectedCandidateProfile.headline)}</p>
+                      <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                        <span className="flex items-center gap-2"><Mail className="h-4 w-4 text-slate-400" />{notProvided(selectedCandidateProfile.email)}</span>
+                        <span className="flex items-center gap-2"><Phone className="h-4 w-4 text-slate-400" />{notProvided(selectedCandidateProfile.phone)}</span>
+                        <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-slate-400" />{notProvided(selectedCandidateProfile.location)}</span>
+                        <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-slate-400" />{selectedCandidateProfile.appliedDate ? new Date(selectedCandidateProfile.appliedDate).toLocaleString() : 'Not provided'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="shrink-0 space-y-2 text-left sm:text-right">
+                    <div className={`rounded-lg border px-4 py-3 ${getMatchBg(selectedCandidateProfile.matchScore)}`}>
+                      <p className="text-xs font-semibold uppercase text-slate-500">ATS Match Score</p>
+                      <p className={`text-3xl font-bold ${getMatchColor(selectedCandidateProfile.matchScore)}`}>
+                        {selectedCandidateProfile.matchScore}%
+                      </p>
+                    </div>
+                    <Badge className={getStatusBadge(selectedCandidateProfile.status)} variant="outline">
+                      {selectedCandidateProfile.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    onClick={() => void openCandidateResume(selectedCandidateProfile)}
+                    disabled={!selectedCandidateProfile.resumeUrl}
+                  >
+                    <ExternalLink className="mr-1.5 h-4 w-4" />
+                    View Resume/CV
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void openCandidateResume(selectedCandidateProfile)}
+                    disabled={!selectedCandidateProfile.resumeUrl}
+                  >
+                    <Download className="mr-1.5 h-4 w-4" />
+                    Download
+                  </Button>
+                  {selectedCandidateProfile.linkedinUrl && (
+                    <Button size="sm" variant="outline" onClick={() => openExternalUrl(selectedCandidateProfile.linkedinUrl)}>
+                      <ExternalLink className="mr-1.5 h-4 w-4" />
+                      LinkedIn
+                    </Button>
+                  )}
+                  {selectedCandidateProfile.githubUrl && (
+                    <Button size="sm" variant="outline" onClick={() => openExternalUrl(selectedCandidateProfile.githubUrl)}>
+                      <ExternalLink className="mr-1.5 h-4 w-4" />
+                      GitHub
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Zap className="h-4 w-4 text-emerald-600" />Skills</h3>
+                    {selectedCandidateProfile.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCandidateProfile.skills.map((skill) => (
+                          <Badge key={skill} className="bg-slate-100 text-slate-700" variant="secondary">{skill}</Badge>
+                        ))}
+                      </div>
+                    ) : <p className="text-sm text-slate-500">Not provided</p>}
+                  </section>
+
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Briefcase className="h-4 w-4 text-slate-500" />Experience</h3>
+                    <p className="whitespace-pre-wrap text-sm text-slate-600">{notProvided(selectedCandidateProfile.experience)}</p>
+                  </section>
+
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><GraduationCap className="h-4 w-4 text-slate-500" />Education</h3>
+                    <p className="whitespace-pre-wrap text-sm text-slate-600">{notProvided(selectedCandidateProfile.education)}</p>
+                  </section>
+
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Award className="h-4 w-4 text-slate-500" />Certifications</h3>
+                    {selectedCandidateProfile.certifications && selectedCandidateProfile.certifications.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCandidateProfile.certifications.map((certification) => (
+                          <Badge key={certification} className="bg-blue-50 text-blue-700" variant="secondary">{certification}</Badge>
+                        ))}
+                      </div>
+                    ) : <p className="text-sm text-slate-500">Not provided</p>}
+                  </section>
+                </div>
+
+                <section className="rounded-lg border border-slate-200 bg-white p-4">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Globe className="h-4 w-4 text-slate-500" />Portfolio Links</h3>
+                  {selectedCandidateProfile.portfolioLinks && selectedCandidateProfile.portfolioLinks.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedCandidateProfile.portfolioLinks.map((link) => (
+                        <button key={link} type="button" onClick={() => openExternalUrl(link)} className="block max-w-full truncate text-sm font-medium text-emerald-700 hover:underline">
+                          {link}
+                        </button>
+                      ))}
+                    </div>
+                  ) : <p className="text-sm text-slate-500">Not provided</p>}
+                </section>
+
+                <section className="rounded-lg border border-slate-200 bg-white p-4">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><FileText className="h-4 w-4 text-slate-500" />Cover Letter</h3>
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">{notProvided(selectedCandidateProfile.coverLetter)}</p>
+                </section>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
         {/* ==================== ACTIVE JOBS TAB ==================== */}
@@ -1089,7 +1286,17 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                  <p className="truncate text-base font-semibold text-slate-950">{app.name}</p>
+                                  <button
+                                    type="button"
+                                    className="truncate text-left text-base font-semibold text-slate-950 hover:text-emerald-700 hover:underline"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setSelectedCandidateProfile(app);
+                                      setShowProfileModal(true);
+                                    }}
+                                  >
+                                    {app.name}
+                                  </button>
                                   {isAlreadyAssigned ? (
                                     <Badge className={assignmentBadge.class} variant="outline">
                                       {assignmentBadge.label}
@@ -1154,6 +1361,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                 <p className="mt-1 text-xs text-slate-400">
                                   {app.scoreSource === 'openai' ? 'AI analysis' : app.scoreSource === 'stored' ? 'Saved' : 'Keyword'}
                                 </p>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedCandidateProfile(app);
+                                    setShowProfileModal(true);
+                                  }}
+                                >
+                                  <User className="mr-1.5 h-4 w-4" />
+                                  View Candidate
+                                </Button>
                                 {!isAlreadyAssigned && app.status !== 'rejected' && (
                                   <Button
                                     size="sm"

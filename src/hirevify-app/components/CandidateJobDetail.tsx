@@ -218,6 +218,13 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       return;
     }
     if (onApply) {
+      const submittedMatchScore = optimizedCv?.projectedScore ?? cvMatch.score;
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          `hirevify_application_match_${job.id}`,
+          JSON.stringify({ score: submittedMatchScore })
+        );
+      }
       if (optimizedCv && typeof window !== 'undefined') {
         window.sessionStorage.setItem(
           `hirevify_optimized_cv_${job.id}`,
@@ -607,6 +614,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       }
       
       // Re-calculate match with the NEW CV and NEW skills
+      // Use optimizedCv.preview directly (no fetch needed — already in memory)
       setCvMatchProgressText('Calculating new match score...');
       const newMatch = await calculateAtsMatch(
         {
@@ -622,7 +630,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
           headline: candidateExtras?.headline,
           summary: candidateExtras?.experience_summary,
           resumeUrl: optimizedCv.path,
-          resumeText: resumeText,
+          resumeText: optimizedCv.preview,
           experience: candidateExtras?.years_of_experience,
         },
         accessToken

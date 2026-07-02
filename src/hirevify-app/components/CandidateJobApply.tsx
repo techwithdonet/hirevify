@@ -91,6 +91,7 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [optimizedCv, setOptimizedCv] = useState<{ path: string; fileName: string; projectedScore?: number } | null>(null);
+  const [submittedMatchScore, setSubmittedMatchScore] = useState<number | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 const [showCvPrompt, setShowCvPrompt] = useState(true);
@@ -102,6 +103,17 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
   // `candidate_profiles` carries headline/skills/years.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const scoreRaw = window.sessionStorage.getItem(`hirevify_application_match_${job.id}`);
+    if (scoreRaw) {
+      try {
+        const parsed = JSON.parse(scoreRaw);
+        const score = Number(parsed?.score);
+        setSubmittedMatchScore(Number.isFinite(score) ? Math.round(score) : null);
+      } catch {
+        setSubmittedMatchScore(null);
+      }
+    }
+
     const raw = window.sessionStorage.getItem(`hirevify_optimized_cv_${job.id}`);
     if (!raw) return;
     try {
@@ -274,13 +286,14 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
         candidateId: authUserId,
         cvPath,
         cvFileName,
+        matchScore: submittedMatchScore,
       });
 
       const { error } = await applicationsService.submitApplication(
         job.id,
         authUserId,
         coverLetter.trim() || undefined,
-        { cvUrl: cvPath, cvFileName },
+        { cvUrl: cvPath, cvFileName, matchScore: submittedMatchScore },
       );
 
       if (error) {
@@ -291,6 +304,7 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       toast.success('Application submitted!');
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem(`hirevify_optimized_cv_${job.id}`);
+        window.sessionStorage.removeItem(`hirevify_application_match_${job.id}`);
       }
     } catch (err: any) {
       console.error('Application submit error', err);
@@ -806,5 +820,4 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
     </DashboardPageLayout>
   );
 }
-
 

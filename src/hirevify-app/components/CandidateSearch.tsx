@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Slider } from './ui/slider';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from './AuthProvider';
 import { toast } from 'sonner';
@@ -28,9 +28,13 @@ interface CandidateSearchProps {
 interface Candidate {
  id: string;
  name: string;
+ email?: string;
+ phone?: string;
+ avatar?: string;
  title: string;
  location: string;
  experience: string;
+ experienceSummary?: string;
  skills: string[];
  matchScore: number;
  availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
@@ -49,6 +53,9 @@ interface Candidate {
  portfolioItems: number;
  GitBranch?: string;
  Link?: string;
+ resumeUrl?: string;
+ portfolioUrl?: string;
+ portfolioLinks?: string[];
  yearsOfExperience: number;
  previousCompanies: string[];
  achievements: string[];
@@ -111,7 +118,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
  const supabase = createSupabaseBrowserClient();
 
- const { data: candidateDetails, error: detailsError } = await supabase.from('candidate_profiles').select('*').or('profile_completed.eq.true,profile_completeness.gte.60').order('updated_at', { ascending: false });
+ const { data: candidateDetails, error: detailsError } = await supabase.from('candidate_profiles').select('*').order('updated_at', { ascending: false });
 
  if (detailsError) {
  console.error('Error loading completed candidate profiles:', detailsError);
@@ -151,12 +158,23 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  }
  }
 
+ const { data: portfolioRows } = lookupIds.length > 0
+ ? await supabase
+ .from('portfolio_items')
+ .select('user_id, title, project_url, live_url, github_url')
+ .in('user_id', lookupIds)
+ : { data: [] };
+
  const mapped = completedProfiles.map((details: any, index: number) => {
  const profile = profileRows.find((item: any) =>
  item.id === details.user_id || item.auth_user_id === details.user_id
  );
 
  const yearsOfExperience = Number(details.years_of_experience || 0);
+ const portfolioLinks = (portfolioRows || [])
+ .filter((item: any) => item.user_id === details.user_id || item.user_id === profile?.id || item.user_id === profile?.auth_user_id)
+ .flatMap((item: any) => [item.project_url, item.live_url, item.github_url])
+ .filter(Boolean);
 
  return {
  id: profile?.id || details.user_id || details.id,
@@ -195,7 +213,8 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  bio: details.bio || '',
  education: details.education || '',
  certifications: details.certifications || [],
- portfolioItems: details.portfolio_url? 1: 0,
+ portfolioItems: Array.from(new Set([details.portfolio_url, ...portfolioLinks].filter(Boolean))).length,
+ portfolioLinks: Array.from(new Set([details.portfolio_url, ...portfolioLinks].filter(Boolean))),
  previousCompanies: details.previous_companies || [],
  achievements: details.achievements || [],
  languages: details.languages || [],
@@ -411,6 +430,30 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages }: Candidate
  }
  };
 
+ const notProvided = (value?: string | number | null) =>
+ value === null || value === undefined || String(value).trim() === '' ? 'Not provided' : String(value);
+
+ const openExternalUrl = (url?: string | null) => {
+ if (!url) return;
+ const normalized = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+ window.open(normalized, '_blank', 'noopener,noreferrer');
+ };
+
+ const openResume = async (candidate: Candidate) => {
+ if (!candidate.resumeUrl) {
+ toast.error('Resume/CV not provided');
+ return;
+ }
+
+ try {
+ const { applicationsService } = await import('@/src/hirevify-app/services/applicationsService');
+ const { url } = await applicationsService.getApplicationFileSignedUrl(candidate.resumeUrl);
+ window.open(url || candidate.resumeUrl, '_blank', 'noopener,noreferrer');
+ } catch {
+ openExternalUrl(candidate.resumeUrl);
+ }
+ };
+
  const getMatchScoreColor = (score: number) => {
  if (score >= 90) return 'text-green-600 bg-green-100';
  if (score >= 80) return 'text-yellow-600 bg-yellow-100';
@@ -488,119 +531,65 @@ const getAvailabilityBadge = (availability: string) => {
 
   return (
   <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
-  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+  <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0">
   <DialogTitle className="sr-only">{selectedCandidate.name} - {selectedCandidate.title}</DialogTitle>
-  {/* Light Header with Candidate Info */}
-  <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 p-6">
-  <div className="flex items-start gap-4">
-  <Avatar className="w-16 h-16 border-2 border-white shadow-md">
-  <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-bold">
-  {selectedCandidate.name.split(' ').map(n => n[0]).join('')}
+  <div className="border-b border-slate-200 bg-white">
+  <div className="h-32 bg-gradient-to-r from-emerald-600 via-teal-600 to-slate-900" />
+  <div className="px-6 pb-6">
+  <div className="-mt-14 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
+  <Avatar className="h-28 w-28 border-4 border-white shadow-lg">
+  {selectedCandidate.avatar && <AvatarImage src={selectedCandidate.avatar} alt={selectedCandidate.name} />}
+  <AvatarFallback className="bg-emerald-100 text-3xl font-bold text-emerald-700">
+  {selectedCandidate.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
   </AvatarFallback>
   </Avatar>
-  <div className="flex-1 min-w-0">
-  <div className="flex items-center gap-3 flex-wrap">
-  <h2 className="text-xl font-bold text-slate-900">{selectedCandidate.name}</h2>
-  {selectedCandidate.isVerified && (
-  <Badge className="bg-blue-100 text-blue-700 border border-blue-200">Verified</Badge>
-  )}
+  <div className="min-w-0 pb-1">
+  <div className="flex flex-wrap items-center gap-2">
+  <h2 className="text-2xl font-bold text-slate-950">{selectedCandidate.name}</h2>
+  {selectedCandidate.isVerified && <Badge className="bg-blue-50 text-blue-700 border border-blue-200">Verified</Badge>}
   </div>
-  <p className="text-slate-600 mt-1">{selectedCandidate.title}</p>
-  <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-  <span className="flex items-center gap-1">
-  <MapPin className="w-4 h-4" />
-  {selectedCandidate.location}
-  </span>
-  <span className="flex items-center gap-1">
-  <Globe className="w-4 h-4" />
-  {selectedCandidate.timezone}
-  </span>
+  <p className="mt-1 text-base text-slate-700">{notProvided(selectedCandidate.title)}</p>
+  <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
+  <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{notProvided(selectedCandidate.location)}</span>
+  <span className="flex items-center gap-1"><Briefcase className="h-4 w-4" />{selectedCandidate.yearsOfExperience || 0} years experience</span>
+  <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{getAvailabilityBadge(selectedCandidate.availability).label}</span>
   </div>
   </div>
-  {/* Match Score Badge - Large & Prominent */}
-  <div className="flex flex-col items-center">
-  <div className={`text-2xl font-black px-4 py-2 rounded-xl ${getMatchScoreColor(selectedCandidate.matchScore)}`}>
-  {selectedCandidate.matchScore}%
   </div>
-  <p className="text-xs text-slate-500 mt-1 font-medium">Match Score</p>
+  <Button
+  variant="outline"
+  onClick={() => saveCandidate(selectedCandidate.id)}
+  className={savedCandidates.includes(selectedCandidate.id)? 'border-red-200 bg-red-50 text-red-600': 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'}
+  >
+  <Heart className={`mr-2 h-4 w-4 ${savedCandidates.includes(selectedCandidate.id)? 'fill-current': ''}`} />
+  {savedCandidates.includes(selectedCandidate.id)? 'Favorited': 'Add to Favorite'}
+  </Button>
   </div>
   </div>
   </div>
 
-  <div className="p-6 space-y-6">
-  {/* Quick Stats Row */}
-  <div className="grid grid-cols-4 gap-4 bg-slate-50 rounded-xl p-4">
-  <div className="text-center">
-  <div className="text-2xl font-bold text-emerald-600">{selectedCandidate.matchScore}%</div>
-  <p className="text-xs text-slate-500 mt-1">Match Score</p>
-  </div>
-  <div className="text-center">
-  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.responseRate}%</div>
-  <p className="text-xs text-slate-500 mt-1">Response Rate</p>
-  </div>
-  <div className="text-center">
-  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.portfolioItems}</div>
-  <p className="text-xs text-slate-500 mt-1">Portfolio Items</p>
-  </div>
-  <div className="text-center">
-  <div className="text-2xl font-bold text-slate-700">{selectedCandidate.yearsOfExperience}</div>
-  <p className="text-xs text-slate-500 mt-1">Years Exp.</p>
-  </div>
-  </div>
+  <div className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
+  <div className="space-y-6">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 text-base font-semibold text-slate-950">About</h3>
+  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">{notProvided(selectedCandidate.bio || selectedCandidate.experienceSummary)}</p>
+  </section>
 
-  {/* Basic Info - 2 Column Grid */}
-  <div className="grid grid-cols-2 gap-6">
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
-  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-  <Briefcase className="w-4 h-4 text-slate-400" />
-  Professional Details
-  </h3>
-  <div className="space-y-2 text-sm">
-  <div className="flex items-center space-x-2">
-  <MapPin className="w-4 h-4 text-slate-400" />
-  <span className="text-slate-700">{selectedCandidate.location}</span>
-  </div>
-  <div className="flex items-center space-x-2">
-  <Briefcase className="w-4 h-4 text-slate-400" />
-  <span className="text-slate-700">{selectedCandidate.experience}</span>
-  </div>
-  <div className="flex items-center space-x-2">
-  <DollarSign className="w-4 h-4 text-slate-400" />
-  <span className="text-slate-700">${selectedCandidate.salaryRange.min.toLocaleString()} - ${selectedCandidate.salaryRange.max.toLocaleString()}</span>
-  </div>
-  <div className="flex items-center space-x-2">
-  <Globe className="w-4 h-4 text-slate-400" />
-  <span className="text-slate-700">{selectedCandidate.timezone}</span>
-  </div>
-  </div>
-  </div>
-
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
-  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-  <Clock className="w-4 h-4 text-slate-400" />
-  Availability & Preferences
-  </h3>
-  <div className="space-y-2">
-  <Badge className={`${getAvailabilityBadge(selectedCandidate.availability).className} text-sm px-3 py-1`}>
-  {getAvailabilityBadge(selectedCandidate.availability).label}
-  </Badge>
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 text-base font-semibold text-slate-950">Skills</h3>
+  {selectedCandidate.skills.length > 0 ? (
   <div className="flex flex-wrap gap-2">
-  {selectedCandidate.preferredWorkType.map(type => (
-  <Badge key={type} variant="outline" className="text-xs border-slate-300 text-slate-600">
-  {type}
-  </Badge>
-  ))}
+  {selectedCandidate.skills.map(skill => <Badge key={skill} className="bg-slate-100 text-slate-700">{skill}</Badge>)}
   </div>
-  </div>
-  </div>
-  </div>
+  ) : <p className="text-sm text-slate-500">Not provided</p>}
+  </section>
 
-  {/* Experience */}
   {selectedCandidate.previousCompanies.length > 0 && (
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
-  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-950">
   <Building2 className="w-4 h-4 text-slate-400" />
-  Previous Companies
+  Experience
   </h3>
   <div className="flex flex-wrap gap-2">
   {selectedCandidate.previousCompanies.map(company => (
@@ -609,15 +598,14 @@ const getAvailabilityBadge = (availability: string) => {
   </Badge>
   ))}
   </div>
-  </div>
+  </section>
   )}
 
-  {/* Achievements */}
   {selectedCandidate.achievements.length > 0 && (
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
-  <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-950">
   <Award className="w-4 h-4 text-slate-400" />
-  Key Achievements
+  Highlights
   </h3>
   <ul className="space-y-2">
   {selectedCandidate.achievements.map((achievement, index) => (
@@ -627,19 +615,18 @@ const getAvailabilityBadge = (availability: string) => {
   </li>
   ))}
   </ul>
-  </div>
+  </section>
   )}
 
-  {/* Education & Certifications */}
   <div className="grid grid-cols-2 gap-4">
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
   <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
   <BookOpen className="w-4 h-4 text-slate-400" />
   Education
   </h3>
-  <p className="text-sm text-slate-600">{selectedCandidate.education || 'Not specified'}</p>
-  </div>
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <p className="text-sm text-slate-600">{notProvided(selectedCandidate.education)}</p>
+  </section>
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
   <h3 className="font-semibold text-slate-900 mb-2 flex items-center gap-2">
   <Award className="w-4 h-4 text-slate-400" />
   Certifications
@@ -655,12 +642,11 @@ const getAvailabilityBadge = (availability: string) => {
   ) : (
   <p className="text-sm text-slate-400">None listed</p>
   )}
-  </div>
+  </section>
   </div>
 
-  {/* Languages */}
   {selectedCandidate.languages.length > 0 && (
-  <div className="bg-white border border-slate-200 rounded-xl p-4">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
   <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
   <Globe className="w-4 h-4 text-slate-400" />
   Languages
@@ -672,34 +658,53 @@ const getAvailabilityBadge = (availability: string) => {
   </Badge>
   ))}
   </div>
+  </section>
+  )}
   </div>
-  )}
 
-  {/* Actions */}
-  <div className="flex gap-3 pt-4 border-t border-slate-200">
-  <Button onClick={() => contactCandidate(selectedCandidate.id)} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
-  <MessageCircle className="w-4 h-4 mr-2" />
-  Send Message
+  <aside className="space-y-4">
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 text-sm font-semibold text-slate-950">Contact & Links</h3>
+  <div className="space-y-2 text-sm text-slate-600">
+  <p>{notProvided(selectedCandidate.email)}</p>
+  <p>{notProvided(selectedCandidate.phone)}</p>
+  <p>{notProvided(selectedCandidate.timezone)}</p>
+  </div>
+  <div className="mt-4 grid gap-2">
+  <Button onClick={() => contactCandidate(selectedCandidate.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+  <MessageCircle className="mr-2 h-4 w-4" />
+  Message
   </Button>
-  <Button 
-  variant="outline" 
-  onClick={() => saveCandidate(selectedCandidate.id)}
-  className={`${savedCandidates.includes(selectedCandidate.id)? 'bg-red-50 text-red-600 border-red-200': 'border-slate-300 text-slate-600'}`}
-  >
-  <Heart className={`w-4 h-4 mr-2 ${savedCandidates.includes(selectedCandidate.id)? 'fill-current': ''}`} />
-  {savedCandidates.includes(selectedCandidate.id)? 'Saved': 'Save'}
+  <Button variant="outline" onClick={() => void openResume(selectedCandidate)} disabled={!selectedCandidate.resumeUrl}>
+  <Download className="mr-2 h-4 w-4" />
+  Resume/CV
   </Button>
-  {selectedCandidate.GitBranch && (
-  <Button variant="outline" size="icon" className="border-slate-300">
-  <Eye className="w-4 h-4" />
-  </Button>
-  )}
-  {selectedCandidate.Link && (
-  <Button variant="outline" size="icon" className="border-slate-300">
-  <LinkIcon className="w-4 h-4" />
-  </Button>
-  )}
- </div>
+  {selectedCandidate.Link && <Button variant="outline" onClick={() => openExternalUrl(selectedCandidate.Link)}><LinkIcon className="mr-2 h-4 w-4" />LinkedIn</Button>}
+  {selectedCandidate.GitBranch && <Button variant="outline" onClick={() => openExternalUrl(selectedCandidate.GitBranch)}><Globe className="mr-2 h-4 w-4" />GitHub</Button>}
+  {selectedCandidate.portfolioUrl && <Button variant="outline" onClick={() => openExternalUrl(selectedCandidate.portfolioUrl)}><Eye className="mr-2 h-4 w-4" />Portfolio</Button>}
+  </div>
+  </section>
+
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 text-sm font-semibold text-slate-950">Profile Details</h3>
+  <dl className="space-y-3 text-sm">
+  <div><dt className="text-slate-400">Work type</dt><dd className="mt-1 text-slate-700">{selectedCandidate.preferredWorkType.length > 0 ? selectedCandidate.preferredWorkType.join(', ') : 'Not provided'}</dd></div>
+  <div><dt className="text-slate-400">Salary range</dt><dd className="mt-1 text-slate-700">{selectedCandidate.salaryRange.min || selectedCandidate.salaryRange.max ? `${selectedCandidate.salaryRange.currency} ${selectedCandidate.salaryRange.min.toLocaleString()} - ${selectedCandidate.salaryRange.max.toLocaleString()}` : 'Not provided'}</dd></div>
+  <div><dt className="text-slate-400">Profile completeness</dt><dd className="mt-1 text-slate-700">{selectedCandidate.profileCompleteness}%</dd></div>
+  </dl>
+  </section>
+
+  <section className="rounded-lg border border-slate-200 bg-white p-5">
+  <h3 className="mb-3 text-sm font-semibold text-slate-950">Portfolio Links</h3>
+  {selectedCandidate.portfolioLinks && selectedCandidate.portfolioLinks.length > 0 ? (
+  <div className="space-y-2">
+  {selectedCandidate.portfolioLinks.map((link) => (
+  <button key={link} type="button" onClick={() => openExternalUrl(link)} className="block max-w-full truncate text-sm font-medium text-emerald-700 hover:underline">{link}</button>
+  ))}
+  </div>
+  ) : <p className="text-sm text-slate-500">Not provided</p>}
+  </section>
+  </aside>
  </div>
  </DialogContent>
  </Dialog>
@@ -918,116 +923,41 @@ const getAvailabilityBadge = (availability: string) => {
  );
 
  const renderCandidateCard = (candidate: Candidate) => (
- <Card key={candidate.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedCandidate(candidate)}>
- <CardContent className="p-6">
- <div className="flex items-start space-x-4">
- <Avatar className="w-12 h-12">
- <AvatarFallback>{candidate.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+ <button
+ key={candidate.id}
+ type="button"
+ className="group rounded-lg border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+ onClick={() => setSelectedCandidate(candidate)}
+ >
+ <Avatar className="mx-auto h-24 w-24 border-4 border-slate-50 shadow-sm">
+ {candidate.avatar && <AvatarImage src={candidate.avatar} alt={candidate.name} />}
+ <AvatarFallback className="bg-emerald-100 text-2xl font-bold text-emerald-700">
+ {candidate.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+ </AvatarFallback>
  </Avatar>
- 
- <div className="flex-1 min-w-0">
- <div className="flex items-start justify-between mb-2">
- <div>
- <h3 className="font-semibold text-lg flex items-center">
- {candidate.name}
- {candidate.isVerified && (
- <Badge className="ml-2 text-xs bg-blue-100 text-blue-800">
- <CheckCircle className="w-3 h-3 mr-1" />
- Verified
- </Badge>
- )}
- </h3>
- <p className="text-muted-foreground">{candidate.title}</p>
+ <div className="mt-4 min-w-0">
+ <div className="flex items-center justify-center gap-1">
+ <h3 className="truncate text-base font-semibold text-slate-950 group-hover:text-emerald-700">{candidate.name}</h3>
+ {savedCandidates.includes(candidate.id) && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
  </div>
- <div className="text-right">
- <div className={`text-sm font-medium px-2 py-1 rounded-full ${getMatchScoreColor(candidate.matchScore)}`}>
- {candidate.matchScore}% match
- </div>
- <p className="text-xs text-muted-foreground mt-1">{candidate.responseRate}% response rate</p>
- </div>
- </div>
-
- <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
- <span className="flex items-center">
- <MapPin className="w-4 h-4 mr-1" />
- {candidate.location}
- </span>
- <span className="flex items-center">
- <Briefcase className="w-4 h-4 mr-1" />
- {candidate.yearsOfExperience}y exp
- </span>
- <span className="flex items-center">
- <Clock className="w-4 h-4 mr-1" />
- {candidate.lastActive}
- </span>
- <span className="flex items-center">
- <Globe className="w-4 h-4 mr-1" />
- {candidate.timezone}
- </span>
- </div>
-
- <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
- {candidate.bio}
+ <p className="mt-1 line-clamp-1 text-sm text-slate-500">{candidate.title || 'Candidate'}</p>
+ <p className="mt-2 flex items-center justify-center gap-1 text-xs text-slate-400">
+ <MapPin className="h-3.5 w-3.5" />
+ <span className="truncate">{candidate.location || 'Not provided'}</span>
  </p>
-
- <div className="space-y-3">
- <div>
- <div className="flex flex-wrap gap-1 mb-2">
- {candidate.skills.slice(0, 5).map(skill => (
- <Badge key={skill} variant="secondary" className="text-xs">
- {skill}
- </Badge>
+ </div>
+ <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+ {candidate.skills.slice(0, 3).map(skill => (
+ <span key={skill} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{skill}</span>
  ))}
- {candidate.skills.length > 5 && (
- <Badge variant="outline" className="text-xs">
- +{candidate.skills.length - 5} more
- </Badge>
- )}
+ {candidate.skills.length > 3 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">+{candidate.skills.length - 3}</span>}
  </div>
+ <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
+ <span>{candidate.yearsOfExperience || 0}y exp</span>
+ <span className="text-slate-300">|</span>
+ <span>{candidate.portfolioItems} links</span>
  </div>
-
- <div className="flex items-center justify-between">
- <div className="flex items-center space-x-3">
- <Badge className={getAvailabilityBadge(candidate.availability).className}>
- {getAvailabilityBadge(candidate.availability).label}
- </Badge>
- <span className="text-sm text-muted-foreground">
- ${candidate.salaryRange.min.toLocaleString()} - ${candidate.salaryRange.max.toLocaleString()}
- </span>
- </div>
-
- <div className="flex space-x-2">
- <Button 
- size="sm" 
- variant="outline" 
- onClick={(e) => {
- e.stopPropagation();
- saveCandidate(candidate.id);
- }}
- className={savedCandidates.includes(candidate.id)? 'bg-red-50 text-red-600': ''}
- >
- <Heart className={`w-4 h-4 ${savedCandidates.includes(candidate.id)? 'fill-current': ''}`} />
- </Button>
- <Button size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
- <Eye className="w-4 h-4" />
- </Button>
- <Button 
- size="sm" 
- onClick={(e) => {
- e.stopPropagation();
- contactCandidate(candidate.id);
- }}
- >
- <Send className="w-4 h-4 mr-2" />
- Contact
- </Button>
- </div>
- </div>
- </div>
- </div>
- </div>
- </CardContent>
- </Card>
+ </button>
  );
 
  const renderSearchResults = () => (
@@ -1035,10 +965,10 @@ const getAvailabilityBadge = (availability: string) => {
  <div className="flex items-center justify-between">
  <div>
  <h2 className="text-xl font-semibold">
- {isLoading? 'Searching...': `${filteredCandidates.length} candidate${filteredCandidates.length!== 1? 's': ''} found`}
+ {isLoading? 'Searching...': `${filteredCandidates.length} candidate profile${filteredCandidates.length!== 1? 's': ''}`}
  </h2>
  <p className="text-sm text-muted-foreground">
- {isLoading? 'Finding the best matches for your requirements': 'Based on your search criteria'}
+ {isLoading? 'Loading candidate profiles': 'Click a profile to open the full recruiter view'}
  </p>
  </div>
  
@@ -1099,7 +1029,7 @@ const getAvailabilityBadge = (availability: string) => {
  </CardContent>
  </Card>
  ): (
- <div className="space-y-4">
+ <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
  {filteredCandidates.map(candidate => renderCandidateCard(candidate))}
  </div>
  )}
