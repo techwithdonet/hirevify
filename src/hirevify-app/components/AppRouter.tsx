@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App Router Component
  * 
  * Handles screen rendering logic based on current screen state
@@ -448,8 +448,6 @@ case 'recruiter-ats':
         onUpgrade={navigation.navigateToPricing}
         onViewMessages={navigation.navigateToMessages}
         onViewCandidateDetail={navigation.navigateToCandidateDetail}
-        savedCandidates={savedCandidates}
-        onToggleSavedCandidate={onToggleSavedCandidate}
       />
     );
   }
@@ -459,8 +457,8 @@ case 'recruiter-ats':
       onBack={navigation.navigateToCandidateSearch}
       onUpgrade={navigation.navigateToPricing}
       onViewMessages={navigation.navigateToMessages}
-      savedCandidates={savedCandidates}
       onToggleSaved={onToggleSavedCandidate}
+      savedCandidates={savedCandidates}
     />
   );
 
@@ -876,6 +874,11 @@ case 'candidate-dashboard':
  );
  }
 }
+
+
+
+
+
 
 
 

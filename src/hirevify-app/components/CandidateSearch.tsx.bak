@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, MapPin, Briefcase, Star, Send, Eye, BookOpen, Award, Clock, Users, TrendingUp, Download, Crown, Plus, X, ChevronDown, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart, Link as LinkIcon, Building2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -24,6 +24,46 @@ interface CandidateSearchProps {
  onUpgrade?: () => void;
  onViewMessages: (conversationId?: string) => void;
  onViewCandidateDetail: (candidate: Candidate) => void;
+}
+
+interface Candidate {
+ id: string;
+ name: string;
+ email?: string;
+ phone?: string;
+ avatar?: string;
+ title: string;
+ location: string;
+ experience: string;
+ experienceSummary?: string;
+ skills: string[];
+ matchScore: number;
+ availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
+ salaryRange: {
+ min: number;
+ max: number;
+ currency: string;
+ };
+ lastActive: string;
+ isVerified: boolean;
+ profileCompleteness: number;
+ bio: string;
+ preferredWorkType: string[];
+ education?: string;
+ certifications: string[];
+ portfolioItems: number;
+ GitBranch?: string;
+ Link?: string;
+ resumeUrl?: string;
+ portfolioUrl?: string;
+ portfolioLinks?: string[];
+ yearsOfExperience: number;
+ previousCompanies: string[];
+ achievements: string[];
+ languages: string[];
+ timezone: string;
+ responseRate: number;
+ hiringSuccessRate: number;
 }
 
 interface SearchFilters {
@@ -866,7 +906,6 @@ const getAvailabilityBadge = (availability: string) => {
   </DashboardPageLayout>
  );
 }
-
 
 
 
