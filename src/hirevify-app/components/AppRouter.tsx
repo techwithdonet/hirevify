@@ -23,6 +23,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { MessagingCenter } from './MessagingCenter';
 import { ProjectSearch } from './ProjectSearch';
 import { CandidateSearch } from './CandidateSearch';
+import { RecruiterCandidateDetail } from './RecruiterCandidateDetail';
 import { ProjectManagement } from './ProjectManagement';
 import { JobApplicants } from './JobApplicants';
 import { InterviewManagement } from './InterviewManagement';
@@ -58,7 +59,7 @@ import { CandidateProjectAssignment } from './CandidateProjectAssignment';
 import { CandidateAppliedJobs } from './CandidateAppliedJobs';
 import { CandidateSavedJobs } from './CandidateSavedJobs';
 import { toast } from 'sonner';
-import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment } from '../types/app';
+import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment, Candidate } from '../types/app';
 
 // Define the navigation methods that we expect from useAppNavigation
 interface NavigationMethods {
@@ -87,6 +88,7 @@ interface NavigationMethods {
   navigateToRecruiterProfileEditor: () => void;
   navigateToCandidateProfileEditor: () => void;
   navigateToCandidateSearch: () => void;
+  navigateToCandidateDetail: (candidate: Candidate) => void;
   navigateToMessages: (conversationId?: string) => void;
   navigateToNotifications: () => void;
   navigateToPricing: () => void;
@@ -167,6 +169,9 @@ interface AppRouterProps {
   selectedApplication: Application | null;
   selectedJob: Job | null;
   selectedAssignment: JobProjectAssignment | null;
+  selectedCandidate: Candidate | null;
+  savedCandidates: string[];
+  onToggleSavedCandidate: (candidateId: string) => void;
   unreadNotifications: number;
   unreadMessages: number;
   selectedConversationId: string | null;
@@ -191,6 +196,9 @@ export function AppRouter({
   selectedApplication,
   selectedJob,
   selectedAssignment,
+  selectedCandidate,
+  savedCandidates,
+  onToggleSavedCandidate,
   unreadNotifications,
   unreadMessages,
   selectedConversationId,
@@ -423,15 +431,40 @@ case 'recruiter-ats':
  );
  
  case 'recruiter-search-candidates':
- return (
- <CandidateSearch 
- onBack={navigation.navigateToRecruiterDashboard}
- onUpgrade={navigation.navigateToPricing}
- onViewMessages={navigation.navigateToMessages}
- />
- );
+  return (
+  <CandidateSearch 
+  onBack={navigation.navigateToRecruiterDashboard}
+  onUpgrade={navigation.navigateToPricing}
+  onViewMessages={navigation.navigateToMessages}
+  onViewCandidateDetail={navigation.navigateToCandidateDetail}
+  />
+  );
 
- case 'recruiter-skills-first-hiring':
+ case 'recruiter-candidate-detail':
+  if (!selectedCandidate) {
+    return (
+      <CandidateSearch 
+        onBack={navigation.navigateToRecruiterDashboard}
+        onUpgrade={navigation.navigateToPricing}
+        onViewMessages={navigation.navigateToMessages}
+        onViewCandidateDetail={navigation.navigateToCandidateDetail}
+        savedCandidates={savedCandidates}
+        onToggleSavedCandidate={onToggleSavedCandidate}
+      />
+    );
+  }
+  return (
+    <RecruiterCandidateDetail 
+      candidate={selectedCandidate}
+      onBack={navigation.navigateToCandidateSearch}
+      onUpgrade={navigation.navigateToPricing}
+      onViewMessages={navigation.navigateToMessages}
+      savedCandidates={savedCandidates}
+      onToggleSaved={onToggleSavedCandidate}
+    />
+  );
+
+  case 'recruiter-skills-first-hiring':
  return (
  <SkillsFirstHiring 
  onBack={navigation.navigateToRecruiterDashboard}

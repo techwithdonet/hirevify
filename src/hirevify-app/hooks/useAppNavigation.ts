@@ -1,6 +1,6 @@
 ﻿import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { Screen, Project, Application, Job, JobProjectAssignment } from '../types/app';
+import { Screen, Project, Application, Job, JobProjectAssignment, Candidate } from '../types/app';
 import { User } from '../components/AuthProvider';
 
 interface ScreenNavigationOptions {
@@ -15,6 +15,7 @@ interface UseAppNavigationProps {
   setSelectedApplication: (application: Application | null) => void;
   setSelectedJob: (job: Job | null) => void;
   setSelectedAssignment: (assignment: JobProjectAssignment | null) => void;
+  setSelectedCandidate: (candidate: Candidate | null) => void;
   setSelectedConversationId: (conversationId: string | null) => void;
   setProjectChallengeData: (data: {
     projectId: string;
@@ -32,6 +33,7 @@ export const useAppNavigation = ({
   setSelectedApplication,
   setSelectedJob,
   setSelectedAssignment,
+  setSelectedCandidate,
   setSelectedConversationId,
   setProjectChallengeData,
   setAssessmentBuilderData,
@@ -305,10 +307,16 @@ export const useAppNavigation = ({
  setCurrentScreen('candidate-ai-career-advisor' as any);
  }, [requireAuth, setCurrentScreen]);
 
- const navigateToCandidateSearch = useCallback(() => {
- if (!requireAuth('search candidates', 'recruiter')) return;
- setCurrentScreen('recruiter-search-candidates');
- }, [requireAuth, setCurrentScreen]);
+  const navigateToCandidateSearch = useCallback(() => {
+  if (!requireAuth('search candidates', 'recruiter')) return;
+  setCurrentScreen('recruiter-search-candidates');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToCandidateDetail = useCallback((candidate: Candidate) => {
+    if (!requireAuth('view candidate details', 'recruiter')) return;
+    setSelectedCandidate(candidate);
+    setCurrentScreen('recruiter-candidate-detail');
+  }, [requireAuth, setSelectedCandidate, setCurrentScreen]);
 
  const navigateToExperienceBuilder = useCallback(() => {
  if (!requireAuth('access the experience builder', 'candidate')) return;
@@ -466,9 +474,10 @@ navigateHome,
   navigateToMessages,
   navigateToNotifications,
   navigateToAISkillsDevelopment,
-  navigateToAICareerAdvisor,
-  navigateToCandidateSearch,
-  navigateToExperienceBuilder,
+    navigateToAICareerAdvisor,
+    navigateToCandidateSearch,
+    navigateToCandidateDetail,
+    navigateToExperienceBuilder,
   navigateToMicroInternships,
   navigateToSkillsFirstHiring,
   navigateToMentorshipProgram,

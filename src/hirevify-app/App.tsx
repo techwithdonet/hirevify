@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './components/AppRouter';
 import { useAppNavigation } from './hooks/useAppNavigation';
-import type { Application, Project, Screen, Job, JobProjectAssignment } from './types/app';
+import type { Application, Project, Screen, Job, JobProjectAssignment, Candidate } from './types/app';
 
 const SCREEN_STORAGE_KEY = 'hirevify_current_screen';
 const HISTORY_SCREEN_KEY = 'hirevifyScreen';
@@ -36,6 +36,7 @@ const ALL_SCREENS: Screen[] = [
  'recruiter-custom-assessment-builder',
  'recruiter-integrations',
  'recruiter-search-candidates',
+ 'recruiter-candidate-detail',
  'recruiter-interviews',
  'recruiter-enhanced-video-interview',
  'recruiter-settings',
@@ -143,6 +144,14 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<JobProjectAssignment | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [savedCandidates, setSavedCandidates] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hirevify_saved_candidates');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -152,7 +161,22 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
     challengeDescription?: string;
   } | null>(null);
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
- const hadAuthenticatedUser = useRef(false);
+  const hadAuthenticatedUser = useRef(false);
+
+  // Save savedCandidates to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hirevify_saved_candidates', JSON.stringify(savedCandidates));
+    }
+  }, [savedCandidates]);
+
+  const toggleSavedCandidate = useCallback((candidateId: string) => {
+    setSavedCandidates(prev => 
+      prev.includes(candidateId)
+        ? prev.filter(id => id !== candidateId)
+        : [...prev, candidateId]
+    );
+  }, []);
 
  const navigateScreen = useCallback((screen: Screen, options: ScreenNavigationOptions = {}) => {
  setCurrentScreenState(screen);
@@ -246,6 +270,7 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
     setSelectedApplication,
     setSelectedJob,
     setSelectedAssignment,
+    setSelectedCandidate,
     setSelectedConversationId,
     setProjectChallengeData,
     setAssessmentBuilderData,
@@ -283,30 +308,33 @@ const effectiveScreen = useMemo<Screen>(() => {
   return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
   }, [currentScreen, user, authInitialized]);
 
- return (
- <div className="min-h-screen">
-  <AppRouter
-   currentScreen={effectiveScreen}
-   user={user}
-   selectedProject={selectedProject}
-   selectedApplication={selectedApplication}
-   selectedJob={selectedJob}
-   selectedAssignment={selectedAssignment}
-   unreadNotifications={unreadNotifications}
-   unreadMessages={unreadMessages}
-   selectedConversationId={selectedConversationId}
-   projectChallengeData={projectChallengeData}
-   assessmentBuilderData={assessmentBuilderData}
-   navigation={navigation}
-   handleLogout={navigation.handleLogout}
-   handleUserTypeSelection={handleUserTypeSelection}
-   setCurrentScreen={navigateScreen}
-   setUnreadMessages={setUnreadMessages}
-   setUnreadNotifications={setUnreadNotifications}
-  />
- <Toaster />
- </div>
- );
+   return (
+   <div className="min-h-screen">
+    <AppRouter
+     currentScreen={effectiveScreen}
+     user={user}
+     selectedProject={selectedProject}
+     selectedApplication={selectedApplication}
+     selectedJob={selectedJob}
+     selectedAssignment={selectedAssignment}
+     selectedCandidate={selectedCandidate}
+     savedCandidates={savedCandidates}
+     onToggleSavedCandidate={toggleSavedCandidate}
+     unreadNotifications={unreadNotifications}
+     unreadMessages={unreadMessages}
+     selectedConversationId={selectedConversationId}
+     projectChallengeData={projectChallengeData}
+     assessmentBuilderData={assessmentBuilderData}
+     navigation={navigation}
+     handleLogout={navigation.handleLogout}
+     handleUserTypeSelection={handleUserTypeSelection}
+     setCurrentScreen={navigateScreen}
+     setUnreadMessages={setUnreadMessages}
+     setUnreadNotifications={setUnreadNotifications}
+    />
+   <Toaster />
+   </div>
+   );
 }
 
 export default function App({ initialScreen }: { initialScreen?: unknown }) {

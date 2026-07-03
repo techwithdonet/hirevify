@@ -1,18 +1,21 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import {
- AlertCircle,
- ArrowLeft,
- Briefcase,
- CheckCircle2,
- ChevronLeft,
- ChevronRight,
- FileText,
- Loader,
- Plus,
- Save,
- Upload,
- User,
- X
+  AlertCircle,
+  ArrowLeft,
+  Award,
+  Briefcase,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  GraduationCap,
+  Loader,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+  User,
+  X
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -50,6 +53,26 @@ interface ProfileData {
  resumeUrl: string;
 }
 
+interface EducationEntry {
+  id: string;
+  degree: string;
+  fieldOfStudy: string;
+  institution: string;
+  startYear: string;
+  endYear: string;
+  grade: string;
+}
+
+interface CertificationEntry {
+  id: string;
+  name: string;
+  issuingOrganization: string;
+  issueDate: string;
+  expiryDate: string;
+  credentialId: string;
+  credentialUrl: string;
+}
+
 interface SkillsPreferences {
  skills: string[];
  jobTypes: string[];
@@ -62,6 +85,87 @@ interface SkillsPreferences {
 }
 
 const experienceLevels = ['Entry Level', '1-2 years', '3-5 years', '5-10 years', '10+ years'];
+
+const degreeTypes = [
+  'High School / SSLC',
+  'HSE / PUC / 12th',
+  'Diploma',
+  'B.Sc',
+  'B.A',
+  'B.Com',
+  'B.Tech / B.E',
+  'BBA',
+  'BCA',
+  'MBBS',
+  'M.Sc',
+  'M.A',
+  'M.Com',
+  'M.Tech / M.E',
+  'MBA',
+  'PGDM',
+  'Ph.D',
+  'Postdoctoral',
+  'Certificate',
+  'Other',
+];
+
+const fieldOfStudyOptions = [
+  'Computer Science & IT',
+  'Electronics & Communication',
+  'Electrical Engineering',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Information Technology',
+  'Data Science & Analytics',
+  'Artificial Intelligence & Machine Learning',
+  'Business Administration',
+  'Finance & Accounting',
+  'Marketing & Sales',
+  'Human Resources',
+  'Economics',
+  'Commerce',
+  'Mathematics & Statistics',
+  'Physics',
+  'Chemistry',
+  'Biology & Life Sciences',
+  'Pharmacy',
+  'Nursing & Healthcare',
+  'Law',
+  'Media & Communication',
+  'Design & Arts',
+  'Hotel Management',
+  'Education & Teaching',
+  'Agriculture',
+  'Other',
+];
+
+// Degree → relevant fields of study
+const degreeFieldsMap: Record<string, string[]> = {
+  'High School / SSLC': ['General', 'Science', 'Commerce', 'Arts', 'Other'],
+  'HSE / PUC / 12th': ['Science', 'Commerce', 'Arts & Humanities', 'Vocational', 'Other'],
+  'Diploma': [
+    'Computer Science & IT', 'Electronics & Communication', 'Electrical Engineering',
+    'Mechanical Engineering', 'Civil Engineering', 'Information Technology',
+    'Pharmacy', 'Nursing & Healthcare', 'Hotel Management', 'Other',
+  ],
+  'B.Sc': ['Computer Science & IT', 'Mathematics & Statistics', 'Physics', 'Chemistry', 'Biology & Life Sciences', 'Commerce', 'Other'],
+  'B.A': ['Economics', 'Media & Communication', 'Design & Arts', 'Education & Teaching', 'Law', 'Human Resources', 'Other'],
+  'B.Com': ['Finance & Accounting', 'Commerce', 'Business Administration', 'Economics', 'Other'],
+  'B.Tech / B.E': ['Computer Science & IT', 'Electronics & Communication', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Information Technology', 'Data Science & Analytics', 'Artificial Intelligence & Machine Learning', 'Other'],
+  'BBA': ['Business Administration', 'Finance & Accounting', 'Marketing & Sales', 'Human Resources', 'Economics', 'Other'],
+  'BCA': ['Computer Science & IT', 'Information Technology', 'Other'],
+  'MBBS': ['Nursing & Healthcare', 'Biology & Life Sciences', 'Other'],
+  'M.Sc': ['Computer Science & IT', 'Mathematics & Statistics', 'Physics', 'Chemistry', 'Biology & Life Sciences', 'Data Science & Analytics', 'Other'],
+  'M.A': ['Economics', 'Media & Communication', 'Design & Arts', 'Education & Teaching', 'Human Resources', 'Other'],
+  'M.Com': ['Finance & Accounting', 'Commerce', 'Business Administration', 'Economics', 'Other'],
+  'M.Tech / M.E': ['Computer Science & IT', 'Electronics & Communication', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Information Technology', 'Data Science & Analytics', 'Artificial Intelligence & Machine Learning', 'Other'],
+  'MBA': ['Business Administration', 'Finance & Accounting', 'Marketing & Sales', 'Human Resources', 'Economics', 'Other'],
+  'PGDM': ['Business Administration', 'Finance & Accounting', 'Marketing & Sales', 'Human Resources', 'Other'],
+  'Ph.D': ['Computer Science & IT', 'Electronics & Communication', 'Electrical Engineering', 'Mechanical Engineering', 'Economics', 'Commerce', 'Biology & Life Sciences', 'Chemistry', 'Physics', 'Mathematics & Statistics', 'Education & Teaching', 'Other'],
+  'Postdoctoral': ['Computer Science & IT', 'Biology & Life Sciences', 'Chemistry', 'Physics', 'Medicine', 'Other'],
+  'Certificate': ['Computer Science & IT', 'Data Science & Analytics', 'Artificial Intelligence & Machine Learning', 'Finance & Accounting', 'Digital Marketing', 'Project Management', 'Other'],
+  'Other': ['Other'],
+};
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
 const workArrangements = ['Remote', 'Hybrid', 'On-site'];
 const noticePeriods = ['Immediate', '1 week', '2 weeks', '1 month', '2 months', '3 months'];
@@ -102,7 +206,10 @@ const [currentStep, setCurrentStep] = useState(0);
  resumeUrl: '',
  });
 
- const [skillsPreferences, setSkillsPreferences] = useState<SkillsPreferences>({
+  const [education, setEducation] = useState<EducationEntry[]>([]);
+  const [certifications, setCertifications] = useState<CertificationEntry[]>([]);
+
+  const [skillsPreferences, setSkillsPreferences] = useState<SkillsPreferences>({
  skills: [],
  jobTypes: [],
  workArrangement: [],
@@ -113,13 +220,15 @@ const [currentStep, setCurrentStep] = useState(0);
  timezone: 'IST',
  });
 
- const steps = [
- { title: 'Basic Profile', description: 'Your identity and headline', icon: User },
- { title: 'Skills', description: 'Your core skills and experience', icon: Briefcase },
- { title: 'Preferences', description: 'Work type, salary and availability', icon: Briefcase },
- { title: 'CV / Portfolio', description: 'CV file and professional links', icon: FileText },
- { title: 'Review', description: 'Complete and become visible', icon: CheckCircle2 },
- ];
+  const steps = [
+  { title: 'Basic Profile', description: 'Your identity and headline', icon: User },
+  { title: 'Education', description: 'Your academic background', icon: GraduationCap },
+  { title: 'Skills', description: 'Your core skills and experience', icon: Briefcase },
+  { title: 'Certifications', description: 'Professional certifications and awards', icon: Award },
+  { title: 'Preferences', description: 'Work type, salary and availability', icon: Briefcase },
+  { title: 'CV / Portfolio', description: 'CV file and professional links', icon: FileText },
+  { title: 'Review', description: 'Complete and become visible', icon: CheckCircle2 },
+  ];
 
  const fullName = (profileData.firstName + ' ' + profileData.lastName).trim();
 
@@ -199,10 +308,14 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  
  
  
- if (!skillsPreferences.currency.trim()) missing.push('Currency');
- if (!hasCv()) missing.push('CV file');
+  if (!skillsPreferences.currency.trim()) missing.push('Currency');
+  if (!hasCv()) missing.push('CV file');
+  const hasValidEducation = education.some(
+    (e) => e.degree.trim() && e.fieldOfStudy.trim() && e.institution.trim() && e.startYear.trim() && e.endYear.trim()
+  );
+  if (!hasValidEducation) missing.push('At least 1 education entry');
 
- return missing;
+  return missing;
  };
 
  const completion = useMemo(() => {
@@ -221,9 +334,10 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  
  
  
- Boolean(skillsPreferences.currency.trim()),
- hasCv(),
- ];
+  Boolean(skillsPreferences.currency.trim()),
+  hasCv(),
+  education.some((e) => e.degree.trim() && e.fieldOfStudy.trim() && e.institution.trim() && e.startYear.trim() && e.endYear.trim()),
+  ];
 
  const completed = checks.filter(Boolean).length;
  const percentage = Math.round((completed / checks.length) * 100);
@@ -234,7 +348,7 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  isComplete: missing.length === 0,
  missing,
  };
- }, [profileData, skillsPreferences, cvFile]);
+  }, [profileData, skillsPreferences, cvFile, education]);
 
  const validateCurrentStep = () => {
  if (currentStep === 0) {
@@ -252,48 +366,64 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  }
  }
 
- if (currentStep === 1) {
- if (skillsPreferences.skills.length < 3) {
- toast.error('Add at least 3 skills');
- return false;
- }
+  if (currentStep === 1) {
+  const hasValidEducation = education.some(
+    (e) => e.degree.trim() && e.fieldOfStudy.trim() && e.institution.trim() && e.startYear.trim() && e.endYear.trim()
+  );
+  if (!hasValidEducation) {
+    toast.error('Add at least one education entry (fill all fields in the entry)');
+    return false;
+  }
+  return true;
+  }
 
- if (!profileData.experienceSummary.trim()) {
- toast.error('Add your experience summary');
- return false;
- }
- }
+  if (currentStep === 2) {
+  if (skillsPreferences.skills.length < 3) {
+  toast.error('Add at least 3 skills');
+  return false;
+  }
 
- if (currentStep === 2) {
- if (skillsPreferences.workArrangement.length < 1) {
- toast.error('Select at least one work arrangement');
- return false;
- }
+  if (!profileData.experienceSummary.trim()) {
+  toast.error('Add your experience summary');
+  return false;
+  }
+  }
 
- if (skillsPreferences.jobTypes.length < 1) {
- toast.error('Select at least one job type');
- return false;
- }
+  if (currentStep === 3) {
+  // Certifications - optional, always allow next
+  return true;
+  }
 
- if (!skillsPreferences.noticePeriod.trim()) {
- toast.error('Select your availability / notice period');
- return false;
- }
+  if (currentStep === 4) {
+  if (skillsPreferences.workArrangement.length < 1) {
+  toast.error('Select at least one work arrangement');
+  return false;
+  }
 
- if (!skillsPreferences.timezone.trim()) {
- toast.error('Select your timezone');
- return false;
- }
- }
+  if (skillsPreferences.jobTypes.length < 1) {
+  toast.error('Select at least one job type');
+  return false;
+  }
 
- if (currentStep === 3) {
- if (!hasCv()) {
- toast.error('Upload your CV before continuing');
- return false;
- }
- }
+  if (!skillsPreferences.noticePeriod.trim()) {
+  toast.error('Select your availability / notice period');
+  return false;
+  }
 
- return true;
+  if (!skillsPreferences.timezone.trim()) {
+  toast.error('Select your timezone');
+  return false;
+  }
+  }
+
+  if (currentStep === 5) {
+  if (!hasCv()) {
+  toast.error('Upload your CV before continuing');
+  return false;
+  }
+  }
+
+  return true;
  };
 
  const loadCandidateProfile = async () => {
@@ -351,17 +481,39 @@ const { data: candidateProfile, error: candidateError } = await supabase
  resumeUrl: candidateProfile?.resume_url || '',
  });
 
- setSkillsPreferences({
- skills: candidateProfile?.skills || [],
- jobTypes: Array.isArray(candidateProfile?.preferred_job_type) ? candidateProfile.preferred_job_type : [],
- workArrangement: candidateProfile?.preferred_work_type || [],
- salaryMin: Number(candidateProfile?.salary_min || 0),
- salaryMax: Number(candidateProfile?.salary_max || 0),
- currency: candidateProfile?.salary_currency || 'USD',
- noticePeriod: candidateProfile?.availability || '',
- timezone: candidateProfile?.timezone || 'IST',
- });
- } catch (error) {
+  setSkillsPreferences({
+  skills: candidateProfile?.skills || [],
+  jobTypes: Array.isArray(candidateProfile?.preferred_job_type) ? candidateProfile.preferred_job_type : [],
+  workArrangement: candidateProfile?.preferred_work_type || [],
+  salaryMin: Number(candidateProfile?.salary_min || 0),
+  salaryMax: Number(candidateProfile?.salary_max || 0),
+  currency: candidateProfile?.salary_currency || 'USD',
+  noticePeriod: candidateProfile?.availability || '',
+  timezone: candidateProfile?.timezone || 'IST',
+  });
+
+  // Load education
+  if (candidateProfile?.education) {
+    try {
+      const parsed = typeof candidateProfile.education === 'string'
+        ? JSON.parse(candidateProfile.education)
+        : candidateProfile.education;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        setEducation(parsed.map((e: any, i: number) => ({
+          id: e.id || String(Date.now() + i),
+          degree: e.degree || '',
+          fieldOfStudy: e.fieldOfStudy || e.field || '',
+          institution: e.institution || e.university || '',
+          startYear: e.startYear || e.startDate || '',
+          endYear: e.endYear || e.endDate || '',
+          grade: e.grade || '',
+        })));
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+  } catch (error) {
  console.error('Failed to load candidate profile:', error);
  toast.error(error instanceof Error? error.message: 'Failed to load candidate profile');
  } finally {
@@ -442,8 +594,9 @@ const { data: candidateProfile, error: candidateError } = await supabase
  timezone: skillsPreferences.timezone,
  portfolio_url: profileData.portfolio.trim() || profileData.website.trim() || null,
  github_url: profileData.GitBranch.trim() || null,
- linkedin_url: profileData.Link.trim() || null,
- resume_url: savedResumeUrl || null,
+  linkedin_url: profileData.Link.trim() || null,
+  resume_url: savedResumeUrl || null,
+  education: JSON.stringify(education),
  profile_completeness: profileCompleteness,
  profile_completed: profileCompleted,
  updated_at: now,
@@ -487,6 +640,11 @@ if (!markComplete && existingProfile?.id) {
   payload.portfolio_url = keepTextValue(payload.portfolio_url, existingProfile.portfolio_url);
   payload.github_url = keepTextValue(payload.github_url, existingProfile.github_url);
   payload.linkedin_url = keepTextValue(payload.linkedin_url, existingProfile.linkedin_url);
+
+  // Keep education if new one is empty
+  if ((!payload.education || payload.education === '[]') && existingProfile.education) {
+    payload.education = existingProfile.education;
+  }
 
   payload.skills = keepArrayValue(payload.skills, existingProfile.skills);
   payload.preferred_work_type = keepArrayValue(payload.preferred_work_type, existingProfile.preferred_work_type);
@@ -675,14 +833,166 @@ if (!markComplete && existingProfile?.id) {
  );
  }
 
- if (currentStep === 1) {
- return (
- <Card className="border border-emerald-100 shadow-sm">
- <CardHeader>
- <CardTitle>Step 2: Skills</CardTitle>
- <p className="text-sm text-muted-foreground">Add at least 3 skills. These are used in recruiter filters.</p>
- </CardHeader>
- <CardContent className="space-y-5">
+  if (currentStep === 1) {
+  return (
+  <Card className="border border-emerald-100 shadow-sm">
+  <CardHeader>
+  <CardTitle>Step 2: Education</CardTitle>
+  <p className="text-sm text-muted-foreground">Add your academic background. You can add multiple entries.</p>
+  </CardHeader>
+  <CardContent className="space-y-6">
+  {education.length === 0 && (
+  <Alert>
+  <AlertCircle className="h-4 w-4" />
+  <AlertDescription>No education added yet. Add your degree(s) below — this step is optional.</AlertDescription>
+  </Alert>
+  )}
+
+  {education.map((entry, index) => (
+  <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
+  <div className="flex justify-between items-center">
+  <span className="text-sm font-medium text-slate-600">Education {index + 1}</span>
+  <button
+  type="button"
+  onClick={() => setEducation(education.filter((_, i) => i !== index))}
+  className="text-slate-400 hover:text-red-500 transition"
+  >
+  <Trash2 className="w-4 h-4" />
+  </button>
+  </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+  <Label>Degree</Label>
+  <Select value={entry.degree} onValueChange={(val) => {
+    const updated = [...education];
+    updated[index] = { ...updated[index], degree: val, fieldOfStudy: '' };
+    setEducation(updated);
+  }}>
+  <SelectTrigger>
+  <SelectValue placeholder="Select degree" />
+  </SelectTrigger>
+  <SelectContent>
+  {degreeTypes.map((d) => (
+  <SelectItem key={d} value={d}>{d}</SelectItem>
+  ))}
+  </SelectContent>
+  </Select>
+  </div>
+  <div>
+  <Label>Field of Study</Label>
+  <Select value={entry.fieldOfStudy} onValueChange={(val) => {
+    const updated = [...education];
+    updated[index] = { ...updated[index], fieldOfStudy: val };
+    setEducation(updated);
+  }}>
+  <SelectTrigger>
+  <SelectValue placeholder={entry.degree ? "Select field" : "Choose degree first"} />
+  </SelectTrigger>
+  <SelectContent>
+  {(degreeFieldsMap[entry.degree] || fieldOfStudyOptions).map((f) => (
+  <SelectItem key={f} value={f}>{f}</SelectItem>
+  ))}
+  </SelectContent>
+  </Select>
+  </div>
+  </div>
+  <div>
+  <Label>Institution / University</Label>
+  <Input
+  value={entry.institution}
+  onChange={(e) => {
+    const updated = [...education];
+    updated[index] = { ...updated[index], institution: e.target.value };
+    setEducation(updated);
+  }}
+  placeholder="University of Kerala, IIT, NIT..."
+  />
+  </div>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div>
+  <Label>Start Year</Label>
+  <Select
+    value={entry.startYear}
+    onValueChange={(value) => {
+      const updated = [...education];
+      updated[index] = { ...updated[index], startYear: value };
+      setEducation(updated);
+    }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select year" />
+    </SelectTrigger>
+    <SelectContent>
+      {Array.from({ length: 50 }, (_, i) => 2026 - i).map((year) => (
+        <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+      ))}
+      <SelectItem value="Ongoing">Ongoing</SelectItem>
+    </SelectContent>
+  </Select>
+  </div>
+  <div>
+  <Label>End Year</Label>
+  <Select
+    value={entry.endYear}
+    onValueChange={(value) => {
+      const updated = [...education];
+      updated[index] = { ...updated[index], endYear: value };
+      setEducation(updated);
+    }}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select year" />
+    </SelectTrigger>
+    <SelectContent>
+      {Array.from({ length: 50 }, (_, i) => 2026 - i).map((year) => (
+        <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+      ))}
+      <SelectItem value="Ongoing">Ongoing</SelectItem>
+    </SelectContent>
+  </Select>
+  </div>
+  <div>
+  <Label>Grade / GPA</Label>
+  <Input
+  value={entry.grade}
+  onChange={(e) => {
+    const updated = [...education];
+    updated[index] = { ...updated[index], grade: e.target.value };
+    setEducation(updated);
+  }}
+  placeholder="8.5 CGPA, First Class..."
+  />
+  </div>
+  </div>
+  </div>
+  ))}
+
+  <Button
+  type="button"
+  variant="outline"
+  onClick={() =>
+    setEducation([
+      ...education,
+      { id: String(Date.now()), degree: '', fieldOfStudy: '', institution: '', startYear: '', endYear: '', grade: '' },
+    ])
+  }
+  className="w-full"
+  >
+  <Plus className="w-4 h-4 mr-2" />
+  Add Education
+  </Button>
+  </CardContent>
+  </Card>
+  );
+  }
+
+  if (currentStep === 2) {
+  return (
+  <Card className="border border-emerald-100 shadow-sm">
+  <CardHeader>
+  <CardTitle>Step 3: Skills</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-5">
  <div>
  <Label>Skills {renderRequiredBadge()}</Label>
  <div className="flex gap-2 mt-2">
@@ -725,16 +1035,151 @@ if (!markComplete && existingProfile?.id) {
  className="min-h-32"
  />
  </div>
- </CardContent>
- </Card>
- );
- }
+  </CardContent>
+  </Card>
+  );
+  }
 
- if (currentStep === 2) {
- return (
- <Card className="border border-emerald-100 shadow-sm">
- <CardHeader>
- <CardTitle>Step 3: Job Preferences</CardTitle>
+  if (currentStep === 3) {
+  return (
+  <Card className="border border-emerald-100 shadow-sm">
+  <CardHeader>
+  <CardTitle>Step 4: Certifications</CardTitle>
+  <p className="text-sm text-muted-foreground">Add professional certifications, licenses, and awards.</p>
+  </CardHeader>
+  <CardContent className="space-y-6">
+
+  {certifications.length === 0 && (
+  <Alert className="border-amber-200 bg-amber-50">
+  <AlertCircle className="h-4 w-4 text-amber-600" />
+  <AlertDescription className="text-amber-800">
+  No certifications added yet. Add your professional certifications below.
+  </AlertDescription>
+  </Alert>
+  )}
+
+  {certifications.map((cert, index) => (
+  <div key={cert.id} className="rounded-lg border p-4 space-y-4">
+  <div className="flex justify-between items-center">
+  <span className="text-sm font-medium text-muted-foreground">Certification {index + 1}</span>
+  <Button
+  type="button"
+  variant="ghost"
+  size="sm"
+  onClick={() => setCertifications(certifications.filter((_, i) => i !== index))}
+  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+  >
+  <Trash2 className="w-4 h-4" />
+  </Button>
+  </div>
+
+  <div>
+  <Label>Certification Name</Label>
+  <Input
+  value={cert.name}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], name: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="AWS Solutions Architect, PMP, Google Analytics..."
+  />
+  </div>
+
+  <div>
+  <Label>Issuing Organization</Label>
+  <Input
+  value={cert.issuingOrganization}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], issuingOrganization: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="Amazon Web Services, Google, PMI..."
+  />
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+  <Label>Issue Date</Label>
+  <Input
+  type="month"
+  value={cert.issueDate}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], issueDate: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="YYYY-MM"
+  />
+  </div>
+  <div>
+  <Label>Expiry Date (leave blank if no expiry)</Label>
+  <Input
+  type="month"
+  value={cert.expiryDate}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], expiryDate: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="YYYY-MM or leave blank"
+  />
+  </div>
+  </div>
+
+  <div>
+  <Label>Credential ID (optional)</Label>
+  <Input
+  value={cert.credentialId}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], credentialId: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="Credential ID or number"
+  />
+  </div>
+
+  <div>
+  <Label>Credential URL (optional)</Label>
+  <Input
+  value={cert.credentialUrl}
+  onChange={(e) => {
+    const updated = [...certifications];
+    updated[index] = { ...updated[index], credentialUrl: e.target.value };
+    setCertifications(updated);
+  }}
+  placeholder="https://..."
+  />
+  </div>
+  </div>
+  ))}
+
+  <Button
+  type="button"
+  variant="outline"
+  onClick={() =>
+    setCertifications([
+      ...certifications,
+      { id: String(Date.now()), name: '', issuingOrganization: '', issueDate: '', expiryDate: '', credentialId: '', credentialUrl: '' },
+    ])
+  }
+  className="w-full"
+  >
+  <Plus className="w-4 h-4 mr-2" />
+  Add Certification
+  </Button>
+  </CardContent>
+  </Card>
+  );
+  }
+
+   if (currentStep === 4) {
+   return (
+   <Card className="border border-emerald-100 shadow-sm">
+   <CardHeader>
+   <CardTitle>Step 5: Job Preferences</CardTitle>
  <p className="text-sm text-muted-foreground">These fields power employer filters.</p>
  </CardHeader>
  <CardContent className="space-y-6">
@@ -818,11 +1263,11 @@ if (!markComplete && existingProfile?.id) {
  );
  }
 
- if (currentStep === 3) {
- return (
- <Card className="border border-emerald-100 shadow-sm">
- <CardHeader>
- <CardTitle>Step 4: CV / Portfolio</CardTitle>
+   if (currentStep === 5) {
+   return (
+   <Card className="border border-emerald-100 shadow-sm">
+   <CardHeader>
+   <CardTitle>Step 6: CV / Portfolio</CardTitle>
  <p className="text-sm text-muted-foreground">Upload your CV file. Portfolio links are optional but help recruiters verify your work.</p>
  </CardHeader>
  <CardContent className="space-y-5">
@@ -890,10 +1335,10 @@ if (!markComplete && existingProfile?.id) {
  );
  }
 
- return (
- <Card className="border border-emerald-100 shadow-sm">
- <CardHeader>
- <CardTitle>Step 5: Review & Complete</CardTitle>
+  return (
+  <Card className="border border-emerald-100 shadow-sm">
+  <CardHeader>
+  <CardTitle>Step 7: Review & Complete</CardTitle>
  <p className="text-sm text-muted-foreground">Complete your profile to appear in employer search.</p>
  </CardHeader>
  <CardContent className="space-y-5">
@@ -1018,7 +1463,7 @@ if (!markComplete && existingProfile?.id) {
  <div className="h-3 rounded-full bg-emerald-600 transition-all" style={{ width: ((currentStep + 1) / steps.length) * 100 + '%' }} />
  </div>
 
- <div className="mt-4 grid grid-cols-5 gap-2">
+  <div className="mt-4 grid grid-cols-6 gap-2">
  {steps.map((step, index) => (
  <button
  key={step.title}

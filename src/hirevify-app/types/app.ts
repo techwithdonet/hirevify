@@ -109,6 +109,7 @@ export type Screen =
   | 'recruiter-custom-assessment-builder'
   | 'recruiter-integrations'
   | 'recruiter-search-candidates'
+  | 'recruiter-candidate-detail'
   | 'recruiter-interviews'
   | 'recruiter-enhanced-video-interview'
   | 'recruiter-settings'
@@ -157,6 +158,58 @@ export type Screen =
   | 'one-way-interview'
   | 'messages'
   | 'notifications';
+
+export interface EducationEntry {
+  id?: string;
+  degree: string;
+  fieldOfStudy?: string;
+  institution?: string;
+  university?: string;
+  startYear?: string;
+  endYear?: string;
+  grade?: string;
+}
+
+export interface Candidate {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatar?: string;
+  title: string;
+  location: string;
+  experience: string;
+  experienceSummary?: string;
+  skills: string[];
+  matchScore: number;
+  availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
+  salaryRange: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  lastActive: string;
+  isVerified: boolean;
+  profileCompleteness: number;
+  bio: string;
+  preferredWorkType: string[];
+  education: EducationEntry[];
+  certifications: string[];
+  hasPortfolio: boolean;
+  portfolioItems: number;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  resumeUrl?: string;
+  portfolioUrl?: string;
+  portfolioLinks?: string[];
+  yearsOfExperience: number;
+  previousCompanies: string[];
+  achievements: string[];
+  languages: string[];
+  timezone: string;
+  responseRate: number;
+  hiringSuccessRate: number;
+}
 
 export interface AppState {
   currentScreen: Screen;

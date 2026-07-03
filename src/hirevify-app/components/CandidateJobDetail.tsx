@@ -88,6 +88,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
   const [isOptimizingCv, setIsOptimizingCv] = useState(false);
   const [optimizationProgressText, setOptimizationProgressText] = useState('');
   const [jobOnlyChosen, setJobOnlyChosen] = useState(false);
+  const [cvJustReplaced, setCvJustReplaced] = useState(false); // Track when CV was replaced to show confirmation
 
   // Resolve candidate profile from auth
   const [candidateProfileId, setCandidateProfileId] = useState<string | null>(null);
@@ -156,6 +157,13 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
     };
     loadCompany();
   }, [supabase, job.recruiter_id]);
+
+  // Clear cvJustReplaced after 5 seconds (confirmation message disappears)
+  useEffect(() => {
+    if (!cvJustReplaced) return;
+    const timer = setTimeout(() => setCvJustReplaced(false), 5000);
+    return () => clearTimeout(timer);
+  }, [cvJustReplaced]);
 
   useEffect(() => {
     const checkExistingApplication = async () => {
@@ -535,19 +543,18 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
   };
 
   const handleReplaceCurrentCv = async () => {
-    if (!optimizedCv || !candidateProfileId) return;
+    if (!optimizedCv) return;
     
     setIsCheckingCvMatch(true);
-    setCvMatchProgressText('Processing optimized CV...');
+    setCvMatchProgressText('Calculating match with optimized CV...');
     
     try {
-      // Extract text from optimized CV
+      // Extract text from optimized CV to get skills
       const file = new File([optimizedCv.preview], optimizedCv.fileName, { type: 'text/plain' });
       const extracted = await extractResumeText(file);
       const resumeText = extracted.text;
       
       // Extract skills from the optimized CV text
-      // Simple extraction: split by common delimiters and look for skill-like words
       const textLower = resumeText.toLowerCase();
       const skillKeywords = [
         'javascript', 'typescript', 'python', 'java', 'c++', 'c#', 'ruby', 'go', 'rust', 'kotlin', 'swift',
@@ -583,39 +590,24 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       const existingSkills = candidateExtras?.skills || [];
       const allSkills = [...new Set([...existingSkills, ...extractedSkills])];
       
-      // Update profile with new CV URL and extracted skills
-      const { error } = await supabase
-        .from('candidate_profiles')
-        .update({ 
-          resume_url: optimizedCv.path, 
-          skills: allSkills,
-          updated_at: new Date().toISOString() 
-        })
-        .in('user_id', [candidateProfileId, authUserId].filter(Boolean) as string[]);
-
-      if (error) {
-        toast.error(error.message || 'Could not replace current CV.');
-        return;
-      }
-
-      // Update local state with new skills and CV URL
-      setCandidateExtras((current) => current ? { 
-        ...current, 
-        resume_url: optimizedCv.path,
-        skills: allSkills 
-      } : current);
-      
-      // Refresh the signed URL for the new CV so future checks use the updated file
-      if (/^https?:\/\//i.test(optimizedCv.path)) {
-        setCvSignedUrl(optimizedCv.path);
-      } else {
-        const signed = await applicationsService.getApplicationFileSignedUrl(optimizedCv.path);
-        if (signed.url) setCvSignedUrl(signed.url);
+      // Store optimized CV in sessionStorage for the application
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          `hirevify_optimized_cv_${job.id}`,
+          JSON.stringify({ 
+            path: optimizedCv.path, 
+            fileName: optimizedCv.fileName,
+            projectedScore: optimizedCv.projectedScore,
+            preview: optimizedCv.preview 
+          })
+        );
+        window.sessionStorage.setItem(
+          `hirevify_application_match_${job.id}`,
+          JSON.stringify({ score: optimizedCv.projectedScore })
+        );
       }
       
       // Re-calculate match with the NEW CV and NEW skills
-      // Use optimizedCv.preview directly (no fetch needed — already in memory)
-      setCvMatchProgressText('Calculating new match score...');
       const newMatch = await calculateAtsMatch(
         {
           id: job.id,
@@ -636,9 +628,20 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
         accessToken
       );
       
+      // Update local state with the new CV match score
       setCvMatch(newMatch);
-      setJobOnlyChosen(true);
-      toast.success(`CV replaced! New match score: ${newMatch.score}%`);
+      setCvJustReplaced(true);
+      
+      // Trigger the apply flow with the optimized CV
+      if (onApply) {
+        onApply(job, { 
+          path: optimizedCv.path, 
+          fileName: optimizedCv.fileName, 
+          projectedScore: optimizedCv.projectedScore 
+        });
+      }
+      
+      toast.success(`Applying with optimized CV! Match score: ${newMatch.score}%`);
     } catch (err) {
       console.error('Failed to replace CV:', err);
       toast.error('Could not process optimized CV. Please try again.');
@@ -1189,14 +1192,14 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                     </div>
                   )}
 
-                  {optimizedCv && jobOnlyChosen && (
+                  {(cvJustReplaced || (optimizedCv && jobOnlyChosen)) && (
                     <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      {candidateExtras?.resume_url === optimizedCv.path ? (
+                      {cvJustReplaced ? (
                         <>
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-semibold text-emerald-800">Profile CV Updated!</p>
                             <span className="text-lg font-bold text-emerald-600">
-                              {cvMatch?.score || optimizedCv.projectedScore}%
+                              {cvMatch?.score}%
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-emerald-700">

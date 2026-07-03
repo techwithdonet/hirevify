@@ -322,10 +322,11 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       if (!optimizedCv || !profile?.id) return;
       setIsReplacingCv(true);
       try {
+        // candidate_profiles.user_id references profiles.id, not auth.users.id
         const { error } = await supabase
           .from('candidate_profiles')
           .update({ resume_url: optimizedCv.path, updated_at: new Date().toISOString() })
-          .eq('user_id', user?.id);
+          .eq('user_id', profile.id);
 
         if (error) throw error;
         toast.success('Your profile CV has been updated with the optimized version!');

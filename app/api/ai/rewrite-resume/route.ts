@@ -72,48 +72,7 @@ export async function POST(request: NextRequest) {
     
     if (rawResumeText && rawResumeText.length > 50) {
       try {
-        const parsePrompt = `
-Parse this raw resume text into structured JSON. Extract ALL available information accurately. Do NOT invent any data.
-
-Return ONLY valid JSON with these exact fields:
-{
-  "summary": string (professional summary from the resume),
-  "experience": [
-    {
-      "jobTitle": string,
-      "companyName": string,
-      "city": string,
-      "startDate": string,
-      "endDate": string,
-      "isCurrentJob": boolean,
-      "description": string[]
-    }
-  ],
-  "skills": [
-    {
-      "name": string,
-      "category": "technical" | "soft" | "language",
-      "proficiency": "intermediate"
-    }
-  ],
-  "education": [
-    {
-      "degree": string,
-      "university": string,
-      "graduationDate": string
-    }
-  ]
-}
-
-Rules:
-- Extract ONLY real information from the resume text
-- Do NOT invent or assume any data not present
-- If a field is not found, use empty string or empty array
-- Dates can be in any format
-
-Raw resume text:
-${rawResumeText.slice(0, 15000)}
-`;
+        const parsePrompt = `Extract all info from this resume as JSON: {summary,experience[{title,company,startDate,endDate,description}],skills[{name,category}],education[{degree,university,graduationDate}]}. Invent nothing. Raw: ${rawResumeText.slice(0, 8000)}`;
 
         const parseResult = await callConfiguredAI({
           purpose: 'Resume parsing',
@@ -128,7 +87,7 @@ ${rawResumeText.slice(0, 15000)}
             }
           ],
           temperature: 0.1,
-          maxTokens: 2500,
+          maxTokens: 1200,
           responseFormatJson: true
         });
         
@@ -143,70 +102,19 @@ ${rawResumeText.slice(0, 15000)}
     const missingSkillsList = (missingSkills || []).join(', ');
     const missingKeywordsList = (missingKeywords || []).join(', ');
     
-    const optimizationPrompt = `
-You are HireVify Resume Optimization AI. Your job is to:
-1. EXPLAIN the current weaknesses
-2. OPTIMIZE the resume with ATS-friendly improvements
-3. ESTIMATE realistic improvement
-
-You do NOT calculate scores. The backend provides deterministic scores.
-
-Return ONLY valid JSON:
+    const optimizationPrompt = `OPTIMIZE this resume for ATS. Return ONLY valid JSON:
 {
-  "optimizedResume": {
-    "summary": string (improved professional summary with ATS keywords - MUST include these keywords if relevant to experience: ${missingKeywordsList || 'None'}),
-    "experience": [array - ALL entries with improved bullet points that naturally include ${missingKeywordsList || 'missing keywords'}],
-    "skills": [array - MUST include these missing skills: ${missingSkillsList || 'None'}],
-    "education": [array - unchanged]
-  },
-  "analysis": {
-    "strengths": string[] (what's working well),
-    "weaknesses": string[] (what needs improvement),
-    "missingSkills": string[] (skills to highlight based on job requirements),
-    "missingKeywords": string[] (keywords to naturally incorporate),
-    "improvementTips": string[] (specific suggestions)
-  },
-  "estimatedImprovement": {
-    "minIncrease": number (minimum percentage point increase),
-    "maxIncrease": number (maximum percentage point increase),
-    "reasoning": string (why this improvement is expected)
-  },
-  "changes": [
-    {
-      "section": string,
-      "before": string,
-      "after": string,
-      "reason": string
-    }
-  ]
+  "optimizedResume": {"summary":string,"experience":[],"skills":[],"education":[]},
+  "analysis": {"strengths":[],"weaknesses":[],"missingSkills":[],"missingKeywords":[],"improvementTips":[]},
+  "estimatedImprovement": {"minIncrease":5,"maxIncrease":12,"reasoning":"keyword additions"},
+  "changes": [{"section":"","before":"","after":"","reason":""}]
 }
-
-CRITICAL RULES - FOLLOW THESE EXACTLY:
-1. NEVER invent: work experience, certifications, projects, skills, degrees, employers, achievements
-2. ONLY rewrite/improve existing information
-3. You MUST include these missing keywords in the optimized resume: ${missingKeywordsList || 'None'}
-   - Add them to the professional summary naturally
-   - Add them to experience bullet points where they fit the actual work
-   - Do NOT invent new skills - only rephrase existing ones with the keywords
-4. You MUST include these missing skills in the skills section: ${missingSkillsList || 'None'}
-5. Estimate improvement realistically (usually 8-15 percentage points when keywords are added)
-
-Target job description:
-${targetJobDescription || 'Not provided'}
-
-Current ATS score: ${atsScore || 0}%
-
-Score categories (for reference - do not modify):
-${JSON.stringify(categories || [], null, 2)}
-
-Missing skills: ${missingSkillsList || 'None'}
-Missing keywords: ${missingKeywordsList || 'None'}
-Strengths: ${(strengths || []).join(', ') || 'None identified'}
-Weaknesses: ${(weaknesses || []).join(', ') || 'None identified'}
-
-Original resume:
-${JSON.stringify(parsedResume, null, 2)}
-`;
+RULES: Never invent data. Only rewrite/improve existing content.
+Add missing keywords (${missingKeywordsList || 'None'}) naturally to summary and bullets.
+Add missing skills (${missingSkillsList || 'None'}) to skills section.
+Original resume: ${JSON.stringify(parsedResume)}
+Job desc: ${(targetJobDescription || '').slice(0, 3000)}
+Current score: ${atsScore || 0}%. Categories: ${JSON.stringify(categories || [])}`;
 
     const aiText = await callConfiguredAI({
       purpose: 'AI resume optimization',
@@ -226,7 +134,7 @@ ${JSON.stringify(parsedResume, null, 2)}
         }
       ],
       temperature: 0.3,
-      maxTokens: 4000,
+      maxTokens: 1800,
       responseFormatJson: true
     });
 
