@@ -105,7 +105,13 @@ export function RecruiterCandidateDetail({
     window.open(normalized, '_blank', 'noopener,noreferrer');
   };
 
-  const openResume = async (candidate: Candidate) => {
+  const getResumeDownloadFileName = (candidate: Candidate) => {
+    const source = candidate.resumeUrl || 'candidate-resume';
+    const fallbackName = source.split('?')[0].split('/').pop() || 'candidate-resume';
+    return fallbackName.replace(/^\d+_/, '').replace(/[^a-zA-Z0-9._ -]+/g, '_') || 'candidate-resume';
+  };
+
+  const downloadResume = async (candidate: Candidate) => {
     if (!candidate.resumeUrl) {
       toast.error('Resume/CV not provided');
       return;
@@ -113,10 +119,24 @@ export function RecruiterCandidateDetail({
 
     try {
       const { applicationsService } = await import('@/src/hirevify-app/services/applicationsService');
-      const { url } = await applicationsService.getApplicationFileSignedUrl(candidate.resumeUrl);
-      window.open(url || candidate.resumeUrl, '_blank', 'noopener,noreferrer');
-    } catch {
-      openExternalUrl(candidate.resumeUrl);
+      const { data: blob, error } = await applicationsService.downloadApplicationFile(candidate.resumeUrl);
+      if (error) {
+        throw new Error(error.message || 'Unable to access resume/CV');
+      }
+      if (!blob || blob.size === 0) {
+        throw new Error('Resume/CV file is empty or unavailable');
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = getResumeDownloadFileName(candidate);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to download resume/CV');
     }
   };
 
@@ -429,7 +449,7 @@ export function RecruiterCandidateDetail({
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => void openResume(candidate)}
+                  onClick={() => void downloadResume(candidate)}
                   disabled={!candidate.resumeUrl}
                   className="w-full rounded-lg border-slate-200 bg-white hover:bg-slate-50"
                 >

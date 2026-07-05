@@ -552,6 +552,71 @@ class ApplicationsService {
 
     return { url: null, error: null };
   }
+
+  async downloadApplicationFile(path: string) {
+    if (!path) {
+      return { data: null, error: null };
+    }
+
+    if (/^https?:\/\//i.test(path)) {
+      try {
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error('Unable to download resume/CV');
+        }
+
+        return { data: await response.blob(), error: null };
+      } catch (error) {
+        return { data: null, error };
+      }
+    }
+
+    const parsed = parseStoredCvPath(path);
+    const bucketsToTry = parsed.bucket
+      ? [parsed.bucket]
+      : DEFAULT_CV_BUCKETS;
+
+    const objectPathsToTry = Array.from(
+      new Set(
+        [
+          parsed.path,
+          parsed.path.replace(/^resumes\//, ''),
+          parsed.path.replace(/^cv-uploads\//, ''),
+          parsed.path.replace(/^candidate-resumes\//, ''),
+        ].filter(Boolean)
+      )
+    );
+
+    let lastError: unknown = null;
+
+    for (const bucket of bucketsToTry) {
+      for (const objectPath of objectPathsToTry) {
+        const { data, error } = await this.supabase.storage
+          .from(bucket)
+          .download(objectPath);
+
+        if (!error && data) {
+          return { data, error: null };
+        }
+
+        lastError = error;
+        const message = String(error?.message || '').toLowerCase();
+        const isMissingStorageObject =
+          message.includes('object not found') ||
+          message.includes('not found') ||
+          message.includes('does not exist') ||
+          message.includes('bucket not found');
+
+        if (isMissingStorageObject) {
+          continue;
+        }
+
+        return { data: null, error };
+      }
+    }
+
+    return { data: null, error: lastError };
+  }
 }
 
 export const applicationsService = new ApplicationsService();

@@ -322,13 +322,24 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       if (!optimizedCv || !profile?.id) return;
       setIsReplacingCv(true);
       try {
-        // candidate_profiles.user_id references profiles.id, not auth.users.id
+        const candidateProfileUserIds = Array.from(new Set([profile.id, user?.id].filter(Boolean))) as string[];
         const { error } = await supabase
           .from('candidate_profiles')
-          .update({ resume_url: optimizedCv.path, updated_at: new Date().toISOString() })
-          .eq('user_id', profile.id);
+          .update({
+            resume_url: optimizedCv.path,
+            resume_verified: true,
+            updated_at: new Date().toISOString(),
+          })
+          .in('user_id', candidateProfileUserIds);
 
         if (error) throw error;
+        setExtras((current) => current ? { ...current, resume_url: optimizedCv.path } : current);
+        if (typeof window !== 'undefined' && optimizedCv.projectedScore) {
+          window.localStorage.setItem(
+            `hirevify_replaced_cv_match_${job.id}_${optimizedCv.path}`,
+            JSON.stringify({ score: optimizedCv.projectedScore })
+          );
+        }
         toast.success('Your profile CV has been updated with the optimized version!');
         setShowCvPrompt(false);
       } catch (err: any) {
@@ -821,4 +832,3 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
     </DashboardPageLayout>
   );
 }
-

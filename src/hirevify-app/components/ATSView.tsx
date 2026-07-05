@@ -953,8 +953,46 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       return;
     }
 
-    const { url } = await applicationsService.getApplicationFileSignedUrl(application.resumeUrl);
-    window.open(url || application.resumeUrl, '_blank', 'noopener,noreferrer');
+    try {
+      const { url } = await applicationsService.getApplicationFileSignedUrl(application.resumeUrl);
+      window.open(url || application.resumeUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.open(application.resumeUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const getResumeDownloadFileName = (application: JobApplication) => {
+    const source = application.resumeFileName || application.resumeUrl || 'candidate-resume';
+    const fallbackName = source.split('?')[0].split('/').pop() || 'candidate-resume';
+    return fallbackName.replace(/^\d+_/, '').replace(/[^a-zA-Z0-9._ -]+/g, '_') || 'candidate-resume';
+  };
+
+  const downloadCandidateResume = async (application: JobApplication) => {
+    if (!application.resumeUrl) {
+      toast.error('Resume/CV not provided');
+      return;
+    }
+
+    try {
+      const { data: blob, error } = await applicationsService.downloadApplicationFile(application.resumeUrl);
+      if (error) {
+        throw new Error(error.message || 'Unable to access resume/CV');
+      }
+      if (!blob || blob.size === 0) {
+        throw new Error('Resume/CV file is empty or unavailable');
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = getResumeDownloadFileName(application);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to download resume/CV');
+    }
   };
 
   const openExternalUrl = (url?: string | null) => {
@@ -1107,7 +1145,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => void openCandidateResume(selectedCandidateProfile)}
+                    onClick={() => void downloadCandidateResume(selectedCandidateProfile)}
                     disabled={!selectedCandidateProfile.resumeUrl}
                   >
                     <Download className="mr-1.5 h-4 w-4" />

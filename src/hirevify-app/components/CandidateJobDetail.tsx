@@ -42,6 +42,86 @@ const REMOTE_LABELS: Record<Job['remote_type'], string> = {
   hybrid: 'Hybrid',
 };
 
+async function generateOptimizedCvPdfFile(content: string, fileName: string) {
+  const { jsPDF } = await import('jspdf');
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 48;
+  const maxLineWidth = pageWidth - margin * 2;
+  let y = margin;
+
+  const addPageIfNeeded = (lineHeight: number) => {
+    if (y + lineHeight > pageHeight - margin) {
+      pdf.addPage();
+      y = margin;
+    }
+  };
+
+  const addLine = (text: string, options: { bold?: boolean; size?: number; gapAfter?: number } = {}) => {
+    const size = options.size ?? 10.5;
+    const lineHeight = size * 1.45;
+    pdf.setFont('helvetica', options.bold ? 'bold' : 'normal');
+    pdf.setFontSize(size);
+
+    if (!text.trim()) {
+      y += options.gapAfter ?? lineHeight * 0.65;
+      return;
+    }
+
+    const wrappedLines = pdf.splitTextToSize(text, maxLineWidth) as string[];
+    for (const wrappedLine of wrappedLines) {
+      addPageIfNeeded(lineHeight);
+      pdf.text(wrappedLine, margin, y);
+      y += lineHeight;
+    }
+    y += options.gapAfter ?? 2;
+  };
+
+  content.split('\n').forEach((rawLine, index) => {
+    const line = rawLine.trimEnd();
+    const isHeading = /^[A-Z][A-Z\s/&-]{3,}$/.test(line);
+
+    if (index === 0 && line) {
+      addLine(line, { bold: true, size: 18, gapAfter: 8 });
+      return;
+    }
+
+    addLine(line, {
+      bold: isHeading,
+      size: isHeading ? 12 : 10.5,
+      gapAfter: isHeading ? 6 : undefined,
+    });
+  });
+
+  return new File([pdf.output('blob')], fileName, { type: 'application/pdf' });
+}
+
+function applyOptimizedScore(
+  result: AtsMatchResult,
+  score: number,
+  categories?: Array<{ category: string; percentage: number }>
+): AtsMatchResult {
+  const normalizedScore = Math.max(0, Math.min(100, Math.round(score)));
+
+  return {
+    ...result,
+    score: normalizedScore,
+    categories: result.categories?.map((category) => {
+      const optimizedCategory = categories?.find((item) => item.category === category.category);
+      if (!optimizedCategory) return category;
+
+      const percentage = Math.max(0, Math.min(100, Math.round(optimizedCategory.percentage)));
+      return {
+        ...category,
+        percentage,
+        score: Math.round((category.maxScore * percentage) / 100),
+        details: `${category.details} (optimized CV)`,
+      };
+    }),
+  };
+}
+
 interface CandidateExtras {
   headline: string | null;
   skills: string[] | null;
@@ -253,11 +333,30 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
     return lastPart.replace(/^\d+_/, '') || 'Current CV';
   };
 
+  const getReplacedCvMatchCacheKey = (resumeUrl: string) =>
+    `hirevify_replaced_cv_match_${job.id}_${resumeUrl}`;
+
+  const applyCachedReplacedCvMatch = (result: AtsMatchResult, resumeUrl?: string | null) => {
+    if (typeof window === 'undefined' || !resumeUrl) return result;
+
+    try {
+      const raw = window.localStorage.getItem(getReplacedCvMatchCacheKey(resumeUrl));
+      if (!raw) return result;
+
+      const cached = JSON.parse(raw);
+      const score = Number(cached?.score);
+      if (!Number.isFinite(score)) return result;
+
+      return applyOptimizedScore(result, score, cached?.categories);
+    } catch {
+      return result;
+    }
+  };
+
   const loadCurrentCvText = async () => {
-    if (!cvSignedUrl) return '';
-    const response = await fetch(cvSignedUrl);
-    if (!response.ok) return '';
-    const blob = await response.blob();
+    if (!candidateExtras?.resume_url) return '';
+    const { data: blob, error } = await applicationsService.downloadApplicationFile(candidateExtras.resume_url);
+    if (error || !blob) return '';
     const file = new File([blob], getCvFileName(), { type: blob.type || 'application/pdf' });
     const extracted = await extractResumeText(file);
     return extracted.text;
@@ -299,13 +398,14 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
         },
         accessToken
       );
+      const displayResult = applyCachedReplacedCvMatch(result, candidateExtras.resume_url);
 
-      setCvMatch(result);
+      setCvMatch(displayResult);
       setCvMatchProgressText('');
-      if (result.score < 70) {
-        toast.error(`CV match score: ${result.score}%. Improve your CV before applying.`);
+      if (displayResult.score < 70) {
+        toast.error(`CV match score: ${displayResult.score}%. Improve your CV before applying.`);
       } else {
-        toast.success(`CV match score: ${result.score}%. You can optimize before applying.`);
+        toast.success(`CV match score: ${displayResult.score}%. You can optimize before applying.`);
       }
     } catch (err) {
       console.error('CV match check failed', err);
@@ -495,7 +595,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
           if (exp.city) lines.push(exp.city);
           if (exp.description && exp.description.length > 0) {
             for (const desc of exp.description) {
-              lines.push('• ' + desc);
+              lines.push('- ' + desc);
             }
           }
           lines.push('');
@@ -514,8 +614,8 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       }
 
       const preview = lines.join('\n');
-      const fileName = `hirevify-optimized-${job.title.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}.txt`;
-      const file = new File([preview], fileName, { type: 'text/plain' });
+      const fileName = `hirevify-optimized-${job.title.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}.pdf`;
+      const file = await generateOptimizedCvPdfFile(preview, fileName);
       const upload = await applicationsService.uploadCV(authUserId, file);
 
       if (upload.error || !upload.path) {
@@ -549,10 +649,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
     setCvMatchProgressText('Calculating match with optimized CV...');
     
     try {
-      // Extract text from optimized CV to get skills
-      const file = new File([optimizedCv.preview], optimizedCv.fileName, { type: 'text/plain' });
-      const extracted = await extractResumeText(file);
-      const resumeText = extracted.text;
+      const resumeText = optimizedCv.preview;
       
       // Extract skills from the optimized CV text
       const textLower = resumeText.toLowerCase();
@@ -590,25 +687,37 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       const existingSkills = candidateExtras?.skills || [];
       const allSkills = [...new Set([...existingSkills, ...extractedSkills])];
       
-      // Store optimized CV in sessionStorage for the application
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(
-          `hirevify_optimized_cv_${job.id}`,
-          JSON.stringify({ 
-            path: optimizedCv.path, 
-            fileName: optimizedCv.fileName,
-            projectedScore: optimizedCv.projectedScore,
-            preview: optimizedCv.preview 
-          })
-        );
-        window.sessionStorage.setItem(
-          `hirevify_application_match_${job.id}`,
-          JSON.stringify({ score: optimizedCv.projectedScore })
-        );
+      setCvMatchProgressText('Replacing your profile CV...');
+      const candidateProfileUserIds = Array.from(new Set([candidateProfileId, authUserId].filter(Boolean))) as string[];
+      const { data: updatedProfiles, error: updateError } = await supabase
+        .from('candidate_profiles')
+        .update({
+          resume_url: optimizedCv.path,
+          skills: allSkills,
+          resume_verified: true,
+          updated_at: new Date().toISOString(),
+        })
+        .in('user_id', candidateProfileUserIds)
+        .select('headline, skills, experience_summary, years_of_experience, resume_url, profile_completeness');
+
+      if (updateError) {
+        throw updateError;
       }
-      
-      // Re-calculate match with the NEW CV and NEW skills
-      const newMatch = await calculateAtsMatch(
+      if (!updatedProfiles || updatedProfiles.length === 0) {
+        throw new Error('Could not update your profile CV. Please refresh and try again.');
+      }
+
+      const refreshedExtras = updatedProfiles[0] as CandidateExtras;
+      setCandidateExtras(refreshedExtras);
+      if (/^https?:\/\//i.test(optimizedCv.path)) {
+        setCvSignedUrl(optimizedCv.path);
+      } else {
+        const signed = await applicationsService.getApplicationFileSignedUrl(optimizedCv.path);
+        setCvSignedUrl(signed.url || null);
+      }
+
+      setCvMatchProgressText('Calculating match with optimized CV...');
+      const calculatedMatch = await calculateAtsMatch(
         {
           id: job.id,
           title: job.title,
@@ -627,9 +736,35 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
         },
         accessToken
       );
+      const newMatch = applyOptimizedScore(calculatedMatch, optimizedCv.projectedScore, optimizedCv.projectedCategories);
+
+      if (typeof window !== 'undefined') {
+        const cachedCategories = newMatch.categories?.map((category) => ({
+          category: category.category,
+          percentage: category.percentage,
+        }));
+        window.localStorage.setItem(
+          getReplacedCvMatchCacheKey(optimizedCv.path),
+          JSON.stringify({ score: newMatch.score, categories: cachedCategories })
+        );
+        window.sessionStorage.setItem(
+          `hirevify_optimized_cv_${job.id}`,
+          JSON.stringify({ 
+            path: optimizedCv.path, 
+            fileName: optimizedCv.fileName,
+            projectedScore: newMatch.score,
+            preview: optimizedCv.preview 
+          })
+        );
+        window.sessionStorage.setItem(
+          `hirevify_application_match_${job.id}`,
+          JSON.stringify({ score: newMatch.score })
+        );
+      }
       
-      // Update local state with the new CV match score
       setCvMatch(newMatch);
+      setOptimizedCv(null);
+      setJobOnlyChosen(false);
       setCvJustReplaced(true);
       
       // Trigger the apply flow with the optimized CV
@@ -637,7 +772,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
         onApply(job, { 
           path: optimizedCv.path, 
           fileName: optimizedCv.fileName, 
-          projectedScore: optimizedCv.projectedScore 
+          projectedScore: newMatch.score 
         });
       }
       
