@@ -955,9 +955,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
     try {
       const { url } = await applicationsService.getApplicationFileSignedUrl(application.resumeUrl);
-      window.open(url || application.resumeUrl, '_blank', 'noopener,noreferrer');
+      const fallbackUrl = /^https?:\/\//i.test(application.resumeUrl) ? application.resumeUrl : null;
+      const resumeUrl = url || fallbackUrl;
+      if (!resumeUrl) {
+        toast.error('Could not create a secure resume link. Check storage access in deployment.');
+        return;
+      }
+      window.open(resumeUrl, '_blank', 'noopener,noreferrer');
     } catch {
-      window.open(application.resumeUrl, '_blank', 'noopener,noreferrer');
+      if (/^https?:\/\//i.test(application.resumeUrl)) {
+        window.open(application.resumeUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      toast.error('Could not create a secure resume link. Check storage access in deployment.');
     }
   };
 

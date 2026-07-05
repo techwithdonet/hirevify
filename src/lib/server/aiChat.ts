@@ -55,14 +55,34 @@ function getOpenRouterModels() {
 function getProviderOrder() {
   const configured = (process.env.AI_PROVIDER || "").toLowerCase().trim();
 
-  if (configured === "openai") return ["openai", "openrouter"];
-  if (configured === "openrouter") return ["openrouter", "openai"];
+  if (configured === "openai") {
+    return [
+      process.env.OPENAI_API_KEY ? "openai" : null,
+      process.env.OPENROUTER_API_KEY ? "openrouter" : null,
+    ].filter(Boolean) as string[];
+  }
+  if (configured === "openrouter") {
+    return [
+      process.env.OPENROUTER_API_KEY ? "openrouter" : null,
+      process.env.OPENAI_API_KEY ? "openai" : null,
+    ].filter(Boolean) as string[];
+  }
 
   const providers: string[] = [];
   if (process.env.OPENAI_API_KEY) providers.push("openai");
   if (process.env.OPENROUTER_API_KEY) providers.push("openrouter");
 
   return providers.length > 0 ? providers : ["openai", "openrouter"];
+}
+
+function getAffordableTokenLimit(message: string) {
+  const match = message.match(/can only afford\s+(\d+)/i);
+  if (!match) return null;
+
+  const affordableTokens = Number(match[1]);
+  if (!Number.isFinite(affordableTokens) || affordableTokens <= 0) return null;
+
+  return Math.max(256, affordableTokens - 96);
 }
 
 async function callOpenAI(options: AIChatOptions) {
@@ -159,7 +179,25 @@ export async function callConfiguredAI(options: AIChatOptions) {
         }
 
         if (provider === "openrouter") {
-          return await callOpenRouter(options);
+          try {
+            return await callOpenRouter(options);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "";
+            const affordableMaxTokens = getAffordableTokenLimit(message);
+            const requestedMaxTokens = options.maxTokens ?? 1200;
+
+            if (affordableMaxTokens && affordableMaxTokens < requestedMaxTokens) {
+              errors.push(
+                `${options.purpose || "AI"} attempt ${attempt} via ${provider}: reducing max_tokens from ${requestedMaxTokens} to ${affordableMaxTokens}`,
+              );
+              return await callOpenRouter({
+                ...options,
+                maxTokens: affordableMaxTokens,
+              });
+            }
+
+            throw error;
+          }
         }
       } catch (error) {
         errors.push(

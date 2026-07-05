@@ -451,9 +451,19 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  try {
  const { applicationsService } = await import('@/src/hirevify-app/services/applicationsService');
  const { url } = await applicationsService.getApplicationFileSignedUrl(candidate.resumeUrl);
- window.open(url || candidate.resumeUrl, '_blank', 'noopener,noreferrer');
+ const fallbackUrl = /^https?:\/\//i.test(candidate.resumeUrl) ? candidate.resumeUrl : null;
+ const resumeUrl = url || fallbackUrl;
+ if (!resumeUrl) {
+ toast.error('Could not create a secure resume link. Check storage access in deployment.');
+ return;
+ }
+ window.open(resumeUrl, '_blank', 'noopener,noreferrer');
  } catch {
+ if (/^https?:\/\//i.test(candidate.resumeUrl)) {
  openExternalUrl(candidate.resumeUrl);
+ return;
+ }
+ toast.error('Could not create a secure resume link. Check storage access in deployment.');
  }
  };
 

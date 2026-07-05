@@ -333,6 +333,12 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
     return lastPart.replace(/^\d+_/, '') || 'Current CV';
   };
 
+  const getCurrentCvHref = () => {
+    if (cvSignedUrl) return cvSignedUrl;
+    const value = candidateExtras?.resume_url || '';
+    return /^https?:\/\//i.test(value) ? value : null;
+  };
+
   const getReplacedCvMatchCacheKey = (resumeUrl: string) =>
     `hirevify_replaced_cv_match_${job.id}_${resumeUrl}`;
 
@@ -1012,14 +1018,20 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                       <p className="text-sm font-bold text-slate-950">Current CV</p>
                       {candidateExtras?.resume_url ? (
                         <>
-                          <a
-                            href={cvSignedUrl || candidateExtras.resume_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-1 block truncate text-xs font-medium text-emerald-700 underline"
-                          >
-                            {getCvFileName()}
-                          </a>
+                          {getCurrentCvHref() ? (
+                            <a
+                              href={getCurrentCvHref() || undefined}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 block truncate text-xs font-medium text-emerald-700 underline"
+                            >
+                              {getCvFileName()}
+                            </a>
+                          ) : (
+                            <p className="mt-1 truncate text-xs font-medium text-slate-600">
+                              {getCvFileName()}
+                            </p>
+                          )}
                           {profileCompleteness < 100 ? (
                             <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
                               <p className="text-xs text-amber-800">
