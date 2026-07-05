@@ -87,44 +87,52 @@ function isScreen(value: unknown): value is Screen {
  return typeof value === 'string' && ALL_SCREENS.includes(value as Screen);
 }
 
-function getUrlForScreen(screen: Screen) {
- const url = new URL(window.location.href);
+function getUrlForScreen(screen: Screen, candidateId?: string | null) {
+  const url = new URL(window.location.href);
 
- if (screen === 'homepage') {
- url.searchParams.delete('screen');
- } else {
- url.searchParams.set('screen', screen);
- }
+  if (screen === 'homepage') {
+    url.searchParams.delete('screen');
+  } else {
+    url.searchParams.set('screen', screen);
+  }
 
- return `${url.pathname}${url.search}${url.hash}`;
+  if (candidateId) {
+    url.searchParams.set('candidateId', candidateId);
+  } else {
+    url.searchParams.delete('candidateId');
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
 }
 
-function readScreenFromLocation() {
- if (typeof window === 'undefined') {
- return null;
- }
+function readScreenFromLocation(): { screen: Screen | null; candidateId: string | null } {
+  if (typeof window === 'undefined') {
+    return { screen: null, candidateId: null };
+  }
 
- const screen = new URL(window.location.href).searchParams.get('screen');
- return isScreen(screen)? screen: null;
+  const url = new URL(window.location.href);
+  const screen = url.searchParams.get('screen');
+  const candidateId = url.searchParams.get('candidateId');
+  return { screen: isScreen(screen) ? screen : null, candidateId: candidateId || null };
 }
 
-function readInitialScreen(): Screen {
- if (typeof window === 'undefined') {
- return 'homepage';
- }
+function readInitialScreen(): { screen: Screen; candidateId: string | null } {
+  if (typeof window === 'undefined') {
+    return { screen: 'homepage', candidateId: null };
+  }
 
- const urlScreen = readScreenFromLocation();
- if (urlScreen) {
- return urlScreen;
- }
+  const { screen: urlScreen, candidateId } = readScreenFromLocation();
+  if (urlScreen) {
+    return { screen: urlScreen, candidateId };
+  }
 
- const stateScreen = window.history.state?.[HISTORY_SCREEN_KEY];
- if (isScreen(stateScreen)) {
- return stateScreen;
- }
+  const stateScreen = window.history.state?.[HISTORY_SCREEN_KEY];
+  if (isScreen(stateScreen)) {
+    return { screen: stateScreen, candidateId };
+  }
 
- const storedScreen = window.localStorage.getItem(SCREEN_STORAGE_KEY);
- return isScreen(storedScreen)? storedScreen: 'homepage';
+  const storedScreen = window.localStorage.getItem(SCREEN_STORAGE_KEY);
+  return { screen: isScreen(storedScreen) ? storedScreen : 'homepage', candidateId };
 }
 
 function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate') {
@@ -135,8 +143,8 @@ function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate
  return screen.startsWith('recruiter-');
 }
 
-function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
- const { user, signOut, authInitialized } = useAuth();
+function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Screen; initialCandidateId?: string | null }) {
+  const { user, signOut, authInitialized } = useAuth();
   const [currentScreen, setCurrentScreenState] = useState<Screen>(() => {
     return initialScreen;
   });
@@ -144,6 +152,9 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<JobProjectAssignment | null>(null);
+  // selectedCandidate must start as `null` on BOTH server and client so the
+  // initial render is identical (and hydrates cleanly). We populate it from
+  // sessionStorage in a useEffect after mount.
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [savedCandidates, setSavedCandidates] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -169,6 +180,30 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
       localStorage.setItem('hirevify_saved_candidates', JSON.stringify(savedCandidates));
     }
   }, [savedCandidates]);
+
+  // Populate selectedCandidate from sessionStorage AFTER mount. We can't do
+  // this in the useState initializer without creating a server/client
+  // mismatch (server has no sessionStorage, so it would render `null` while
+  // the client first render would have the real candidate — causing different
+  // subtrees to be rendered and a hydration error).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!initialCandidateId) {
+      setSelectedCandidate(null);
+      return;
+    }
+    try {
+      const stored = sessionStorage.getItem('selectedCandidate');
+      if (stored) {
+        setSelectedCandidate(JSON.parse(stored));
+      } else {
+        setSelectedCandidate(null);
+      }
+    } catch (e) {
+      console.warn('Failed to parse stored candidate:', e);
+      setSelectedCandidate(null);
+    }
+  }, [initialCandidateId]);
 
   const toggleSavedCandidate = useCallback((candidateId: string) => {
     setSavedCandidates(prev => 
@@ -205,36 +240,49 @@ function HireVifyApp({ initialScreen }: { initialScreen: Screen }) {
  }
  }, []);
 
- useEffect(() => {
- if (typeof window === 'undefined') {
- return;
- }
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
 
- const initialScreen = readInitialScreen();
- setCurrentScreenState(initialScreen);
- window.localStorage.setItem(SCREEN_STORAGE_KEY, initialScreen);
- window.history.replaceState({
- ...(window.history.state || {}),
- [HISTORY_SCREEN_KEY]: initialScreen,
- }, '', getUrlForScreen(initialScreen));
- const handlePopState = (event: PopStateEvent) => {
- const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
- const nextScreen = isScreen(stateScreen)? stateScreen: readScreenFromLocation();
+    setCurrentScreenState(initialScreen);
+    window.localStorage.setItem(SCREEN_STORAGE_KEY, initialScreen);
+    window.history.replaceState({
+      ...(window.history.state || {}),
+      [HISTORY_SCREEN_KEY]: initialScreen,
+    }, '', getUrlForScreen(initialScreen, initialCandidateId));
+    const handlePopState = (event: PopStateEvent) => {
+      const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
+      const { screen: nextScreen, candidateId: nextCandidateId } = isScreen(stateScreen)
+        ? { screen: stateScreen, candidateId: null }
+        : readScreenFromLocation();
 
- if (!nextScreen) {
- setCurrentScreenState('homepage');
- window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
- return;
- }
+      if (!nextScreen) {
+        setCurrentScreenState('homepage');
+        window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
+        return;
+      }
 
- setCurrentScreenState(nextScreen);
- window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
- window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
- };
+      setCurrentScreenState(nextScreen);
+      if (nextCandidateId) {
+        const stored = sessionStorage.getItem('selectedCandidate');
+        if (stored) {
+          try {
+            setSelectedCandidate(JSON.parse(stored));
+          } catch (e) {
+            console.warn('Failed to parse stored candidate:', e);
+          }
+        }
+      } else {
+        setSelectedCandidate(null);
+      }
+      window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+    };
 
- window.addEventListener('popstate', handlePopState);
- return () => window.removeEventListener('popstate', handlePopState);
- }, []);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [initialScreen, initialCandidateId]);
 
  useEffect(() => {
  if (!authInitialized) {
@@ -337,14 +385,33 @@ const effectiveScreen = useMemo<Screen>(() => {
    );
 }
 
-export default function App({ initialScreen }: { initialScreen?: unknown }) {
- const safeInitialScreen = isScreen(initialScreen) ? initialScreen : 'homepage';
+export default function App({
+  initialScreen,
+  initialCandidateId,
+}: {
+  initialScreen?: unknown;
+  initialCandidateId?: unknown;
+}) {
+  // Prefer the server-provided values so the SSR HTML matches the client tree.
+  // Fall back to client-only readInitialScreen() (URL / history / localStorage)
+  // when the prop is missing — this is harmless because the server already
+  // returned the default in that case, and the client will agree.
+  const { screen: clientScreen, candidateId: clientCandidateId } = readInitialScreen();
 
- return (
- <ErrorBoundary>
- <AuthProvider>
- <HireVifyApp initialScreen={safeInitialScreen} />
- </AuthProvider>
- </ErrorBoundary>
- );
+  const safeInitialScreen: Screen = isScreen(initialScreen)
+    ? initialScreen
+    : (clientScreen ?? 'homepage');
+
+  const candidateId: string | null =
+    typeof initialCandidateId === 'string' && initialCandidateId.length > 0
+      ? initialCandidateId
+      : (clientCandidateId ?? null);
+
+  return (
+  <ErrorBoundary>
+  <AuthProvider>
+  <HireVifyApp initialScreen={safeInitialScreen} initialCandidateId={candidateId} />
+  </AuthProvider>
+  </ErrorBoundary>
+  );
 }

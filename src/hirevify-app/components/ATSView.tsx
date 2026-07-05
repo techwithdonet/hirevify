@@ -41,6 +41,11 @@ import {
   XIcon,
   Phone,
   Globe,
+  Building2,
+  Home,
+  Wallet,
+  ShieldCheck,
+  Eye,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { useAuth } from './AuthProvider';
@@ -91,6 +96,33 @@ interface JobApplication {
   portfolioLinks?: string[];
   cvSignedUrl?: string | null;
   allAtsCategories?: AtsMatchResult['categories'];
+  dateOfBirth?: string | null;
+  // Rich profile fields (extended for Candidate Profile popup)
+  workMode?: string | null;
+  willingToRelocate?: boolean | null;
+  noticePeriod?: string | null;
+  employmentType?: string | null;
+  employmentStatus?: string | null;
+  expectedSalary?: string | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: string | null;
+  languages?: string[] | null;
+  achievements?: string[] | null;
+  previousCompanies?: string[] | null;
+  careerLevel?: string | null;
+  industry?: string | null;
+  preferredRoles?: string[] | null;
+  preferredWorkType?: string[] | null;
+  currentCompany?: string | null;
+  currentDesignation?: string | null;
+  profileViews?: number | null;
+  profileLastUpdated?: string | null;
+  emailVerified?: boolean | null;
+  phoneVerified?: boolean | null;
+  resumeVerified?: boolean | null;
+  availability?: string | null;
+  timezone?: string | null;
 }
 
 interface Job {
@@ -123,6 +155,7 @@ interface ATSViewProps {
   onStartInterview: () => void;
   onViewMessages: (conversationId?: string) => void;
   onViewOngoingProjects?: () => void;
+  onViewCandidateDetail?: (candidate: any) => void;
   selectedCandidate?: any;
 }
 
@@ -142,7 +175,71 @@ const mapAssignmentRecord = (assignment: any): AssignmentRecord => ({
   submissionNotes: assignment.submission_notes || null,
 });
 
-export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoingProjects, selectedCandidate }: ATSViewProps) {
+// Map JobApplication to Candidate format for navigation to candidate profile
+const mapApplicationToCandidate = (app: JobApplication): any => {
+  // Parse education string into EducationEntry array
+  let educationArray: any[] = [];
+  if (app.education) {
+    try {
+      // Try parsing as JSON first
+      const parsed = JSON.parse(app.education);
+      if (Array.isArray(parsed)) {
+        educationArray = parsed;
+      } else if (typeof parsed === 'object') {
+        educationArray = [parsed];
+      }
+    } catch {
+      // If not JSON, treat as plain text degree/institution
+      if (app.education.trim()) {
+        educationArray = [{
+          degree: app.education.trim(),
+          fieldOfStudy: '',
+          institution: '',
+        }];
+      }
+    }
+  }
+
+  return {
+    id: app.candidateId,
+    name: app.name || 'Unknown Candidate',
+    email: app.email,
+    phone: app.phone || '',
+    avatar: app.avatarUrl || '',
+    title: app.headline || app.jobTitle || 'Candidate',
+    location: app.location || '',
+    experience: app.experience || '',
+    experienceSummary: app.profileSummary || '',
+    skills: app.skills || [],
+    matchScore: app.matchScore || 0,
+    availability: 'immediate' as const,
+    salaryRange: { min: 0, max: 0, currency: 'USD' },
+    lastActive: app.appliedDate || new Date().toISOString(),
+    isVerified: false,
+    profileCompleteness: app.profileCompleteness || 0,
+    bio: app.profileSummary || '',
+    preferredWorkType: [],
+    education: educationArray,
+    certifications: app.certifications || [],
+    hasPortfolio: Boolean(app.portfolioUrl || app.githubUrl),
+    portfolioItems: 0,
+    githubUrl: app.githubUrl,
+    linkedinUrl: app.linkedinUrl,
+    resumeUrl: app.resumeUrl || app.cvSignedUrl,
+    portfolioUrl: app.portfolioUrl,
+    portfolioLinks: app.portfolioLinks || [],
+    yearsOfExperience: app.yearsOfExperience || 0,
+    previousCompanies: [],
+    achievements: [],
+    languages: [],
+    timezone: '',
+    responseRate: 0,
+    hiringSuccessRate: 0,
+    dateOfBirth: app.dateOfBirth || null,
+  };
+};
+
+export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoingProjects, onViewCandidateDetail, selectedCandidate }: ATSViewProps) {
   const { user } = useAuth();
   const [recruiterId, setRecruiterId] = useState<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -187,6 +284,29 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     };
     loadProfile();
   }, []);
+
+  // Handle sessionStorage for browser refresh persistence
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedCandidateId = sessionStorage.getItem('ats_viewing_candidate_id');
+    if (savedCandidateId && applications.length > 0) {
+      const app = applications.find((a) => a.applicationId === savedCandidateId || a.id === savedCandidateId);
+      if (app) {
+        setSelectedCandidateProfile(app);
+        setShowProfileModal(true);
+      }
+    }
+  }, [applications]);
+
+  // Sync sessionStorage with modal state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (showProfileModal && selectedCandidateProfile?.applicationId) {
+      sessionStorage.setItem('ats_viewing_candidate_id', selectedCandidateProfile.applicationId);
+    } else {
+      sessionStorage.removeItem('ats_viewing_candidate_id');
+    }
+  }, [showProfileModal, selectedCandidateProfile]);
 
   // Load recruiter's jobs
   useEffect(() => {
@@ -369,6 +489,33 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             portfolioLinks: Array.from(new Set([details?.portfolio_url, ...candidatePortfolioLinks].filter(Boolean))),
             cvSignedUrl: null,
             allAtsCategories: atsMatch.categories,
+            dateOfBirth: (details as any)?.date_of_birth || (profile as any)?.date_of_birth || null,
+            // Rich profile fields
+            workMode: (details as any)?.work_mode || null,
+            willingToRelocate: typeof (details as any)?.willing_to_relocate === 'boolean' ? (details as any).willing_to_relocate : null,
+            noticePeriod: (details as any)?.notice_period || null,
+            employmentType: (details as any)?.employment_type || null,
+            employmentStatus: (details as any)?.employment_status || null,
+            expectedSalary: (details as any)?.expected_salary || null,
+            salaryMin: typeof (details as any)?.salary_min === 'number' ? (details as any).salary_min : null,
+            salaryMax: typeof (details as any)?.salary_max === 'number' ? (details as any).salary_max : null,
+            salaryCurrency: (details as any)?.salary_currency || null,
+            languages: Array.isArray((details as any)?.languages) ? (details as any).languages : [],
+            achievements: Array.isArray((details as any)?.achievements) ? (details as any).achievements : [],
+            previousCompanies: Array.isArray((details as any)?.previous_companies) ? (details as any).previous_companies : [],
+            careerLevel: (details as any)?.career_level || null,
+            industry: (details as any)?.industry || null,
+            preferredRoles: Array.isArray((details as any)?.preferred_roles) ? (details as any).preferred_roles : [],
+            preferredWorkType: Array.isArray((details as any)?.preferred_work_type) ? (details as any).preferred_work_type : [],
+            currentCompany: (details as any)?.current_company || null,
+            currentDesignation: (details as any)?.current_designation || details?.headline || null,
+            profileViews: typeof (details as any)?.profile_views === 'number' ? (details as any).profile_views : null,
+            profileLastUpdated: (details as any)?.profile_last_updated || (details as any)?.updated_at || null,
+            emailVerified: typeof (details as any)?.email_verified === 'boolean' ? (details as any).email_verified : Boolean(profile?.email),
+            phoneVerified: typeof (details as any)?.phone_verified === 'boolean' ? (details as any).phone_verified : Boolean(details?.phone || profile?.phone),
+            resumeVerified: typeof (details as any)?.resume_verified === 'boolean' ? (details as any).resume_verified : Boolean(resumeUrl),
+            availability: (details as any)?.availability || null,
+            timezone: (details as any)?.timezone || null,
           };
         }));
 
@@ -787,6 +934,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   const notProvided = (value?: string | number | null) =>
     value === null || value === undefined || String(value).trim() === '' ? 'Not provided' : String(value);
 
+  const computeAge = (dateOfBirth?: string | null): number | null => {
+    if (!dateOfBirth) return null;
+    const dob = new Date(dateOfBirth);
+    if (Number.isNaN(dob.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age >= 0 && age < 150 ? age : null;
+  };
+
   const openCandidateResume = async (application: JobApplication) => {
     if (!application.resumeUrl) {
       toast.error('Resume/CV not provided');
@@ -884,6 +1044,26 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                         <span className="flex items-center gap-2"><Phone className="h-4 w-4 text-slate-400" />{notProvided(selectedCandidateProfile.phone)}</span>
                         <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-slate-400" />{notProvided(selectedCandidateProfile.location)}</span>
                         <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-slate-400" />{selectedCandidateProfile.appliedDate ? new Date(selectedCandidateProfile.appliedDate).toLocaleString() : 'Not provided'}</span>
+                        {selectedCandidateProfile.dateOfBirth && (
+                          <span className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-emerald-500" />
+                            DOB: {new Date(selectedCandidateProfile.dateOfBirth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {(() => {
+                              const age = computeAge(selectedCandidateProfile.dateOfBirth);
+                              return age !== null ? (
+                                <span className="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                  {age} yr{age === 1 ? '' : 's'} old
+                                </span>
+                              ) : null;
+                            })()}
+                          </span>
+                        )}
+                        {(selectedCandidateProfile.yearsOfExperience !== null && selectedCandidateProfile.yearsOfExperience !== undefined) && (
+                          <span className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4 text-slate-400" />
+                            {selectedCandidateProfile.yearsOfExperience} year{selectedCandidateProfile.yearsOfExperience === 1 ? '' : 's'} experience
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -894,6 +1074,20 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                         {selectedCandidateProfile.matchScore}%
                       </p>
                     </div>
+                    {typeof selectedCandidateProfile.profileCompleteness === 'number' && (
+                      <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
+                        <p className="text-xs font-semibold uppercase text-slate-500">Profile Completeness</p>
+                        <p className="mt-1 text-lg font-bold text-slate-900">
+                          {selectedCandidateProfile.profileCompleteness}%
+                        </p>
+                        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                            style={{ width: `${Math.max(0, Math.min(100, selectedCandidateProfile.profileCompleteness))}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                     <Badge className={getStatusBadge(selectedCandidateProfile.status)} variant="outline">
                       {selectedCandidateProfile.status}
                     </Badge>
@@ -952,7 +1146,38 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
                   <section className="rounded-lg border border-slate-200 bg-white p-4">
                     <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><GraduationCap className="h-4 w-4 text-slate-500" />Education</h3>
-                    <p className="whitespace-pre-wrap text-sm text-slate-600">{notProvided(selectedCandidateProfile.education)}</p>
+                    {(() => {
+                      if (!selectedCandidateProfile.education) return <p className="text-sm text-slate-500">Not provided</p>;
+                      try {
+                        const educationData = typeof selectedCandidateProfile.education === 'string' 
+                          ? JSON.parse(selectedCandidateProfile.education) 
+                          : selectedCandidateProfile.education;
+                        if (!Array.isArray(educationData)) {
+                          return <p className="text-sm text-slate-600">{selectedCandidateProfile.education}</p>;
+                        }
+                        return (
+                          <div className="space-y-3">
+                            {educationData.map((edu: any, index: number) => (
+                              <div key={edu.id || index} className="border-l-2 border-emerald-400 pl-3">
+                                <p className="font-medium text-sm text-slate-800">{edu.degree || 'Degree not specified'}</p>
+                                {edu.fieldOfStudy && <p className="text-xs text-slate-600 mt-0.5">{edu.fieldOfStudy}</p>}
+                                {edu.institution && <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1"><Building2 className="h-3 w-3" />{edu.institution}</p>}
+                                {(edu.startYear || edu.endYear) && (
+                                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {edu.startYear || '?'}{edu.startYear && edu.endYear && ' - '}{edu.endYear || 'Present'}
+                                    {(edu.startYear === 'Ongoing' || edu.endYear === 'Ongoing') && ' (Ongoing)'}
+                                  </p>
+                                )}
+                                {edu.grade && <p className="text-xs text-slate-400 mt-1">Grade: {edu.grade}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } catch {
+                        return <p className="text-sm text-slate-600">{selectedCandidateProfile.education}</p>;
+                      }
+                    })()}
                   </section>
 
                   <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -966,6 +1191,320 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                     ) : <p className="text-sm text-slate-500">Not provided</p>}
                   </section>
                 </div>
+
+                {(() => {
+                  const c = selectedCandidateProfile;
+                  const hasCareerProfile =
+                    c.careerLevel || c.industry || c.currentDesignation || c.currentCompany ||
+                    (c.previousCompanies && c.previousCompanies.length > 0);
+                  const hasWorkPreferences =
+                    c.workMode || c.noticePeriod || c.availability || c.timezone ||
+                    c.employmentType || c.employmentStatus ||
+                    typeof c.willingToRelocate === 'boolean' ||
+                    c.expectedSalary || c.salaryMin || c.salaryMax || c.salaryCurrency;
+                  const hasLookingFor =
+                    (c.preferredRoles && c.preferredRoles.length > 0) ||
+                    (c.preferredWorkType && c.preferredWorkType.length > 0);
+                  const hasLanguages = c.languages && c.languages.length > 0;
+                  const hasAchievements = c.achievements && c.achievements.length > 0;
+                  const hasProfileStats =
+                    typeof c.profileViews === 'number' || c.profileLastUpdated ||
+                    typeof c.emailVerified === 'boolean' ||
+                    typeof c.phoneVerified === 'boolean' ||
+                    typeof c.resumeVerified === 'boolean';
+
+                  const anyRichData =
+                    hasCareerProfile || hasWorkPreferences || hasLookingFor ||
+                    hasLanguages || hasAchievements || hasProfileStats;
+
+                  if (!anyRichData) return null;
+
+                  const formatSalaryRange = () => {
+                    if (c.salaryMin != null && c.salaryMax != null) {
+                      const cur = c.salaryCurrency || 'USD';
+                      const formatter = (n: number) =>
+                        n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : String(n);
+                      return `${c.salaryCurrency || ''} ${formatter(c.salaryMin)} – ${formatter(c.salaryMax)}`.trim();
+                    }
+                    if (c.expectedSalary) return c.expectedSalary;
+                    return null;
+                  };
+                  const salaryDisplay = formatSalaryRange();
+
+                  return (
+                    <section className="rounded-lg border border-slate-200 bg-white p-4">
+                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-950">
+                        <Briefcase className="h-4 w-4 text-emerald-600" />
+                        Professional Details
+                      </h3>
+
+                      <div className="space-y-4">
+                        {/* Career Profile */}
+                        {hasCareerProfile && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Career Profile</p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              {(c.currentDesignation || c.currentCompany) && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Current Role</p>
+                                  {c.currentDesignation && (
+                                    <p className="mt-0.5 text-sm font-semibold text-slate-900">{c.currentDesignation}</p>
+                                  )}
+                                  {c.currentCompany && (
+                                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+                                      <Building2 className="h-3.5 w-3.5" />
+                                      {c.currentCompany}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                              {c.careerLevel && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Career Level</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                                    {c.careerLevel}
+                                  </p>
+                                </div>
+                              )}
+                              {c.industry && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Industry</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    <Target className="h-3.5 w-3.5 text-emerald-600" />
+                                    {c.industry}
+                                  </p>
+                                </div>
+                              )}
+                              {c.previousCompanies && c.previousCompanies.length > 0 && (
+                                <div className="sm:col-span-2">
+                                  <p className="text-xs text-slate-500">Previous Companies</p>
+                                  <div className="mt-1 flex flex-wrap gap-1.5">
+                                    {c.previousCompanies.map((company) => (
+                                      <Badge key={company} className="bg-white text-slate-700 border border-slate-200" variant="secondary">
+                                        <Building2 className="mr-1 h-3 w-3" />
+                                        {company}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Work Preferences */}
+                        {hasWorkPreferences && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Work Preferences</p>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              {c.workMode && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Work Mode</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    {c.workMode.toLowerCase().includes('remote') ? <Home className="h-3.5 w-3.5 text-emerald-600" /> : <Building2 className="h-3.5 w-3.5 text-emerald-600" />}
+                                    {c.workMode}
+                                  </p>
+                                </div>
+                              )}
+                              {typeof c.willingToRelocate === 'boolean' && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Willing to Relocate</p>
+                                  <p className={`mt-0.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                    c.willingToRelocate
+                                      ? 'bg-emerald-100 text-emerald-700'
+                                      : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    <MapPin className="h-3 w-3" />
+                                    {c.willingToRelocate ? 'Yes' : 'No'}
+                                  </p>
+                                </div>
+                              )}
+                              {c.noticePeriod && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Notice Period</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                                    {c.noticePeriod}
+                                  </p>
+                                </div>
+                              )}
+                              {c.availability && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Availability</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    <Calendar className="h-3.5 w-3.5 text-emerald-600" />
+                                    {c.availability}
+                                  </p>
+                                </div>
+                              )}
+                              {c.timezone && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Timezone</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                    <Globe className="h-3.5 w-3.5 text-emerald-600" />
+                                    {c.timezone}
+                                  </p>
+                                </div>
+                              )}
+                              {c.employmentType && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Employment Type</p>
+                                  <p className="mt-0.5 text-sm font-medium text-slate-800">{c.employmentType}</p>
+                                </div>
+                              )}
+                              {c.employmentStatus && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Employment Status</p>
+                                  <p className="mt-0.5 text-sm font-medium text-slate-800">{c.employmentStatus}</p>
+                                </div>
+                              )}
+                              {salaryDisplay && (
+                                <div className="sm:col-span-2 lg:col-span-1">
+                                  <p className="text-xs text-slate-500">Expected Salary</p>
+                                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                                    <Wallet className="h-3.5 w-3.5" />
+                                    {salaryDisplay}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Looking For */}
+                        {hasLookingFor && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Looking For</p>
+                            <div className="space-y-3">
+                              {c.preferredRoles && c.preferredRoles.length > 0 && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Preferred Roles</p>
+                                  <div className="mt-1 flex flex-wrap gap-1.5">
+                                    {c.preferredRoles.map((role) => (
+                                      <Badge key={role} className="bg-emerald-50 text-emerald-700 border border-emerald-200" variant="secondary">
+                                        <Briefcase className="mr-1 h-3 w-3" />
+                                        {role}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {c.preferredWorkType && c.preferredWorkType.length > 0 && (
+                                <div>
+                                  <p className="text-xs text-slate-500">Preferred Work Type</p>
+                                  <div className="mt-1 flex flex-wrap gap-1.5">
+                                    {c.preferredWorkType.map((workType) => (
+                                      <Badge key={workType} className="bg-blue-50 text-blue-700 border border-blue-200" variant="secondary">
+                                        {workType}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Languages */}
+                        {hasLanguages && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Languages</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {c.languages!.map((language) => (
+                                <Badge key={language} className="bg-indigo-50 text-indigo-700 border border-indigo-200" variant="secondary">
+                                  <Globe className="mr-1 h-3 w-3" />
+                                  {language}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Achievements */}
+                        {hasAchievements && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                              <Star className="h-3.5 w-3.5 text-amber-500" />
+                              Key Achievements
+                            </p>
+                            <ul className="space-y-2">
+                              {c.achievements!.map((achievement, idx) => (
+                                <li key={`${idx}-${achievement.slice(0, 20)}`} className="flex items-start gap-2 text-sm text-slate-700">
+                                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                                  <span className="leading-6">{achievement}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Trust & Activity */}
+                        {hasProfileStats && (
+                          <div className="rounded-lg bg-slate-50 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Trust & Activity</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {typeof c.emailVerified === 'boolean' && (
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  c.emailVerified
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-slate-200 text-slate-600 border border-slate-300'
+                                }`}>
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Email {c.emailVerified ? 'verified' : 'unverified'}
+                                </span>
+                              )}
+                              {typeof c.phoneVerified === 'boolean' && (
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  c.phoneVerified
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-slate-200 text-slate-600 border border-slate-300'
+                                }`}>
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Phone {c.phoneVerified ? 'verified' : 'unverified'}
+                                </span>
+                              )}
+                              {typeof c.resumeVerified === 'boolean' && (
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  c.resumeVerified
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-slate-200 text-slate-600 border border-slate-300'
+                                }`}>
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Resume {c.resumeVerified ? 'on file' : 'missing'}
+                                </span>
+                              )}
+                              {typeof c.profileViews === 'number' && (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                  <Eye className="h-3 w-3" />
+                                  {c.profileViews} profile view{c.profileViews === 1 ? '' : 's'}
+                                </span>
+                              )}
+                              {c.profileLastUpdated && (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                  <RefreshCw className="h-3 w-3" />
+                                  Updated {new Date(c.profileLastUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  );
+                })()}
+
+                {selectedCandidateProfile.profileSummary && (
+                  <section className="rounded-lg border border-slate-200 bg-white p-4">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950">
+                      <FileText className="h-4 w-4 text-slate-500" />
+                      Professional Summary
+                    </h3>
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                      {selectedCandidateProfile.profileSummary}
+                    </p>
+                  </section>
+                )}
 
                 <section className="rounded-lg border border-slate-200 bg-white p-4">
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Globe className="h-4 w-4 text-slate-500" />Portfolio Links</h3>
@@ -1367,12 +1906,17 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                   className="mt-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    setSelectedCandidateProfile(app);
-                                    setShowProfileModal(true);
+                                    if (onViewCandidateDetail) {
+                                      onViewCandidateDetail(mapApplicationToCandidate(app));
+                                    } else {
+                                      // Fallback to modal if navigation not provided
+                                      setSelectedCandidateProfile(app);
+                                      setShowProfileModal(true);
+                                    }
                                   }}
                                 >
                                   <User className="mr-1.5 h-4 w-4" />
-                                  View Candidate
+                                  View Candidate Profile
                                 </Button>
                                 {!isAlreadyAssigned && app.status !== 'rejected' && (
                                   <Button

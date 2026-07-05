@@ -183,6 +183,31 @@ export interface Candidate {
   skills: string[];
   matchScore: number;
   availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
+  currentLocation?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  totalExperience?: number;
+  currentCompany?: string;
+  currentDesignation?: string;
+  employmentStatus?: string;
+  noticePeriod?: string;
+  preferredLocations?: string[];
+  employmentType?: string;
+  workMode?: string;
+  expectedSalary?: string;
+  industry?: string;
+  preferredRoles?: string[];
+  careerLevel?: string;
+  workAuthorization?: string;
+  willingToRelocate?: boolean;
+  availableFrom?: string | null;
+  profileLastUpdated?: string | null;
+  profileViews?: number;
+  responseTime?: string;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+  resumeVerified?: boolean;
   salaryRange: {
     min: number;
     max: number;
@@ -209,6 +234,7 @@ export interface Candidate {
   timezone: string;
   responseRate: number;
   hiringSuccessRate: number;
+  dateOfBirth?: string | null;
 }
 
 export interface AppState {

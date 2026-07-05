@@ -38,6 +38,31 @@ export interface CandidateProfile {
  portfolio_url: string | null;
  github_url: string | null;
  linkedin_url: string | null;
+ current_location: string | null;
+ country: string | null;
+ state: string | null;
+ city: string | null;
+ total_experience: number | null;
+ current_company: string | null;
+ current_designation: string | null;
+ employment_status: string | null;
+ notice_period: string | null;
+ preferred_locations: string[];
+ employment_type: string | null;
+ work_mode: string | null;
+ expected_salary: string | null;
+ industry: string | null;
+ preferred_roles: string[];
+ career_level: string | null;
+ work_authorization: string | null;
+ willing_to_relocate: boolean;
+ available_from: string | null;
+ profile_last_updated: string | null;
+ profile_views: number;
+ response_time: string | null;
+ email_verified: boolean;
+ phone_verified: boolean;
+ resume_verified: boolean;
  preferred_work_type: string[];
  availability: 'immediate' | 'two-weeks' | 'one-month' | 'not-looking';
  salary_min: number | null;
@@ -163,6 +188,31 @@ class ProfilesService {
  portfolio_url: null,
  github_url: null,
  linkedin_url: null,
+ current_location: '',
+ country: '',
+ state: '',
+ city: '',
+ total_experience: 0,
+ current_company: '',
+ current_designation: '',
+ employment_status: '',
+ notice_period: '',
+ preferred_locations: [],
+ employment_type: '',
+ work_mode: '',
+ expected_salary: '',
+ industry: '',
+ preferred_roles: [],
+ career_level: '',
+ work_authorization: '',
+ willing_to_relocate: false,
+ available_from: null,
+ profile_last_updated: new Date().toISOString(),
+ profile_views: 0,
+ response_time: '',
+ email_verified: false,
+ phone_verified: false,
+ resume_verified: false,
  profile_completeness: 0,
  profile_completed: false,
  years_of_experience: 0,

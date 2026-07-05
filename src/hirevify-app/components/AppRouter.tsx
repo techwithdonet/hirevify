@@ -58,6 +58,7 @@ import { CandidateJobApply } from './CandidateJobApply';
 import { CandidateProjectAssignment } from './CandidateProjectAssignment';
 import { CandidateAppliedJobs } from './CandidateAppliedJobs';
 import { CandidateSavedJobs } from './CandidateSavedJobs';
+import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { toast } from 'sonner';
 import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment, Candidate } from '../types/app';
 
@@ -332,6 +333,7 @@ case 'recruiter-ats':
   onStartInterview={navigation.navigateToLiveInterview}
   onViewMessages={navigation.navigateToMessages}
   onViewOngoingProjects={navigation.navigateToOngoingProjects}
+  onViewCandidateDetail={navigation.navigateToCandidateDetail}
   selectedCandidate={selectedApplication as any}
   />
   );
@@ -442,19 +444,26 @@ case 'recruiter-ats':
 
  case 'recruiter-candidate-detail':
   if (!selectedCandidate) {
+    // Render a structurally identical loading placeholder on both server and
+    // client first render. After mount, the useEffect in App.tsx populates
+    // `selectedCandidate` from sessionStorage and we re-render with the real
+    // detail page. This avoids a hydration mismatch where the server (no
+    // sessionStorage) would otherwise fall back to <CandidateSearch/>.
     return (
-      <CandidateSearch 
-        onBack={navigation.navigateToRecruiterDashboard}
-        onUpgrade={navigation.navigateToPricing}
-        onViewMessages={navigation.navigateToMessages}
-        onViewCandidateDetail={navigation.navigateToCandidateDetail}
-      />
+      <DashboardPageLayout
+        title="Loading candidate..."
+        onBack={navigation.navigateToATS}
+      >
+        <div className="mx-auto max-w-6xl p-8 text-center text-slate-500">
+          Loading candidate profile...
+        </div>
+      </DashboardPageLayout>
     );
   }
   return (
-    <RecruiterCandidateDetail 
+    <RecruiterCandidateDetail
       candidate={selectedCandidate}
-      onBack={navigation.navigateToCandidateSearch}
+      onBack={navigation.navigateToATS}
       onUpgrade={navigation.navigateToPricing}
       onViewMessages={navigation.navigateToMessages}
       onToggleSaved={onToggleSavedCandidate}

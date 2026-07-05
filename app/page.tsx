@@ -4,8 +4,14 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function pickParam(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
 export default async function Home({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const screen = Array.isArray(params?.screen) ? params?.screen[0] : params?.screen;
-  return <App initialScreen={screen} />;
+  const params = (await searchParams) ?? {};
+  const screen = pickParam(params.screen);
+  const candidateId = pickParam(params.candidateId);
+  return <App initialScreen={screen} initialCandidateId={candidateId} />;
 }

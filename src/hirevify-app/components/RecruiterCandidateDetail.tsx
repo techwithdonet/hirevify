@@ -1,6 +1,28 @@
-import { ArrowLeft, MapPin, Briefcase, Send, Eye, BookOpen, Award, Clock, Globe, Calendar, DollarSign, CheckCircle, MessageCircle, Heart, Link as LinkIcon, Building2, Download, Mail, Phone, Globe as GlobeIcon, Star, GraduationCap } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Award,
+  BookOpen,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  GraduationCap,
+  Heart,
+  Home,
+  Link as LinkIcon,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Wallet,
+  Globe,
+} from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useAuth } from './AuthProvider';
@@ -8,7 +30,6 @@ import { toast } from 'sonner';
 import { Candidate } from '../types/app';
 import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
-import { dashboardTheme } from '../theme/dashboardTheme';
 
 interface RecruiterCandidateDetailProps {
   candidate: Candidate;
@@ -51,18 +72,18 @@ function normalizeCandidateAvailability(value?: string | null): 'immediate' | 't
 
 const getAvailabilityBadge = (availability: string) => {
   const config = {
-    'immediate': { label: 'Available Now', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    'two-weeks': { label: '2 Weeks Notice', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-    'one-month': { label: '1 Month Notice', className: 'bg-amber-50 text-amber-700 border-amber-200' },
-    'not-looking': { label: 'Not Looking', className: 'bg-slate-50 text-slate-600 border-slate-200' }
+    immediate: { label: 'Available now', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    'two-weeks': { label: '2 weeks notice', className: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+    'one-month': { label: '1 month notice', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+    'not-looking': { label: 'Not looking', className: 'bg-slate-100 text-slate-600 border-slate-200' },
   };
-  
+
   if (!availability || availability === '' || availability === 'null' || availability === 'undefined') {
-    return { label: 'Availability Unknown', className: 'bg-slate-50 text-slate-600 border-slate-200' };
+    return { label: 'Availability unknown', className: 'bg-slate-100 text-slate-600 border-slate-200' };
   }
-  
+
   const normalizedAvailability = normalizeCandidateAvailability(availability);
-  return config[normalizedAvailability] || { label: 'Availability Unknown', className: 'bg-slate-50 text-slate-600 border-slate-200' };
+  return config[normalizedAvailability] || { label: 'Availability unknown', className: 'bg-slate-100 text-slate-600 border-slate-200' };
 };
 
 export function RecruiterCandidateDetail({
@@ -71,7 +92,7 @@ export function RecruiterCandidateDetail({
   onUpgrade,
   onViewMessages,
   savedCandidates,
-  onToggleSaved
+  onToggleSaved,
 }: RecruiterCandidateDetailProps) {
   const { user } = useAuth();
 
@@ -119,6 +140,23 @@ export function RecruiterCandidateDetail({
   };
 
   const isSaved = savedCandidates.includes(candidate.id);
+  const availability = getAvailabilityBadge(candidate.availability);
+  const initials = candidate.name.split(' ').map((name) => name[0]).join('').slice(0, 2);
+  const summary = candidate.bio || candidate.experienceSummary;
+  const workPreference = candidate.preferredWorkType.length > 0 ? candidate.preferredWorkType.join(', ') : 'Flexible';
+  const displayLocation = candidate.currentLocation || candidate.location;
+  const displayExperience = candidate.totalExperience ?? candidate.yearsOfExperience ?? 0;
+  const displayCompany = candidate.currentCompany || 'Company not provided';
+  const displayDesignation = candidate.currentDesignation || candidate.title;
+  const preferredRole = candidate.preferredRoles?.[0] || 'Preferred role not set';
+  const salary = candidate.expectedSalary
+    ? candidate.expectedSalary
+    : candidate.salaryRange.min || candidate.salaryRange.max
+      ? `${candidate.salaryRange.currency} ${candidate.salaryRange.min.toLocaleString()} - ${candidate.salaryRange.max.toLocaleString()}`
+      : 'Not disclosed';
+  const primarySkills = candidate.skills.slice(0, 6);
+  const extraSkillCount = Math.max(candidate.skills.length - primarySkills.length, 0);
+  const lastActive = candidate.lastActive ? new Date(candidate.lastActive).toLocaleDateString() : 'Unknown';
 
   return (
     <DashboardPageLayout
@@ -126,19 +164,23 @@ export function RecruiterCandidateDetail({
       subtitle=""
       onBack={onBack}
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onToggleSaved(candidate.id)}
-            className={`${isSaved ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-300 text-slate-700'} rounded-full px-4`}
+            className={`rounded-full border px-4 ${
+              isSaved
+                ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+            }`}
           >
             <Heart className={`mr-1.5 h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
             {isSaved ? 'Saved' : 'Save'}
           </Button>
-          <Button 
-            onClick={() => contactCandidate(candidate.id)} 
-            className="bg-[#0a66c2] hover:bg-[#004182] text-white rounded-full px-6"
+          <Button
+            onClick={() => contactCandidate(candidate.id)}
+            className="rounded-full bg-slate-950 px-5 text-white shadow-sm hover:bg-slate-800"
             size="sm"
           >
             <MessageCircle className="mr-1.5 h-4 w-4" />
@@ -147,350 +189,300 @@ export function RecruiterCandidateDetail({
         </div>
       }
     >
-      <div className="max-w-5xl mx-auto space-y-4">
-        
-        {/* LinkedIn-style Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          {/* Banner Background */}
-          <div className="h-32 bg-gradient-to-r from-[#0a66c2] via-[#0077b5] to-[#00a0dc]"></div>
-          
-          {/* Profile Info Section */}
-          <div className="px-6 pb-4">
-            <div className="flex flex-col sm:flex-row items-start gap-4 -mt-12">
-              {/* Avatar */}
-              <div className="relative">
-                <Avatar className="h-28 w-28 border-4 border-white shadow-lg bg-white">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="relative bg-[radial-gradient(circle_at_top_left,_#0f766e_0,_#0f172a_42%,_#111827_100%)] px-5 py-6 text-white sm:px-7">
+            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+                <Avatar className="h-28 w-28 border-4 border-white/90 bg-white shadow-xl">
                   {candidate.avatar && <AvatarImage src={candidate.avatar} alt={candidate.name} />}
-                  <AvatarFallback className="bg-[#0a66c2] text-white text-3xl font-bold">
-                    {candidate.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </AvatarFallback>
+                  <AvatarFallback className="bg-slate-950 text-3xl font-bold text-white">{initials}</AvatarFallback>
                 </Avatar>
-                {candidate.isVerified && (
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
-                    <div className="bg-blue-500 text-white rounded-full p-1">
-                      <CheckCircle className="h-3 w-3" />
-                    </div>
+                <div className="min-w-0 pb-1">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <Badge className={`rounded-full border px-3 py-1 text-xs font-semibold ${availability.className}`}>
+                      <Clock className="mr-1.5 h-3.5 w-3.5" />
+                      {availability.label}
+                    </Badge>
+                    {candidate.isVerified && (
+                      <Badge className="rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-semibold text-teal-800">
+                        <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                        Verified
+                      </Badge>
+                    )}
                   </div>
-                )}
-              </div>
-              
-              {/* Name & Title */}
-              <div className="flex-1 pt-1 sm:pt-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-2xl font-bold text-slate-900">{candidate.name}</h1>
+                  <h1 className="text-3xl font-bold text-white sm:text-4xl">{candidate.name}</h1>
+                  <p className="mt-2 text-base font-medium text-slate-200">{notProvided(displayDesignation)}</p>
+                  <p className="mt-1 text-sm text-slate-300">{displayCompany}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-300">
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-teal-200" />
+                      {notProvided(displayLocation)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Briefcase className="h-4 w-4 text-teal-200" />
+                      {displayExperience} years experience
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Home className="h-4 w-4 text-teal-200" />
+                      {candidate.workMode || workPreference}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Globe className="h-4 w-4 text-teal-200" />
+                      {candidate.willingToRelocate ? 'Open to relocate' : 'No relocation preference'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Star className="h-4 w-4 text-teal-200" />
+                      {preferredRole}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {[
+                      availability.label,
+                      candidate.employmentStatus === 'Open to work' ? 'Open to Work' : '',
+                      candidate.workMode,
+                      candidate.noticePeriod === 'Immediate' ? 'Immediate Joiner' : '',
+                      candidate.emailVerified ? 'Verified Email' : '',
+                      candidate.phoneVerified ? 'Verified Phone' : '',
+                      candidate.resumeVerified ? 'Verified Resume' : '',
+                      candidate.willingToRelocate ? 'Open to Relocation' : '',
+                    ].filter(Boolean).map((badge) => (
+                      <span key={badge} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/15">
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-base text-slate-700 mb-2">{notProvided(candidate.title)}</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-slate-400" />
-                    {notProvided(candidate.location)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Briefcase className="h-4 w-4 text-slate-400" />
-                    {candidate.yearsOfExperience || 0} years experience
-                  </span>
-                  <Badge className={`text-xs font-medium border ${getAvailabilityBadge(candidate.availability).className}`}>
-                    <Clock className="h-3 w-3 mr-1" />
-                    {getAvailabilityBadge(candidate.availability).label}
-                  </Badge>
-                </div>
               </div>
-              
-              {/* Match Score */}
-              <div className="flex flex-col items-center bg-white rounded-lg border border-slate-200 px-4 py-2 shadow-sm">
-                <span className="text-2xl font-bold text-emerald-600">{candidate.matchScore}%</span>
-                <span className="text-xs text-slate-500">Match Score</span>
+
+              <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/15 bg-white/10 p-2 backdrop-blur">
+                <Metric label="Complete" value={`${candidate.profileCompleteness}%`} />
+                <Metric label="Response" value={`${candidate.responseRate}%`} />
+                <Metric label="Success" value={`${candidate.hiringSuccessRate || 0}%`} />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Profile Completeness Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700">Profile Completeness</span>
-            <span className="text-sm font-semibold text-[#0a66c2]">{candidate.profileCompleteness}%</span>
+          <div className="grid gap-4 border-t border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-3">
+            <QuickFact icon={Wallet} label="Expected salary" value={salary} />
+            <QuickFact icon={Building2} label="Work preference" value={workPreference} />
+            <QuickFact icon={Calendar} label="Last active" value={lastActive} />
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-gradient-to-r from-emerald-400 to-emerald-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${candidate.profileCompleteness}%` }}
-            />
-          </div>
-        </div>
+        </section>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          {/* Left Column */}
-          <div className="space-y-4">
-            
-            {/* About Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-              <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-[#0a66c2]" />
-                About
-              </h2>
-              <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">
-                {notProvided(candidate.bio || candidate.experienceSummary)}
-              </p>
-            </div>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <main className="space-y-5">
+            <Panel
+              icon={BookOpen}
+              title="Professional Summary"
+              eyebrow="Candidate overview"
+            >
+              <p className="text-sm leading-7 text-slate-600 whitespace-pre-wrap">{notProvided(summary)}</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <InfoPill label="Industry" value={candidate.industry || 'Not provided'} />
+                <InfoPill label="Career Level" value={candidate.careerLevel || 'Not provided'} />
+                <InfoPill label="Languages" value={candidate.languages.length ? candidate.languages.join(', ') : 'Not provided'} />
+                <InfoPill label="Preferred Roles" value={candidate.preferredRoles?.length ? candidate.preferredRoles.join(', ') : 'Not provided'} />
+              </div>
+            </Panel>
 
-            {/* Skills Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-              <h2 className="text-lg font-semibold text-slate-900 mb-3">Skills</h2>
+            <Panel icon={Sparkles} title="Core Skills" eyebrow={`${candidate.skills.length} skills listed`}>
               {candidate.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {candidate.skills.map(skill => (
-                    <Badge key={skill} className="bg-[#ebf4fc] text-[#0a66c2] border border-[#b3d4f0] px-3 py-1 font-medium text-sm hover:bg-[#dbeafe] transition-colors">
+                  {candidate.skills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+                    >
                       {skill}
                     </Badge>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">Not provided</p>
+                <EmptyText>Not provided</EmptyText>
               )}
-            </div>
+            </Panel>
 
-            {/* Experience Section */}
-            {candidate.previousCompanies.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-[#0a66c2]" />
-                  Experience
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {candidate.previousCompanies.map(company => (
-                    <Badge key={company} variant="outline" className="border-slate-300 text-slate-700 bg-slate-50 px-3 py-1">
-                      <Building2 className="h-3 w-3 mr-1" />
-                      {company}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Education & Certifications */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Education */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-[#0a66c2]" />
-                  Education
-                </h2>
+            <div className="grid gap-5 md:grid-cols-2">
+              <Panel icon={GraduationCap} title="Education" eyebrow="Academic background">
                 {candidate.education && candidate.education.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {candidate.education.map((edu, index) => (
-                      <div key={edu.id || index} className="border-l-2 border-[#0a66c2] pl-3">
-                        <p className="font-medium text-sm text-slate-800">{edu.degree}</p>
-                        {edu.fieldOfStudy && (
-                          <p className="text-xs text-slate-600 mt-0.5">{edu.fieldOfStudy}</p>
-                        )}
-                        {edu.institution && (
-                          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                            <Building2 className="h-3 w-3" />
-                            {edu.institution}
+                      <div key={edu.id || index} className="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
+                        <p className="font-semibold text-slate-950">{edu.degree}</p>
+                        {edu.fieldOfStudy && <p className="mt-1 text-sm text-slate-600">{edu.fieldOfStudy}</p>}
+                        {(edu.institution || edu.university) && (
+                          <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                            <Building2 className="h-3.5 w-3.5" />
+                            {edu.institution || edu.university}
                           </p>
                         )}
                         {(edu.startYear || edu.endYear) && (
-                          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                          <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                            <Calendar className="h-3.5 w-3.5" />
                             {edu.startYear}{edu.startYear && edu.endYear && ' - '}{edu.endYear}
-                            {edu.startYear === 'Ongoing' || edu.endYear === 'Ongoing' ? ' (Ongoing)' : ''}
                           </p>
                         )}
-                        {edu.grade && (
-                          <p className="text-xs text-slate-400 mt-0.5">Grade: {edu.grade}</p>
-                        )}
+                        {edu.grade && <p className="mt-1 text-xs font-medium text-slate-400">Grade: {edu.grade}</p>}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-400">Not provided</p>
+                  <EmptyText>Not provided</EmptyText>
                 )}
-              </div>
+              </Panel>
 
-              {/* Certifications */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Award className="h-5 w-5 text-[#0a66c2]" />
-                  Certifications
-                </h2>
+              <Panel icon={Award} title="Credentials" eyebrow="Certifications">
                 {candidate.certifications && candidate.certifications.length > 0 ? (
                   <div className="space-y-2">
                     {candidate.certifications.map((cert, index) => (
-                      <div key={index} className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                        <Award className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                        <span className="text-sm text-slate-700 font-medium">{cert}</span>
+                      <div key={index} className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                        <Award className="h-4 w-4 flex-shrink-0 text-amber-600" />
+                        <span className="text-sm font-semibold text-slate-700">{cert}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-400">None listed</p>
+                  <EmptyText>None listed</EmptyText>
                 )}
-              </div>
+              </Panel>
             </div>
 
-            {/* Highlights/Achievements */}
-            {candidate.achievements.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Star className="h-5 w-5 text-amber-500" />
-                  Highlights
-                </h2>
-                <ul className="space-y-2">
-                  {candidate.achievements.map((achievement, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-slate-600">{achievement}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Languages */}
-            {candidate.languages.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
-                <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-[#0a66c2]" />
-                  Languages
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {candidate.languages.map(language => (
-                    <Badge key={language} variant="outline" className="border-slate-300 text-slate-700 bg-white px-3 py-1">
-                      <Globe className="h-3 w-3 mr-1" />
-                      {language}
-                    </Badge>
-                  ))}
+            {(candidate.previousCompanies.length > 0 || candidate.achievements.length > 0 || candidate.languages.length > 0) && (
+              <Panel icon={Star} title="Hiring Signals" eyebrow="Experience, proof points, languages">
+                <div className="grid gap-5 md:grid-cols-3">
+                  <SignalBlock title="Companies">
+                    {candidate.previousCompanies.length > 0 ? (
+                      candidate.previousCompanies.map((company) => (
+                        <Badge key={company} variant="outline" className="mr-2 mb-2 rounded-full border-slate-200 bg-white text-slate-700">
+                          {company}
+                        </Badge>
+                      ))
+                    ) : (
+                      <EmptyText>Not provided</EmptyText>
+                    )}
+                  </SignalBlock>
+                  <SignalBlock title="Highlights">
+                    {candidate.achievements.length > 0 ? (
+                      <ul className="space-y-2">
+                        {candidate.achievements.map((achievement, index) => (
+                          <li key={index} className="flex gap-2 text-sm text-slate-600">
+                            <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-600" />
+                            <span>{achievement}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <EmptyText>Not provided</EmptyText>
+                    )}
+                  </SignalBlock>
+                  <SignalBlock title="Languages">
+                    {candidate.languages.length > 0 ? (
+                      candidate.languages.map((language) => (
+                        <Badge key={language} variant="outline" className="mr-2 mb-2 rounded-full border-slate-200 bg-white text-slate-700">
+                          {language}
+                        </Badge>
+                      ))
+                    ) : (
+                      <EmptyText>Not provided</EmptyText>
+                    )}
+                  </SignalBlock>
                 </div>
-              </div>
+              </Panel>
             )}
-          </div>
+          </main>
 
-          {/* Right Sidebar */}
-          <aside className="space-y-4">
-            
-            {/* Contact & Actions */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#0a66c2] to-[#0077b5] px-4 py-3">
-                <h3 className="text-white font-semibold text-sm">Contact Information</h3>
+          <aside className="space-y-5">
+            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase text-slate-400">Recruiter actions</p>
+                <h2 className="mt-1 text-lg font-bold text-slate-950">Shortlist decision</h2>
               </div>
-              <div className="p-4 space-y-3">
-                {candidate.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <a href={`mailto:${candidate.email}`} className="text-[#0a66c2] hover:underline truncate">
-                      {candidate.email}
-                    </a>
+              <div className="mb-5 rounded-lg bg-slate-950 p-4 text-white">
+                <div className="mb-3 flex items-center justify-between text-sm text-slate-300">
+                  <span>Profile completeness</span>
+                  <span className="font-semibold text-white">{candidate.profileCompleteness}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/15">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-teal-300 to-emerald-300"
+                    style={{ width: `${candidate.profileCompleteness}%` }}
+                  />
+                </div>
+                {primarySkills.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {primarySkills.map((skill) => (
+                      <span key={skill} className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium text-slate-100">
+                        {skill}
+                      </span>
+                    ))}
+                    {extraSkillCount > 0 && <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-medium text-slate-100">+{extraSkillCount}</span>}
                   </div>
                 )}
-                {candidate.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-600">{candidate.phone}</span>
-                  </div>
-                )}
-                {candidate.timezone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-600">{candidate.timezone}</span>
-                  </div>
-                )}
-                
-                <div className="pt-2 space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => void openResume(candidate)}
-                    disabled={!candidate.resumeUrl}
-                    className="w-full justify-start border-slate-300 hover:border-[#0a66c2] hover:bg-[#ebf4fc]"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Resume
-                  </Button>
-                  
-                  <div className="flex gap-2">
-                    {candidate.linkedinUrl && (
-                      <Button variant="outline" size="sm" onClick={() => openExternalUrl(candidate.linkedinUrl)} className="flex-1 justify-center border-slate-300 hover:border-[#0a66c2] hover:bg-[#ebf4fc]">
-                        <LinkIcon className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {candidate.githubUrl && (
-                      <Button variant="outline" size="sm" onClick={() => openExternalUrl(candidate.githubUrl)} className="flex-1 justify-center border-slate-300 hover:border-[#0a66c2] hover:bg-[#ebf4fc]">
-                        <GlobeIcon className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {candidate.portfolioUrl && (
-                      <Button variant="outline" size="sm" onClick={() => openExternalUrl(candidate.portfolioUrl)} className="flex-1 justify-center border-slate-300 hover:border-[#0a66c2] hover:bg-[#ebf4fc]">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
               </div>
-            </div>
 
-            {/* Profile Stats */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-700">Profile Insights</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-500">Response Rate</span>
-                  <span className="text-sm font-semibold text-emerald-600">{candidate.responseRate}%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-500">Work Type</span>
-                  <span className="text-sm font-medium text-slate-700">
-                    {candidate.preferredWorkType.length > 0
-                      ? candidate.preferredWorkType.join(', ')
-                      : 'Not set'}
-                  </span>
-                </div>
-                {candidate.salaryRange.min || candidate.salaryRange.max ? (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-slate-500">Salary Range</span>
-                    <span className="text-sm font-medium text-slate-700">
-                      {candidate.salaryRange.currency} {candidate.salaryRange.min.toLocaleString()} - {candidate.salaryRange.max.toLocaleString()}
-                    </span>
-                  </div>
-                ) : null}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-500">Last Active</span>
-                  <span className="text-sm text-slate-600">{candidate.lastActive ? new Date(candidate.lastActive).toLocaleDateString() : 'Unknown'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Portfolio Links */}
-            {candidate.portfolioLinks && candidate.portfolioLinks.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Portfolio</h3>
-                <div className="space-y-2">
-                  {candidate.portfolioLinks.map((link, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => openExternalUrl(link)}
-                      className="block max-w-full truncate text-sm font-medium text-[#0a66c2] hover:underline text-left flex items-center gap-1"
-                    >
-                      <LinkIcon className="h-3 w-3 flex-shrink-0" />
-                      {link.replace(/^https?:\/\//, '')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Upgrade CTA */}
-            {onUpgrade && (
-              <div className="bg-gradient-to-br from-[#f5f5f5] to-[#ebf4fc] rounded-lg border border-[#b3d4f0] p-4 text-center">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Unlock Full Potential</h3>
-                <p className="text-xs text-slate-500 mb-3">Upgrade to Pro for unlimited access</p>
-                <Button 
-                  onClick={onUpgrade} 
-                  className="w-full bg-[#0a66c2] hover:bg-[#004182] text-white text-sm"
+              <div className="space-y-2">
+                <Button onClick={() => contactCandidate(candidate.id)} className="w-full rounded-lg bg-teal-600 text-white hover:bg-teal-700">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Message candidate
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void openResume(candidate)}
+                  disabled={!candidate.resumeUrl}
+                  className="w-full rounded-lg border-slate-200 bg-white hover:bg-slate-50"
                 >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download resume
+                </Button>
+              </div>
+            </div>
+
+            <SidebarPanel title="Contact Information">
+              <ContactRow icon={Mail} value={candidate.email} href={candidate.email ? `mailto:${candidate.email}` : undefined} />
+              <ContactRow icon={Phone} value={candidate.phone} />
+              <ContactRow icon={Clock} value={candidate.timezone} />
+              <LinkButton label="LinkedIn" url={candidate.linkedinUrl} onOpen={openExternalUrl} />
+              <LinkButton label="Portfolio" url={candidate.portfolioUrl} onOpen={openExternalUrl} />
+              <LinkButton label="GitHub" url={candidate.githubUrl} onOpen={openExternalUrl} />
+            </SidebarPanel>
+
+            {(candidate.linkedinUrl || candidate.githubUrl || candidate.portfolioUrl || (candidate.portfolioLinks && candidate.portfolioLinks.length > 0)) && (
+              <SidebarPanel title="Online Presence">
+                <LinkButton label="LinkedIn" url={candidate.linkedinUrl} onOpen={openExternalUrl} />
+                <LinkButton label="GitHub" url={candidate.githubUrl} onOpen={openExternalUrl} />
+                <LinkButton label="Portfolio" url={candidate.portfolioUrl} onOpen={openExternalUrl} />
+                {candidate.portfolioLinks?.map((link, index) => (
+                  <LinkButton key={index} label={link.replace(/^https?:\/\//, '')} url={link} onOpen={openExternalUrl} />
+                ))}
+              </SidebarPanel>
+            )}
+
+            <SidebarPanel title="Role Preferences">
+              <InfoLine label="Experience" value={`${displayExperience} years`} />
+              <InfoLine label="Availability" value={candidate.employmentStatus || availability.label} />
+              <InfoLine label="Notice Period" value={candidate.noticePeriod || availability.label} />
+              <InfoLine label="Employment Type" value={candidate.employmentType || 'Not provided'} />
+              <InfoLine label="Salary" value={salary} />
+              <InfoLine label="Profile Views" value={String(candidate.profileViews || 0)} />
+              <InfoLine label="Last Updated" value={candidate.profileLastUpdated ? new Date(candidate.profileLastUpdated).toLocaleDateString() : lastActive} />
+              <InfoLine label="Email Verified" value={candidate.emailVerified ? 'Yes' : 'No'} />
+              <InfoLine label="Phone Verified" value={candidate.phoneVerified ? 'Yes' : 'No'} />
+              <InfoLine label="Resume Verified" value={candidate.resumeVerified ? 'Yes' : 'No'} />
+              {candidate.dateOfBirth && (
+                <InfoLine
+                  label="Date of birth"
+                  value={new Date(candidate.dateOfBirth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                />
+              )}
+            </SidebarPanel>
+
+            {onUpgrade && (
+              <div className="rounded-lg border border-teal-200 bg-gradient-to-br from-teal-50 to-slate-50 p-5 shadow-sm">
+                <h3 className="text-base font-bold text-slate-950">Unlock full candidate intelligence</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Upgrade to access richer comparisons, unlimited candidate profiles, and advanced outreach tools.</p>
+                <Button onClick={onUpgrade} className="mt-4 w-full rounded-lg bg-slate-950 text-white hover:bg-slate-800">
                   Upgrade to Pro
                 </Button>
               </div>
@@ -500,4 +492,135 @@ export function RecruiterCandidateDetail({
       </div>
     </DashboardPageLayout>
   );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-[86px] rounded-lg bg-white/10 px-3 py-2 text-center">
+      <p className="text-lg font-bold text-white">{value}</p>
+      <p className="text-[11px] font-medium uppercase text-slate-300">{label}</p>
+    </div>
+  );
+}
+
+function QuickFact({ icon: Icon, label, value }: { icon: typeof Wallet; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
+        <p className="truncate text-sm font-semibold text-slate-900">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function Panel({
+  icon: Icon,
+  title,
+  eyebrow,
+  children,
+}: {
+  icon: typeof BookOpen;
+  title: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-400">{eyebrow}</p>
+          <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SignalBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-3 text-sm font-bold text-slate-900">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function SidebarPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 className="mb-4 text-base font-bold text-slate-950">{title}</h3>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function ContactRow({ icon: Icon, value, href }: { icon: typeof Mail; value?: string; href?: string }) {
+  if (!value) {
+    return <EmptyText>Not provided</EmptyText>;
+  }
+
+  const content = (
+    <>
+      <Icon className="h-4 w-4 flex-shrink-0 text-slate-400" />
+      <span className="truncate text-sm font-medium text-slate-700">{value}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a href={href} className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 transition hover:bg-slate-50">
+        {content}
+      </a>
+    );
+  }
+
+  return <div className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-100 px-3 py-2">{content}</div>;
+}
+
+function LinkButton({ label, url, onOpen }: { label: string; url?: string; onOpen: (url?: string | null) => void }) {
+  if (!url) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(url)}
+      className="flex w-full min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-100 px-3 py-2 text-left transition hover:border-teal-200 hover:bg-teal-50"
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <LinkIcon className="h-4 w-4 flex-shrink-0 text-teal-700" />
+        <span className="truncate text-sm font-semibold text-slate-700">{label}</span>
+      </span>
+      <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-slate-400" />
+    </button>
+  );
+}
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="text-right text-sm font-semibold text-slate-800">{value}</span>
+    </div>
+  );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+    </div>
+  );
+}
+
+function EmptyText({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-slate-400">{children}</p>;
 }

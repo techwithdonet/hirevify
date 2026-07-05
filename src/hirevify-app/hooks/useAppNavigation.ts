@@ -150,11 +150,17 @@ export const useAppNavigation = ({
  }
  }, [requireAuth, user, setCurrentScreen]);
 
- const navigateToATS = useCallback((application?: Application) => {
- if (!requireAuth('access the ATS', 'recruiter')) return;
- setSelectedApplication(application || null);
- setCurrentScreen('recruiter-ats');
- }, [requireAuth, setSelectedApplication, setCurrentScreen]);
+  const navigateToATS = useCallback((application?: Application) => {
+    if (!requireAuth('access the ATS', 'recruiter')) return;
+    setSelectedApplication(application || null);
+    setCurrentScreen('recruiter-ats');
+    // Clear candidateId from URL when leaving candidate detail
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('candidateId');
+      window.history.replaceState(window.history.state || {}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [requireAuth, setSelectedApplication, setCurrentScreen]);
 
  const navigateToResumeBuilder = useCallback(() => {
  if (!requireAuth('build your resume', 'candidate')) return;
@@ -314,8 +320,21 @@ export const useAppNavigation = ({
 
   const navigateToCandidateDetail = useCallback((candidate: Candidate) => {
     if (!requireAuth('view candidate details', 'recruiter')) return;
+    // Persist to sessionStorage so it survives page refresh
+    try {
+      sessionStorage.setItem('selectedCandidate', JSON.stringify(candidate));
+    } catch (e) {
+      console.warn('Failed to persist candidate to sessionStorage:', e);
+    }
     setSelectedCandidate(candidate);
     setCurrentScreen('recruiter-candidate-detail');
+    // Update URL with candidateId
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('screen', 'recruiter-candidate-detail');
+      url.searchParams.set('candidateId', candidate.id);
+      window.history.replaceState(window.history.state || {}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
   }, [requireAuth, setSelectedCandidate, setCurrentScreen]);
 
  const navigateToExperienceBuilder = useCallback(() => {

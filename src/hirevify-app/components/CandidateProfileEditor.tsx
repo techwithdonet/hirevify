@@ -30,6 +30,10 @@ import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { toast } from 'sonner';
 import { dashboardTheme } from '../theme/dashboardTheme';
+import {
+  calculateCandidateProfileCompletion,
+  candidateProfessionalProfileSchema,
+} from '../utils/candidateProfileValidation';
 
 interface CandidateProfileEditorProps {
  onBack: () => void;
@@ -43,6 +47,7 @@ interface ProfileData {
  phone: string;
  location: string;
  bio: string;
+ dateOfBirth: string;
  currentTitle: string;
  experience: string;
  experienceSummary: string;
@@ -82,6 +87,29 @@ interface SkillsPreferences {
  currency: string;
  noticePeriod: string;
  timezone: string;
+}
+
+interface ProfessionalProfileData {
+ currentCompany: string;
+ currentDesignation: string;
+ industry: string;
+ careerLevel: string;
+ totalExperience: string;
+ employmentStatus: string;
+ noticePeriod: string;
+ availableFrom: string;
+ expectedSalary: string;
+ preferredRoles: string[];
+ preferredLocations: string[];
+ employmentType: string;
+ workMode: string;
+ willingToRelocate: boolean;
+ workAuthorization: string;
+ country: string;
+ state: string;
+ city: string;
+ currentLocation: string;
+ languages: string[];
 }
 
 const experienceLevels = ['Entry Level', '1-2 years', '3-5 years', '5-10 years', '10+ years'];
@@ -169,6 +197,13 @@ const degreeFieldsMap: Record<string, string[]> = {
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
 const workArrangements = ['Remote', 'Hybrid', 'On-site'];
 const noticePeriods = ['Immediate', '1 week', '2 weeks', '1 month', '2 months', '3 months'];
+const employmentStatuses = ['Open to work', 'Employed', 'Serving notice', 'Freelancing', 'Student', 'Not actively looking'];
+const careerLevels = ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Lead', 'Manager', 'Director'];
+const industries = ['Software & IT', 'Data & Analytics', 'Finance', 'Healthcare', 'Education', 'Retail', 'Media', 'Manufacturing', 'Other'];
+const workAuthorizations = ['Citizen', 'Permanent Resident', 'Work Visa', 'Student Visa', 'Sponsorship Required', 'Not specified'];
+const commonRoles = ['Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Data Analyst', 'Power BI Analyst', 'QA Engineer', 'Product Manager'];
+const commonLocations = ['Remote', 'Kochi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Pune', 'Mumbai', 'Delhi NCR'];
+const commonLanguages = ['English', 'Hindi', 'Malayalam', 'Tamil', 'Kannada', 'Telugu'];
 const timezones = ['IST', 'UTC', 'GST', 'EST', 'CST', 'MST', 'PST', 'GMT', 'CET'];
 const currencies = ['USD', 'INR', 'EUR', 'GBP', 'CAD', 'AUD', 'QAR'];
 const ACCEPTED_CV_TYPES = [
@@ -187,6 +222,9 @@ const [currentStep, setCurrentStep] = useState(0);
  const [isLoading, setIsLoading] = useState(false);
  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
  const [newSkill, setNewSkill] = useState('');
+ const [newPreferredRole, setNewPreferredRole] = useState('');
+ const [newPreferredLocation, setNewPreferredLocation] = useState('');
+ const [newLanguage, setNewLanguage] = useState('');
  const [cvFile, setCvFile] = useState<File | null>(null);
 
  const [profileData, setProfileData] = useState<ProfileData>({
@@ -196,6 +234,7 @@ const [currentStep, setCurrentStep] = useState(0);
  phone: '',
  location: '',
  bio: '',
+ dateOfBirth: '',
  currentTitle: '',
  experience: '',
  experienceSummary: '',
@@ -217,8 +256,31 @@ const [currentStep, setCurrentStep] = useState(0);
  salaryMax: 0,
  currency: 'USD',
  noticePeriod: '',
- timezone: 'IST',
- });
+  timezone: 'IST',
+  });
+
+  const [professionalData, setProfessionalData] = useState<ProfessionalProfileData>({
+ currentCompany: '',
+ currentDesignation: '',
+ industry: '',
+ careerLevel: '',
+ totalExperience: '',
+ employmentStatus: '',
+ noticePeriod: '',
+ availableFrom: '',
+ expectedSalary: '',
+ preferredRoles: [],
+ preferredLocations: [],
+ employmentType: '',
+ workMode: '',
+ willingToRelocate: false,
+ workAuthorization: '',
+ country: '',
+ state: '',
+ city: '',
+ currentLocation: '',
+ languages: [],
+  });
 
   const steps = [
   { title: 'Basic Profile', description: 'Your identity and headline', icon: User },
@@ -256,6 +318,19 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  };
 
  const hasCv = () => Boolean(cvFile || profileData.resumeUrl.trim());
+
+ const computeAge = (dateOfBirth?: string | null): number | null => {
+ if (!dateOfBirth) return null;
+ const dob = new Date(dateOfBirth);
+ if (Number.isNaN(dob.getTime())) return null;
+ const now = new Date();
+ let age = now.getFullYear() - dob.getFullYear();
+ const m = now.getMonth() - dob.getMonth();
+ if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
+ age--;
+ }
+ return age >= 0 && age < 150 ? age : null;
+ };
 
  const getStoredCvName = () => {
  if (cvFile) return cvFile.name;
@@ -319,36 +394,37 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  };
 
  const completion = useMemo(() => {
- const checks = [
- Boolean(fullName),
- Boolean(profileData.phone.trim()),
- Boolean(profileData.location.trim()),
- Boolean(profileData.currentTitle.trim()),
- Boolean(profileData.experience.trim()),
- Boolean(profileData.bio.trim()),
- skillsPreferences.skills.length >= 3,
- Boolean(profileData.experienceSummary.trim()),
- skillsPreferences.workArrangement.length >= 1,
- Boolean(skillsPreferences.noticePeriod.trim()),
- Boolean(skillsPreferences.timezone.trim()),
- 
- 
- 
-  Boolean(skillsPreferences.currency.trim()),
-  hasCv(),
-  education.some((e) => e.degree.trim() && e.fieldOfStudy.trim() && e.institution.trim() && e.startYear.trim() && e.endYear.trim()),
-  ];
-
- const completed = checks.filter(Boolean).length;
- const percentage = Math.round((completed / checks.length) * 100);
- const missing = getMissingFields();
+ const calculated = calculateCandidateProfileCompletion({
+ full_name: fullName,
+ phone: profileData.phone,
+ email: profileData.email,
+ location: profileData.location,
+ current_location: professionalData.currentLocation,
+ headline: profileData.currentTitle,
+ bio: profileData.bio,
+ experience_summary: profileData.experienceSummary,
+ skills: skillsPreferences.skills,
+ total_experience: professionalData.totalExperience,
+ years_of_experience: parseCandidateExperienceYears(profileData.experience),
+ experience_level: profileData.experience,
+ education,
+ resume_url: hasCv() ? profileData.resumeUrl || 'selected-file' : '',
+ linkedin_url: profileData.Link,
+ languages: professionalData.languages,
+ preferred_roles: professionalData.preferredRoles,
+ current_company: professionalData.currentCompany,
+ city: professionalData.city,
+ });
+ const requiredMissing = getMissingFields();
+ const missing = Array.from(new Set([...requiredMissing, ...calculated.missing]));
 
  return {
- percentage,
+ percentage: calculated.percentage,
  isComplete: missing.length === 0,
  missing,
+ checklist: calculated.checklist,
  };
-  }, [profileData, skillsPreferences, cvFile, education]);
+  }, [profileData, skillsPreferences, cvFile, education, professionalData]);
 
  const validateCurrentStep = () => {
  if (currentStep === 0) {
@@ -471,6 +547,7 @@ const { data: candidateProfile, error: candidateError } = await supabase
  phone: candidateProfile?.phone || profileRow.phone || '',
  location: candidateProfile?.location || profileRow.location || '',
  bio: candidateProfile?.bio || profileRow.bio || '',
+ dateOfBirth: candidateProfile?.date_of_birth ? String(candidateProfile.date_of_birth).slice(0, 10) : '',
  currentTitle: candidateProfile?.headline || '',
  experience: candidateProfile?.experience_level && experienceLevels.includes(candidateProfile.experience_level) ? candidateProfile.experience_level : candidateProfile?.experience_summary && experienceLevels.includes(candidateProfile.experience_summary) ? candidateProfile.experience_summary : mapYearsToExperienceLevel(candidateProfile?.years_of_experience),
  experienceSummary: candidateProfile?.experience_summary || '',
@@ -490,6 +567,29 @@ const { data: candidateProfile, error: candidateError } = await supabase
   currency: candidateProfile?.salary_currency || 'USD',
   noticePeriod: candidateProfile?.availability || '',
   timezone: candidateProfile?.timezone || 'IST',
+  });
+
+  setProfessionalData({
+  currentCompany: candidateProfile?.current_company || '',
+  currentDesignation: candidateProfile?.current_designation || candidateProfile?.headline || '',
+  industry: candidateProfile?.industry || '',
+  careerLevel: candidateProfile?.career_level || '',
+  totalExperience: String(candidateProfile?.total_experience ?? candidateProfile?.years_of_experience ?? ''),
+  employmentStatus: candidateProfile?.employment_status || '',
+  noticePeriod: candidateProfile?.notice_period || candidateProfile?.availability || '',
+  availableFrom: candidateProfile?.available_from || '',
+  expectedSalary: candidateProfile?.expected_salary || '',
+  preferredRoles: candidateProfile?.preferred_roles || [],
+  preferredLocations: candidateProfile?.preferred_locations || [],
+  employmentType: candidateProfile?.employment_type || '',
+  workMode: candidateProfile?.work_mode || (candidateProfile?.preferred_work_type || [])[0] || '',
+  willingToRelocate: Boolean(candidateProfile?.willing_to_relocate),
+  workAuthorization: candidateProfile?.work_authorization || '',
+  country: candidateProfile?.country || '',
+  state: candidateProfile?.state || '',
+  city: candidateProfile?.city || '',
+  currentLocation: candidateProfile?.current_location || candidateProfile?.location || profileRow.location || '',
+  languages: candidateProfile?.languages || [],
   });
 
   // Load education
@@ -548,6 +648,32 @@ const { data: candidateProfile, error: candidateError } = await supabase
  const now = new Date().toISOString();
  let savedResumeUrl = profileData.resumeUrl.trim();
 
+ const professionalPayload = candidateProfessionalProfileSchema.parse({
+ current_company: professionalData.currentCompany,
+ current_designation: professionalData.currentDesignation || profileData.currentTitle,
+ industry: professionalData.industry,
+ career_level: professionalData.careerLevel,
+ total_experience: professionalData.totalExperience === '' ? null : Number(professionalData.totalExperience),
+ employment_status: professionalData.employmentStatus,
+ notice_period: professionalData.noticePeriod || skillsPreferences.noticePeriod,
+ available_from: professionalData.availableFrom,
+ expected_salary: professionalData.expectedSalary,
+ preferred_roles: professionalData.preferredRoles,
+ preferred_locations: professionalData.preferredLocations,
+ employment_type: professionalData.employmentType || skillsPreferences.jobTypes[0] || '',
+ work_mode: professionalData.workMode || skillsPreferences.workArrangement[0] || '',
+ willing_to_relocate: professionalData.willingToRelocate,
+ work_authorization: professionalData.workAuthorization,
+ country: professionalData.country,
+ state: professionalData.state,
+ city: professionalData.city,
+ current_location: professionalData.currentLocation || profileData.location,
+ linkedin_url: profileData.Link,
+ github_url: profileData.GitBranch,
+ portfolio_url: profileData.portfolio || profileData.website,
+ languages: professionalData.languages,
+ });
+
  if (cvFile) {
  const upload = await applicationsService.uploadCV(authData.user.id, cvFile);
 
@@ -574,15 +700,16 @@ const { data: candidateProfile, error: candidateError } = await supabase
  throw new Error(updateProfileError.message);
  }
 
- const payload: Record<string, any> = {
+const payload: Record<string, any> = {
  user_id: authData.user.id,
  full_name: fullName,
  phone: profileData.phone.trim(),
  location: profileData.location.trim(),
  bio: profileData.bio.trim(),
+ date_of_birth: profileData.dateOfBirth || null,
  headline: profileData.currentTitle.trim(),
  skills: skillsPreferences.skills,
- years_of_experience: parseCandidateExperienceYears(profileData.experience),
+ years_of_experience: Number(professionalPayload.total_experience ?? parseCandidateExperienceYears(profileData.experience)),
   experience_level: profileData.experience.trim(),
  experience_summary: profileData.experienceSummary.trim(),
   preferred_job_type: [...skillsPreferences.jobTypes],
@@ -592,11 +719,37 @@ const { data: candidateProfile, error: candidateError } = await supabase
  salary_max: Number(skillsPreferences.salaryMax || 0),
  salary_currency: skillsPreferences.currency,
  timezone: skillsPreferences.timezone,
- portfolio_url: profileData.portfolio.trim() || profileData.website.trim() || null,
- github_url: profileData.GitBranch.trim() || null,
-  linkedin_url: profileData.Link.trim() || null,
+ portfolio_url: professionalPayload.portfolio_url || null,
+ github_url: professionalPayload.github_url || null,
+  linkedin_url: professionalPayload.linkedin_url || null,
   resume_url: savedResumeUrl || null,
   education: JSON.stringify(education),
+  certifications: certifications.map((cert) => cert.name.trim()).filter(Boolean),
+  languages: professionalPayload.languages,
+  current_location: professionalPayload.current_location || null,
+  country: professionalPayload.country || null,
+  state: professionalPayload.state || null,
+  city: professionalPayload.city || null,
+  total_experience: professionalPayload.total_experience,
+  current_company: professionalPayload.current_company || null,
+  current_designation: professionalPayload.current_designation || null,
+  employment_status: professionalPayload.employment_status || null,
+  notice_period: professionalPayload.notice_period || null,
+  preferred_locations: professionalPayload.preferred_locations,
+  employment_type: professionalPayload.employment_type || null,
+  work_mode: professionalPayload.work_mode || null,
+  expected_salary: professionalPayload.expected_salary || null,
+  industry: professionalPayload.industry || null,
+  preferred_roles: professionalPayload.preferred_roles,
+  career_level: professionalPayload.career_level || null,
+  work_authorization: professionalPayload.work_authorization || null,
+  willing_to_relocate: professionalPayload.willing_to_relocate,
+  available_from: professionalPayload.available_from || null,
+  profile_last_updated: now,
+  response_time: professionalData.noticePeriod || skillsPreferences.noticePeriod || null,
+  email_verified: Boolean(profileRow.email),
+  phone_verified: Boolean(profileData.phone.trim()),
+  resume_verified: Boolean(savedResumeUrl),
  profile_completeness: profileCompleteness,
  profile_completed: profileCompleted,
  updated_at: now,
@@ -630,9 +783,10 @@ if (!markComplete && existingProfile?.id) {
     return Array.isArray(next) ? next : [];
   };
 
-  payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
+payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   payload.phone = keepTextValue(payload.phone, existingProfile.phone);
   payload.location = keepTextValue(payload.location, existingProfile.location);
+  payload.date_of_birth = keepTextValue(payload.date_of_birth, existingProfile.date_of_birth);
   payload.headline = keepTextValue(payload.headline, existingProfile.headline);
   payload.bio = keepTextValue(payload.bio, existingProfile.bio);
   payload.experience_summary = keepTextValue(payload.experience_summary, existingProfile.experience_summary);
@@ -640,6 +794,20 @@ if (!markComplete && existingProfile?.id) {
   payload.portfolio_url = keepTextValue(payload.portfolio_url, existingProfile.portfolio_url);
   payload.github_url = keepTextValue(payload.github_url, existingProfile.github_url);
   payload.linkedin_url = keepTextValue(payload.linkedin_url, existingProfile.linkedin_url);
+  payload.current_location = keepTextValue(payload.current_location, existingProfile.current_location);
+  payload.country = keepTextValue(payload.country, existingProfile.country);
+  payload.state = keepTextValue(payload.state, existingProfile.state);
+  payload.city = keepTextValue(payload.city, existingProfile.city);
+  payload.current_company = keepTextValue(payload.current_company, existingProfile.current_company);
+  payload.current_designation = keepTextValue(payload.current_designation, existingProfile.current_designation);
+  payload.employment_status = keepTextValue(payload.employment_status, existingProfile.employment_status);
+  payload.notice_period = keepTextValue(payload.notice_period, existingProfile.notice_period);
+  payload.employment_type = keepTextValue(payload.employment_type, existingProfile.employment_type);
+  payload.work_mode = keepTextValue(payload.work_mode, existingProfile.work_mode);
+  payload.expected_salary = keepTextValue(payload.expected_salary, existingProfile.expected_salary);
+  payload.industry = keepTextValue(payload.industry, existingProfile.industry);
+  payload.career_level = keepTextValue(payload.career_level, existingProfile.career_level);
+  payload.work_authorization = keepTextValue(payload.work_authorization, existingProfile.work_authorization);
 
   // Keep education if new one is empty
   if ((!payload.education || payload.education === '[]') && existingProfile.education) {
@@ -649,6 +817,9 @@ if (!markComplete && existingProfile?.id) {
   payload.skills = keepArrayValue(payload.skills, existingProfile.skills);
   payload.preferred_work_type = keepArrayValue(payload.preferred_work_type, existingProfile.preferred_work_type);
   payload.preferred_job_type = keepArrayValue(payload.preferred_job_type, existingProfile.preferred_job_type);
+  payload.preferred_roles = keepArrayValue(payload.preferred_roles, existingProfile.preferred_roles);
+  payload.preferred_locations = keepArrayValue(payload.preferred_locations, existingProfile.preferred_locations);
+  payload.languages = keepArrayValue(payload.languages, existingProfile.languages);
 
   payload.experience_level = keepTextValue(payload.experience_level, existingProfile.experience_level);
 
@@ -751,6 +922,45 @@ if (!markComplete && existingProfile?.id) {
  }));
  };
 
+ const addUniqueProfessionalValue = (
+ key: 'preferredRoles' | 'preferredLocations' | 'languages',
+ value: string,
+ reset: (value: string) => void,
+ label: string,
+ ) => {
+ const cleanValue = value.trim();
+ if (!cleanValue) return;
+
+ const exists = professionalData[key].some((item) => item.toLowerCase() === cleanValue.toLowerCase());
+ if (exists) {
+ toast.error(`${label} already added`);
+ return;
+ }
+
+ setProfessionalData((prev) => ({
+ ...prev,
+ [key]: [...prev[key], cleanValue],
+ }));
+ reset('');
+ };
+
+ const toggleProfessionalArrayValue = (key: 'preferredRoles' | 'preferredLocations' | 'languages', value: string) => {
+ setProfessionalData((prev) => {
+ const exists = prev[key].includes(value);
+ return {
+ ...prev,
+ [key]: exists ? prev[key].filter((item) => item !== value) : [...prev[key], value],
+ };
+ });
+ };
+
+ const removeProfessionalArrayValue = (key: 'preferredRoles' | 'preferredLocations' | 'languages', value: string) => {
+ setProfessionalData((prev) => ({
+ ...prev,
+ [key]: prev[key].filter((item) => item !== value),
+ }));
+ };
+
  const toggleArrayValue = (key: 'jobTypes' | 'workArrangement', value: string) => {
  setSkillsPreferences((prev) => {
  const exists = prev[key].includes(value);
@@ -798,6 +1008,28 @@ if (!markComplete && existingProfile?.id) {
  <div>
  <Label>Location {renderRequiredBadge()}</Label>
  <Input value={profileData.location} onChange={(event) => setProfileData({...profileData, location: event.target.value })} placeholder="Kochi, Kerala / Remote / Bangalore" />
+ </div>
+
+ <div>
+ <Label>Date of Birth</Label>
+ <Input
+ type="date"
+ max={new Date().toISOString().slice(0, 10)}
+ value={profileData.dateOfBirth}
+ onChange={(event) => setProfileData({...profileData, dateOfBirth: event.target.value })}
+ />
+ {(() => {
+ const age = computeAge(profileData.dateOfBirth);
+ if (age === null) return <p className="mt-1 text-xs text-slate-500">Optional. Recruiters see this alongside your profile.</p>;
+ return (
+ <p className="mt-1 text-xs text-slate-600">
+ <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+ {age} yr{age === 1 ? '' : 's'} old
+ </span>
+ <span className="ml-2 text-slate-500">— recruiters will see this on your profile.</span>
+ </p>
+ );
+ })()}
  </div>
 
  <div>
@@ -1184,6 +1416,130 @@ if (!markComplete && existingProfile?.id) {
  </CardHeader>
  <CardContent className="space-y-6">
  <div>
+ <h3 className="text-base font-semibold text-slate-900">Professional Information</h3>
+ <p className="text-sm text-muted-foreground">These details make your profile easier for recruiters to shortlist.</p>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div>
+ <Label>Current Company</Label>
+ <Input value={professionalData.currentCompany} onChange={(event) => setProfessionalData({...professionalData, currentCompany: event.target.value })} placeholder="Accenture, TCS, Freelance..." />
+ </div>
+ <div>
+ <Label>Current Designation</Label>
+ <Input value={professionalData.currentDesignation} onChange={(event) => setProfessionalData({...professionalData, currentDesignation: event.target.value })} placeholder="Software Engineer" />
+ </div>
+ <div>
+ <Label>Industry</Label>
+ <Select value={professionalData.industry} onValueChange={(value) => setProfessionalData({...professionalData, industry: value })}>
+ <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+ <SelectContent>{industries.map((industry) => <SelectItem key={industry} value={industry}>{industry}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ <div>
+ <Label>Career Level</Label>
+ <Select value={professionalData.careerLevel} onValueChange={(value) => setProfessionalData({...professionalData, careerLevel: value })}>
+ <SelectTrigger><SelectValue placeholder="Select career level" /></SelectTrigger>
+ <SelectContent>{careerLevels.map((level) => <SelectItem key={level} value={level}>{level}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ <div>
+ <Label>Total Experience</Label>
+ <Input type="number" min="0" step="0.5" value={professionalData.totalExperience} onChange={(event) => setProfessionalData({...professionalData, totalExperience: event.target.value })} placeholder="1.5" />
+ </div>
+ <div>
+ <Label>Expected Salary</Label>
+ <Input value={professionalData.expectedSalary} onChange={(event) => setProfessionalData({...professionalData, expectedSalary: event.target.value })} placeholder="INR 8 LPA, negotiable" />
+ </div>
+ <div>
+ <Label>Employment Status</Label>
+ <Select value={professionalData.employmentStatus} onValueChange={(value) => setProfessionalData({...professionalData, employmentStatus: value })}>
+ <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+ <SelectContent>{employmentStatuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ <div>
+ <Label>Notice Period</Label>
+ <Select value={professionalData.noticePeriod} onValueChange={(value) => setProfessionalData({...professionalData, noticePeriod: value, employmentStatus: value === 'Immediate' ? 'Open to work' : professionalData.employmentStatus })}>
+ <SelectTrigger><SelectValue placeholder="Select notice period" /></SelectTrigger>
+ <SelectContent>{noticePeriods.map((period) => <SelectItem key={period} value={period}>{period}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ <div>
+ <Label>Available From</Label>
+ <Input type="date" value={professionalData.availableFrom} onChange={(event) => setProfessionalData({...professionalData, availableFrom: event.target.value })} />
+ </div>
+ <div>
+ <Label>Work Authorization</Label>
+ <Select value={professionalData.workAuthorization} onValueChange={(value) => setProfessionalData({...professionalData, workAuthorization: value })}>
+ <SelectTrigger><SelectValue placeholder="Select authorization" /></SelectTrigger>
+ <SelectContent>{workAuthorizations.map((authorization) => <SelectItem key={authorization} value={authorization}>{authorization}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div>
+ <Label>Employment Type</Label>
+ <Select value={professionalData.employmentType} onValueChange={(value) => setProfessionalData({...professionalData, employmentType: value })}>
+ <SelectTrigger><SelectValue placeholder="Select employment type" /></SelectTrigger>
+ <SelectContent>{jobTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ <div>
+ <Label>Remote / Hybrid / Onsite</Label>
+ <Select value={professionalData.workMode} onValueChange={(value) => setProfessionalData({...professionalData, workMode: value })}>
+ <SelectTrigger><SelectValue placeholder="Select work mode" /></SelectTrigger>
+ <SelectContent>{workArrangements.map((mode) => <SelectItem key={mode} value={mode}>{mode}</SelectItem>)}</SelectContent>
+ </Select>
+ </div>
+ </div>
+
+ <label className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm font-medium">
+ <input
+ type="checkbox"
+ checked={professionalData.willingToRelocate}
+ onChange={(event) => setProfessionalData({...professionalData, willingToRelocate: event.target.checked })}
+ className="h-4 w-4"
+ />
+ Open to relocation
+ </label>
+
+ <ChipEditor
+ label="Preferred Roles"
+ value={newPreferredRole}
+ placeholder="Add role"
+ suggestions={commonRoles}
+ items={professionalData.preferredRoles}
+ onValueChange={setNewPreferredRole}
+ onAdd={() => addUniqueProfessionalValue('preferredRoles', newPreferredRole, setNewPreferredRole, 'Preferred role')}
+ onToggleSuggestion={(role) => toggleProfessionalArrayValue('preferredRoles', role)}
+ onRemove={(role) => removeProfessionalArrayValue('preferredRoles', role)}
+ />
+
+ <ChipEditor
+ label="Preferred Locations"
+ value={newPreferredLocation}
+ placeholder="Add location"
+ suggestions={commonLocations}
+ items={professionalData.preferredLocations}
+ onValueChange={setNewPreferredLocation}
+ onAdd={() => addUniqueProfessionalValue('preferredLocations', newPreferredLocation, setNewPreferredLocation, 'Preferred location')}
+ onToggleSuggestion={(location) => toggleProfessionalArrayValue('preferredLocations', location)}
+ onRemove={(location) => removeProfessionalArrayValue('preferredLocations', location)}
+ />
+
+ <div>
+ <h3 className="text-base font-semibold text-slate-900">Location</h3>
+ <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+ <Input value={professionalData.country} onChange={(event) => setProfessionalData({...professionalData, country: event.target.value })} placeholder="Country" />
+ <Input value={professionalData.state} onChange={(event) => setProfessionalData({...professionalData, state: event.target.value })} placeholder="State" />
+ <Input value={professionalData.city} onChange={(event) => setProfessionalData({...professionalData, city: event.target.value })} placeholder="City" />
+ <Input value={professionalData.currentLocation} onChange={(event) => setProfessionalData({...professionalData, currentLocation: event.target.value })} placeholder="Current location" />
+ </div>
+ </div>
+
+ <div>
  <Label>Preferred Job Types {renderRequiredBadge()}</Label>
  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
  {jobTypes.map((type) => (
@@ -1319,6 +1675,18 @@ if (!markComplete && existingProfile?.id) {
  <Input value={profileData.Link} onChange={(event) => setProfileData({...profileData, Link: event.target.value })} placeholder="https://linkedin.com/in/username" />
  </div>
 
+ <ChipEditor
+ label="Languages"
+ value={newLanguage}
+ placeholder="Add language"
+ suggestions={commonLanguages}
+ items={professionalData.languages}
+ onValueChange={setNewLanguage}
+ onAdd={() => addUniqueProfessionalValue('languages', newLanguage, setNewLanguage, 'Language')}
+ onToggleSuggestion={(language) => toggleProfessionalArrayValue('languages', language)}
+ onRemove={(language) => removeProfessionalArrayValue('languages', language)}
+ />
+
  <div>
  <Label>Website</Label>
  <Input value={profileData.website} onChange={(event) => setProfileData({...profileData, website: event.target.value })} placeholder="https://yourwebsite.com" />
@@ -1357,6 +1725,14 @@ if (!markComplete && existingProfile?.id) {
 
  <div className="mt-4 h-3 w-full rounded-full bg-white">
  <div className="h-3 rounded-full bg-emerald-600" style={{ width: completion.percentage + '%' }} />
+ </div>
+ <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+ {completion.checklist.map((item) => (
+ <div key={item.key} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm">
+ <CheckCircle2 className={item.complete ? 'h-4 w-4 text-emerald-600' : 'h-4 w-4 text-slate-300'} />
+ <span className={item.complete ? 'text-slate-800' : 'text-slate-500'}>{item.label}</span>
+ </div>
+ ))}
  </div>
  </div>
 
@@ -1512,6 +1888,75 @@ if (!markComplete && existingProfile?.id) {
  </div>
  </div>
  </main>
+ </div>
+ );
+}
+
+function ChipEditor({
+ label,
+ value,
+ placeholder,
+ suggestions,
+ items,
+ onValueChange,
+ onAdd,
+ onToggleSuggestion,
+ onRemove,
+}: {
+ label: string;
+ value: string;
+ placeholder: string;
+ suggestions: string[];
+ items: string[];
+ onValueChange: (value: string) => void;
+ onAdd: () => void;
+ onToggleSuggestion: (value: string) => void;
+ onRemove: (value: string) => void;
+}) {
+ return (
+ <div>
+ <Label>{label}</Label>
+ <div className="mt-2 flex gap-2">
+ <Input
+ value={value}
+ onChange={(event) => onValueChange(event.target.value)}
+ onKeyDown={(event) => {
+ if (event.key === 'Enter') {
+ event.preventDefault();
+ onAdd();
+ }
+ }}
+ placeholder={placeholder}
+ />
+ <Button type="button" variant="outline" onClick={onAdd}>
+ <Plus className="mr-2 h-4 w-4" />
+ Add
+ </Button>
+ </div>
+ <div className="mt-3 flex flex-wrap gap-2">
+ {suggestions.map((suggestion) => (
+ <button
+ key={suggestion}
+ type="button"
+ onClick={() => onToggleSuggestion(suggestion)}
+ className={items.includes(suggestion) ? 'rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800' : 'rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600'}
+ >
+ {suggestion}
+ </button>
+ ))}
+ </div>
+ {items.length > 0 && (
+ <div className="mt-3 flex flex-wrap gap-2">
+ {items.map((item) => (
+ <Badge key={item} variant="secondary" className="gap-1">
+ {item}
+ <button type="button" onClick={() => onRemove(item)} aria-label={`Remove ${item}`}>
+ <X className="h-3 w-3" />
+ </button>
+ </Badge>
+ ))}
+ </div>
+ )}
  </div>
  );
 }
