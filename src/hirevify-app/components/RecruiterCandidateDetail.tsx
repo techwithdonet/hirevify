@@ -463,7 +463,6 @@ export function RecruiterCandidateDetail({
               <ContactRow icon={Mail} value={candidate.email} href={candidate.email ? `mailto:${candidate.email}` : undefined} />
               <ContactRow icon={Phone} value={candidate.phone} />
               <ContactRow icon={Clock} value={candidate.timezone} />
-              <LinkButton label="LinkedIn" url={candidate.linkedinUrl} onOpen={openExternalUrl} />
               <LinkButton label="Portfolio" url={candidate.portfolioUrl} onOpen={openExternalUrl} />
               <LinkButton label="GitHub" url={candidate.githubUrl} onOpen={openExternalUrl} />
             </SidebarPanel>
