@@ -214,6 +214,22 @@ export function AppRouter({
   setUnreadMessages,
   setUnreadNotifications,
 }: AppRouterProps) {
+ const handleCandidateDetailBack = () => {
+  const backScreen = typeof window !== 'undefined'
+   ? window.sessionStorage.getItem('hirevify_candidate_detail_back_screen')
+   : null;
+
+  if (typeof window !== 'undefined') {
+   window.sessionStorage.removeItem('hirevify_candidate_detail_back_screen');
+  }
+
+  if (backScreen === 'recruiter-ats') {
+   navigation.navigateToATS();
+   return;
+  }
+
+  navigation.navigateToCandidateSearch();
+ };
  
  switch (currentScreen) {
  case 'homepage':
@@ -456,7 +472,7 @@ case 'recruiter-ats':
     return (
       <DashboardPageLayout
         title="Loading candidate..."
-        onBack={navigation.navigateToCandidateSearch}
+        onBack={handleCandidateDetailBack}
       >
         <div className="mx-auto max-w-6xl p-8 text-center text-slate-500">
           Loading candidate profile...
@@ -467,7 +483,7 @@ case 'recruiter-ats':
   return (
     <RecruiterCandidateDetail
       candidate={selectedCandidate}
-      onBack={navigation.navigateToCandidateSearch}
+      onBack={handleCandidateDetailBack}
       onUpgrade={navigation.navigateToPricing}
       onViewMessages={navigation.navigateToMessages}
       onToggleSaved={onToggleSavedCandidate}

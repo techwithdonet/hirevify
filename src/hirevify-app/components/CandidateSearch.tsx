@@ -794,7 +794,12 @@ const getAvailabilityBadge = (availability: string) => {
  key={candidate.id}
  type="button"
  className="group rounded-lg border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
- onClick={() => onViewCandidateDetail(candidate)}
+ onClick={() => {
+ if (typeof window !== 'undefined') {
+ window.sessionStorage.setItem('hirevify_candidate_detail_back_screen', 'recruiter-search-candidates');
+ }
+ onViewCandidateDetail(candidate);
+ }}
  >
  <Avatar className="mx-auto h-24 w-24 border-4 border-slate-50 shadow-sm">
  {candidate.avatar && <AvatarImage src={candidate.avatar} alt={candidate.name} />}

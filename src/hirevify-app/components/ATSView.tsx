@@ -410,41 +410,29 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
               : 'Not provided');
           const storedScore = app.match_score === null || app.match_score === undefined ? null : Number(app.match_score);
           const hasValidStoredScore = storedScore !== null && Number.isFinite(storedScore) && storedScore > 0;
-          const atsMatch = hasValidStoredScore
-            ? {
-              score: Math.round(storedScore),
-              matchedKeywords: [],
-              missingKeywords: [],
-              explanation: 'Saved match score from application time.',
-              source: 'stored' as AtsMatchResult['source'],
-              categories: [],
-              missingSkills: [],
-              strengths: [],
-              weaknesses: [],
-            }
-            : await calculateAtsMatch(
-              {
-                id: job?.id || selectedJobId,
-                title: job?.title || '',
-                description: job?.description || '',
-                requirements: Array.isArray(job?.requirements) ? job.requirements : [],
-                skills: Array.isArray(job?.skills) ? job.skills : [],
-                experience_level: job?.experience_level || null,
-              },
-              {
-                applicationId: app.id,
-                name: details?.full_name || profile?.full_name || 'Candidate',
-                skills,
-                headline: details?.headline || '',
-                summary: details?.profile_summary || details?.summary || details?.bio || '',
-                resumeUrl,
-                resumeText: details?.resume_text || details?.resume_content || '',
-                coverLetter: app.cover_letter || '',
-                experience,
-                storedScore: app.match_score,
-              },
-              authToken
-            );
+          const atsMatch = await calculateAtsMatch(
+            {
+              id: job?.id || selectedJobId,
+              title: job?.title || '',
+              description: job?.description || '',
+              requirements: Array.isArray(job?.requirements) ? job.requirements : [],
+              skills: Array.isArray(job?.skills) ? job.skills : [],
+              experience_level: job?.experience_level || null,
+            },
+            {
+              applicationId: app.id,
+              name: details?.full_name || profile?.full_name || 'Candidate',
+              skills,
+              headline: details?.headline || '',
+              summary: details?.profile_summary || details?.summary || details?.bio || '',
+              resumeUrl,
+              resumeText: details?.resume_text || details?.resume_content || '',
+              coverLetter: app.cover_letter || '',
+              experience,
+              storedScore: app.match_score,
+            },
+            authToken
+          );
 
           if (!hasValidStoredScore && atsMatch.score > 0) {
             await supabase.from('applications').update({ match_score: atsMatch.score }).eq('id', app.id);
@@ -939,6 +927,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     return 'bg-slate-50 border-slate-200';
   };
 
+  const openCandidateProfile = (app: JobApplication) => {
+    if (onViewCandidateDetail) {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('hirevify_candidate_detail_back_screen', 'recruiter-ats');
+      }
+      onViewCandidateDetail(mapApplicationToCandidate(app));
+      return;
+    }
+
+    setSelectedCandidateProfile(app);
+    setShowProfileModal(true);
+  };
+
   const getStatusBadge = (status: string) => {
     const map: Record<string, string> = {
       applied: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -988,6 +989,54 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       age--;
     }
     return age >= 0 && age < 150 ? age : null;
+  };
+
+  const getSuitabilityVerdict = (score: number) => {
+    if (score >= 90) return 'Strong fit for this job';
+    if (score >= 70) return 'Good fit for recruiter review';
+    if (score >= 50) return 'Possible fit with gaps';
+    return 'Low fit for this job';
+  };
+
+  const getJobSkillMatches = (application: JobApplication) => {
+    const jobSkills = selectedJob?.skills || [];
+    const candidateSkills = application.skills || [];
+    if (jobSkills.length === 0 || candidateSkills.length === 0) return [];
+
+    return candidateSkills.filter((skill) =>
+      jobSkills.some((jobSkill) => jobSkill.toLowerCase().trim() === skill.toLowerCase().trim())
+    );
+  };
+
+  const getMatchedEvidence = (application: JobApplication) =>
+    Array.from(new Set([...getJobSkillMatches(application), ...application.atsMatchedKeywords].filter(Boolean)));
+
+  const getCandidateFitReasons = (application: JobApplication) => {
+    const reasons: string[] = [];
+    const skillMatches = getJobSkillMatches(application);
+
+    if (application.matchScore >= 70) {
+      reasons.push(`The CV checker scored this candidate ${application.matchScore}% against the selected job requirements.`);
+    }
+    if (skillMatches.length > 0) {
+      reasons.push(`Direct skill overlap with the role: ${skillMatches.slice(0, 5).join(', ')}.`);
+    } else if (application.atsMatchedKeywords.length > 0) {
+      reasons.push(`The resume and application contain relevant job keywords: ${application.atsMatchedKeywords.slice(0, 5).join(', ')}.`);
+    }
+    if (application.yearsOfExperience !== null && application.yearsOfExperience !== undefined) {
+      reasons.push(`${application.yearsOfExperience} year${application.yearsOfExperience === 1 ? '' : 's'} of candidate-reported experience supports the role fit.`);
+    } else if (application.experience && application.experience !== 'Not provided') {
+      reasons.push(`Experience evidence found in the profile/CV: ${application.experience.slice(0, 110)}${application.experience.length > 110 ? '...' : ''}`);
+    }
+    if (typeof application.profileCompleteness === 'number' && application.profileCompleteness >= 100) {
+      reasons.push('The candidate has a complete recruiter-visible profile, so the match is based on a fuller profile record.');
+    }
+
+    if (reasons.length === 0) {
+      reasons.push('The score is available, but detailed CV checker evidence is limited for this saved application.');
+    }
+
+    return reasons.slice(0, 4);
   };
 
   const openCandidateResume = async (application: JobApplication) => {
@@ -1107,14 +1156,145 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       </header>
 
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="ats-candidate-profile-dialog max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+        <DialogContent className="ats-candidate-profile-dialog max-h-[90vh] overflow-y-auto sm:max-w-5xl">
           {selectedCandidateProfile && (
             <>
               <DialogHeader>
-                <DialogTitle>Candidate Profile</DialogTitle>
+                <DialogTitle className="text-xl font-semibold text-slate-950">AI CV match analysis</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-5">
+                <section className="overflow-hidden rounded-xl border border-emerald-200 bg-white shadow-sm">
+                  <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
+                    <div className="bg-[#075c46] p-5 text-white">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white">
+                        <FileCheck className="h-4 w-4" />
+                        HireVify CV Checker
+                      </div>
+                      <p className="mt-4 text-5xl font-bold leading-none">{selectedCandidateProfile.matchScore}%</p>
+                      <p className="mt-2 text-lg font-semibold">{getSuitabilityVerdict(selectedCandidateProfile.matchScore)}</p>
+                      <p className="mt-4 text-sm font-medium leading-6 text-white">
+                        Analysis for {selectedCandidateProfile.name} against {selectedJob?.title || selectedCandidateProfile.jobTitle || 'this job'}.
+                      </p>
+                      <div className="mt-5 inline-flex items-center rounded-full border border-white/40 bg-white/15 px-3 py-1 text-xs font-bold text-white">
+                        Score source: {selectedCandidateProfile.scoreSource === 'stored' ? 'Saved CV score' : 'Live CV checker'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-5 p-5">
+                      <div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Why this candidate is suitable</p>
+                            <h2 className="mt-1 text-2xl font-semibold text-slate-950">
+                              {notProvided(selectedCandidateProfile.name)} for {selectedJob?.title || selectedCandidateProfile.jobTitle || 'selected role'}
+                            </h2>
+                          </div>
+                          <Badge className={getStatusBadge(selectedCandidateProfile.status)} variant="outline">
+                            {selectedCandidateProfile.status}
+                          </Badge>
+                        </div>
+
+                        <ul className="mt-4 grid gap-3 md:grid-cols-2">
+                          {getCandidateFitReasons(selectedCandidateProfile).map((reason) => (
+                            <li key={reason} className="flex gap-3 rounded-lg border border-slate-300 bg-white p-3 text-sm font-medium leading-6 text-slate-800 shadow-sm">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                              <span>{reason}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div className="rounded-lg border border-slate-200 bg-white p-3">
+                          <p className="text-xs font-bold uppercase text-slate-700">Skill overlap</p>
+                          <p className="mt-1 text-2xl font-bold text-slate-950">{getJobSkillMatches(selectedCandidateProfile).length}</p>
+                          <p className="mt-1 text-xs font-medium text-slate-600">direct job skill match{getJobSkillMatches(selectedCandidateProfile).length === 1 ? '' : 'es'}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3">
+                          <p className="text-xs font-bold uppercase text-slate-700">Matched evidence</p>
+                          <p className="mt-1 text-2xl font-bold text-emerald-700">{getMatchedEvidence(selectedCandidateProfile).length}</p>
+                          <p className="mt-1 text-xs font-medium text-slate-600">skills and CV terms found</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-white p-3">
+                          <p className="text-xs font-bold uppercase text-slate-700">Open gaps</p>
+                          <p className="mt-1 text-2xl font-bold text-amber-600">{selectedCandidateProfile.atsMissingKeywords.length}</p>
+                          <p className="mt-1 text-xs font-medium text-slate-600">keywords to verify</p>
+                        </div>
+                      </div>
+
+                      {selectedCandidateProfile.atsExplanation && (
+                        <div className="rounded-lg border border-sky-300 bg-white p-4 shadow-sm">
+                          <p className="mb-1 flex items-center gap-2 text-sm font-bold text-slate-950">
+                            <Target className="h-4 w-4" />
+                            CV checker explanation
+                          </p>
+                          <p className="text-sm font-medium leading-6 text-slate-800">{selectedCandidateProfile.atsExplanation}</p>
+                        </div>
+                      )}
+
+                      {selectedCandidateProfile.allAtsCategories && selectedCandidateProfile.allAtsCategories.length > 0 && (
+                        <div>
+                          <p className="mb-3 text-sm font-semibold text-slate-950">Score breakdown</p>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            {selectedCandidateProfile.allAtsCategories.slice(0, 6).map((category) => (
+                              <div key={category.category} className="rounded-lg border border-slate-200 bg-white p-3">
+                                <div className="flex items-center justify-between gap-3">
+                                  <p className="text-sm font-semibold text-slate-800">{category.category}</p>
+                                  <span className="text-sm font-bold text-slate-950">{category.score}/{category.maxScore}</span>
+                                </div>
+                                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                                  <div
+                                    className="h-full rounded-full bg-emerald-500"
+                                    style={{ width: `${Math.max(0, Math.min(100, category.percentage))}%` }}
+                                  />
+                                </div>
+                                <p className="mt-2 text-xs font-medium leading-5 text-slate-700">{category.details}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-emerald-300 bg-white p-4 shadow-sm">
+                          <p className="mb-3 flex items-center gap-2 text-sm font-bold text-emerald-900">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Evidence matched
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {getMatchedEvidence(selectedCandidateProfile).slice(0, 14).map((item) => (
+                              <Badge key={item} className="border border-emerald-200 bg-white text-emerald-700" variant="secondary">
+                                {item}
+                              </Badge>
+                            ))}
+                            {getMatchedEvidence(selectedCandidateProfile).length === 0 && (
+                              <p className="text-sm font-medium text-slate-700">No detailed matched evidence is available for this score yet.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border border-amber-300 bg-white p-4 shadow-sm">
+                          <p className="mb-3 flex items-center gap-2 text-sm font-bold text-amber-900">
+                            <AlertCircle className="h-4 w-4" />
+                            Gaps to verify
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCandidateProfile.atsMissingKeywords.slice(0, 12).map((item) => (
+                              <Badge key={item} className="border border-amber-200 bg-white text-amber-700" variant="secondary">
+                                {item}
+                              </Badge>
+                            ))}
+                            {selectedCandidateProfile.atsMissingKeywords.length === 0 && (
+                              <p className="text-sm font-medium text-slate-700">No major keyword gaps were returned by the checker.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
                 <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 gap-4">
                     <Avatar className="h-16 w-16 shrink-0">
@@ -1921,8 +2101,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                     className="truncate text-left text-base font-semibold text-slate-950 hover:text-emerald-700 hover:underline"
                                     onClick={(event) => {
                                       event.stopPropagation();
-                                      setSelectedCandidateProfile(app);
-                                      setShowProfileModal(true);
+                                      openCandidateProfile(app);
                                     }}
                                   >
                                     {app.name}
@@ -1982,12 +2161,21 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
                               {/* Match Score */}
                               <div className="shrink-0 text-right">
-                                <div className={`rounded-lg border px-3 py-2 ${getMatchBg(app.matchScore)}`}>
+                                <button
+                                  type="button"
+                                  className={`rounded-lg border px-3 py-2 text-right transition hover:shadow-sm ${getMatchBg(app.matchScore)}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setSelectedCandidateProfile(app);
+                                    setShowProfileModal(true);
+                                  }}
+                                  aria-label={`Open match score details for ${app.name}`}
+                                >
                                   <p className="text-xs font-semibold uppercase text-slate-500">Match</p>
                                   <p className={`text-2xl font-bold ${getMatchColor(app.matchScore)}`}>
                                     {app.matchScore}%
                                   </p>
-                                </div>
+                                </button>
                                 <p className="mt-1 text-xs text-slate-400">
                                   {app.scoreSource === 'openai' ? 'AI analysis' : app.scoreSource === 'stored' ? 'Saved' : 'Keyword'}
                                 </p>
@@ -1997,13 +2185,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                                   className="mt-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                                   onClick={(event) => {
                                     event.stopPropagation();
-                                    if (onViewCandidateDetail) {
-                                      onViewCandidateDetail(mapApplicationToCandidate(app));
-                                    } else {
-                                      // Fallback to modal if navigation not provided
-                                      setSelectedCandidateProfile(app);
-                                      setShowProfileModal(true);
-                                    }
+                                    openCandidateProfile(app);
                                   }}
                                 >
                                   <User className="mr-1.5 h-4 w-4" />

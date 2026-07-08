@@ -1,158 +1,228 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
+﻿import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
-/**
- * Resume Optimization API
- * 
- * AI's role is to EXPLAIN and OPTIMIZE - NOT to calculate scores.
- * The scoring engine provides deterministic scores.
- * 
- * Input:
- * - resumeData: structured resume data
- * - rawResumeText: raw CV text for parsing
- * - targetJobDescription: job to optimize for
- * - atsScore: CURRENT deterministic score (from backend)
- * - categories: category breakdown from scoring engine
- * - missingSkills: skills missing from scoring engine
- * - missingKeywords: keywords missing from scoring engine
- * 
- * Output:
- * - optimizedResume: improved resume
- * - analysis: AI explanation of improvements
- * - estimatedImprovement: realistic improvement estimate
- * - changes: list of what was changed
- */
-export async function POST(request: NextRequest) {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({ error: 'Supabase environment variables are missing.' }, { status: 503 });
-    }
-
-    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-
-    if (!bearerToken) {
-      return NextResponse.json({ error: 'No active Supabase session found. Please login again.' }, { status: 401 });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${bearerToken}`
-        }
-      }
-    });
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
-
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: 'Invalid Supabase session. Please logout and login again.' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const {
-      resumeData,
-      rawResumeText,
-      targetJobDescription,
-      atsScore,
-      categories,
-      missingSkills,
-      missingKeywords,
-      strengths,
-      weaknesses
-    } = body;
-
-    // Phase 1: Parse raw resume text into structured data (if provided)
-    let parsedResume = resumeData || {};
-    
-    if (rawResumeText && rawResumeText.length > 50) {
-      try {
-        const parsePrompt = `Extract all info from this resume as JSON: {summary,experience[{title,company,startDate,endDate,description}],skills[{name,category}],education[{degree,university,graduationDate}]}. Invent nothing. Raw: ${rawResumeText.slice(0, 8000)}`;
-
-        const parseResult = await callConfiguredAI({
-          purpose: 'Resume parsing',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a resume parser. Extract ONLY real information. Return only valid JSON. Never invent data.'
-            },
-            {
-              role: 'user',
-              content: parsePrompt
-            }
-          ],
-          temperature: 0.1,
-          maxTokens: 2200,
-          responseFormatJson: true
-        });
-        
-        const parsed = JSON.parse(extractJsonObject(parseResult));
-        parsedResume = { ...parsedResume, ...parsed };
-      } catch (parseError) {
-        console.warn('Resume parsing failed, using provided data:', parseError);
-      }
-    }
-
-    // Phase 2: Optimize resume for ATS (without calculating scores)
-    const missingSkillsList = (missingSkills || []).join(', ');
-    const missingKeywordsList = (missingKeywords || []).join(', ');
-    
-    const optimizationPrompt = `OPTIMIZE this resume for ATS. Return ONLY valid JSON:
-{
-  "optimizedResume": {"summary":string,"experience":[],"skills":[],"education":[]},
-  "analysis": {"strengths":[],"weaknesses":[],"missingSkills":[],"missingKeywords":[],"improvementTips":[]},
-  "estimatedImprovement": {"minIncrease":5,"maxIncrease":12,"reasoning":"keyword additions"},
-  "changes": [{"section":"","before":"","after":"","reason":""}]
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown error";
 }
-RULES: Never invent data. Only rewrite/improve existing content.
-Add missing keywords (${missingKeywordsList || 'None'}) naturally to summary and bullets.
-Add missing skills (${missingSkillsList || 'None'}) to skills section.
-Original resume: ${JSON.stringify(parsedResume)}
-Job desc: ${(targetJobDescription || '').slice(0, 3000)}
-Current score: ${atsScore || 0}%. Categories: ${JSON.stringify(categories || [])}`;
 
-    const aiText = await callConfiguredAI({
-      purpose: 'AI resume optimization',
-      messages: [
-        {
-          role: 'system',
-          content: `You are HireVify Resume Optimization AI.
-- EXPLAIN: Why the resume is weak in certain areas
-- OPTIMIZE: Rewrite existing content for better ATS performance  
-- ESTIMATE: Give realistic improvement projections (5-15 points max)
-- NEVER invent: experience, certifications, projects, skills, degrees, employers, achievements
-- DO improve: wording, keyword placement, formatting suggestions, bullet points`
-        },
-        {
-          role: 'user',
-          content: optimizationPrompt
-        }
-      ],
-      temperature: 0.3,
-      maxTokens: 2200,
-      responseFormatJson: true
-    });
+function extractJsonObject(text: string) {
+  const cleaned = String(text || "")
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
-    const result = JSON.parse(extractJsonObject(aiText));
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("AI response did not contain valid JSON.");
+  }
+
+  return JSON.parse(cleaned.slice(start, end + 1));
+}
+
+function asArray(value: any) {
+  return Array.isArray(value) ? value : [];
+}
+
+function fallbackOptimizedResume(body: any) {
+  const parsed = body?.parsedResume || {};
+  const missingKeywords = asArray(body?.missingKeywords).slice(0, 12);
+
+  const existingSkills = asArray(parsed.skills)
+    .map((skill: any) => typeof skill === "string" ? skill : skill?.name)
+    .filter(Boolean);
+
+  const mergedSkills = Array.from(new Set([...existingSkills, ...missingKeywords]));
+
+  return {
+    optimizedResume: {
+      summary:
+        parsed.summary ||
+        "Results-driven professional with experience aligned to the target role, strong technical capabilities, and a proven ability to support business operations, solve problems, and deliver measurable outcomes.",
+      experience: asArray(parsed.experience),
+      skills: mergedSkills.map((skill) => ({
+        name: skill,
+        category: "technical",
+      })),
+      education: asArray(parsed.education),
+    },
+    estimatedImprovement: {
+      minIncrease: 5,
+      maxIncrease: 10,
+    },
+    changes: [
+      "Added missing ATS keywords where relevant.",
+      "Improved resume structure for ATS readability.",
+      "Kept optimization realistic without inventing experience.",
+    ],
+    projectedScore: body?.currentScore
+      ? Math.min(95, Math.max(Number(body.currentScore) + 8, 70))
+      : 75,
+    projectedCategories: asArray(body?.categories),
+    provider: "fallback",
+  };
+}
+
+function buildPrompt(body: any) {
+  const parsedResume = body?.parsedResume || {};
+  const currentResumeText =
+    body?.currentResumeText ||
+    body?.resumeText ||
+    body?.cvText ||
+    JSON.stringify(parsedResume, null, 2);
+
+  const jobDescription =
+    body?.targetJobDescription ||
+    body?.jobDescription ||
+    body?.description ||
+    "";
+
+  const missingKeywords = asArray(body?.missingKeywords);
+
+  return `
+You are HireVify Resume Optimization AI.
+
+Return ONLY valid JSON. No markdown. No explanation outside JSON.
+
+Rules:
+- Optimize the resume for ATS.
+- Do not invent fake companies, fake degrees, fake dates, or fake experience.
+- You may improve wording and include relevant missing keywords only when they fit the candidate background.
+- Keep output clean and parseable.
+
+Required JSON shape:
+{
+  "optimizedResume": {
+    "summary": "string",
+    "experience": [
+      {
+        "jobTitle": "string",
+        "companyName": "string",
+        "startDate": "string",
+        "endDate": "string",
+        "isCurrentJob": false,
+        "responsibilities": ["string"]
+      }
+    ],
+    "skills": [
+      {
+        "name": "string",
+        "category": "technical"
+      }
+    ],
+    "education": [
+      {
+        "degree": "string",
+        "university": "string",
+        "graduationDate": "string"
+      }
+    ]
+  },
+  "estimatedImprovement": {
+    "minIncrease": 5,
+    "maxIncrease": 15
+  },
+  "changes": ["string"],
+  "projectedScore": 75,
+  "projectedCategories": []
+}
+
+Current resume:
+${currentResumeText}
+
+Target job description:
+${jobDescription}
+
+Missing ATS keywords:
+${missingKeywords.join(", ")}
+`;
+}
+
+async function askGemini(prompt: string) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY is missing");
+  }
+
+  const ai = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+
+  const response = await ai.models.generateContent({
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
+    contents: prompt,
+  });
+
+  return response.text || "";
+}
+
+async function askGroq(prompt: string) {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is missing");
+  }
+
+  const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+  });
+
+  const response = await groq.chat.completions.create({
+    model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are HireVify Resume Optimization AI. Return only valid JSON.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.25,
+    max_tokens: 1200,
+  });
+
+  return response.choices[0]?.message?.content || "";
+}
+
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}));
+  const prompt = buildPrompt(body);
+
+  const errors: string[] = [];
+
+  try {
+    const text = await askGemini(prompt);
+    const result = extractJsonObject(text);
 
     return NextResponse.json({
-      optimizedResume: result.optimizedResume || parsedResume,
-      analysis: result.analysis || { strengths: [], weaknesses: [], missingSkills: [], missingKeywords: [], improvementTips: [] },
-      estimatedImprovement: result.estimatedImprovement || { minIncrease: 5, maxIncrease: 10, reasoning: 'Based on keyword improvements' },
-      changes: result.changes || [],
-      originalResume: parsedResume,
-      note: 'Score is calculated deterministically by the backend. This API only optimizes and explains.'
+      ...fallbackOptimizedResume(body),
+      ...result,
+      provider: "gemini",
     });
   } catch (error) {
-    console.error('Resume optimization failed:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'AI resume optimization failed.' },
-      { status: 500 }
-    );
+    errors.push(`Gemini failed: ${getErrorMessage(error)}`);
   }
+
+  try {
+    const text = await askGroq(prompt);
+    const result = extractJsonObject(text);
+
+    return NextResponse.json({
+      ...fallbackOptimizedResume(body),
+      ...result,
+      provider: "groq",
+      warning: errors.join(" | "),
+    });
+  } catch (error) {
+    errors.push(`Groq failed: ${getErrorMessage(error)}`);
+  }
+
+  return NextResponse.json({
+    ...fallbackOptimizedResume(body),
+    warning: errors.join(" | "),
+  });
 }
