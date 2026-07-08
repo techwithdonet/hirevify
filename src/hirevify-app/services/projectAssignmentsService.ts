@@ -59,20 +59,44 @@ class ProjectAssignmentsService {
    * Create a new project assignment for a candidate
    */
   async createAssignment(params: CreateAssignmentParams) {
-    const { data, error } = await this.supabase.from('job_project_assignments').insert([
-      {
-        job_id: params.jobId,
-        project_id: params.projectId,
-        candidate_id: params.candidateId,
-        recruiter_id: params.recruiterId,
-        application_id: params.applicationId || null,
-        assignment_status: 'pending',
-      },
-    ]).select().single<JobProjectAssignment>();
+    const payload = {
+      job_id: params.jobId,
+      project_id: params.projectId,
+      candidate_id: params.candidateId,
+      recruiter_id: params.recruiterId,
+      application_id: params.applicationId || null,
+      assignment_status: 'pending',
+    };
+
+    console.log('[Assignment Create Payload]', payload);
+
+    const { data, error } = await this.supabase
+      .from('job_project_assignments')
+      .insert([payload])
+      .select()
+      .maybeSingle<JobProjectAssignment>();
 
     if (error) {
-      console.error('Error creating assignment:', error);
-      return { data: null, error };
+      const detailedError = {
+        message: (error as any)?.message || 'Unknown Supabase insert error',
+        details: (error as any)?.details || '',
+        hint: (error as any)?.hint || '',
+        code: (error as any)?.code || '',
+      };
+
+      console.error('[Assignment Create Error Details]', detailedError);
+
+      return {
+        data: null,
+        error: {
+          ...error,
+          message:
+            detailedError.message +
+            (detailedError.details ? ' | Details: ' + detailedError.details : '') +
+            (detailedError.hint ? ' | Hint: ' + detailedError.hint : '') +
+            (detailedError.code ? ' | Code: ' + detailedError.code : ''),
+        } as any,
+      };
     }
 
     return { data, error: null };
@@ -321,7 +345,7 @@ class ProjectAssignmentsService {
    * Check if candidate already has an assignment for a job/project
    */
   async hasExistingAssignment(jobId: string, projectId: string, candidateId: string) {
-    const { data, error } = await this.supabase.from('job_project_assignments').select('id').eq('job_id', jobId).eq('project_id', projectId).eq('candidate_id', candidateId).single();
+    const { data, error } = await this.supabase.from('job_project_assignments').select('id').eq('job_id', jobId).eq('project_id', projectId).eq('candidate_id', candidateId).maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error checking existing assignment:', error);

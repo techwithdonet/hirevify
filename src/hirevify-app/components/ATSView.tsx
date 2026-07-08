@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -655,7 +655,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   };
 
   const handleSendAssignment = async () => {
-    if (selectedCandidateIds.size === 0) {
+    if (selectedCount === 0) {
       toast.error('Select at least one candidate to assign');
       return;
     }
@@ -666,29 +666,59 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     try {
       const supabase = createSupabaseBrowserClient();
       let createdCount = 0;
+      let skippedCount = 0;
+      let failedMessage = '';
+      const assignmentProjectId = String(
+        (selectedJob as any)?.project_id ||
+        (selectedJob as any)?.projectId ||
+        (selectedJob as any)?.project?.id ||
+        selectedJobId
+      );
 
       for (const appId of selectedCandidateIds) {
         const app = applications.find((a) => a.id === appId);
-        if (!app) continue;
+        if (!app) continue;        // Resolve candidate_id to profiles.id because job_project_assignments.candidate_id has FK to profiles.id
+        const { data: candidateProfileRow, error: candidateProfileError } = await supabase
+          .from('profiles')
+          .select('id, auth_user_id')
+          .or(`id.eq.${app.candidateId},auth_user_id.eq.${app.candidateId}`)
+          .maybeSingle();
+
+        if (candidateProfileError || !candidateProfileRow?.id) {
+          console.error('Candidate profile not found for assignment:', {
+            candidateId: app.candidateId,
+            error: candidateProfileError,
+          });
+          failedMessage = 'Candidate profile record was not found in profiles table.';
+          continue;
+        }
+
+        const resolvedCandidateId = candidateProfileRow.id;
 
         // Check if assignment already exists
         const { hasAssignment } = await projectAssignmentsService.hasExistingAssignment(
           selectedJobId,
-          selectedJobId,
-          app.candidateId
+          assignmentProjectId,
+          resolvedCandidateId
         );
 
-        if (hasAssignment) continue;
+        if (hasAssignment) { skippedCount++; continue; }
 
         const { data: assignment, error } = await projectAssignmentsService.createAssignment({
           jobId: selectedJobId,
-          projectId: selectedJobId,
-          candidateId: app.candidateId,
+          projectId: assignmentProjectId,
+          candidateId: resolvedCandidateId,
           recruiterId: recruiterId,
-          applicationId: app.applicationId,
+          applicationId: app.applicationId || app.id,
         });
 
-        if (!error) {
+        if (error) {
+          console.error('Assignment create failed:', error);
+          failedMessage = error.message || 'Assignment creation failed.';
+          continue;
+        }
+
+        if (assignment) {
           // Update application status
           await supabase
             .from('applications')
@@ -699,11 +729,11 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
           const { data: candidateProfile } = await supabase
             .from('profiles')
             .select('auth_user_id')
-            .eq('id', app.candidateId)
+            .eq('id', resolvedCandidateId)
             .maybeSingle();
           await supabase.from('notifications').insert([
             {
-              user_id: candidateProfile?.auth_user_id || app.candidateId,
+              user_id: candidateProfile?.auth_user_id || resolvedCandidateId,
               type: 'assignment',
               title: 'New Project Assignment',
               message: `You have been assigned to "${selectedJob?.title}". Please review and accept or decline.`,
@@ -718,6 +748,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
 
           createdCount++;
         }
+      }
+
+      if (createdCount === 0) {
+        if (failedMessage) {
+          toast.error('Assignment failed: ' + failedMessage);
+        } else if (skippedCount > 0) {
+          toast.error('Candidate already has this assignment. Refreshing assignment status.');
+          await refreshProjectAssignments();
+        } else {
+          toast.error('No candidates were assigned. Please select a pending candidate and try again.');
+        }
+        setSelectedCandidateIds(new Set());
+        return;
       }
 
       toast.success(`${createdCount} candidate${createdCount === 1 ? '' : 's'} assigned successfully`);
@@ -2221,7 +2264,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                       onClick={onViewOngoingProjects}
                       className="text-sm font-medium text-teal-600 hover:text-teal-700"
                     >
-                      View All →
+                      View All ?
                     </button>
                   )}
                 </div>
@@ -2364,6 +2407,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
     </div>
   );
 }
+
 
 
 
