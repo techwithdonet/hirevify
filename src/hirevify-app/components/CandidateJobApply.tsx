@@ -139,29 +139,41 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       setIsProfileLoading(false);
       return;
     }
-    let cancelled = false;
-    (async () => {
+    let cancelled = false;    (async () => {
       try {
-        // 1) profiles row — try auth_user_id first, fallback to id
-        // (some profiles may have id = auth_user_id without auth_user_id column set)
+        const { data: authData } = await supabase.auth.getUser();
+        const authUserId = authData?.user?.id || user.id;
+
+        const profileIds = Array.from(new Set([authUserId, user.id].filter(Boolean) as string[]));
+        const profileFilter = profileIds
+          .flatMap((id) => [`auth_user_id.eq.${id}`, `id.eq.${id}`])
+          .join(',');
+
         const { data: profileRow } = await supabase
           .from('profiles')
-          .select(
-            'id, auth_user_id, full_name, email, avatar_url, phone, location, bio, role',
-          )
-          .or(`auth_user_id.eq.${user.id},id.eq.${user.id}`)
+          .select('id, auth_user_id, full_name, email, avatar_url, phone, location, bio, role')
+          .or(profileFilter)
           .maybeSingle<ProfileRow>();
 
         if (cancelled) return;
         setProfile(profileRow ?? null);
 
-        const { data: extrasRow } = await supabase
-          .from('candidate_profiles')
-          .select(
-            'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability, profile_completeness, profile_completed',
-          )
-          .eq('user_id', user.id)
-          .maybeSingle<CandidateExtras>();
+        const candidateIds = Array.from(
+          new Set([authUserId, user.id, profileRow?.id, profileRow?.auth_user_id].filter(Boolean) as string[])
+        );
+
+        let extrasRow: CandidateExtras | null = null;
+
+        if (candidateIds.length > 0) {
+          const { data: extrasRows } = await supabase
+            .from('candidate_profiles')
+            .select('*')
+            .or(candidateIds.map((id) => `user_id.eq.${id}`).join(','))
+            .limit(1);
+
+          extrasRow = Array.isArray(extrasRows) ? (extrasRows[0] as CandidateExtras | null) : null;
+        }
+
         if (!cancelled) setExtras(extrasRow ?? null);
       } catch (err) {
         console.warn('Could not resolve candidate profile', err);
@@ -206,13 +218,10 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       toast.error('Could not load your account profile. Please refresh and try again.');
       return;
     }
-    const profileCompleteness = Number(extras?.profile_completeness || 0);
-    const hasCompletedProfile =
-      Boolean(extras?.profile_completed) ||
-      profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+    const hasCompletedProfile = Boolean(profile);
 
     if (!hasCompletedProfile) {
-      toast.error('Complete all required candidate profile fields before applying.');
+      toast.error('Could not load your candidate profile. Please refresh and try again.');
       return;
     }
     if (coverLetter.length > MAX_COVER_LETTER) {
@@ -230,24 +239,13 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       profileCompleteness: extras?.profile_completeness,
     });
     
-    if (!cvFile && !optimizedCv && !extras?.resume_url) {
-      // More helpful error message
-      const hasProfile = !!extras;
-      const hasResumeUrlField = extras?.resume_url !== undefined && extras?.resume_url !== null;
-      
-      if (hasProfile && !hasResumeUrlField) {
-        toast.error('CV not found in profile. Please upload your CV in profile completion and save.', {
-          description: 'Your profile exists but CV URL is missing. Try re-uploading your CV.',
-          duration: 5000,
-        });
-      } else if (!hasProfile) {
-        toast.error('Could not load profile data. Please complete your profile first.', {
-          description: 'Profile not found. Go to profile completion to set up your profile.',
-          duration: 5000,
-        });
-      } else {
-        toast.error('Upload a CV in profile completion before applying.');
-      }
+    const savedCvPath = extras?.resume_url || (extras as any)?.resume_file_url || (extras as any)?.cv_url || null;
+
+    if (!cvFile && !optimizedCv && !savedCvPath) {
+      toast.error('Please choose your CV before submitting this application.', {
+        description: 'Click Back to edit, choose your CV file, then submit again.',
+        duration: 5000,
+      });
       return;
     }
 
@@ -274,9 +272,9 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       } else if (optimizedCv) {
         cvPath = optimizedCv.path;
         cvFileName = optimizedCv.fileName;
-      } else if (extras?.resume_url) {
-        cvPath = extras.resume_url;
-        cvFileName = extras.resume_url.split('/').pop()?.replace(/^\d+_/, '') || 'Profile CV';
+      } else if (savedCvPath) {
+        cvPath = savedCvPath;
+        cvFileName = savedCvPath.split('/').pop()?.replace(/^\d+_/, '') || 'Profile CV';
       }
 
       // Debug: log what's being submitted
@@ -804,12 +802,7 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
             <Button
               type="button"
               onClick={() => setStep('review')}
-              disabled={
-                isProfileLoading ||
-                !profile ||
-                !extras ||
-                (!extras.profile_completed && Number(extras.profile_completeness || 0) < MIN_CANDIDATE_PROFILE_COMPLETENESS)
-              }
+              disabled={false}
               className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
             >
               Continue to review
@@ -824,14 +817,16 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
             >
               Cancel
             </Button>
-            {(!profile || !extras || (!extras.profile_completed && Number(extras.profile_completeness || 0) < MIN_CANDIDATE_PROFILE_COMPLETENESS)) && !isProfileLoading && (
-              <p className="text-center text-xs text-amber-700">
-                Complete all required candidate profile fields before applying.
-              </p>
-            )}
           </div>
         </aside>
       </div>
     </DashboardPageLayout>
   );
 }
+
+
+
+
+
+
+
