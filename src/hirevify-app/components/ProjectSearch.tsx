@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { savedJobsService } from '../services/savedJobsService';
+import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
 
 // Local types to avoid API dependency issues
 interface Project {
@@ -158,9 +159,8 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const candidateProfileFilters = [`user_id.eq.${authUserId}`];
   if (profileRow?.id) candidateProfileFilters.push(`user_id.eq.${profileRow.id}`);
 
-  const { data: candidateProfileRows } = await supabase.from('candidate_profiles').select('id, user_id').or(candidateProfileFilters.join(','));
+  const { data: candidateProfileRows } = await supabase.from('candidate_profiles').select('user_id').or(candidateProfileFilters.join(','));
   (candidateProfileRows || []).forEach((row: any) => {
-  if (row?.id) candidateIds.add(String(row.id));
   if (row?.user_id) candidateIds.add(String(row.user_id));
   });
 
@@ -176,9 +176,7 @@ const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   (async () => {
   if (!authUserId) return { savedIds: new Set<string>() };
 
-  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
-  const candidateIdForSaved = profileRow?.id ?? authUserId;
-  const { data: savedRows } = await supabase.from('saved_jobs').select('job_id').eq('candidate_id', candidateIdForSaved);
+  const { data: savedRows } = await supabase.from('saved_jobs').select('job_id').eq('candidate_id', authUserId);
   return { savedIds: new Set<string>((savedRows || []).map((row: any) => String(row.job_id)).filter(Boolean)) };
   })(),
   ]);
@@ -407,7 +405,7 @@ const toggleBookmark = async (projectId: string) => {
   });
 
   try {
-  if (wasSaved) {
+ if (wasSaved) {
   const { error } = await savedJobsService.unsaveJob(user.id, projectId);
   if (error) {
   console.error('Failed to unsave job', error);
@@ -567,9 +565,30 @@ const applyToProject = async () => {
  return;
  }
 
- const candidateOwnerProfileId = applicationProfileRow.id;
+ const { data: candidateDetails, error: candidateDetailsError } = await supabase
+ .from('candidate_profiles')
+ .select('profile_completeness, profile_completed')
+ .eq('user_id', currentAuthUserId)
+ .maybeSingle();
 
- const { data: existing } = await supabase.from('applications').select('id').eq('job_id', selectedProject.id).eq('candidate_id', candidateOwnerProfileId).maybeSingle();
+ if (candidateDetailsError) {
+ toast.error(candidateDetailsError.message || 'Could not validate your candidate profile.');
+ return;
+ }
+
+ const profileCompleteness = Number(candidateDetails?.profile_completeness || 0);
+ const hasCompletedProfile =
+ Boolean(candidateDetails?.profile_completed) ||
+ profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+
+ if (!hasCompletedProfile) {
+      toast.error('Complete all required candidate profile fields before applying.');
+ return;
+ }
+
+ const candidateOwnerId = currentAuthUserId;
+
+ const { data: existing } = await supabase.from('applications').select('id').eq('job_id', selectedProject.id).eq('candidate_id', candidateOwnerId).maybeSingle();
 
  if (existing) {
  toast.error('You have already applied to this job.');
@@ -602,7 +621,7 @@ const applyToProject = async () => {
  const matchScore = calculateMatchScore(selectedProject);
 const { error: appError } = await supabase.from('applications').insert({
  job_id: selectedProject.id,
- candidate_id: candidateOwnerProfileId,
+ candidate_id: candidateOwnerId,
  cover_letter: coverLetter.trim(),
  status: 'applied',
  match_score: matchScore,
@@ -629,7 +648,7 @@ const { error: appError } = await supabase.from('applications').insert({
  type: 'new_application',
  title: 'New Application Received',
  message: `${candidateProfile.full_name || 'A candidate'} applied for "${selectedProject.title}"`,
- data: { job_id: selectedProject.id, candidate_id: candidateOwnerProfileId },
+ data: { job_id: selectedProject.id, candidate_id: candidateOwnerId },
  read: false,
  });
  }
@@ -728,14 +747,13 @@ const { error: appError } = await supabase.from('applications').insert({
 
   const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
 
-  const { data: candidateProfileRow } = await supabase.from('candidate_profiles').select('id, user_id').or(`user_id.eq.${authUserId}${profileRow?.id? `,user_id.eq.${profileRow.id}`: ''}`).maybeSingle();
+ const { data: candidateProfileRow } = await supabase.from('candidate_profiles').select('user_id').eq('user_id', authUserId).maybeSingle();
 
  const candidateIds = Array.from(
  new Set(
  [
  authUserId,
  profileRow?.id,
- candidateProfileRow?.id,
  candidateProfileRow?.user_id,
  ].filter(Boolean).map(String)
  )

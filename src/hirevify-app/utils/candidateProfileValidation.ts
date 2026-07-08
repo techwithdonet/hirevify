@@ -58,22 +58,71 @@ export type CompletionItem = {
   complete: boolean;
 };
 
+export const MIN_CANDIDATE_PROFILE_COMPLETENESS = 100;
+
 const hasText = (value: unknown) => typeof value === 'string' && value.trim().length > 0;
 const hasArray = (value: unknown) => Array.isArray(value) && value.length > 0;
+const hasArrayCount = (value: unknown, count: number) => Array.isArray(value) && value.length >= count;
+const hasNumericValue = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return false;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) && numberValue >= 0;
+};
+
+const hasValidEducation = (value: unknown) => {
+  if (!value) return false;
+
+  let entries = value;
+  if (typeof value === 'string') {
+    try {
+      entries = JSON.parse(value);
+    } catch {
+      return value.trim().length > 0;
+    }
+  }
+
+  if (!Array.isArray(entries)) return false;
+
+  return entries.some((entry) => {
+    if (!entry || typeof entry !== 'object') return false;
+    const education = entry as Record<string, unknown>;
+    return (
+      hasText(education.degree) &&
+      hasText(education.fieldOfStudy ?? education.field) &&
+      hasText(education.institution ?? education.university) &&
+      hasText(education.startYear ?? education.startDate) &&
+      hasText(education.endYear ?? education.endDate)
+    );
+  });
+};
 
 export function getCandidateProfileCompletionChecklist(profile: Record<string, unknown>): CompletionItem[] {
+  const locationComplete =
+    hasText(profile.current_location) ||
+    hasText(profile.location) ||
+    hasText(profile.city);
+  const experienceComplete =
+    hasNumericValue(profile.total_experience) ||
+    hasNumericValue(profile.years_of_experience) ||
+    hasText(profile.experience_level);
+
   return [
-    { key: 'resume', label: 'Resume', complete: hasText(profile.resume_url) },
-    { key: 'summary', label: 'Summary', complete: hasText(profile.bio) || hasText(profile.experience_summary) },
-    { key: 'skills', label: 'Skills', complete: hasArray(profile.skills) },
-    { key: 'experience', label: 'Experience', complete: Number(profile.total_experience ?? profile.years_of_experience ?? 0) >= 0 && (Number(profile.total_experience ?? profile.years_of_experience ?? 0) > 0 || hasText(profile.experience_level)) },
-    { key: 'education', label: 'Education', complete: hasText(profile.education) || hasArray(profile.education) },
-    { key: 'contact', label: 'Contact', complete: hasText(profile.phone) || hasText(profile.email) },
-    { key: 'linkedin', label: 'LinkedIn', complete: hasText(profile.linkedin_url) },
-    { key: 'languages', label: 'Languages', complete: hasArray(profile.languages) },
-    { key: 'preferred_role', label: 'Preferred Role', complete: hasArray(profile.preferred_roles) },
-    { key: 'current_company', label: 'Current Company', complete: hasText(profile.current_company) },
-    { key: 'location', label: 'Location', complete: hasText(profile.current_location) || hasText(profile.location) || hasText(profile.city) },
+    { key: 'full_name', label: 'Full name', complete: hasText(profile.full_name) },
+    { key: 'phone', label: 'Phone number', complete: hasText(profile.phone) },
+    { key: 'location', label: 'Location', complete: locationComplete },
+    { key: 'headline', label: 'Current title / headline', complete: hasText(profile.headline) || hasText(profile.current_designation) },
+    { key: 'bio', label: 'Short bio', complete: hasText(profile.bio) },
+    { key: 'education', label: 'At least 1 education entry', complete: hasValidEducation(profile.education) },
+    { key: 'skills', label: 'At least 3 skills', complete: hasArrayCount(profile.skills, 3) },
+    { key: 'experience', label: 'Experience level', complete: experienceComplete },
+    { key: 'experience_summary', label: 'Experience summary', complete: hasText(profile.experience_summary) },
+    { key: 'preferred_roles', label: 'Preferred role', complete: hasArray(profile.preferred_roles) },
+    { key: 'job_types', label: 'Preferred job type', complete: hasArray(profile.job_types) || hasArray(profile.preferred_job_type) || hasText(profile.employment_type) },
+    { key: 'work_arrangement', label: 'Work arrangement', complete: hasArray(profile.work_arrangement) || hasArray(profile.preferred_work_type) || hasText(profile.work_mode) },
+    { key: 'availability', label: 'Availability / notice period', complete: hasText(profile.availability) || hasText(profile.notice_period) },
+    { key: 'timezone', label: 'Timezone', complete: hasText(profile.timezone) },
+    { key: 'currency', label: 'Currency', complete: hasText(profile.salary_currency) },
+    { key: 'resume', label: 'CV file', complete: hasText(profile.resume_url) },
   ];
 }
 

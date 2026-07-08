@@ -1,10 +1,12 @@
 ﻿"use client";
 
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { AuthProvider } from "@/src/hirevify-app/components/AuthProvider";
 
 export default function Admin1Layout({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isCheckingSavedLogin, setIsCheckingSavedLogin] = useState(true);
   const [username, setUsername] = useState("admin1");
@@ -141,7 +143,7 @@ export default function Admin1Layout({ children }: { children: ReactNode }) {
   localStorage.removeItem("hirevify_user");
   localStorage.removeItem("hirevify_access_token");
 
-  window.location.href = "/";
+  router.replace("/");
 };
 
 return (

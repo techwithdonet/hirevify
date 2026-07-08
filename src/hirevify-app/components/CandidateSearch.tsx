@@ -18,6 +18,7 @@ import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import type { Candidate } from '@/src/hirevify-app/types/app';
+import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
 
 interface CandidateSearchProps {
  onBack: () => void;
@@ -78,7 +79,11 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
  const supabase = createSupabaseBrowserClient();
 
- const { data: candidateDetails, error: detailsError } = await supabase.from('candidate_profiles').select('*').order('updated_at', { ascending: false });
+ const { data: candidateDetails, error: detailsError } = await supabase
+ .from('candidate_profiles')
+ .select('*')
+ .gte('profile_completeness', MIN_CANDIDATE_PROFILE_COMPLETENESS)
+ .order('updated_at', { ascending: false });
 
  if (detailsError) {
  console.error('Error loading completed candidate profiles:', detailsError);
@@ -101,43 +106,54 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  )
  );
 
- const profileRows: any[] = [];
-
- for (const id of lookupIds) {
- const { data: profileById } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
-
- if (profileById) {
- profileRows.push(profileById);
- continue;
- }
-
- const { data: profileByAuthId } = await supabase.from('profiles').select('*').eq('auth_user_id', id).maybeSingle();
-
- if (profileByAuthId) {
- profileRows.push(profileByAuthId);
- }
- }
-
- const { data: portfolioRows } = lookupIds.length > 0
- ? await supabase
+ const [{ data: profilesById }, { data: profilesByAuthId }, { data: portfolioRows }] = await Promise.all([
+ lookupIds.length > 0
+ ? supabase.from('profiles').select('*').in('id', lookupIds)
+ : Promise.resolve({ data: [] as any[] }),
+ lookupIds.length > 0
+ ? supabase.from('profiles').select('*').in('auth_user_id', lookupIds)
+ : Promise.resolve({ data: [] as any[] }),
+ lookupIds.length > 0
+ ? supabase
  .from('portfolio_items')
  .select('user_id, title, project_url, live_url, github_url')
  .in('user_id', lookupIds)
- : { data: [] };
+ : Promise.resolve({ data: [] as any[] }),
+ ]);
+
+ const profileRows = [...(profilesById || []), ...(profilesByAuthId || [])];
+ const profileById = new Map<string, any>(
+ profileRows
+ .filter((profile: any) => Boolean(profile.id))
+ .map((profile: any) => [profile.id, profile] as [string, any])
+ );
+ const profileByAuthId = new Map<string, any>(
+ profileRows
+ .filter((profile: any) => Boolean(profile.auth_user_id))
+ .map((profile: any) => [profile.auth_user_id, profile] as [string, any])
+ );
+ const portfolioByUserId = new Map<string, any[]>();
+ (portfolioRows || []).forEach((item: any) => {
+ const items = portfolioByUserId.get(item.user_id) || [];
+ items.push(item);
+ portfolioByUserId.set(item.user_id, items);
+ });
 
  const mapped = completedProfiles.map((details: any, index: number) => {
- const profile = profileRows.find((item: any) =>
- item.id === details.user_id || item.auth_user_id === details.user_id
- );
+ const profile = profileById.get(details.user_id) || profileByAuthId.get(details.user_id);
 
  const yearsOfExperience = Number(details.years_of_experience || 0);
- const portfolioLinks = (portfolioRows || [])
- .filter((item: any) => item.user_id === details.user_id || item.user_id === profile?.id || item.user_id === profile?.auth_user_id)
+ const portfolioItemsForCandidate = [
+ ...(portfolioByUserId.get(details.user_id) || []),
+ ...(profile?.id ? portfolioByUserId.get(profile.id) || [] : []),
+ ...(profile?.auth_user_id ? portfolioByUserId.get(profile.auth_user_id) || [] : []),
+ ];
+ const portfolioLinks = portfolioItemsForCandidate
  .flatMap((item: any) => [item.project_url, item.live_url, item.github_url])
  .filter(Boolean);
 
- return {
- id: profile?.id || details.user_id || details.id,
+  return {
+    id: details.user_id,
  name: details.full_name || profile?.full_name || 'Candidate',
  email: profile?.email || '',
  avatar: profile?.avatar_url || '',
@@ -153,8 +169,8 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  experienceSummary: details.experience_summary || '',
  resumeUrl: details.resume_url || '',
  portfolioUrl: details.portfolio_url || '',
- GitBranch: details.github_url || '',
- Link: details.linkedin_url || '',
+ githubUrl: details.github_url || '',
+ linkedinUrl: details.linkedin_url || '',
 
  matchScore: Math.max(60, 95 - index * 4),
  responseRate: Number(details.response_rate || Math.max(50, 90 - index * 3)),
@@ -267,9 +283,10 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  ];
 
  useEffect(() => {
+ if (isLoadingCandidates) return;
  applyFilters();
  loadAIRecommendations();
- }, [searchFilters, sortBy]);
+ }, [searchFilters, sortBy, candidates, isLoadingCandidates]);
 
  const loadAIRecommendations = async () => {
  if (user?.userType!== 'recruiter') return;
@@ -279,7 +296,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  try {
  // Simulate AI recommendations based on recent projects or hiring patterns
  // In a real implementation, this would call the AI matching service
- const topCandidates = candidates.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
+ const topCandidates = [...candidates].sort((a, b) => b.matchScore - a.matchScore).slice(0, 3);
  
  setAiRecommendations(topCandidates);
  
@@ -302,9 +319,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
 
  const applyFilters = () => {
  setIsLoading(true);
- 
- // Simulate API call delay
- setTimeout(() => {
+
  let filtered = candidates.filter(candidate => {
  // Keywords filter
  if (searchFilters.keywords) {
@@ -401,7 +416,6 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
 
  setFilteredCandidates(filtered);
  setIsLoading(false);
- }, 500);
  };
 
  const contactCandidate = async (candidateId: string) => {
@@ -790,13 +804,17 @@ const getAvailabilityBadge = (availability: string) => {
 
  const renderSearchResults = () => (
  <div className="space-y-6">
+ {(() => {
+ const isResultsLoading = isLoadingCandidates || isLoading;
+ return (
+ <>
  <div className="flex items-center justify-between">
  <div>
  <h2 className="text-xl font-semibold">
- {isLoading? 'Searching...': `${filteredCandidates.length} candidate profile${filteredCandidates.length!== 1? 's': ''}`}
+ {isResultsLoading? 'Loading candidates...': `${filteredCandidates.length} candidate profile${filteredCandidates.length!== 1? 's': ''}`}
  </h2>
  <p className="text-sm text-muted-foreground">
- {isLoading? 'Loading candidate profiles': 'Click a profile to open the full recruiter view'}
+ {isResultsLoading? 'Fetching real candidate profiles': 'Click a profile to open the full recruiter view'}
  </p>
  </div>
  
@@ -825,7 +843,7 @@ const getAvailabilityBadge = (availability: string) => {
  </div>
  </div>
 
- {isLoading? (
+ {isResultsLoading? (
  <div className="space-y-4">
  {[1, 2, 3].map(i => (
  <Card key={i} className="animate-pulse">
@@ -863,13 +881,16 @@ const getAvailabilityBadge = (availability: string) => {
  )}
 
  {/* Load More Button */}
- {!isLoading && filteredCandidates.length > 0 && filteredCandidates.length >= 10 && (
+ {!isResultsLoading && filteredCandidates.length > 0 && filteredCandidates.length >= 10 && (
  <div className="text-center">
  <Button variant="outline" onClick={() => toast.info('Loading more candidates...')}>
  Load More Candidates
  </Button>
  </div>
  )}
+ </>
+ );
+ })()}
  </div>
  );
 

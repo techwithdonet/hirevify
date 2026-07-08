@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { useConversations } from '../hooks/useConversations';
 import { useNotifications } from '../hooks/useNotifications';
@@ -18,21 +18,14 @@ import {
   Bell,
   Search,
   ChevronRight,
-  Calendar,
   Award,
   MessageSquare,
-  User,
   ArrowRight,
   Brain,
   Scan,
   Zap,
-  BookOpen,
   TrendingUp,
-  Clock3,
-  CheckCircle2,
   ArrowUpRight,
-  LayoutDashboard,
-  FileSearch,
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
@@ -245,8 +238,8 @@ export function RecruiterDashboard({
       subtitle: 'Candidates applying to experience posts',
       count: growthApplicationCountByType('experience_builder'),
       icon: Target,
-      accent: 'bg-blue-50 text-blue-600',
-      hoverAccent: 'group-hover:bg-blue-600',
+      accent: 'bg-teal-50 text-teal-700',
+      hoverAccent: 'group-hover:bg-teal-700',
       action: () => openGrowthApplications('experience_builder'),
       latest: growthApplicants.find((application) => application.opportunity?.type === 'experience_builder')
         ? `${latestApplicationLabel(growthApplicants.find((application) => application.opportunity?.type === 'experience_builder'))} - ${growthApplicants.find((application) => application.opportunity?.type === 'experience_builder')?.opportunity?.title || 'Experience post'}`
@@ -258,8 +251,8 @@ export function RecruiterDashboard({
       subtitle: 'Candidates applying to micro internships',
       count: growthApplicationCountByType('micro_internship'),
       icon: Clock,
-      accent: 'bg-amber-50 text-amber-600',
-      hoverAccent: 'group-hover:bg-amber-600',
+      accent: 'bg-lime-50 text-lime-700',
+      hoverAccent: 'group-hover:bg-lime-700',
       action: () => openGrowthApplications('micro_internship'),
       latest: growthApplicants.find((application) => application.opportunity?.type === 'micro_internship')
         ? `${latestApplicationLabel(growthApplicants.find((application) => application.opportunity?.type === 'micro_internship'))} - ${growthApplicants.find((application) => application.opportunity?.type === 'micro_internship')?.opportunity?.title || 'Micro internship'}`
@@ -305,16 +298,16 @@ export function RecruiterDashboard({
   };
 
   return (
-    <div className="premium-page">
+    <div className="min-h-screen bg-white text-slate-950">
       {/* Premium Header */}
-      <header className="premium-header">
-        <div className="premium-header-inner">
+      <header className="sticky top-0 z-40 border-b border-emerald-100 bg-white/95 shadow-[0_14px_36px_rgba(16,185,129,0.08)] backdrop-blur-xl">
+        <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo and Title */}
           <div className="flex min-w-0 items-center gap-4">
             <HireVifyLogo size="md" />
             <div className="min-w-0">
-              <p className="premium-eyebrow text-emerald-600">Recruiter workspace</p>
-              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Dashboard</h1>
+              <p className="text-xs font-bold uppercase tracking-normal text-emerald-700">Recruiter workspace</p>
+              <h1 className="text-xl font-bold text-slate-950 sm:text-2xl">Dashboard</h1>
             </div>
           </div>
           
@@ -322,12 +315,12 @@ export function RecruiterDashboard({
           <div className="flex items-center gap-2">
             {/* Premium Status */}
             {subscription?.isActive? (
-              <Badge className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700 md:flex">
+                <Badge className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700 md:flex">
                 <Crown className="h-3.5 w-3.5" />
                 {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
               </Badge>
             ): (
-              <Button onClick={onUpgrade} className="hidden items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-slate-800 md:flex">
+              <Button onClick={onUpgrade} className="hidden items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 font-semibold text-white shadow-[0_14px_30px_rgba(5,150,105,0.22)] hover:bg-emerald-700 md:flex">
                 <Crown className="h-4 w-4" />
                 Upgrade to Pro
               </Button>
@@ -339,7 +332,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewNotifications} 
-                className="premium-btn-icon-ghost relative"
+                className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Bell className="h-5 w-5" />
                 {unreadNotificationsCount > 0 && (
@@ -353,7 +346,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewMessages} 
-                className="premium-btn-icon-ghost relative"
+                className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <MessageSquare className="h-5 w-5" />
                 {totalUnreadMessages > 0 && (
@@ -367,7 +360,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewSettings} 
-                className="premium-btn-icon-ghost"
+                className="rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Settings className="h-5 w-5" />
               </Button>
@@ -376,7 +369,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onLogout} 
-                className="premium-btn-icon-ghost hover:text-red-600"
+                className="rounded-full text-slate-700 hover:bg-red-50 hover:text-red-600"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -386,111 +379,130 @@ export function RecruiterDashboard({
       </header>
 
       {/* Main Content */}
-      <main className="premium-content">
-        {/* Profile Completion Card */}
-        <div className="mb-6 premium-card">
-          <div className="p-5 sm:p-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors",
-                  isRecruiterProfileComplete 
-                    ? 'bg-emerald-100 text-emerald-600' 
-                    : 'bg-amber-100 text-amber-600'
-                )}>
-                  {isRecruiterProfileComplete ? <Award className="h-6 w-6" /> : <User className="h-6 w-6" />}
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-semibold text-slate-900">
-                      {isRecruiterProfileComplete ? 'Company profile ready' : 'Complete your profile'}
-                    </h2>
-                    <Badge className={isRecruiterProfileComplete ? 'premium-badge-success' : 'premium-badge-warning'}>
-                      {recruiterProfileCompleteness}% complete
-                    </Badge>
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Workspace Overview */}
+        <section className="mb-8 overflow-hidden rounded-[26px] border border-emerald-100 bg-white shadow-[0_20px_56px_rgba(15,23,42,0.08)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="bg-white px-5 py-7 sm:px-8">
+              <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                <div className="max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-semibold uppercase tracking-normal text-emerald-700">
+                      Workspace
+                    </span>
+                    <span className="h-px w-8 bg-emerald-300" />
+                    <span className="text-sm text-slate-600">Recruiting operations</span>
                   </div>
-                  <p className="mt-1 max-w-xl text-sm text-slate-600">
-                    {isRecruiterProfileComplete 
-                      ? 'Your company details are visible to candidates. Keep it updated for better engagement.'
-                      : 'Add your company details to start posting jobs and receiving applications.'
-                    }
+                  <h2 className="mt-3 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+                    Recruiting desk
+                  </h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                    Keep the essentials close: publish roles, review assigned work, and move candidates through the pipeline.
                   </p>
                 </div>
-              </div>
-              <Button 
-                onClick={() => onEditProfile?.()} 
-                className="premium-btn-primary shrink-0"
-              >
-                {isRecruiterProfileComplete ? 'Edit Profile' : 'Complete Profile'}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
 
-        {/* Stats Grid */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[
-            { label: 'Jobs', value: postedJobs.length, icon: FolderOpen, action: onViewProjects, color: 'text-blue-600 bg-blue-50' },
-            { label: 'All Projects', value: applicants.filter((a) => a.status === 'assigned').length, icon: Briefcase, action: onViewOngoingProjects || onViewATS, color: 'text-teal-600 bg-teal-50' },
-            { label: 'Hire Rate', value: stats?.hireRate || 'N/A', icon: TrendingUp, action: onViewAnalytics, color: 'text-violet-600 bg-violet-50' },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                type="button"
-                onClick={item.action}
-                className="premium-stat-card cursor-pointer text-left"
-              >
-                <div className="mb-3">
-                  <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl', item.color)}>
-                    <Icon className="h-5 w-5" />
-                  </span>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    onClick={() => (onPostJob ? onPostJob() : onPostProject?.())}
+                    className="h-11 rounded-full bg-emerald-600 px-5 font-semibold text-white shadow-[0_14px_30px_rgba(5,150,105,0.22)] hover:bg-emerald-700"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Post Job
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onSearchCandidates}
+                    className="h-11 rounded-full border-emerald-200 bg-white px-5 font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    Search Candidates
+                  </Button>
                 </div>
-                <p className="premium-stat-label">{item.label}</p>
-                <p className="premium-stat-value">{item.value}</p>
-              </button>
-            );
-          })}
-        </div>
+              </div>
 
-        {/* Quick Actions */}
-        <div className="mb-6 premium-card-interactive overflow-hidden">
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 sm:p-6">
-            <div className="mb-4">
-              <p className="premium-eyebrow text-slate-400">Quick Actions</p>
-              <h2 className="mt-1 text-xl font-semibold text-white">Post jobs and source candidates</h2>
+              <div className="mt-8 grid grid-cols-1 overflow-hidden rounded-2xl border border-emerald-100 bg-white/80 sm:grid-cols-3">
+                {[
+                  { label: 'Open jobs', value: postedJobs.length, action: onViewProjects },
+                  { label: 'Assigned projects', value: applicants.filter((a) => a.status === 'assigned').length, action: onViewOngoingProjects || onViewATS },
+                  { label: 'Hire rate', value: stats?.hireRate || 'N/A', action: onViewAnalytics },
+                ].map((item, index) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.action}
+                    className={cn(
+                      "group px-5 py-5 text-left transition-colors hover:bg-emerald-50",
+                      index > 0 && "border-t border-emerald-100 sm:border-l sm:border-t-0"
+                    )}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700 group-hover:text-emerald-700">
+                      {item.label}
+                    </p>
+                    <div className="mt-2 flex items-end justify-between gap-3">
+                      <p className="text-3xl font-semibold tracking-normal text-slate-950">{item.value}</p>
+                      <ArrowUpRight className="mb-1 h-4 w-4 text-slate-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-700" />
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button
-                onClick={() => (onPostJob ? onPostJob() : onPostProject?.())}
-                className="h-14 rounded-xl bg-white px-6 font-semibold text-slate-900 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-emerald-50"
+
+            <aside className="border-t border-emerald-100 bg-white px-5 py-7 text-slate-950 sm:px-7 lg:border-l lg:border-t-0">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Profile task</p>
+                  <h3 className="mt-2 text-base font-semibold text-slate-950">
+                    {isRecruiterProfileComplete ? 'Company profile ready' : 'Complete company profile'}
+                  </h3>
+                </div>
+                <span className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+                  isRecruiterProfileComplete
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-emerald-100 text-emerald-700'
+                )}>
+                  {recruiterProfileCompleteness}%
+                </span>
+              </div>
+
+              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-emerald-200">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    isRecruiterProfileComplete ? 'bg-emerald-500' : 'bg-emerald-600'
+                  )}
+                  style={{ width: `${Math.min(100, Math.max(0, recruiterProfileCompleteness))}%` }}
+                />
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                {isRecruiterProfileComplete
+                  ? 'Your public company details are active. Refresh them when hiring priorities change.'
+                  : 'Add the missing company details before you start receiving serious applications.'
+                }
+              </p>
+
+              <button
+                type="button"
+                onClick={() => onEditProfile?.()}
+                className="mt-5 inline-flex items-center text-sm font-semibold text-emerald-700 hover:text-emerald-700"
               >
-                <Plus className="mr-2 h-5 w-5" />
-                Post Job
-              </Button>
-              <Button
-                variant="outline"
-                onClick={onSearchCandidates}
-                className="h-14 rounded-xl border-white/30 bg-white/10 px-6 font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
-              >
-                <Search className="mr-2 h-5 w-5" />
-                Search Candidates
-              </Button>
-            </div>
+                {isRecruiterProfileComplete ? 'Edit profile' : 'Finish setup'}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </button>
+            </aside>
           </div>
-        </div>
+        </section>
 
         {/* Application Sections */}
-        <div className="mb-6 premium-card">
-          <div className="premium-card-header">
+        <div className="mb-6 overflow-hidden rounded-[24px] border border-emerald-100 bg-white shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+          <div className="border-b border-emerald-100 bg-white px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="premium-eyebrow text-emerald-600">Applications</p>
-                <h2 className="premium-card-title mt-1">Application Pipeline</h2>
+                <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Applications</p>
+                <h2 className="mt-1 text-lg font-semibold text-slate-950">Application Pipeline</h2>
               </div>
-              <p className="text-sm text-slate-500">Review and manage applications by category.</p>
+              <p className="text-sm text-slate-600">Review and manage applications by category.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
@@ -501,23 +513,23 @@ export function RecruiterDashboard({
                   key={section.key}
                   type="button"
                   onClick={section.action}
-                  className="group flex min-h-[160px] flex-col rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/70 p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg"
+                  className="group flex min-h-[160px] flex-col rounded-2xl border border-emerald-100 bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-[0_18px_45px_rgba(16,185,129,0.12)]"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors', section.accent, section.hoverAccent, 'group-hover:text-white')}>
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 px-2 text-sm font-bold text-white shadow-sm">
+                    <span className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-emerald-600 px-2 text-sm font-bold text-white shadow-sm">
                       {section.count}
                     </span>
                   </div>
                   <div className="mb-3">
                     <h3 className="text-base font-semibold text-slate-950">{section.title}</h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">{section.subtitle}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">{section.subtitle}</p>
                   </div>
-                  <p className="mt-auto line-clamp-2 rounded-lg bg-white/70 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-100">{section.latest}</p>
+                  <p className="mt-auto line-clamp-2 rounded-lg bg-white/85 px-3 py-2 text-xs text-slate-600 ring-1 ring-emerald-100">{section.latest}</p>
                   <div className="mt-4 flex items-center text-xs font-semibold text-slate-600">
-                    <span className="transition-colors group-hover:text-emerald-600">View all</span>
+                    <span className="transition-colors group-hover:text-emerald-700">View all</span>
                     <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </div>
                 </button>
@@ -531,173 +543,190 @@ export function RecruiterDashboard({
           {/* Left Column */}
           <div className="space-y-6">
             {/* AI Tools */}
-            <div className="premium-card">
-              <div className="premium-card-header">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="premium-eyebrow text-violet-600">Powered by AI</p>
-                    <h2 className="premium-card-title mt-1">Hiring Tools</h2>
-                  </div>
-                  <Badge className="premium-badge-default">
-                    <Sparkles className="mr-1 h-3 w-3" />
-                    Pro
-                  </Badge>
+            <section className="overflow-hidden rounded-[24px] border border-emerald-100 bg-white shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+              <div className="flex flex-col gap-2 border-b border-emerald-100 bg-white px-5 py-5 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Powered by AI</p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-950">Hiring Tools</h2>
                 </div>
+                <span className="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  <Sparkles className="mr-1.5 h-3 w-3" />
+                  Pro workspace
+                </span>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'AI Matching', description: 'Smart candidate matching', icon: Brain, action: onViewAIMatchingDashboard, access: aiMatchingAccess, color: 'bg-emerald-50 text-emerald-600' },
-                    { label: 'ATS Scanner', description: 'Resume screening', icon: Scan, action: onViewATSScanner, access: atsAccess, color: 'bg-blue-50 text-blue-600' },
-                    { label: 'Assessments', description: 'Custom skills tests', icon: Award, action: onViewSkillsAssessment, access: assessmentsAccess, color: 'bg-violet-50 text-violet-600' },
-                    { label: 'Analytics', description: 'Hiring insights', icon: BarChart3, action: onViewAnalytics, access: analyticsAccess, color: 'bg-amber-50 text-amber-600' },
-                  ].map((tool) => {
-                    const Icon = tool.icon;
-                    return (
-                      <button 
-                        key={tool.label} 
-                        type="button" 
-                        onClick={tool.action} 
-                        className="group rounded-xl border border-slate-200 bg-slate-50 p-4 text-left transition-all hover:border-emerald-300 hover:bg-white"
-                      >
-                        <div className="mb-3 flex items-center justify-between">
-                          <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl', tool.color)}>
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          {tool.access && <Badge className="premium-badge-success">PRO</Badge>}
-                        </div>
-                        <h3 className="font-semibold text-slate-900">{tool.label}</h3>
-                        <p className="mt-1 text-sm text-slate-500">{tool.description}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
 
-            {/* Why Skills-First Hiring */}
-            <div className="premium-card">
-              <div className="premium-card-header">
-                <h2 className="premium-card-title">Why Skills-First Hiring?</h2>
+              <div className="divide-y divide-emerald-100">
+                {[
+                  { label: 'AI Matching', description: 'Rank candidates against role requirements and project signals.', icon: Brain, action: onViewAIMatchingDashboard, access: aiMatchingAccess },
+                  { label: 'ATS Scanner', description: 'Screen resumes and surface missing evidence before review.', icon: Scan, action: onViewATSScanner, access: atsAccess },
+                  { label: 'Assessments', description: 'Create skills tests tied to the work you are hiring for.', icon: Award, action: onViewSkillsAssessment, access: assessmentsAccess },
+                  { label: 'Analytics', description: 'Track pipeline health, conversion, and hiring momentum.', icon: BarChart3, action: onViewAnalytics, access: analyticsAccess },
+                ].map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <button
+                      key={tool.label}
+                      type="button"
+                      onClick={tool.action}
+                      className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-white"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-100 text-emerald-800 transition-colors group-hover:bg-emerald-200 group-hover:text-slate-950">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-slate-950">{tool.label}</span>
+                        <span className="mt-1 block text-sm leading-5 text-slate-600">{tool.description}</span>
+                      </span>
+                      <span className="flex items-center gap-3">
+                        <span className={cn(
+                          "hidden rounded-full px-2.5 py-1 text-xs font-semibold sm:inline-flex",
+                          tool.access ? 'bg-emerald-100 text-emerald-800' : 'bg-white text-emerald-700 ring-1 ring-emerald-100'
+                        )}>
+                          {tool.access ? 'Available' : 'Pro'}
+                        </span>
+                        <ArrowUpRight className="h-4 w-4 text-slate-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-700" />
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="p-4">
-                <div className="grid gap-3 md:grid-cols-3">
-                  {[
-                    { title: 'Project-Based', copy: 'See real work samples instead of just resumes', icon: Target },
-                    { title: 'AI-Powered', copy: 'Advanced AI finds the perfect candidates', icon: Zap },
-                    { title: 'Skills Tests', copy: 'Validate technical skills with custom tests', icon: Award },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.title} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                        <Icon className="mb-3 h-5 w-5 text-emerald-600" />
-                        <h4 className="font-semibold text-slate-900">{item.title}</h4>
-                        <p className="mt-1 text-sm text-slate-600">{item.copy}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            </section>
           </div>
 
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
             {/* Messages */}
-            <div className="premium-card">
-              <div className="premium-card-header">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="premium-eyebrow text-blue-600">Inbox</p>
-                    <h3 className="premium-card-title mt-1">Messages</h3>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={onViewMessages}
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                  >
-                    View all
-                  </Button>
+            <section className="overflow-hidden rounded-[24px] border border-emerald-100 bg-white shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+              <div className="flex items-end justify-between border-b border-emerald-100 bg-white px-5 py-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Inbox</p>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-950">Messages</h3>
                 </div>
+                <button
+                  type="button"
+                  onClick={onViewMessages}
+                  className="text-sm font-semibold text-emerald-800 hover:text-emerald-700"
+                >
+                  View all
+                </button>
               </div>
               <div>
                 {messageConversations.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <MessageSquare className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-                    <p className="text-sm font-medium text-slate-700">No conversations yet</p>
-                    <p className="mt-1 text-xs text-slate-500">Candidate messages will appear here.</p>
+                  <div className="px-5 py-8 text-center">
+                    <MessageSquare className="mx-auto mb-3 h-7 w-7 text-emerald-300" />
+                    <p className="text-sm font-semibold text-slate-950">No conversations yet</p>
+                    <p className="mt-1 text-xs text-slate-600">Candidate messages will appear here.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-emerald-100">
                     {messageConversations.slice(0, 5).map((conversation) => (
                       <button
                         key={conversation.otherUser.id}
                         type="button"
                         onClick={onViewMessages}
-                        className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-slate-50"
+                        className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-white"
                       >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-50 text-sm font-semibold text-blue-600">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-800">
                           {(conversation.otherUser.name || 'U').slice(0, 1).toUpperCase()}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-sm font-semibold text-slate-900">{conversation.otherUser.name || 'User'}</p>
-                            <span className="text-xs text-slate-400">{conversation.lastMessage ? formatMessageTime(conversation.lastMessage.createdAt) : ''}</span>
-                          </div>
-                          <p className="truncate text-xs text-slate-500">{conversation.lastMessage ? conversation.lastMessage.message : 'No messages yet'}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-950">{conversation.otherUser.name || 'User'}</p>
+                          <p className="truncate text-xs text-slate-600">{conversation.lastMessage ? conversation.lastMessage.message : 'No messages yet'}</p>
                         </div>
-                        {conversation.unreadCount > 0 && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                            {conversation.unreadCount}
-                          </span>
-                        )}
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-xs text-slate-400">{conversation.lastMessage ? formatMessageTime(conversation.lastMessage.createdAt) : ''}</span>
+                          {conversation.unreadCount > 0 && (
+                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+                              {conversation.unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
+            </section>
 
             {/* Recent Applications */}
-            <div className="premium-card">
-              <div className="premium-card-header">
-                <h3 className="premium-card-title">Recent Applications</h3>
+            <section className="overflow-hidden rounded-[24px] border border-emerald-100 bg-white shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+              <div className="border-b border-emerald-100 bg-white px-5 py-5">
+                <h3 className="text-lg font-semibold text-slate-950">Recent Applications</h3>
               </div>
-              <div className="p-4">
+              <div>
                 {recentApplications.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-emerald-100">
                     {recentApplications.map((application) => (
-                      <div 
-                        key={`${application.category}-${application.id}`} 
-                        className="rounded-xl border border-slate-100 bg-slate-50 p-3 transition-colors hover:border-slate-200"
+                      <div
+                        key={`${application.category}-${application.id}`}
+                        className="px-5 py-4"
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <p className="line-clamp-1 text-sm font-semibold text-slate-900">{application.candidate}</p>
-                          <Badge className="premium-badge-default shrink-0">{application.category}</Badge>
+                          <p className="line-clamp-1 text-sm font-semibold text-slate-950">{application.candidate}</p>
+                          <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
+                            {application.category}
+                          </span>
                         </div>
-                        <p className="mt-1 line-clamp-1 text-xs text-slate-500">{application.source}</p>
-                        <p className="mt-2 text-xs font-medium capitalize text-slate-600">
-                          Status: {application.status}
+                        <p className="mt-1 line-clamp-1 text-xs text-slate-600">{application.source}</p>
+                        <p className="mt-2 text-xs font-semibold capitalize text-emerald-700">
+                          {application.status}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="premium-empty py-8">
-                    <Users className="premium-empty-icon" />
-                    <p className="premium-empty-title">No applications yet</p>
-                    <p className="premium-empty-description">Post a job to start receiving applications.</p>
+                  <div className="px-5 py-8 text-center">
+                    <Users className="mx-auto mb-3 h-8 w-8 text-emerald-300" />
+                    <p className="text-sm font-semibold text-slate-950">No applications yet</p>
+                    <p className="mt-1 text-xs text-slate-600">Post a job to start receiving applications.</p>
                   </div>
                 )}
               </div>
-            </div>
+            </section>
           </div>
         </div>
+
+        {/* Why Skills-First Hiring */}
+        <section className="mt-6 overflow-hidden rounded-[28px] border border-emerald-100 bg-white text-slate-950 shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="px-5 py-7 sm:px-7">
+              <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700">Hiring approach</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-normal">Why skills-first hiring?</h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-slate-600">
+                Use real work evidence, AI review, and structured assessments to reduce guesswork before interviews.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 border-t border-emerald-100 bg-white sm:grid-cols-3 lg:border-l lg:border-t-0">
+              {[
+                { title: 'Project-based', copy: 'Review proof of work before shortlisting.', icon: Target },
+                { title: 'AI-assisted', copy: 'Find stronger matches without manual sorting.', icon: Zap },
+                { title: 'Skills tested', copy: 'Validate ability with focused assessments.', icon: Award },
+              ].map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.title}
+                    className={cn(
+                      "px-5 py-7 sm:px-6",
+                      index > 0 && "border-t border-emerald-100 sm:border-l sm:border-t-0"
+                    )}
+                  >
+                    <Icon className="h-5 w-5 text-emerald-700" />
+                    <h3 className="mt-4 text-base font-semibold">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.copy}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
 }
+
+
+
 
 
 

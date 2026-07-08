@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
             }
           ],
           temperature: 0.1,
-          maxTokens: 900,
+          maxTokens: 2200,
           responseFormatJson: true
         });
         
@@ -134,7 +134,7 @@ Current score: ${atsScore || 0}%. Categories: ${JSON.stringify(categories || [])
         }
       ],
       temperature: 0.3,
-      maxTokens: 900,
+      maxTokens: 2200,
       responseFormatJson: true
     });
 

@@ -270,7 +270,7 @@ class ProfilesService {
  * Update candidate profile
  */
  async updateCandidateProfile(userId: string, updates: Partial<Omit<CandidateProfile, 'id' | 'created_at' | 'updated_at'>>) {
- const { data, error } = await this.supabase.from('candidate_profiles').update(updates).eq('id', userId).select().maybeSingle<CandidateProfile>();
+ const { data, error } = await this.supabase.from('candidate_profiles').update(updates).eq('user_id', userId).select().maybeSingle<CandidateProfile>();
 
  if (error) {
  console.error('Error updating candidate profile:', error);

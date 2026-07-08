@@ -790,7 +790,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  : null;
 
  if (!result) {
- const insertUserIds = uniqueClean([authUserId, profileId, user.id]);
+ const insertUserIds = uniqueClean([authUserId, user.id]);
  let lastInsertError: any = null;
 
  for (const insertUserId of insertUserIds) {
@@ -811,9 +811,9 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  throw new Error(result.error.message);
  }
 
- if (profileId) {
+ if (authUserId) {
  const { error: evaluationError } = await supabase.from('cv_evaluations').insert({
- candidate_id: profileId,
+ candidate_id: authUserId,
  cv_url: resumeUrl,
  ats_score: scanResult ? scanResult.data.extractionMetadata.confidence / 100 : null,
  ai_feedback: {

@@ -47,7 +47,11 @@ import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { useAuth } from './AuthProvider';
 import { supabase } from '@/src/lib/supabase';
-import { applicationsService, type ApplicationWithDetails } from '../services/applicationsService';
+import {
+  applicationsService,
+  MIN_CANDIDATE_PROFILE_COMPLETENESS,
+  type ApplicationWithDetails,
+} from '../services/applicationsService';
 import { projectAssignmentsService, type AssignmentWithDetails } from '../services/projectAssignmentsService';
 import { profilesService } from '../services/profilesService';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
@@ -192,12 +196,13 @@ export function CandidateAppliedJobs({
   const checkProfileForJobSearch = () => {
     const completeness = Number(candidateProfile?.profile_completeness || 0);
     const hasResume = Boolean(candidateProfile?.resume_url);
-    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
+    const isProfileComplete =
+      Boolean(candidateProfile?.profile_completed) || completeness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
     
     if (!isProfileComplete || !hasResume) {
       const missing: string[] = [];
       if (!hasResume) missing.push('upload a CV');
-      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
+      if (!isProfileComplete) missing.push(`complete all required profile fields (${completeness}% done)`);
       
       toast.error(
         `Please ${missing.join(' and ')} before finding jobs and applying.`,

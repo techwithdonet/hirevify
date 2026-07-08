@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { subscriptionsService, type Subscription } from '@/src/hirevify-app/services/subscriptionsService';
 
 type BillingSettingsCardProps = {
-  profileId: string | null;
+  userId: string | null;
   userEmail?: string;
 };
 
@@ -23,23 +23,23 @@ function daysRemaining(value?: string | null) {
   return Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
 }
 
-export function BillingSettingsCard({ profileId, userEmail }: BillingSettingsCardProps) {
+export function BillingSettingsCard({ userId, userEmail }: BillingSettingsCardProps) {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<'freeze' | 'unfreeze' | 'cancel' | null>(null);
 
   const loadSubscription = useCallback(async () => {
-    if (!profileId) {
+    if (!userId) {
       setSubscription(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    const { data } = await subscriptionsService.getUserSubscription(profileId);
+    const { data } = await subscriptionsService.getUserSubscription(userId);
     setSubscription(data);
     setLoading(false);
-  }, [profileId]);
+  }, [userId]);
 
   useEffect(() => {
     void loadSubscription();
@@ -63,7 +63,7 @@ export function BillingSettingsCard({ profileId, userEmail }: BillingSettingsCar
   const canCancel = Boolean(subscription && subscription.tier !== 'free' && subscription.status !== 'canceled' && subscription.status !== 'expired');
 
   const runAction = async (nextAction: 'freeze' | 'unfreeze' | 'cancel') => {
-    if (!profileId) {
+    if (!userId) {
       toast.error('Subscription profile is still loading.');
       return;
     }
@@ -72,10 +72,10 @@ export function BillingSettingsCard({ profileId, userEmail }: BillingSettingsCar
     try {
       const result =
         nextAction === 'freeze'
-          ? await subscriptionsService.freezeSubscription(profileId)
+          ? await subscriptionsService.freezeSubscription(userId)
           : nextAction === 'unfreeze'
-            ? await subscriptionsService.unfreezeSubscription(profileId)
-            : await subscriptionsService.cancelSubscription(profileId);
+            ? await subscriptionsService.unfreezeSubscription(userId)
+            : await subscriptionsService.cancelSubscription(userId);
 
       if (result.error) {
         throw result.error;

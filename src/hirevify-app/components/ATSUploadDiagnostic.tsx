@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
@@ -21,6 +22,7 @@ interface DiagnosticResult {
 }
 
 export function ATSUploadDiagnostic() {
+ const router = useRouter();
  const [isRunning, setIsRunning] = useState(false);
  const [results, setResults] = useState<DiagnosticResult[]>([]);
  const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -381,13 +383,13 @@ export function ATSUploadDiagnostic() {
  </p>
  <div className="flex gap-3">
  <Button
- onClick={() => window.location.href = '/?screen=functional-ats'}
+ onClick={() => router.push('/?screen=recruiter-functional-ats')}
  variant="outline"
  >
  Test Functional ATS Scanner
  </Button>
  <Button
- onClick={() => window.location.href = '/?screen=accuracy-first-ats'}
+ onClick={() => router.push('/?screen=recruiter-accuracy-first-ats')}
  variant="outline"
  >
  Test Accuracy-First ATS Scanner
@@ -398,8 +400,8 @@ export function ATSUploadDiagnostic() {
  <strong>Quick Access URLs:</strong>
  </p>
  <ul className="text-xs text-blue-700 mt-1 space-y-1">
- <li> Functional ATS Scanner: <code>/?screen=functional-ats</code></li>
- <li> Accuracy-First Scanner: <code>/?screen=accuracy-first-ats</code></li>
+ <li> Functional ATS Scanner: <code>/?screen=recruiter-functional-ats</code></li>
+ <li> Accuracy-First Scanner: <code>/?screen=recruiter-accuracy-first-ats</code></li>
  <li> Upload Diagnostic: <code>/?diagnostic=ats</code></li>
  </ul>
  </div>

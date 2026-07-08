@@ -26,7 +26,6 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [isSaving, setIsSaving] = useState(false);
-  const [profileId, setProfileId] = useState<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [profileCompleteness, setProfileCompleteness] = useState(0);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -55,20 +54,10 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
       if (!currentAuthId) return;
 
       setAuthUserId(currentAuthId);
-      const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('id')
-        .or(`auth_user_id.eq.${currentAuthId},id.eq.${currentAuthId}`)
-        .maybeSingle();
-
-      setProfileId(profileRow?.id || null);
-      const candidateIds = [profileRow?.id, currentAuthId].filter(Boolean) as string[];
       const { data: candidateProfile } = await supabase
         .from('candidate_profiles')
         .select('profile_completed, profile_completeness, resume_url')
-        .in('user_id', candidateIds)
-        .order('updated_at', { ascending: false })
-        .limit(1)
+        .eq('user_id', currentAuthId)
         .maybeSingle();
 
       if (candidateProfile) {
@@ -92,7 +81,7 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
   };
 
   const handleProfileVisibilityChange = async (checked: boolean) => {
-    if (!profileId || !authUserId) {
+    if (!authUserId) {
       toast.error('Profile not loaded yet.');
       return;
     }
@@ -103,7 +92,7 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
       const { error } = await supabase
         .from('candidate_profiles')
         .update({ profile_completed: checked, updated_at: new Date().toISOString() })
-        .in('user_id', [profileId, authUserId]);
+        .eq('user_id', authUserId);
 
       if (error) throw error;
       setProfileVisible(checked);
@@ -254,7 +243,7 @@ export function CandidateSettings({ onBack }: CandidateSettingsProps) {
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6">
-            <BillingSettingsCard profileId={profileId} userEmail={user?.email} />
+            <BillingSettingsCard userId={authUserId} userEmail={user?.email} />
           </TabsContent>
 
           <TabsContent value="privacy" className="space-y-6">

@@ -6,6 +6,7 @@ import { User } from '../components/AuthProvider';
 interface ScreenNavigationOptions {
  replace?: boolean;
  skipScroll?: boolean;
+ candidateId?: string | null;
 }
 
 interface UseAppNavigationProps {
@@ -153,13 +154,7 @@ export const useAppNavigation = ({
   const navigateToATS = useCallback((application?: Application) => {
     if (!requireAuth('access the ATS', 'recruiter')) return;
     setSelectedApplication(application || null);
-    setCurrentScreen('recruiter-ats');
-    // Clear candidateId from URL when leaving candidate detail
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('candidateId');
-      window.history.replaceState(window.history.state || {}, '', `${url.pathname}${url.search}${url.hash}`);
-    }
+    setCurrentScreen('recruiter-ats', { candidateId: null });
   }, [requireAuth, setSelectedApplication, setCurrentScreen]);
 
  const navigateToResumeBuilder = useCallback(() => {
@@ -327,14 +322,7 @@ export const useAppNavigation = ({
       console.warn('Failed to persist candidate to sessionStorage:', e);
     }
     setSelectedCandidate(candidate);
-    setCurrentScreen('recruiter-candidate-detail');
-    // Update URL with candidateId
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('screen', 'recruiter-candidate-detail');
-      url.searchParams.set('candidateId', candidate.id);
-      window.history.replaceState(window.history.state || {}, '', `${url.pathname}${url.search}${url.hash}`);
-    }
+    setCurrentScreen('recruiter-candidate-detail', { candidateId: candidate.id });
   }, [requireAuth, setSelectedCandidate, setCurrentScreen]);
 
  const navigateToExperienceBuilder = useCallback(() => {

@@ -36,7 +36,7 @@ import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import type { Job } from '../types/app';
-import { applicationsService } from '../services/applicationsService';
+import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
 
 interface CandidateJobApplyProps {
   job: Job;
@@ -75,6 +75,8 @@ interface CandidateExtras {
   github_url: string | null;
   linkedin_url: string | null;
   availability: string | null;
+  profile_completeness: number | null;
+  profile_completed?: boolean | null;
 }
 
 type Step = 'edit' | 'review' | 'success';
@@ -153,18 +155,12 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
         if (cancelled) return;
         setProfile(profileRow ?? null);
 
-        // 2) candidate_profiles row - user_id in candidate_profiles references profiles.id
-        // So we need to try BOTH profileRow.id AND user.id (auth.users.id)
-        // Some profiles have id = auth.users.id, others have separate IDs
-        const candidateProfileUserIds = Array.from(new Set([profileRow?.id, user.id].filter(Boolean)));
         const { data: extrasRow } = await supabase
           .from('candidate_profiles')
           .select(
-            'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability',
+            'headline, years_of_experience, skills, resume_url, portfolio_url, github_url, linkedin_url, availability, profile_completeness, profile_completed',
           )
-          .in('user_id', candidateProfileUserIds)
-          .order('updated_at', { ascending: false })
-          .limit(1)
+          .eq('user_id', user.id)
           .maybeSingle<CandidateExtras>();
         if (!cancelled) setExtras(extrasRow ?? null);
       } catch (err) {
@@ -206,8 +202,17 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       toast.error('Please sign in to apply.');
       return;
     }
-    if (!profile?.id) {
-      toast.error('Could not load your profile. Please refresh and try again.');
+    if (!profile) {
+      toast.error('Could not load your account profile. Please refresh and try again.');
+      return;
+    }
+    const profileCompleteness = Number(extras?.profile_completeness || 0);
+    const hasCompletedProfile =
+      Boolean(extras?.profile_completed) ||
+      profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+
+    if (!hasCompletedProfile) {
+      toast.error('Complete all required candidate profile fields before applying.');
       return;
     }
     if (coverLetter.length > MAX_COVER_LETTER) {
@@ -221,7 +226,8 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       hasOptimizedCv: !!optimizedCv,
       hasExtras: !!extras,
       extrasResumeUrl: extras?.resume_url,
-      profileId: profile?.id,
+      candidateId: user.id,
+      profileCompleteness: extras?.profile_completeness,
     });
     
     if (!cvFile && !optimizedCv && !extras?.resume_url) {
@@ -273,13 +279,6 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
         cvFileName = extras.resume_url.split('/').pop()?.replace(/^\d+_/, '') || 'Profile CV';
       }
 
-      // Validate profile.id exists before submitting
-      if (!profile?.id) {
-        toast.error('Could not identify your profile. Please refresh the page and try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
       // Debug: log what's being submitted
       console.log('[Apply Debug] Submitting with:', {
         jobId: job.id,
@@ -319,10 +318,9 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
   
 
     const handleReplaceCv = async () => {
-      if (!optimizedCv || !profile?.id) return;
+      if (!optimizedCv || !user?.id) return;
       setIsReplacingCv(true);
       try {
-        const candidateProfileUserIds = Array.from(new Set([profile.id, user?.id].filter(Boolean))) as string[];
         const { error } = await supabase
           .from('candidate_profiles')
           .update({
@@ -330,7 +328,7 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
             resume_verified: true,
             updated_at: new Date().toISOString(),
           })
-          .in('user_id', candidateProfileUserIds);
+          .eq('user_id', user.id);
 
         if (error) throw error;
         setExtras((current) => current ? { ...current, resume_url: optimizedCv.path } : current);
@@ -637,7 +635,7 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
               <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isSubmitting || !profile?.id}
+                disabled={isSubmitting || !user?.id}
                 className="mt-4 w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
               >
                 {isSubmitting ? (
@@ -806,7 +804,12 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
             <Button
               type="button"
               onClick={() => setStep('review')}
-              disabled={isProfileLoading || !profile?.id}
+              disabled={
+                isProfileLoading ||
+                !profile ||
+                !extras ||
+                (!extras.profile_completed && Number(extras.profile_completeness || 0) < MIN_CANDIDATE_PROFILE_COMPLETENESS)
+              }
               className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
             >
               Continue to review
@@ -821,9 +824,9 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
             >
               Cancel
             </Button>
-            {!profile?.id && !isProfileLoading && (
+            {(!profile || !extras || (!extras.profile_completed && Number(extras.profile_completeness || 0) < MIN_CANDIDATE_PROFILE_COMPLETENESS)) && !isProfileLoading && (
               <p className="text-center text-xs text-amber-700">
-                We couldn't find your profile. Try refreshing the page.
+                Complete all required candidate profile fields before applying.
               </p>
             )}
           </div>

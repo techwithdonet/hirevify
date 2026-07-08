@@ -20,6 +20,7 @@ interface MessagingCenterProps {
 export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversationId }: MessagingCenterProps) {
   const { user } = useAuth();
   const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+  const [currentParticipantIds, setCurrentParticipantIds] = useState<string[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,13 +45,14 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
     );
   }, [conversations, searchTerm]);
 
-  // Resolve the auth user to a profiles.id once â€” every conversation/message
-  // FK and "is this mine" check downstream depends on this, not the auth uid.
   useEffect(() => {
     if (!user) return;
     CommunicationsAPI.getCurrentProfileId()
       .then(setCurrentProfileId)
       .catch((error) => console.error('Failed to resolve current profile:', error));
+    CommunicationsAPI.getCurrentParticipantAliases()
+      .then(setCurrentParticipantIds)
+      .catch((error) => console.error('Failed to resolve chat participant aliases:', error));
   }, [user?.id]);
 
   const loadConversations = async () => {
@@ -125,14 +127,14 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
     if (!selectedConversation || !currentProfileId) return;
 
     const unsubscribe = CommunicationsAPI.subscribeToMessages(selectedConversation.id, (message) => {
-      if (message.senderId === currentProfileId) return;
+      if (currentParticipantIds.includes(message.senderId)) return;
 
       setMessages((current) => (current.some((m) => m.id === message.id) ? current : [...current, message]));
       CommunicationsAPI.markConversationAsRead(selectedConversation.id).catch(() => {});
     });
 
     return unsubscribe;
-  }, [selectedConversation?.id, currentProfileId]);
+  }, [selectedConversation?.id, currentProfileId, currentParticipantIds]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -347,7 +349,7 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
                 ) : (
                   <div className="space-y-4">
                     {messages.map((message) => {
-                      const mine = message.senderId === currentProfileId;
+                      const mine = currentParticipantIds.includes(message.senderId);
 
                       return (
                         <div key={message.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>

@@ -24,6 +24,7 @@ import { Input } from './ui/input';
 import { useAuth } from './AuthProvider';
 import { savedJobsService } from '../services/savedJobsService';
 import { profilesService } from '../services/profilesService';
+import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { toast } from 'sonner';
 import type { Job } from '../types/app';
@@ -63,12 +64,13 @@ export function CandidateSavedJobs({ onBack, onViewJob, onBrowseJobs }: Candidat
   const checkProfileForJobSearch = () => {
     const completeness = Number(candidateProfile?.profile_completeness || 0);
     const hasResume = Boolean(candidateProfile?.resume_url);
-    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
+    const isProfileComplete =
+      Boolean(candidateProfile?.profile_completed) || completeness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
     
     if (!isProfileComplete || !hasResume) {
       const missing: string[] = [];
       if (!hasResume) missing.push('upload a CV');
-      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
+      if (!isProfileComplete) missing.push(`complete all required profile fields (${completeness}% done)`);
       
       toast.error(
         `Please ${missing.join(' and ')} before finding jobs and applying.`,

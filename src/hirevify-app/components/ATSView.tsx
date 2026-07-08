@@ -1064,7 +1064,7 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
       </header>
 
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+        <DialogContent className="ats-candidate-profile-dialog max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           {selectedCandidateProfile && (
             <>
               <DialogHeader>

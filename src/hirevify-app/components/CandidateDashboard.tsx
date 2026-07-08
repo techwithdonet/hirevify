@@ -1,46 +1,43 @@
-﻿import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Bell,
-  MessageCircle,
-  Settings,
-  LogOut,
-  Search,
-  User,
-  FileText,
+  ArrowRight,
   Award,
-  Users,
+  Bell,
+  BookOpen,
+  Brain,
+  Briefcase,
+  CheckCircle,
+  ChevronRight,
+  Crown,
+  DollarSign,
+  FileText,
+  Lightbulb,
+  LogOut,
+  MapPin,
+  MessageCircle,
+  Rocket,
+  Search,
+  Send,
+  Settings,
+  Sparkles,
   Target,
   Timer,
-  BookOpen,
-  ArrowRight,
-  Crown,
-  CheckCircle,
-  Brain,
-  Sparkles,
-  Briefcase,
-  MapPin,
-  DollarSign,
   TrendingUp,
-  ChevronRight,
-  Rocket,
-  Lightbulb,
+  User,
+  Users,
   Zap,
   Bookmark,
-  Send,
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
-import { Badge } from './ui/badge';
 import { useAuth } from './AuthProvider';
 import { supabase } from '@/src/lib/supabase';
 import { HireVifyLogo } from './HireVifyLogo';
 import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsService';
 import { profilesService } from '@/src/hirevify-app/services/profilesService';
-import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
+import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '@/src/hirevify-app/services/applicationsService';
 import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
 import { jobsService } from '@/src/hirevify-app/services/jobsService';
-import { usePremiumAccess } from '../utils/premium';
 import { useConversations } from '../hooks/useConversations';
 import { useNotifications } from '../hooks/useNotifications';
 import { toast } from 'sonner';
@@ -97,23 +94,20 @@ export function CandidateDashboard({
   onSkillsDevelopmentAI,
   onMarketIntelligence,
   unreadNotifications,
-  unreadMessages
+  unreadMessages,
 }: CandidateDashboardProps) {
   const { user } = useAuth();
-  const { checkAccess } = usePremiumAccess();
   const { conversations: messageConversations } = useConversations();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
+  void onProjectChallengeVideo;
+  void unreadNotifications;
+  void unreadMessages;
+
   const totalUnreadMessages = messageConversations.reduce(
     (sum, conversation) => sum + (conversation.unreadCount || 0),
     0
   );
-  void checkAccess;
-  void onVideoInterview;
-  void onViewInterviews;
-  void onProjectChallengeVideo;
-  void onMarketIntelligence;
-  void unreadNotifications;
-  void unreadMessages;
+
   const [subscription, setSubscription] = useState<any>(null);
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
@@ -121,26 +115,25 @@ export function CandidateDashboard({
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [publishedJobsCount, setPublishedJobsCount] = useState<number>(0);
 
-  // Check profile completeness before allowing job search/apply
   const checkProfileForJobSearch = () => {
     const completeness = Number(candidateProfile?.profile_completeness || 0);
     const hasResume = Boolean(candidateProfile?.resume_url);
-    const isProfileComplete = Boolean(candidateProfile?.profile_completed) || completeness >= 60;
-    
-    // Show warning if profile is incomplete or CV is missing
+    const isProfileComplete =
+      Boolean(candidateProfile?.profile_completed) || completeness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+
     if (!isProfileComplete || !hasResume) {
       const missing: string[] = [];
       if (!hasResume) missing.push('upload a CV');
-      if (!isProfileComplete) missing.push(`complete your profile (${completeness}% done)`);
-      
+      if (!isProfileComplete) missing.push(`complete all required profile fields (${completeness}% done)`);
+
       toast.error(
         `Please ${missing.join(' and ')} before finding jobs and applying.`,
-        { 
+        {
           action: {
             label: 'Complete Profile',
-            onClick: onEditProfile
+            onClick: onEditProfile,
           },
-          duration: 8000
+          duration: 8000,
         }
       );
       return false;
@@ -148,54 +141,43 @@ export function CandidateDashboard({
     return true;
   };
 
-  // Wrapper for onSearchProjects with profile check
   const handleSearchProjects = () => {
     if (checkProfileForJobSearch()) {
       onSearchProjects();
     }
   };
 
-  // Load all candidate data from Supabase
   useEffect(() => {
     const loadCandidateData = async () => {
       if (!user?.id) return;
 
       try {
-        // Load subscription
         const subData = await subscriptionsService.getUserSubscription(user.id);
-        if (subData.data) {
-          setSubscription(subData.data);
-        } else {
-          // Default free tier if no subscription
-          setSubscription({ tier: 'free', isActive: false });
-        }
+        setSubscription(subData.data || { tier: 'free', isActive: false });
 
-        // Load candidate profile
         const profileData = await profilesService.getCandidateProfile(user.id);
         if (profileData.data) {
           setCandidateProfile(profileData.data);
         }
 
-        // Load applications — use auth.users.id since that's what's stored as candidate_id
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
         const appData = await applicationsService.getCandidateApplications(user.id, authUser?.id);
         if (appData.data) {
           setApplications(appData.data);
         }
 
-        // Load portfolio
         const portfolioData = await portfolioService.getUserPortfolio(user.id);
         if (portfolioData.data) {
           setPortfolio(portfolioData.data);
         }
 
-        // Load saved jobs
         const savedData = await savedJobsService.getCandidateSavedJobs(user.id);
         if (savedData.data) {
           setSavedJobs(savedData.data);
         }
 
-        // Load published jobs count for the Find Jobs hero CTA
         try {
           const { count } = await jobsService.getPublishedJobs({ limit: 1 });
           setPublishedJobsCount(count || 0);
@@ -211,427 +193,285 @@ export function CandidateDashboard({
     loadCandidateData();
   }, [user?.id]);
 
+  const candidateName = user?.name?.split(' ')[0] || 'Candidate';
+  const planName = subscription?.tier
+    ? subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)
+    : 'Free';
   const candidateProfileCompleteness = Number(candidateProfile?.profile_completeness || 0);
+  const visibleProgress = Math.min(candidateProfileCompleteness, 100);
   const isCandidateProfileComplete =
-    Boolean(candidateProfile?.profile_completed) || candidateProfileCompleteness >= 60;
+    Boolean(candidateProfile?.profile_completed) ||
+    candidateProfileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+
+  const metrics = [
+    { label: 'Applied', value: applications.length, icon: FileText, action: onViewAppliedJobs, tone: 'tone-mint' },
+    { label: 'Portfolio', value: portfolio.length, icon: Award, action: onViewPortfolio, tone: 'tone-blue' },
+    { label: 'Saved', value: savedJobs.length, icon: Bookmark, action: onViewSavedJobs, tone: 'tone-violet' },
+    { label: 'Plan', value: planName, icon: Crown, action: subscription?.isActive ? undefined : onUpgrade, tone: 'tone-amber' },
+  ];
+
+  const workbenchActions = [
+    { label: 'Find jobs', meta: `${publishedJobsCount} live roles`, icon: Search, action: handleSearchProjects, tone: 'tone-ink' },
+    { label: 'Knowledge test', meta: 'Skill proof', icon: Award, action: onTakeKnowledgeAssessment, tone: 'tone-mint' },
+    { label: 'Resume studio', meta: 'CV builder', icon: FileText, action: onBuildResume, tone: 'tone-blue' },
+    { label: 'Portfolio', meta: 'Work samples', icon: Sparkles, action: onViewPortfolio, tone: 'tone-violet' },
+    { label: 'Mock interview', meta: 'Practice run', icon: Send, action: onVideoInterview, tone: 'tone-coral' },
+    { label: 'Interview coach', meta: 'Prep notes', icon: Brain, action: onAIInterviewCoach, tone: 'tone-amber' },
+  ];
+
+  const growthPaths = [
+    { label: 'Experience Builder', meta: '1-2 week projects', icon: Target, action: onExperienceBuilder, tone: 'tone-mint' },
+    { label: 'Micro-Internships', meta: '1-5 day projects', icon: Timer, action: onMicroInternships, tone: 'tone-blue' },
+    { label: 'Mentorship', meta: 'Expert guidance', icon: Users, action: onMentorshipProgram, tone: 'tone-coral' },
+    { label: 'Career Switch', meta: 'Structured track', icon: BookOpen, action: onCareerSwitcherTrack, tone: 'tone-violet' },
+  ];
+
+  const sideLinks = [
+    { label: 'Applied jobs', icon: Briefcase, action: onViewAppliedJobs },
+    { label: 'Saved jobs', icon: Bookmark, action: onViewSavedJobs },
+    { label: 'Interviews', icon: User, action: onViewInterviews },
+    { label: 'Skills lab', icon: TrendingUp, action: onSkillsDevelopmentAI },
+    { label: 'Market pulse', icon: Lightbulb, action: onMarketIntelligence },
+  ];
 
   return (
-    <div className="premium-page">
-      {/* Premium Header */}
-      <header className="premium-header">
-        <div className="premium-header-inner">
-          {/* Logo and Title */}
-          <div className="flex min-w-0 items-center gap-4">
+    <div className="candidate-workbench">
+      <header className="candidate-workbench-header">
+        <div className="candidate-workbench-header-inner">
+          <div className="candidate-brand-lockup">
             <HireVifyLogo size="md" />
-            <div className="min-w-0">
-              <p className="premium-eyebrow text-emerald-600">Candidate workspace</p>
-              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
-                Welcome, {user?.name?.split(' ')[0] || 'Candidate'}
-              </h1>
+            <div>
+              <p className="candidate-small-label">Candidate workspace</p>
+              <h1>{candidateName}'s desk</h1>
             </div>
           </div>
-          
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Premium Status */}
-            {subscription && subscription.isActive ? (
-              <Badge className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700 md:flex">
-                <Crown className="h-3.5 w-3.5" />
-                {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
-              </Badge>
-            ) : (
-              <Button onClick={onUpgrade} className="hidden items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-slate-800 md:flex">
+
+          <div className="candidate-header-actions">
+            {subscription?.isActive ? (
+              <span className="candidate-plan-pill">
                 <Crown className="h-4 w-4" />
-                Upgrade to Pro
+                {planName}
+              </span>
+            ) : (
+              <Button onClick={onUpgrade} className="candidate-upgrade-button">
+                <Crown className="h-4 w-4" />
+                Upgrade
               </Button>
             )}
-            
-            {/* Icon Buttons */}
-            <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onViewMessages} 
-                className="premium-btn-icon-ghost relative"
-              >
+
+            <div className="candidate-icon-cluster" aria-label="Workspace actions">
+              <button type="button" onClick={onViewMessages} className="candidate-icon-button" aria-label="Messages">
                 <MessageCircle className="h-5 w-5" />
                 {totalUnreadMessages > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {totalUnreadMessages > 9? '9+': totalUnreadMessages}
-                  </span>
+                  <span>{totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}</span>
                 )}
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onViewNotifications} 
-                className="premium-btn-icon-ghost relative"
-              >
+              </button>
+              <button type="button" onClick={onViewNotifications} className="candidate-icon-button" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {unreadNotificationsCount > 9? '9+': unreadNotificationsCount}
-                  </span>
+                  <span>{unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}</span>
                 )}
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onViewSettings} 
-                className="premium-btn-icon-ghost"
-              >
+              </button>
+              <button type="button" onClick={onViewSettings} className="candidate-icon-button" aria-label="Settings">
                 <Settings className="h-5 w-5" />
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onLogout} 
-                className="premium-btn-icon-ghost hover:text-red-600"
-              >
+              </button>
+              <button type="button" onClick={onLogout} className="candidate-icon-button danger" aria-label="Log out">
                 <LogOut className="h-5 w-5" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="premium-content">
-        {/* Profile Completion Hero */}
-        <section className="mb-6 premium-card">
-          <div className="p-5 sm:p-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className={cn(
-                "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors",
-                isCandidateProfileComplete 
-                  ? 'bg-emerald-100 text-emerald-600' 
-                  : 'bg-amber-100 text-amber-600'
-              )}>
-                {isCandidateProfileComplete ? (
-                  <CheckCircle className="h-7 w-7" />
-                ) : (
-                  <User className="h-7 w-7" />
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <Badge className={isCandidateProfileComplete ? 'premium-badge-success' : 'premium-badge-warning'}>
-                    {candidateProfileCompleteness}% complete
-                  </Badge>
-                  <Badge className="premium-badge-default">
-                    Recruiter visibility
-                  </Badge>
-                </div>
-
-                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-                  {isCandidateProfileComplete ? 'Your profile is ready' : 'Complete your candidate profile'}
-                </h2>
-
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                  {isCandidateProfileComplete 
-                    ? 'Recruiters can now discover your profile. Keep it updated for better matches.'
-                    : 'Add skills, experience, and portfolio details so recruiters can find you.'
-                  }
-                </p>
-
-                <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-                    style={{ width: `${Math.min(candidateProfileCompleteness, 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-5 sm:w-64">
-                <p className="text-sm font-semibold text-slate-900">Next step</p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {isCandidateProfileComplete 
-                    ? 'Review your details before applying to new projects.'
-                    : 'Finish the missing fields to improve matching quality.'
-                  }
-                </p>
-                <Button 
-                  onClick={onEditProfile} 
-                  className="mt-4 w-full premium-btn-primary"
-                >
-                  {isCandidateProfileComplete ? 'View / Edit Profile' : 'Complete Profile'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+      <main className="candidate-workbench-main">
+        <section className="candidate-command-board">
+          <div className="candidate-profile-story">
+            <div className={cn('candidate-profile-mark', isCandidateProfileComplete ? 'is-ready' : 'is-open')}>
+              {isCandidateProfileComplete ? <CheckCircle className="h-7 w-7" /> : <User className="h-7 w-7" />}
             </div>
-          </div>
-        </section>
-
-        {/* Quick Stats */}
-        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {[
-            { label: 'Applied Jobs', value: applications.length, icon: FileText, color: 'bg-emerald-50 text-emerald-600', action: onViewAppliedJobs },
-            { label: 'Portfolio Items', value: portfolio.length, icon: Award, color: 'bg-blue-50 text-blue-600' },
-            { label: 'Saved Jobs', value: savedJobs.length, icon: Bookmark, color: 'bg-violet-50 text-violet-600', action: onViewSavedJobs },
-            { label: 'Subscription', value: (subscription?.tier || 'free').charAt(0).toUpperCase() + (subscription?.tier || 'free').slice(1), icon: Crown, color: 'bg-amber-50 text-amber-600' },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.label}
-                onClick={item.action}
-                className={cn(
-                  "premium-stat-card",
-                  item.action && "cursor-pointer"
-                )}
-              >
-                <div className="mb-3">
-                  <span className={cn('inline-flex h-10 w-10 items-center justify-center rounded-xl', item.color)}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                </div>
-                <p className="premium-stat-label">{item.label}</p>
-                <p className="premium-stat-value">{item.value}</p>
+            <div className="candidate-profile-copy">
+              <div className="candidate-status-line">
+                <span>{visibleProgress}% complete</span>
+                <span>{isCandidateProfileComplete ? 'Visible to recruiters' : 'Hidden until complete'}</span>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Find Jobs Hero CTA */}
-        <section
-          onClick={handleSearchProjects}
-          className="group relative mb-6 cursor-pointer overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-6 text-white shadow-lg transition-shadow hover:shadow-xl sm:p-8"
-        >
-          {/* Decorative glow */}
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-12 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl" />
-
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-emerald-200 backdrop-blur-sm">
-                <Sparkles className="h-3.5 w-3.5" />
-                Featured
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Find Your Next Opportunity
-              </h2>
-              <p className="mt-3 text-base text-white/80 sm:text-lg">
-                Browse open roles from real companies, see attached projects, and apply in one click.
+              <h2>{isCandidateProfileComplete ? 'Profile ready for recruiters' : 'Finish the required profile details'}</h2>
+              <p>
+                {isCandidateProfileComplete
+                  ? 'Your profile can be discovered. Keep the details fresh before applying.'
+                  : 'Complete the required fields and upload your CV before job matching opens.'}
               </p>
-
-              <div className="mt-5 grid grid-cols-1 gap-2 text-sm text-white/70 sm:grid-cols-3">
-                <li className="inline-flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-emerald-300" />
-                  {publishedJobsCount} open jobs
-                </li>
-                <li className="inline-flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-emerald-300" />
-                  Remote Â· Hybrid Â· On-site
-                </li>
-                <li className="inline-flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-emerald-300" />
-                  Transparent budgets
-                </li>
+              <div className="candidate-meter" aria-label={`Profile completion ${visibleProgress}%`}>
+                <div style={{ width: `${visibleProgress}%` }} />
               </div>
             </div>
+            <button type="button" onClick={onEditProfile} className="candidate-profile-link">
+              {isCandidateProfileComplete ? 'Review profile' : 'Complete profile'}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
 
-            <div className="flex flex-col items-center gap-4 lg:items-end">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm transition-transform group-hover:scale-105 group-hover:bg-white/25">
-                <Search className="h-7 w-7" />
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-colors group-hover:bg-emerald-50">
-                Browse all jobs
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </div>
-            </div>
+          <div className="candidate-metric-strip">
+            {metrics.map((item) => {
+              const Icon = item.icon;
+              const content = (
+                <>
+                  <span className={cn('candidate-tone-dot', item.tone)}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span>
+                    <strong>{item.value}</strong>
+                    <small>{item.label}</small>
+                  </span>
+                </>
+              );
+
+              return item.action ? (
+                <button key={item.label} type="button" onClick={item.action} className="candidate-metric-item">
+                  {content}
+                </button>
+              ) : (
+                <div key={item.label} className="candidate-metric-item">
+                  {content}
+                </div>
+              );
+            })}
           </div>
         </section>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          {/* Left Column - Main Tools */}
-          <div className="space-y-6">
-            {/* Essential Tools */}
-            <section className="premium-card">
-              <div className="premium-card-header">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="premium-eyebrow text-emerald-600">Start here</p>
-                    <h2 className="premium-card-title mt-1">Essential Tools</h2>
-                  </div>
-                  <p className="max-w-md text-sm text-slate-500">Build credibility and prepare better for opportunities.</p>
-                </div>
+        <div className="candidate-workbench-layout">
+          <div className="candidate-workbench-primary">
+            <button type="button" onClick={handleSearchProjects} className="candidate-job-strip">
+              <span className="candidate-job-icon">
+                <Search className="h-6 w-6" />
+              </span>
+              <span className="candidate-job-copy">
+                <span className="candidate-small-label">Open roles</span>
+                <strong>Find your next opportunity</strong>
+                <span>
+                  <Briefcase className="h-4 w-4" />
+                  {publishedJobsCount} live jobs
+                  <MapPin className="h-4 w-4" />
+                  Remote, hybrid, onsite
+                  <DollarSign className="h-4 w-4" />
+                  Clear budgets
+                </span>
+              </span>
+              <span className="candidate-job-cta">
+                Browse jobs
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </button>
+
+            <section className="candidate-section">
+              <div className="candidate-section-heading">
+                <span>Workbench</span>
+                <h2>Tools you actually use</h2>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: 'Knowledge Assessment', description: 'Verify your skills', icon: Award, color: 'bg-emerald-50 text-emerald-600', action: onTakeKnowledgeAssessment },
-                    { label: 'AI Resume Builder', description: 'Create your resume', icon: Brain, color: 'bg-blue-50 text-blue-600', action: onBuildResume },
-                    { label: 'Portfolio', description: 'Showcase your work', icon: Sparkles, color: 'bg-violet-50 text-violet-600', action: onViewPortfolio },
-                    { label: 'Find Jobs', description: 'Browse opportunities', icon: Search, color: 'bg-amber-50 text-amber-600', action: handleSearchProjects },
-                  ].map((tool) => {
-                    const Icon = tool.icon;
-                    return (
-                      <button
-                        key={tool.label}
-                        onClick={tool.action}
-                        className="group relative rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-emerald-300 hover:shadow-md"
-                      >
-                        <div className="mb-3 flex items-start justify-between">
-                          <span className={cn('inline-flex h-11 w-11 items-center justify-center rounded-xl transition-colors', tool.color, 'group-hover:bg-slate-900 group-hover:text-white')}>
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <ArrowRight className="h-5 w-5 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
-                        </div>
-                        <h3 className="font-semibold text-slate-900">{tool.label}</h3>
-                        <p className="mt-1 text-sm text-slate-500">{tool.description}</p>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="candidate-action-grid">
+                {workbenchActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button key={action.label} type="button" onClick={action.action} className="candidate-action-row">
+                      <span className={cn('candidate-tone-dot', action.tone)}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <strong>{action.label}</strong>
+                        <small>{action.meta}</small>
+                      </span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
-            {/* Career Growth */}
-            <section className="premium-card">
-              <div className="premium-card-header">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="premium-eyebrow text-violet-600">Growth plan</p>
-                    <h2 className="premium-card-title mt-1">Career Growth Paths</h2>
-                  </div>
-                  <p className="max-w-md text-sm text-slate-500">Choose a guided path to build real experience.</p>
-                </div>
+            <section className="candidate-section">
+              <div className="candidate-section-heading">
+                <span>Growth paths</span>
+                <h2>Build proof, not just a profile</h2>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {[
-                    { title: 'Experience Builder', description: '1-2 week projects', icon: Target, color: 'bg-emerald-50 text-emerald-600', action: onExperienceBuilder },
-                    { title: 'Micro-Internships', description: '1-5 day projects', icon: Timer, color: 'bg-blue-50 text-blue-600', action: onMicroInternships },
-                    { title: 'Mentorship', description: 'Expert guidance', icon: Users, color: 'bg-amber-50 text-amber-600', action: onMentorshipProgram },
-                    { title: 'Career Switch', description: 'Structured learning', icon: BookOpen, color: 'bg-violet-50 text-violet-600', action: onCareerSwitcherTrack },
-                  ].map((path) => {
-                    const Icon = path.icon;
-                    return (
-                      <button
-                        key={path.title}
-                        onClick={path.action}
-                        className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-emerald-300 hover:shadow-md"
-                      >
-                        <span className={cn('inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors', path.color, 'group-hover:bg-slate-900 group-hover:text-white')}>
-                          <Icon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-slate-900">{path.title}</h4>
-                          <p className="text-sm text-slate-500">{path.description}</p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="candidate-growth-list">
+                {growthPaths.map((path) => {
+                  const Icon = path.icon;
+                  return (
+                    <button key={path.label} type="button" onClick={path.action} className="candidate-growth-row">
+                      <span className={cn('candidate-tone-dot', path.tone)}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <strong>{path.label}</strong>
+                        <small>{path.meta}</small>
+                      </span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
           </div>
 
-          {/* Right Column - Sidebar */}
-          <aside className="space-y-6">
-            {/* Premium Card */}
-            {!subscription?.isActive ? (
-              <section className="relative overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 p-6 text-white shadow-lg">
-                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-400/20 blur-2xl" />
-                <div className="relative text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                    <Crown className="h-6 w-6" />
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">Go Premium</h3>
-                  <p className="mt-2 text-sm text-white/70">Unlock advanced tools and features</p>
-                  <Button 
-                    onClick={onUpgrade} 
-                    className="mt-5 w-full rounded-xl bg-white font-bold text-emerald-900 shadow-lg hover:bg-emerald-50"
-                  >
-                    Upgrade Now
-                  </Button>
-                </div>
-              </section>
-            ) : (
-              <section className="relative overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 p-6 text-white shadow-lg">
-                <div className="relative text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                    <Crown className="h-6 w-6" />
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">{subscription?.tier?.charAt(0).toUpperCase() + subscription?.tier?.slice(1)} Plan</h3>
-                  <p className="mt-2 text-sm text-white/70">Premium features enabled</p>
-                </div>
-              </section>
-            )}
-
-            {/* Recent Applications */}
-            <section className="premium-card">
-              <div className="premium-card-header">
-                <div className="flex items-center justify-between">
-                  <h3 className="premium-card-title">Recent Applications</h3>
-                  <button
-                    type="button"
-                    onClick={onViewAppliedJobs}
-                    className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
-                  >
-                    View all â†’
-                  </button>
-                </div>
+          <aside className="candidate-workbench-rail">
+            <section className="candidate-rail-panel candidate-plan-panel">
+              <div className="candidate-plan-symbol">
+                {subscription?.isActive ? <Crown className="h-5 w-5" /> : <Rocket className="h-5 w-5" />}
               </div>
-              <div className="p-4">
-                {applications.length > 0 ? (
-                  <div className="space-y-3">
-                    {applications.slice(0, 3).map((app: any, idx: number) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={onViewAppliedJobs}
-                        className="block w-full rounded-xl border border-slate-100 bg-slate-50 p-4 text-left transition-colors hover:border-emerald-200 hover:bg-emerald-50/50"
-                      >
-                        <p className="line-clamp-1 text-sm font-semibold text-slate-900">
-                          {app.job?.title || app.job_title || app.title || 'Application submitted'}
-                        </p>
-                        <p className="mt-1 text-xs font-medium capitalize text-slate-500">
-                          Status: {app.status || 'applied'}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="premium-empty py-8">
-                    <FileText className="premium-empty-icon" />
-                    <p className="premium-empty-title">No applications yet</p>
-                    <p className="premium-empty-description">Apply to a project to see progress here.</p>
-                    <Button onClick={onViewAppliedJobs} variant="outline" className="mt-4 premium-btn-secondary">
-                      Browse jobs
-                    </Button>
-                  </div>
-                )}
+              <div>
+                <span className="candidate-small-label">{subscription?.isActive ? 'Current plan' : 'Upgrade path'}</span>
+                <h3>{subscription?.isActive ? `${planName} is active` : 'Make the workspace sharper'}</h3>
+                <p>{subscription?.isActive ? 'Premium tools are enabled.' : 'Unlock advanced preparation and matching tools.'}</p>
               </div>
+              {!subscription?.isActive && (
+                <button type="button" onClick={onUpgrade} className="candidate-rail-button">
+                  Upgrade now
+                  <Zap className="h-4 w-4" />
+                </button>
+              )}
             </section>
 
-            {/* Quick Links */}
-            <section className="premium-card">
-              <div className="premium-card-header">
-                <h3 className="premium-card-title">Quick Links</h3>
+            <section className="candidate-rail-panel">
+              <div className="candidate-rail-title">
+                <h3>Recent applications</h3>
+                <button type="button" onClick={onViewAppliedJobs}>
+                  View all
+                </button>
               </div>
-              <div className="p-4">
-                <div className="space-y-1">
-                  {[
-                    { label: 'Interview Coach', icon: Brain, action: onAIInterviewCoach },
-                    { label: 'Skills Development', icon: TrendingUp, action: onSkillsDevelopmentAI },
-                  ].map((link) => (
-                    <button
-                      key={link.label}
-                      onClick={link.action}
-                      className="group flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-emerald-700"
-                    >
-                      <span>{link.label}</span>
-                      <ChevronRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-emerald-600" />
+              {applications.length > 0 ? (
+                <div className="candidate-application-list">
+                  {applications.slice(0, 3).map((app: any, index: number) => (
+                    <button key={app.id || index} type="button" onClick={onViewAppliedJobs} className="candidate-application-row">
+                      <span>
+                        <strong>{app.job?.title || app.job_title || app.title || 'Application submitted'}</strong>
+                        <small>Status: {app.status || 'applied'}</small>
+                      </span>
+                      <ChevronRight className="h-4 w-4" />
                     </button>
                   ))}
                 </div>
+              ) : (
+                <div className="candidate-empty-note">
+                  <FileText className="h-5 w-5" />
+                  <span>No applications yet</span>
+                  <button type="button" onClick={handleSearchProjects}>Browse jobs</button>
+                </div>
+              )}
+            </section>
+
+            <section className="candidate-rail-panel">
+              <div className="candidate-rail-title">
+                <h3>Quick links</h3>
+              </div>
+              <div className="candidate-quick-list">
+                {sideLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <button key={link.label} type="button" onClick={link.action}>
+                      <Icon className="h-4 w-4" />
+                      <span>{link.label}</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  );
+                })}
               </div>
             </section>
           </aside>
@@ -640,6 +480,3 @@ export function CandidateDashboard({
     </div>
   );
 }
-
-
-

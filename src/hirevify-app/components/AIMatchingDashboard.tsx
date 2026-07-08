@@ -221,7 +221,7 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  ? await supabase
  .from('profiles')
  .select('id, auth_user_id, full_name, email, phone, location')
- .in('id', candidateIds)
+ .in('auth_user_id', candidateIds)
  : { data: [], error: null };
 
  if (candidateProfileError) {
@@ -709,3 +709,4 @@ function RuleBlock({ title, description, badge }: { title: string; description: 
  </div>
  );
 }
+

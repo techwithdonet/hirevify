@@ -124,6 +124,7 @@ interface NavigationMethods {
 interface ScreenNavigationOptions {
  replace?: boolean;
  skipScroll?: boolean;
+ candidateId?: string | null;
 }
 
 interface User {
@@ -239,7 +240,7 @@ export function AppRouter({
   onViewIntegrations={navigation.navigateToIntegrations}
   onViewInterviews={navigation.navigateToInterviews}
   onViewSettings={navigation.navigateToSettings}
-          onEditProfile={() => setCurrentScreen('recruiter-profile-editor')}
+          onEditProfile={navigation.navigateToRecruiterProfileEditor}
   onSearchCandidates={navigation.navigateToCandidateSearch}
   onViewMessages={navigation.navigateToMessages}
   onViewNotifications={navigation.navigateToNotifications}
@@ -509,7 +510,7 @@ case 'candidate-dashboard':
   onSearchProjects={navigation.navigateToProjectSearch}
   onViewInterviews={navigation.navigateToInterviews}
   onViewSettings={navigation.navigateToSettings}
-          onEditProfile={() => setCurrentScreen('candidate-profile-editor')}
+  onEditProfile={navigation.navigateToCandidateProfileEditor}
   onViewMessages={navigation.navigateToMessages}
   onViewNotifications={navigation.navigateToNotifications}
   onViewAppliedJobs={navigation.navigateToAppliedJobs}

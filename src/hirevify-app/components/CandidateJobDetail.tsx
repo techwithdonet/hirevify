@@ -9,7 +9,7 @@ import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import type { Job } from '../types/app';
-import { applicationsService } from '../services/applicationsService';
+import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
 import type { Application as ServiceApplication } from '../services/applicationsService';
 import { calculateAtsMatch, type AtsMatchResult } from '../services/atsMatchingService';
 import { extractResumeText } from '../utils/ats/resumeTextExtractor';
@@ -288,7 +288,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
       return;
     }
     // Check profile completeness - show modal if below threshold
-    if (profileCompleteness < 40) {
+    if (profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS) {
       setShowProfileIncompleteModal(true);
       return;
     }
@@ -831,7 +831,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                 />
               </div>
               <p className="mt-2 text-xs text-slate-500">
-                Minimum 40% required to apply. Add your skills, experience, and resume to increase your profile strength.
+                Complete all required profile fields to apply and become visible to recruiters.
               </p>
             </div>
             <div className="space-y-3">
@@ -981,7 +981,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
           {/* Sidebar */}
           <aside className="space-y-4">
             {/* Profile Completeness Warning */}
-            {profileCompleteness < 40 && (
+            {profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS && (
               <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-sm">
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
@@ -991,7 +991,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                     <p className="text-sm font-semibold text-slate-950">Profile too incomplete</p>
                     <p className="mt-1 text-xs text-slate-600">
                       Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
-                      Complete at least 40% to apply for jobs.
+                      Complete all required profile fields to apply for jobs.
                     </p>
                     <button
                       type="button"
@@ -1391,7 +1391,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                       Your application is in. The recruiter will review your profile and may assign the project.
                     </p>
                   </div>
-                ) : profileCompleteness < 100 ? (
+                ) : profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS ? (
                   <div className="space-y-2">
                     <Button
                       disabled
@@ -1416,9 +1416,9 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                   <Button
                     className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
                     onClick={handleApplyClick}
-                    disabled={profileCompleteness < 40 || !cvMatch || isCvBelowThreshold}
+                    disabled={profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS || !cvMatch || isCvBelowThreshold}
                   >
-                    {profileCompleteness < 40
+                    {profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS
                       ? 'Complete profile to apply'
                       : !cvMatch
                         ? 'Check CV match to apply'

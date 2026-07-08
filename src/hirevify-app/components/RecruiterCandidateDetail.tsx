@@ -210,14 +210,14 @@ export function RecruiterCandidateDetail({
       }
     >
       <div className="mx-auto max-w-6xl space-y-5">
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="relative bg-[radial-gradient(circle_at_top_left,_#0f766e_0,_#0f172a_42%,_#111827_100%)] px-5 py-6 text-white sm:px-7">
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+        <section className="overflow-hidden rounded-lg border border-violet-100 bg-white shadow-sm">
+          <div className="relative border-b border-violet-100 bg-[linear-gradient(135deg,_#8b5a88_0%,_#75517f_48%,_#5b4a73_100%)] px-5 py-6 text-white sm:px-7">
+            <div className="absolute inset-y-0 left-0 w-1 bg-emerald-300" />
             <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
-                <Avatar className="h-28 w-28 border-4 border-white/90 bg-white shadow-xl">
+                <Avatar className="h-28 w-28 border-4 border-white/95 bg-white shadow-[0_18px_36px_rgba(15,23,42,0.20)] ring-1 ring-white/30">
                   {candidate.avatar && <AvatarImage src={candidate.avatar} alt={candidate.name} />}
-                  <AvatarFallback className="bg-slate-950 text-3xl font-bold text-white">{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-white text-3xl font-bold text-violet-800">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 pb-1">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -226,34 +226,34 @@ export function RecruiterCandidateDetail({
                       {availability.label}
                     </Badge>
                     {candidate.isVerified && (
-                      <Badge className="rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-semibold text-teal-800">
+                      <Badge className="rounded-full border border-white/40 bg-white/90 px-3 py-1 text-xs font-semibold text-violet-800">
                         <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
                         Verified
                       </Badge>
                     )}
                   </div>
                   <h1 className="text-3xl font-bold text-white sm:text-4xl">{candidate.name}</h1>
-                  <p className="mt-2 text-base font-medium text-slate-200">{notProvided(displayDesignation)}</p>
-                  <p className="mt-1 text-sm text-slate-300">{displayCompany}</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-300">
+                  <p className="mt-2 text-base font-semibold text-emerald-100">{notProvided(displayDesignation)}</p>
+                  <p className="mt-1 text-sm text-violet-100">{displayCompany}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-violet-50">
                     <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-4 w-4 text-teal-200" />
+                      <MapPin className="h-4 w-4 text-emerald-200" />
                       {notProvided(displayLocation)}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Briefcase className="h-4 w-4 text-teal-200" />
+                      <Briefcase className="h-4 w-4 text-emerald-200" />
                       {displayExperience} years experience
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Home className="h-4 w-4 text-teal-200" />
+                      <Home className="h-4 w-4 text-emerald-200" />
                       {candidate.workMode || workPreference}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Globe className="h-4 w-4 text-teal-200" />
+                      <Globe className="h-4 w-4 text-emerald-200" />
                       {candidate.willingToRelocate ? 'Open to relocate' : 'No relocation preference'}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-teal-200" />
+                      <Star className="h-4 w-4 text-amber-200" />
                       {preferredRole}
                     </span>
                   </div>
@@ -268,7 +268,7 @@ export function RecruiterCandidateDetail({
                       candidate.resumeVerified ? 'Verified Resume' : '',
                       candidate.willingToRelocate ? 'Open to Relocation' : '',
                     ].filter(Boolean).map((badge) => (
-                      <span key={badge} className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/15">
+                      <span key={badge} className="rounded-full bg-white/14 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/20">
                         {badge}
                       </span>
                     ))}
@@ -276,7 +276,7 @@ export function RecruiterCandidateDetail({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/15 bg-white/10 p-2 backdrop-blur">
+              <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/20 bg-white/14 p-2 shadow-sm backdrop-blur">
                 <Metric label="Complete" value={`${candidate.profileCompleteness}%`} />
                 <Metric label="Response" value={`${candidate.responseRate}%`} />
                 <Metric label="Success" value={`${candidate.hiringSuccessRate || 0}%`} />
@@ -284,7 +284,7 @@ export function RecruiterCandidateDetail({
             </div>
           </div>
 
-          <div className="grid gap-4 border-t border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-3">
+          <div className="grid gap-4 bg-white p-4 sm:grid-cols-3">
             <QuickFact icon={Wallet} label="Expected salary" value={salary} />
             <QuickFact icon={Building2} label="Work preference" value={workPreference} />
             <QuickFact icon={Calendar} label="Last active" value={lastActive} />
@@ -311,12 +311,12 @@ export function RecruiterCandidateDetail({
               {candidate.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {candidate.skills.map((skill) => (
-                    <Badge
+                    <span
                       key={skill}
-                      className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+                      className="select-none rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-800 outline-none"
                     >
                       {skill}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               ) : (
@@ -516,17 +516,17 @@ export function RecruiterCandidateDetail({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-[86px] rounded-lg bg-white/10 px-3 py-2 text-center">
+    <div className="min-w-[86px] rounded-lg border border-white/18 bg-white/14 px-3 py-2 text-center">
       <p className="text-lg font-bold text-white">{value}</p>
-      <p className="text-[11px] font-medium uppercase text-slate-300">{label}</p>
+      <p className="text-[11px] font-semibold uppercase text-violet-100">{label}</p>
     </div>
   );
 }
 
 function QuickFact({ icon: Icon, label, value }: { icon: typeof Wallet; label: string; value: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700">
+    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-emerald-100 bg-white p-4">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0">

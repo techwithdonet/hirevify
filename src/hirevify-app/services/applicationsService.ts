@@ -1,10 +1,13 @@
-﻿/**
+/**
  * Applications Service
  * Handles all job application operations from Supabase
  */
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { calculateDeterministicAtsMatch } from './deterministicAtsService';
+import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../utils/candidateProfileValidation';
+
+export { MIN_CANDIDATE_PROFILE_COMPLETENESS };
 
 const DEFAULT_CV_BUCKETS = [
   process.env.NEXT_PUBLIC_CANDIDATE_CV_BUCKET,
@@ -79,6 +82,32 @@ class ApplicationsService {
   coverLetter?: string,
   extras?: { cvUrl?: string | null; cvFileName?: string | null; matchScore?: number | null }
   ) {
+  const { data: candidateProfile, error: candidateProfileError } = await this.supabase
+    .from('candidate_profiles')
+    .select('profile_completeness, profile_completed, resume_url')
+    .eq('user_id', candidateId)
+    .maybeSingle();
+
+  if (candidateProfileError) {
+    console.error('Error validating candidate profile before application:', candidateProfileError);
+    return { data: null, error: candidateProfileError };
+  }
+
+  const profileCompleteness = Number(candidateProfile?.profile_completeness || 0);
+  const hasCompletedProfile =
+    Boolean(candidateProfile?.profile_completed) ||
+    profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+  const hasResume = Boolean(candidateProfile?.resume_url);
+
+  if (!hasCompletedProfile || !hasResume) {
+    return {
+      data: null,
+      error: {
+        message: 'Complete all required candidate profile fields and upload your CV before applying.',
+      } as any,
+    };
+  }
+
   const submittedMatchScore = Number(extras?.matchScore);
   // Build insert payload - only include cv_file_name if we have a value
   const insertPayload: Record<string, unknown> = {
@@ -108,7 +137,7 @@ class ApplicationsService {
   return { data: null, error };
   }
 
-  // ── Calculate and save match score if the apply flow did not pass one ──
+  // -- Calculate and save match score if the apply flow did not pass one --
   if (!Number.isFinite(submittedMatchScore) || submittedMatchScore <= 0) {
   try {
     const { data: jobRow2 } = await this.supabase
@@ -118,7 +147,6 @@ class ApplicationsService {
       .maybeSingle();
 
     if (jobRow2) {
-      // Get the candidate's profile (try profiles then candidate_profiles)
       const { data: profileRow } = await this.supabase
         .from('profiles')
         .select('id, auth_user_id, full_name')
@@ -281,8 +309,8 @@ class ApplicationsService {
 
     const { data: profiles, error: profilesError } = await this.supabase
       .from('profiles')
-      .select('id, full_name, email')
-      .in('id', candidateIds);
+      .select('id, auth_user_id, full_name, email')
+      .in('auth_user_id', candidateIds);
 
     if (profilesError) {
       console.error('Error fetching application candidate profiles:', {
@@ -297,7 +325,7 @@ class ApplicationsService {
     const { data: candidateProfiles, error: detailsError } = await this.supabase
       .from('candidate_profiles')
       .select('*')
-      .in('id', candidateIds);
+      .in('user_id', candidateIds);
 
     if (detailsError) {
       console.error('Error fetching application candidate details:', {
@@ -309,8 +337,8 @@ class ApplicationsService {
       });
     }
 
-    const profileMap = new Map((profiles || []).map((profile) => [profile.id, profile]));
-    const detailsMap = new Map((candidateProfiles || []).map((profile) => [profile.id, profile]));
+    const profileMap = new Map((profiles || []).map((profile: any) => [profile.auth_user_id || profile.id, profile]));
+    const detailsMap = new Map((candidateProfiles || []).map((profile: any) => [profile.user_id, profile]));
 
     const merged = rows.map((application) => ({
       ...application,
@@ -450,7 +478,7 @@ class ApplicationsService {
   /**
    * Upload a CV file to the existing candidate file storage bucket
    * at path: resumes/<authUserId>/cv/<timestamp>_<originalName>
-   * Returns the storage path (not a public URL â€” caller must use
+   * Returns the storage path (not a public URL — caller must use
    * `getApplicationFileSignedUrl` to fetch a temporary link).
    */
   async uploadCV(authUserId: string, file: File) {
@@ -620,6 +648,7 @@ class ApplicationsService {
 }
 
 export const applicationsService = new ApplicationsService();
+
 
 
 

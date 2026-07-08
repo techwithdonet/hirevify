@@ -33,7 +33,9 @@ import { dashboardTheme } from '../theme/dashboardTheme';
 import {
   calculateCandidateProfileCompletion,
   candidateProfessionalProfileSchema,
+  MIN_CANDIDATE_PROFILE_COMPLETENESS,
 } from '../utils/candidateProfileValidation';
+import { z } from 'zod';
 
 interface CandidateProfileEditorProps {
  onBack: () => void;
@@ -214,6 +216,32 @@ const ACCEPTED_CV_TYPES = [
 const ACCEPTED_CV_EXTENSIONS = '.pdf,.doc,.docx';
 const MAX_CV_BYTES = 10 * 1024 * 1024;
 
+const normalizeOptionalUrl = (value: string) => {
+ const trimmed = value.trim();
+ if (!trimmed) return '';
+ return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const normalizeLinkedInUrl = (value: string) => {
+ const trimmed = value.trim();
+ if (!trimmed) return '';
+ if (/^https?:\/\//i.test(trimmed) || /(^|\.)linkedin\.com\//i.test(trimmed)) {
+ return normalizeOptionalUrl(trimmed);
+ }
+ const handle = trimmed.replace(/^@+/, '').replace(/^in\//i, '').replace(/^\/+/, '');
+ return handle ? `https://www.linkedin.com/in/${handle}` : '';
+};
+
+const normalizeGitHubUrl = (value: string) => {
+ const trimmed = value.trim();
+ if (!trimmed) return '';
+ if (/^https?:\/\//i.test(trimmed) || /(^|\.)github\.com\//i.test(trimmed)) {
+ return normalizeOptionalUrl(trimmed);
+ }
+ const handle = trimmed.replace(/^@+/, '').replace(/^\/+/, '');
+ return handle ? `https://github.com/${handle}` : '';
+};
+
 export function CandidateProfileEditor({ onBack }: CandidateProfileEditorProps) {
  const { user } = useAuth();
  
@@ -366,33 +394,6 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  setCvFile(file);
  };
 
- const getMissingFields = () => {
- const missing: string[] = [];
-
- if (!fullName) missing.push('Full name');
- if (!profileData.phone.trim()) missing.push('Phone number');
- if (!profileData.location.trim()) missing.push('Location');
- if (!profileData.currentTitle.trim()) missing.push('Current title / headline');
- if (!profileData.experience.trim()) missing.push('Experience level');
- if (!profileData.bio.trim()) missing.push('Short bio');
- if (skillsPreferences.skills.length < 3) missing.push('At least 3 skills');
- if (!profileData.experienceSummary.trim()) missing.push('Experience summary');
- if (skillsPreferences.workArrangement.length < 1) missing.push('Preferred work arrangement');
- if (!skillsPreferences.noticePeriod.trim()) missing.push('Availability / notice period');
- if (!skillsPreferences.timezone.trim()) missing.push('Timezone');
- 
- 
- 
-  if (!skillsPreferences.currency.trim()) missing.push('Currency');
-  if (!hasCv()) missing.push('CV file');
-  const hasValidEducation = education.some(
-    (e) => e.degree.trim() && e.fieldOfStudy.trim() && e.institution.trim() && e.startYear.trim() && e.endYear.trim()
-  );
-  if (!hasValidEducation) missing.push('At least 1 education entry');
-
-  return missing;
- };
-
  const completion = useMemo(() => {
  const calculated = calculateCandidateProfileCompletion({
  full_name: fullName,
@@ -400,10 +401,16 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  email: profileData.email,
  location: profileData.location,
  current_location: professionalData.currentLocation,
+ current_designation: professionalData.currentDesignation,
  headline: profileData.currentTitle,
  bio: profileData.bio,
  experience_summary: profileData.experienceSummary,
  skills: skillsPreferences.skills,
+ job_types: skillsPreferences.jobTypes,
+ work_arrangement: skillsPreferences.workArrangement,
+ availability: skillsPreferences.noticePeriod,
+ timezone: skillsPreferences.timezone,
+ salary_currency: skillsPreferences.currency,
  total_experience: professionalData.totalExperience,
  years_of_experience: parseCandidateExperienceYears(profileData.experience),
  experience_level: profileData.experience,
@@ -412,16 +419,17 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  linkedin_url: profileData.Link,
  languages: professionalData.languages,
  preferred_roles: professionalData.preferredRoles,
+ employment_type: professionalData.employmentType,
+ work_mode: professionalData.workMode,
+ notice_period: professionalData.noticePeriod,
  current_company: professionalData.currentCompany,
  city: professionalData.city,
  });
- const requiredMissing = getMissingFields();
- const missing = Array.from(new Set([...requiredMissing, ...calculated.missing]));
 
  return {
  percentage: calculated.percentage,
- isComplete: missing.length === 0,
- missing,
+ isComplete: calculated.percentage >= MIN_CANDIDATE_PROFILE_COMPLETENESS && calculated.isComplete,
+ missing: calculated.missing,
  checklist: calculated.checklist,
  };
   }, [profileData, skillsPreferences, cvFile, education, professionalData]);
@@ -488,6 +496,16 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
 
   if (!skillsPreferences.timezone.trim()) {
   toast.error('Select your timezone');
+  return false;
+  }
+
+  if (!skillsPreferences.currency.trim()) {
+  toast.error('Select your salary currency');
+  return false;
+  }
+
+  if (professionalData.preferredRoles.length < 1) {
+  toast.error('Add at least one preferred role');
   return false;
   }
   }
@@ -648,7 +666,9 @@ const { data: candidateProfile, error: candidateError } = await supabase
  const now = new Date().toISOString();
  let savedResumeUrl = profileData.resumeUrl.trim();
 
- const professionalPayload = candidateProfessionalProfileSchema.parse({
+ let professionalPayload;
+ try {
+ professionalPayload = candidateProfessionalProfileSchema.parse({
  current_company: professionalData.currentCompany,
  current_designation: professionalData.currentDesignation || profileData.currentTitle,
  industry: professionalData.industry,
@@ -668,11 +688,18 @@ const { data: candidateProfile, error: candidateError } = await supabase
  state: professionalData.state,
  city: professionalData.city,
  current_location: professionalData.currentLocation || profileData.location,
- linkedin_url: profileData.Link,
- github_url: profileData.GitBranch,
- portfolio_url: profileData.portfolio || profileData.website,
+ linkedin_url: normalizeLinkedInUrl(profileData.Link),
+ github_url: normalizeGitHubUrl(profileData.GitBranch),
+ portfolio_url: profileData.portfolio || profileData.website ? normalizeOptionalUrl(profileData.portfolio || profileData.website) : '',
  languages: professionalData.languages,
  });
+ } catch (error) {
+ if (error instanceof z.ZodError) {
+ const message = error.issues.map((issue) => issue.message).join(', ');
+ throw new Error(message || 'Please check your profile links.');
+ }
+ throw error;
+ }
 
  if (cvFile) {
  const upload = await applicationsService.uploadCV(authData.user.id, cvFile);
@@ -827,15 +854,13 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
     payload.years_of_experience = Number(existingProfile.years_of_experience);
   }
 
-  if (Boolean(existingProfile.profile_completed) && Number(existingProfile.profile_completeness || 0) >= 100) {
+  if (completion.isComplete && Boolean(existingProfile.profile_completed) && Number(existingProfile.profile_completeness || 0) >= 100) {
     payload.profile_completed = true;
     payload.profile_completeness = 100;
   }
 }
 
-  // Preserve already completed profile on draft save.
-  // Save Draft must not downgrade a completed 100% profile to a local partial percentage.
-  if (!markComplete && Boolean(existingProfile?.profile_completed) && Number(existingProfile?.profile_completeness || 0) >= 100) {
+  if (!markComplete && completion.isComplete && Boolean(existingProfile?.profile_completed) && Number(existingProfile?.profile_completeness || 0) >= 100) {
     payload.profile_completed = true;
     payload.profile_completeness = 100;
   }
@@ -971,7 +996,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  };
 
  const renderRequiredBadge = () => (
- <span className="ml-2 text-xs text-red-600">Required</span>
+ <span className="ml-1 text-sm font-bold text-red-600">*</span>
  );
 
  const renderStepContent = () => {
@@ -1076,7 +1101,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   {education.length === 0 && (
   <Alert>
   <AlertCircle className="h-4 w-4" />
-  <AlertDescription>No education added yet. Add your degree(s) below — this step is optional.</AlertDescription>
+  <AlertDescription>No education added yet. Add at least one completed education row.</AlertDescription>
   </Alert>
   )}
 
@@ -1094,7 +1119,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   </div>
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div>
-  <Label>Degree</Label>
+  <Label>Degree {renderRequiredBadge()}</Label>
   <Select value={entry.degree} onValueChange={(val) => {
     const updated = [...education];
     updated[index] = { ...updated[index], degree: val, fieldOfStudy: '' };
@@ -1111,7 +1136,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   </Select>
   </div>
   <div>
-  <Label>Field of Study</Label>
+  <Label>Field of Study {renderRequiredBadge()}</Label>
   <Select value={entry.fieldOfStudy} onValueChange={(val) => {
     const updated = [...education];
     updated[index] = { ...updated[index], fieldOfStudy: val };
@@ -1129,7 +1154,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   </div>
   </div>
   <div>
-  <Label>Institution / University</Label>
+  <Label>Institution / University {renderRequiredBadge()}</Label>
   <Input
   value={entry.institution}
   onChange={(e) => {
@@ -1142,7 +1167,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   </div>
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div>
-  <Label>Start Year</Label>
+  <Label>Start Year {renderRequiredBadge()}</Label>
   <Select
     value={entry.startYear}
     onValueChange={(value) => {
@@ -1163,7 +1188,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
   </Select>
   </div>
   <div>
-  <Label>End Year</Label>
+  <Label>End Year {renderRequiredBadge()}</Label>
   <Select
     value={entry.endYear}
     onValueChange={(value) => {
@@ -1506,7 +1531,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  </label>
 
  <ChipEditor
- label="Preferred Roles"
+ label={<>Preferred Roles {renderRequiredBadge()}</>}
  value={newPreferredRole}
  placeholder="Add role"
  suggestions={commonRoles}
@@ -1839,13 +1864,13 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  <div className="h-3 rounded-full bg-emerald-600 transition-all" style={{ width: ((currentStep + 1) / steps.length) * 100 + '%' }} />
  </div>
 
-  <div className="mt-4 grid grid-cols-6 gap-2">
+ <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
  {steps.map((step, index) => (
  <button
  key={step.title}
  type="button"
  onClick={() => setCurrentStep(index)}
- className={index === currentStep? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs text-white': index < currentStep? 'rounded-lg bg-emerald-100 px-3 py-2 text-xs text-emerald-800': 'rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600'}
+ className={index === currentStep? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm': index < currentStep? 'rounded-lg bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800': 'rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200'}
  >
  {index + 1}. {step.title}
  </button>
@@ -1903,7 +1928,7 @@ function ChipEditor({
  onToggleSuggestion,
  onRemove,
 }: {
- label: string;
+ label: any;
  value: string;
  placeholder: string;
  suggestions: string[];

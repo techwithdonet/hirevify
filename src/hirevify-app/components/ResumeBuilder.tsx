@@ -193,8 +193,8 @@ const [isImportingFromCv, setIsImportingFromCv] = useState(false);
  return;
  }
 
- // 2. Get candidate profile using the profile's primary ID
- const { data: candidateProfile } = await profilesService.getCandidateProfile(profile.id);
+ // 2. Get candidate profile using the candidate auth ID
+ const { data: candidateProfile } = await profilesService.getCandidateProfile(user.id);
 
  // 3. Map skills: string[] -> Skill[]
  const mappedSkills: Skill[] = (candidateProfile?.skills || []).map((name: string) => ({

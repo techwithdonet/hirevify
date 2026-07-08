@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import App from "@/src/hirevify-app/App";
 
 type PageProps = {
@@ -13,5 +14,9 @@ export default async function Home({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const screen = pickParam(params.screen);
   const candidateId = pickParam(params.candidateId);
-  return <App initialScreen={screen} initialCandidateId={candidateId} />;
+  return (
+    <Suspense fallback={null}>
+      <App initialScreen={screen} initialCandidateId={candidateId} />
+    </Suspense>
+  );
 }

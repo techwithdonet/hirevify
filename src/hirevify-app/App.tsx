@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from './components/ui/sonner';
@@ -9,17 +10,18 @@ import { useAppNavigation } from './hooks/useAppNavigation';
 import type { Application, Project, Screen, Job, JobProjectAssignment, Candidate } from './types/app';
 
 const SCREEN_STORAGE_KEY = 'hirevify_current_screen';
-const HISTORY_SCREEN_KEY = 'hirevifyScreen';
 
 export type ScreenNavigationOptions = {
  replace?: boolean;
  skipScroll?: boolean;
+ candidateId?: string | null;
 };
 
 const ALL_SCREENS: Screen[] = [
  'homepage',
  'recruiter-dashboard',
  'recruiter-post-project',
+ 'recruiter-post-job',
  'recruiter-projects',
  'recruiter-job-applicants',
  'recruiter-ats',
@@ -40,9 +42,11 @@ const ALL_SCREENS: Screen[] = [
  'recruiter-interviews',
  'recruiter-enhanced-video-interview',
  'recruiter-settings',
+ 'recruiter-profile-editor',
  'recruiter-skills-first-hiring',
   'recruiter-employer-education',
   'recruiter-application-detail',
+  'recruiter-ongoing-projects',
   'candidate-dashboard',
  'candidate-ai-resume-builder',
  'candidate-resume-builder',
@@ -55,17 +59,21 @@ const ALL_SCREENS: Screen[] = [
  'candidate-enhanced-video-interview',
   'candidate-search-projects',
 'candidate-jobs',
+ 'candidate-job-detail',
  'candidate-job-apply',
  'candidate-applied-jobs',
  'candidate-saved-jobs',
  'candidate-my-jobs',
   'candidate-interviews',
  'candidate-settings',
+ 'candidate-profile-editor',
  'candidate-experience-builder',
  'candidate-micro-internships',
  'candidate-mentorship-program',
  'candidate-career-switcher-track',
  'candidate-project-challenge-video',
+ 'candidate-project-assignment',
+ 'candidate-project-submission',
  'candidate-ats-scanner',
  'candidate-functional-ats',
  'candidate-accuracy-first-ats',
@@ -87,32 +95,33 @@ function isScreen(value: unknown): value is Screen {
  return typeof value === 'string' && ALL_SCREENS.includes(value as Screen);
 }
 
-function getUrlForScreen(screen: Screen, candidateId?: string | null) {
-  const url = new URL(window.location.href);
+function getUrlForScreen(
+  pathname: string,
+  currentSearch: string,
+  screen: Screen,
+  candidateId?: string | null,
+) {
+  const params = new URLSearchParams(currentSearch);
 
   if (screen === 'homepage') {
-    url.searchParams.delete('screen');
+    params.delete('screen');
   } else {
-    url.searchParams.set('screen', screen);
+    params.set('screen', screen);
   }
 
   if (candidateId) {
-    url.searchParams.set('candidateId', candidateId);
+    params.set('candidateId', candidateId);
   } else {
-    url.searchParams.delete('candidateId');
+    params.delete('candidateId');
   }
 
-  return `${url.pathname}${url.search}${url.hash}`;
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
-function readScreenFromLocation(): { screen: Screen | null; candidateId: string | null } {
-  if (typeof window === 'undefined') {
-    return { screen: null, candidateId: null };
-  }
-
-  const url = new URL(window.location.href);
-  const screen = url.searchParams.get('screen');
-  const candidateId = url.searchParams.get('candidateId');
+function readScreenFromSearchParams(searchParams: URLSearchParams): { screen: Screen | null; candidateId: string | null } {
+  const screen = searchParams.get('screen');
+  const candidateId = searchParams.get('candidateId');
   return { screen: isScreen(screen) ? screen : null, candidateId: candidateId || null };
 }
 
@@ -121,14 +130,9 @@ function readInitialScreen(): { screen: Screen; candidateId: string | null } {
     return { screen: 'homepage', candidateId: null };
   }
 
-  const { screen: urlScreen, candidateId } = readScreenFromLocation();
+  const { screen: urlScreen, candidateId } = readScreenFromSearchParams(new URLSearchParams(window.location.search));
   if (urlScreen) {
     return { screen: urlScreen, candidateId };
-  }
-
-  const stateScreen = window.history.state?.[HISTORY_SCREEN_KEY];
-  if (isScreen(stateScreen)) {
-    return { screen: stateScreen, candidateId };
   }
 
   const storedScreen = window.localStorage.getItem(SCREEN_STORAGE_KEY);
@@ -144,6 +148,9 @@ function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate
 }
 
 function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Screen; initialCandidateId?: string | null }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, signOut, authInitialized } = useAuth();
   const [currentScreen, setCurrentScreenState] = useState<Screen>(() => {
     return initialScreen;
@@ -173,6 +180,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   } | null>(null);
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
   const hadAuthenticatedUser = useRef(false);
+  const hasSyncedUrlScreen = useRef(false);
 
   // Save savedCandidates to localStorage
   useEffect(() => {
@@ -222,67 +230,58 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
 
  window.localStorage.setItem(SCREEN_STORAGE_KEY, screen);
 
- const state = {...(window.history.state || {}),
- [HISTORY_SCREEN_KEY]: screen,
- };
- const url = getUrlForScreen(screen);
- const currentHistoryScreen = window.history.state?.[HISTORY_SCREEN_KEY];
- const shouldReplace = Boolean(options.replace || currentHistoryScreen === screen);
+ const currentScreenParam = searchParams.get('screen');
+ const url = getUrlForScreen(pathname, searchParams.toString(), screen, options.candidateId);
+ const shouldReplace = Boolean(options.replace || currentScreenParam === screen);
 
  if (shouldReplace) {
- window.history.replaceState(state, '', url);
+ router.replace(url, { scroll: false });
  } else {
- window.history.pushState(state, '', url);
+ router.push(url, { scroll: false });
  }
 
  if (!options.skipScroll) {
  window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
  }
- }, []);
+ }, [pathname, router, searchParams]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    setCurrentScreenState(initialScreen);
-    window.localStorage.setItem(SCREEN_STORAGE_KEY, initialScreen);
-    window.history.replaceState({
-      ...(window.history.state || {}),
-      [HISTORY_SCREEN_KEY]: initialScreen,
-    }, '', getUrlForScreen(initialScreen, initialCandidateId));
-    const handlePopState = (event: PopStateEvent) => {
-      const stateScreen = event.state?.[HISTORY_SCREEN_KEY];
-      const { screen: nextScreen, candidateId: nextCandidateId } = isScreen(stateScreen)
-        ? { screen: stateScreen, candidateId: null }
-        : readScreenFromLocation();
+    const { screen: nextScreen, candidateId: nextCandidateId } = readScreenFromSearchParams(
+      new URLSearchParams(searchParams.toString()),
+    );
 
-      if (!nextScreen) {
-        setCurrentScreenState('homepage');
-        window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
+    if (!nextScreen) {
+      if (!hasSyncedUrlScreen.current) {
+        hasSyncedUrlScreen.current = true;
         return;
       }
 
-      setCurrentScreenState(nextScreen);
-      if (nextCandidateId) {
-        const stored = sessionStorage.getItem('selectedCandidate');
-        if (stored) {
-          try {
-            setSelectedCandidate(JSON.parse(stored));
-          } catch (e) {
-            console.warn('Failed to parse stored candidate:', e);
-          }
-        }
-      } else {
-        setSelectedCandidate(null);
-      }
-      window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
-      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
-    };
+      setCurrentScreenState('homepage');
+      window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
+      setSelectedCandidate(null);
+      return;
+    }
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [initialScreen, initialCandidateId]);
+    hasSyncedUrlScreen.current = true;
+    setCurrentScreenState(nextScreen);
+    if (nextCandidateId) {
+      const stored = sessionStorage.getItem('selectedCandidate');
+      if (stored) {
+        try {
+          setSelectedCandidate(JSON.parse(stored));
+        } catch (e) {
+          console.warn('Failed to parse stored candidate:', e);
+        }
+      }
+    } else {
+      setSelectedCandidate(null);
+    }
+    window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
+  }, [searchParams]);
 
  useEffect(() => {
  if (!authInitialized) {
@@ -356,8 +355,10 @@ const effectiveScreen = useMemo<Screen>(() => {
   return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
   }, [currentScreen, user, authInitialized]);
 
+   const useWorkspaceTheme = effectiveScreen !== 'homepage';
+
    return (
-   <div className="min-h-screen">
+   <div className={`min-h-screen ${useWorkspaceTheme ? 'hirevify-workspace-theme' : ''}`}>
     <AppRouter
      currentScreen={effectiveScreen}
      user={user}

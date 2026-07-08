@@ -96,6 +96,7 @@ type ConversationRow = {
 
 type ProfileRow = {
   id: string;
+  auth_user_id?: string | null;
   full_name?: string | null;
   email?: string | null;
   role?: string | null;
@@ -105,6 +106,10 @@ type ProfileRow = {
 
 function normalizeUserType(profile: ProfileRow): "recruiter" | "candidate" {
   return profile.role === "recruiter" ? "recruiter" : "candidate";
+}
+
+function uniqueClean(values: Array<string | null | undefined>) {
+  return [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
 }
 
 function mapMessage(row: MessageRow): Message {
@@ -160,7 +165,7 @@ async function getCurrentUserId(): Promise<string> {
   return data.user.id;
 }
 
-async function getCurrentProfileId(): Promise<string> {
+async function getCurrentChatUserId(): Promise<string> {
   const supabase = createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -168,59 +173,215 @@ async function getCurrentProfileId(): Promise<string> {
     throw new Error("User is not authenticated.");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", data.user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    throw new Error(profileError.message || "Failed to load current profile.");
-  }
-
-  if (!profile) {
-    throw new Error("No profile found for the current user.");
-  }
-
-  return profile.id;
+  return data.user.id;
 }
 
-async function getProfileMap(profileIds: string[]) {
+async function getParticipantAliases(id: string): Promise<string[]> {
   const supabase = createClient();
-  const uniqueIds = [...new Set(profileIds)].filter(Boolean);
+  const aliases = new Set<string>(uniqueClean([id]));
+
+  const { data: profileById } = await supabase
+    .from("profiles")
+    .select("id, auth_user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (profileById) {
+    aliases.add(profileById.id);
+    if (profileById.auth_user_id) aliases.add(profileById.auth_user_id);
+  }
+
+  const { data: profileByAuthId } = await supabase
+    .from("profiles")
+    .select("id, auth_user_id")
+    .eq("auth_user_id", id)
+    .maybeSingle();
+
+  if (profileByAuthId) {
+    aliases.add(profileByAuthId.id);
+    if (profileByAuthId.auth_user_id) aliases.add(profileByAuthId.auth_user_id);
+  }
+
+  const { data: candidateById } = await supabase
+    .from("candidate_profiles")
+    .select("id, user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (candidateById) {
+    aliases.add(candidateById.id);
+    if (candidateById.user_id) aliases.add(candidateById.user_id);
+  }
+
+  const { data: candidateByUserId } = await supabase
+    .from("candidate_profiles")
+    .select("id, user_id")
+    .eq("user_id", id)
+    .maybeSingle();
+
+  if (candidateByUserId) {
+    aliases.add(candidateByUserId.id);
+    if (candidateByUserId.user_id) aliases.add(candidateByUserId.user_id);
+  }
+
+  return [...aliases];
+}
+
+async function normalizeParticipantToAuthId(id: string): Promise<string> {
+  const supabase = createClient();
+
+  const { data: profileById } = await supabase
+    .from("profiles")
+    .select("auth_user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (profileById?.auth_user_id) {
+    return profileById.auth_user_id;
+  }
+
+  const { data: profileByAuthId } = await supabase
+    .from("profiles")
+    .select("auth_user_id")
+    .eq("auth_user_id", id)
+    .maybeSingle();
+
+  if (profileByAuthId?.auth_user_id) {
+    return profileByAuthId.auth_user_id;
+  }
+
+  const { data: candidateById } = await supabase
+    .from("candidate_profiles")
+    .select("user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (candidateById?.user_id) {
+    return candidateById.user_id;
+  }
+
+  const { data: candidateByUserId } = await supabase
+    .from("candidate_profiles")
+    .select("user_id")
+    .eq("user_id", id)
+    .maybeSingle();
+
+  if (candidateByUserId?.user_id) {
+    return candidateByUserId.user_id;
+  }
+
+  return id;
+}
+
+async function normalizeParticipantToProfileId(id: string): Promise<string | null> {
+  const supabase = createClient();
+
+  const { data: profileById } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (profileById?.id) {
+    return profileById.id;
+  }
+
+  const authId = await normalizeParticipantToAuthId(id);
+  const { data: profileByAuthId } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", authId)
+    .maybeSingle();
+
+  if (profileByAuthId?.id) {
+    return profileByAuthId.id;
+  }
+
+  return null;
+}
+
+async function getProfileMap(participantIds: string[]) {
+  const supabase = createClient();
+  const uniqueIds = uniqueClean(participantIds);
 
   if (uniqueIds.length === 0) {
     return new Map<string, Conversation["otherUser"]>();
   }
 
-  const { data, error } = await supabase
+  const [{ data: profilesById, error: profilesByIdError }, { data: profilesByAuthId, error: profilesByAuthIdError }] = await Promise.all([
+    supabase
     .from("profiles")
-    .select("id, full_name, email, role, company_name, avatar_url")
-    .in("id", uniqueIds);
+    .select("id, auth_user_id, full_name, email, role, company_name, avatar_url")
+      .in("id", uniqueIds),
+    supabase
+      .from("profiles")
+      .select("id, auth_user_id, full_name, email, role, company_name, avatar_url")
+      .in("auth_user_id", uniqueIds),
+  ]);
 
-  if (error) {
-    console.warn("Failed to load profile details:", error.message);
-    return new Map<string, Conversation["otherUser"]>();
+  if (profilesByIdError || profilesByAuthIdError) {
+    console.warn("Failed to load profile details:", profilesByIdError?.message || profilesByAuthIdError?.message);
   }
 
-  return new Map(
-    ((data || []) as ProfileRow[]).map((profile) => [
-      profile.id,
-      {
-        id: profile.id,
-        name: profile.full_name || profile.email || "User",
-        email: profile.email || "",
-        avatar: profile.avatar_url || undefined,
-        userType: normalizeUserType(profile),
-        company: profile.company_name || undefined,
-      },
-    ]),
-  );
+  const [{ data: candidatesById }, { data: candidatesByUserId }] = await Promise.all([
+    supabase
+      .from("candidate_profiles")
+      .select("id, user_id, full_name, email")
+      .in("id", uniqueIds),
+    supabase
+      .from("candidate_profiles")
+      .select("id, user_id, full_name, email")
+      .in("user_id", uniqueIds),
+  ]);
+
+  const profileMap = new Map<string, Conversation["otherUser"]>();
+  const profiles = [...(profilesById || []), ...(profilesByAuthId || [])];
+
+  for (const profile of profiles as ProfileRow[]) {
+    const canonicalId = profile.auth_user_id || profile.id;
+    const user: Conversation["otherUser"] = {
+      id: canonicalId,
+      name: profile.full_name || profile.email || "User",
+      email: profile.email || "",
+      avatar: profile.avatar_url || undefined,
+      userType: normalizeUserType(profile),
+      company: profile.company_name || undefined,
+    };
+
+    profileMap.set(profile.id, user);
+    if (profile.auth_user_id) {
+      profileMap.set(profile.auth_user_id, user);
+    }
+  }
+
+  for (const cp of [...(candidatesById || []), ...(candidatesByUserId || [])] as { id: string; user_id?: string; full_name?: string; email?: string }[]) {
+    const canonicalId = cp.user_id || cp.id;
+    if (!profileMap.has(cp.id)) {
+      const user: Conversation["otherUser"] = {
+        id: canonicalId,
+        name: cp.full_name || cp.email || "User",
+        email: cp.email || "",
+        userType: "candidate",
+      };
+
+      profileMap.set(cp.id, user);
+      if (cp.user_id) {
+        profileMap.set(cp.user_id, user);
+      }
+    }
+  }
+
+  return profileMap;
 }
 
 export class CommunicationsAPI {
   static async getCurrentProfileId(): Promise<string> {
-    return getCurrentProfileId();
+    return getCurrentChatUserId();
+  }
+
+  static async getCurrentParticipantAliases(): Promise<string[]> {
+    const currentUserId = await getCurrentChatUserId();
+    return uniqueClean([currentUserId, ...(await getParticipantAliases(currentUserId))]);
   }
 
   static async getOrCreateConversation(conversationData: {
@@ -234,12 +395,19 @@ export class CommunicationsAPI {
       throw new Error("Both recruiter and candidate profiles are required to open a conversation.");
     }
 
+    const [recruiterId, candidateId, recruiterAliases, candidateAliases] = await Promise.all([
+      normalizeParticipantToAuthId(conversationData.recruiterProfileId),
+      normalizeParticipantToAuthId(conversationData.candidateProfileId),
+      getParticipantAliases(conversationData.recruiterProfileId),
+      getParticipantAliases(conversationData.candidateProfileId),
+    ]);
+
     const findExisting = async () => {
       let query = supabase
         .from("conversations")
         .select("*")
-        .eq("recruiter_id", conversationData.recruiterProfileId)
-        .eq("candidate_id", conversationData.candidateProfileId);
+        .in("recruiter_id", uniqueClean([recruiterId, ...recruiterAliases]))
+        .in("candidate_id", uniqueClean([candidateId, ...candidateAliases]));
 
       query = conversationData.applicationId
         ? query.eq("application_id", conversationData.applicationId)
@@ -261,19 +429,46 @@ export class CommunicationsAPI {
     const { data, error } = await supabase
       .from("conversations")
       .insert({
-        recruiter_id: conversationData.recruiterProfileId,
-        candidate_id: conversationData.candidateProfileId,
+        recruiter_id: recruiterId,
+        candidate_id: candidateId,
         application_id: conversationData.applicationId || null,
       })
       .select("*")
       .single();
 
     if (error) {
-      // Unique constraint hit (race: another request created it first) â€” fetch the real row.
+      console.error('[getOrCreateConversation] Insert error:', error);
+      // Unique constraint hit (race: another request created it first) â€" fetch the real row.
       if (error.code === "23505") {
         const { data: retried } = await findExisting();
         if (retried) return retried as ConversationRow;
       }
+
+      if (error.code === "23503") {
+        const [legacyRecruiterId, legacyCandidateId] = await Promise.all([
+          normalizeParticipantToProfileId(conversationData.recruiterProfileId),
+          normalizeParticipantToProfileId(conversationData.candidateProfileId),
+        ]);
+
+        if (legacyRecruiterId && legacyCandidateId) {
+          const legacy = await supabase
+            .from("conversations")
+            .insert({
+              recruiter_id: legacyRecruiterId,
+              candidate_id: legacyCandidateId,
+              application_id: conversationData.applicationId || null,
+            })
+            .select("*")
+            .single();
+
+          if (!legacy.error) {
+            return legacy.data as ConversationRow;
+          }
+        }
+
+        throw new Error("Chat database still depends on profile IDs. Run supabase_chat_identity_migration.sql in Supabase, then try Message candidate again.");
+      }
+
       throw new Error(error.message || "Failed to create conversation.");
     }
 
@@ -291,7 +486,7 @@ export class CommunicationsAPI {
     }
 
     const supabase = createClient();
-    const senderId = await getCurrentProfileId();
+    const senderId = await getCurrentChatUserId();
 
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
     const path = `${conversationId}/${senderId}-${Date.now()}-${safeName}`;
@@ -326,7 +521,7 @@ export class CommunicationsAPI {
     attachment?: MessageAttachment;
   }): Promise<Message> {
     const supabase = createClient();
-    const senderId = await getCurrentProfileId();
+    const senderId = await getCurrentChatUserId();
 
     if (!messageData.conversationId) {
       throw new Error("A conversation is required to send a message.");
@@ -387,13 +582,14 @@ export class CommunicationsAPI {
 
   static async markConversationAsRead(conversationId: string): Promise<void> {
     const supabase = createClient();
-    const currentUserId = await getCurrentProfileId();
+    const currentUserId = await getCurrentChatUserId();
+    const currentUserAliases = await getParticipantAliases(currentUserId);
 
     const { error } = await supabase
       .from("messages")
       .update({ read: true, read_at: new Date().toISOString() })
       .eq("conversation_id", conversationId)
-      .eq("recipient_id", currentUserId)
+      .in("recipient_id", uniqueClean([currentUserId, ...currentUserAliases]))
       .eq("read", false);
 
     if (error) {
@@ -403,12 +599,13 @@ export class CommunicationsAPI {
 
   static async getConversations(): Promise<Conversation[]> {
     const supabase = createClient();
-    const currentUserId = await getCurrentProfileId();
+    const currentUserId = await getCurrentChatUserId();
+    const currentUserAliases = uniqueClean([currentUserId, ...(await getParticipantAliases(currentUserId))]);
 
     const { data: conversationRows, error: conversationsError } = await supabase
       .from("conversations")
       .select("*")
-      .or(`recruiter_id.eq.${currentUserId},candidate_id.eq.${currentUserId}`)
+      .or(`recruiter_id.in.(${currentUserAliases.join(",")}),candidate_id.in.(${currentUserAliases.join(",")})`)
       .order("last_message_at", { ascending: false, nullsFirst: false });
 
     if (conversationsError) {
@@ -442,15 +639,15 @@ export class CommunicationsAPI {
     }
 
     const otherUserIds = conversationList.map((c) =>
-      c.recruiter_id === currentUserId ? c.candidate_id : c.recruiter_id,
+      currentUserAliases.includes(c.recruiter_id) ? c.candidate_id : c.recruiter_id,
     );
     const profiles = await getProfileMap(otherUserIds);
 
     return conversationList.map((conversation) => {
       const otherUserId =
-        conversation.recruiter_id === currentUserId ? conversation.candidate_id : conversation.recruiter_id;
+        currentUserAliases.includes(conversation.recruiter_id) ? conversation.candidate_id : conversation.recruiter_id;
       const messages = messagesByConversation.get(conversation.id) || [];
-      const unreadCount = messages.filter((m) => m.senderId !== currentUserId && !m.read).length;
+      const unreadCount = messages.filter((m) => !currentUserAliases.includes(m.senderId) && !m.read).length;
 
       return {
         id: conversation.id,

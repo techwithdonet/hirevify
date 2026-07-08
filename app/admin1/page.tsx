@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/hirevify-app/components/AuthProvider";
 import { Button } from "@/src/hirevify-app/components/ui/button";
 import { Toaster } from "@/src/hirevify-app/components/ui/sonner";
@@ -210,6 +211,7 @@ function isPermissionWarning(warning: string) {
 }
 
 function AdminPanel() {
+  const router = useRouter();
   const { signIn, setUser } = useAuth();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
@@ -487,7 +489,7 @@ function AdminPanel() {
 
   const openDashboard = (type: "recruiter" | "candidate") => {
     localStorage.setItem("hirevify_admin_auto_open", type);
-    window.location.href = "/";
+    router.push("/");
   };
 
   const handlePreviewLogin = async (type: "recruiter" | "candidate") => {

@@ -24,7 +24,7 @@ const NOTIFICATION_STORAGE_KEY = 'hirevify_recruiter_notification_settings';
 export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
   const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [recruiterId, setRecruiterId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState('');
   const [profileCompleteness, setProfileCompleteness] = useState(0);
   const [notifications, setNotifications] = useState({
@@ -48,6 +48,7 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
       const { data: authData } = await supabase.auth.getUser();
       const authUserId = authData.user?.id;
       if (!authUserId) return;
+      setRecruiterId(authUserId);
 
       const { data: profileRow } = await supabase
         .from('profiles')
@@ -56,8 +57,6 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
         .maybeSingle();
 
       if (!profileRow?.id) return;
-      setProfileId(profileRow.id);
-
       const { data: recruiterProfile } = await supabase
         .from('recruiter_profiles')
         .select('company_name, profile_completeness')
@@ -216,7 +215,7 @@ export function RecruiterSettings({ onBack }: RecruiterSettingsProps) {
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6">
-            <BillingSettingsCard profileId={profileId} userEmail={user?.email} />
+            <BillingSettingsCard userId={recruiterId} userEmail={user?.email} />
           </TabsContent>
 
           <TabsContent value="data" className="space-y-6">
