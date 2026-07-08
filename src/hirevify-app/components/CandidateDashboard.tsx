@@ -107,6 +107,7 @@ export function CandidateDashboard({
     (sum, conversation) => sum + (conversation.unreadCount || 0),
     0
   );
+  const visibleUnreadNotifications = Math.max(Number(unreadNotifications || 0), unreadNotificationsCount);
 
   const [subscription, setSubscription] = useState<any>(null);
   const [candidateProfile, setCandidateProfile] = useState<any>(null);
@@ -268,8 +269,8 @@ export function CandidateDashboard({
               </button>
               <button type="button" onClick={onViewNotifications} className="candidate-icon-button" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
-                {unreadNotificationsCount > 0 && (
-                  <span>{unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}</span>
+                {visibleUnreadNotifications > 0 && (
+                  <span>{visibleUnreadNotifications > 9 ? '9+' : visibleUnreadNotifications}</span>
                 )}
               </button>
               <button type="button" onClick={onViewSettings} className="candidate-icon-button" aria-label="Settings">

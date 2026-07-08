@@ -27,6 +27,7 @@ import {
   TrendingUp,
   ArrowUpRight,
   Sparkles,
+  Bookmark,
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { usePremiumAccess } from '../utils/premium';
@@ -34,6 +35,7 @@ import { profilesService } from '@/src/hirevify-app/services/profilesService';
 import { jobsService } from '@/src/hirevify-app/services/jobsService';
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { careerGrowthService, type CareerGrowthApplication, type CareerGrowthType } from '@/src/hirevify-app/services/careerGrowthService';
+import { projectAssignmentsService } from '@/src/hirevify-app/services/projectAssignmentsService';
 import { subscriptionsService } from '@/src/hirevify-app/services/subscriptionsService';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { CommunicationsAPI, type Conversation } from '@/src/hirevify-app/utils/api/communications';
@@ -68,6 +70,7 @@ interface RecruiterDashboardProps {
   onViewSettings?: () => void;
   onEditProfile?: () => void;
   onSearchCandidates?: () => void;
+  onViewSavedCandidates?: () => void;
   onViewMessages?: () => void;
   onViewNotifications?: () => void;
   onUpgrade: () => void;
@@ -95,6 +98,7 @@ export function RecruiterDashboard({
   onViewSettings,
   onEditProfile,
   onSearchCandidates,
+  onViewSavedCandidates,
   onViewMessages,
   onViewNotifications,
   onUpgrade, 
@@ -110,11 +114,13 @@ export function RecruiterDashboard({
   const [postedJobs, setPostedJobs] = useState<any[]>([]);
   const [applicants, setApplicants] = useState<any[]>([]);
   const [growthApplicants, setGrowthApplicants] = useState<CareerGrowthApplication[]>([]);
+  const [assignmentStats, setAssignmentStats] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [comingSoonFeature, setComingSoonFeature] = useState<string | null>(null);
   const { conversations: messageConversations } = useConversations();
   const { unreadCount: unreadNotificationsCount } = useNotifications();
+  const visibleUnreadNotifications = Math.max(Number(unreadNotifications || 0), unreadNotificationsCount);
 
   const totalUnreadMessages = messageConversations.reduce(
     (sum, conversation) => sum + (conversation.unreadCount || 0),
@@ -189,6 +195,11 @@ export function RecruiterDashboard({
           console.warn('Career growth applications were not loaded:', growthAppData.error.message);
         }
 
+        const assignmentStatsData = await projectAssignmentsService.getRecruiterAssignmentStats(recruiterId);
+        if (assignmentStatsData.data) {
+          setAssignmentStats(assignmentStatsData.data);
+        }
+
         // Load stats
         const statsData = await jobsService.getRecruiterStats(recruiterId);
         if (statsData.data) {
@@ -218,6 +229,12 @@ export function RecruiterDashboard({
     Boolean(recruiterProfile?.profile_completed) || recruiterProfileCompleteness >= 60;
   const growthApplicationCountByType = (type: CareerGrowthType) =>
     growthApplicants.filter((application) => application.opportunity?.type === type).length;
+  const assignedProjectsCount =
+    Number(assignmentStats?.pending || 0) +
+    Number(assignmentStats?.accepted || 0) +
+    Number(assignmentStats?.submitted || 0) +
+    Number(assignmentStats?.under_review || 0) ||
+    applicants.filter((a) => a.status === 'assigned').length;
   const latestApplicationLabel = (application: any) =>
     application?.candidate_profile?.full_name || application?.candidate_profile?.email || application?.candidate_name || application?.candidate_email || 'Candidate';
   const applicationSections = [
@@ -335,9 +352,9 @@ export function RecruiterDashboard({
                 className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Bell className="h-5 w-5" />
-                {unreadNotificationsCount > 0 && (
+                {visibleUnreadNotifications > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {unreadNotificationsCount > 9? '9+': unreadNotificationsCount}
+                    {visibleUnreadNotifications > 9? '9+': visibleUnreadNotifications}
                   </span>
                 )}
               </Button>
@@ -417,13 +434,21 @@ export function RecruiterDashboard({
                     <Search className="mr-2 h-4 w-4" />
                     Search Candidates
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={onViewSavedCandidates}
+                    className="h-11 rounded-full border-emerald-200 bg-white px-5 font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+                  >
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Saved Candidates
+                  </Button>
                 </div>
               </div>
 
               <div className="mt-8 grid grid-cols-1 overflow-hidden rounded-2xl border border-emerald-100 bg-white/80 sm:grid-cols-3">
                 {[
                   { label: 'Open jobs', value: postedJobs.length, action: onViewProjects },
-                  { label: 'Assigned projects', value: applicants.filter((a) => a.status === 'assigned').length, action: onViewOngoingProjects || onViewATS },
+                  { label: 'Assigned projects', value: assignedProjectsCount, action: onViewOngoingProjects || onViewATS },
                   { label: 'Hire rate', value: stats?.hireRate || 'N/A', action: onViewAnalytics },
                 ].map((item, index) => (
                   <button

@@ -89,6 +89,7 @@ interface NavigationMethods {
   navigateToRecruiterProfileEditor: () => void;
   navigateToCandidateProfileEditor: () => void;
   navigateToCandidateSearch: () => void;
+  navigateToSavedCandidateSearch: () => void;
   navigateToCandidateDetail: (candidate: Candidate) => void;
   navigateToMessages: (conversationId?: string) => void;
   navigateToNotifications: () => void;
@@ -242,6 +243,7 @@ export function AppRouter({
   onViewSettings={navigation.navigateToSettings}
           onEditProfile={navigation.navigateToRecruiterProfileEditor}
   onSearchCandidates={navigation.navigateToCandidateSearch}
+  onViewSavedCandidates={navigation.navigateToSavedCandidateSearch}
   onViewMessages={navigation.navigateToMessages}
   onViewNotifications={navigation.navigateToNotifications}
   onUpgrade={navigation.navigateToPricing}
@@ -440,6 +442,7 @@ case 'recruiter-ats':
   onUpgrade={navigation.navigateToPricing}
   onViewMessages={navigation.navigateToMessages}
   onViewCandidateDetail={navigation.navigateToCandidateDetail}
+  savedOnly={typeof window !== 'undefined' && window.localStorage.getItem('hirevify_show_saved_candidates') === '1'}
   />
   );
 
@@ -453,7 +456,7 @@ case 'recruiter-ats':
     return (
       <DashboardPageLayout
         title="Loading candidate..."
-        onBack={navigation.navigateToATS}
+        onBack={navigation.navigateToCandidateSearch}
       >
         <div className="mx-auto max-w-6xl p-8 text-center text-slate-500">
           Loading candidate profile...
@@ -464,7 +467,7 @@ case 'recruiter-ats':
   return (
     <RecruiterCandidateDetail
       candidate={selectedCandidate}
-      onBack={navigation.navigateToATS}
+      onBack={navigation.navigateToCandidateSearch}
       onUpgrade={navigation.navigateToPricing}
       onViewMessages={navigation.navigateToMessages}
       onToggleSaved={onToggleSavedCandidate}

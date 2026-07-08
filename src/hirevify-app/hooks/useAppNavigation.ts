@@ -310,6 +310,17 @@ export const useAppNavigation = ({
 
   const navigateToCandidateSearch = useCallback(() => {
   if (!requireAuth('search candidates', 'recruiter')) return;
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem('hirevify_show_saved_candidates');
+  }
+  setCurrentScreen('recruiter-search-candidates');
+  }, [requireAuth, setCurrentScreen]);
+
+  const navigateToSavedCandidateSearch = useCallback(() => {
+  if (!requireAuth('view saved candidates', 'recruiter')) return;
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem('hirevify_show_saved_candidates', '1');
+  }
   setCurrentScreen('recruiter-search-candidates');
   }, [requireAuth, setCurrentScreen]);
 
@@ -483,6 +494,7 @@ navigateHome,
   navigateToAISkillsDevelopment,
     navigateToAICareerAdvisor,
     navigateToCandidateSearch,
+    navigateToSavedCandidateSearch,
     navigateToCandidateDetail,
     navigateToExperienceBuilder,
   navigateToMicroInternships,

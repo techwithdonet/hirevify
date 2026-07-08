@@ -2464,8 +2464,12 @@ body .fixed button[class*="bg-lime"] {
 .candidate-job-copy span:last-child {
   flex-wrap: wrap;
   gap: 8px 12px;
-  color: #b7c7cd;
+  color: #e8fbfb;
   font-size: 0.9rem;
+}
+
+.candidate-job-copy .candidate-small-label {
+  color: #b7fff4;
 }
 
 .candidate-job-cta {

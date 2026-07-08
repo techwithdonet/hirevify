@@ -132,11 +132,13 @@ function readInitialScreen(): { screen: Screen; candidateId: string | null } {
 
   const { screen: urlScreen, candidateId } = readScreenFromSearchParams(new URLSearchParams(window.location.search));
   if (urlScreen) {
+    if (urlScreen === 'recruiter-candidate-detail' && !window.sessionStorage.getItem('selectedCandidate')) {
+      return { screen: 'homepage', candidateId: null };
+    }
     return { screen: urlScreen, candidateId };
   }
 
-  const storedScreen = window.localStorage.getItem(SCREEN_STORAGE_KEY);
-  return { screen: isScreen(storedScreen) ? storedScreen : 'homepage', candidateId };
+  return { screen: 'homepage', candidateId: null };
 }
 
 function isScreenForOtherRole(screen: Screen, userType: 'recruiter' | 'candidate') {
@@ -266,6 +268,15 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
       return;
     }
 
+    if (nextScreen === 'recruiter-candidate-detail' && !sessionStorage.getItem('selectedCandidate')) {
+      hasSyncedUrlScreen.current = true;
+      setCurrentScreenState('homepage');
+      window.localStorage.setItem(SCREEN_STORAGE_KEY, 'homepage');
+      setSelectedCandidate(null);
+      router.replace(getUrlForScreen(pathname, searchParams.toString(), 'homepage', null), { scroll: false });
+      return;
+    }
+
     hasSyncedUrlScreen.current = true;
     setCurrentScreenState(nextScreen);
     if (nextCandidateId) {
@@ -281,7 +292,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
       setSelectedCandidate(null);
     }
     window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
-  }, [searchParams]);
+  }, [pathname, router, searchParams]);
 
  useEffect(() => {
  if (!authInitialized) {
@@ -292,7 +303,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
  hadAuthenticatedUser.current = true;
  const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
 
- if (currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)) {
+ if (isScreenForOtherRole(currentScreen, user.userType)) {
  setSelectedProject(null);
  setSelectedApplication(null);
  navigateScreen(dashboardScreen, { replace: true });

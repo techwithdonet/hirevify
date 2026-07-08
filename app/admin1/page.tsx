@@ -31,6 +31,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { upsertSubscription } from "../../src/hirevify-app/utils/api/subscriptions";
 
 type SectionId = "dashboard" | "top" | "reports" | "plans" | "assessments" | "health" | "preview";
 type Row = Record<string, unknown>;
@@ -552,7 +553,7 @@ function AdminPanel() {
     setPlanUpdatingId(profileId);
     try {
       const expiresAt = tier === "free" ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-      const { error: planError } = await supabase.from("subscriptions").upsert(
+      const { error: planError } = await upsertSubscription(
         {
           user_id: profileId,
           tier,
@@ -561,11 +562,11 @@ function AdminPanel() {
           auto_renew: tier === "pro",
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "user_id" },
+        "user_id",
       );
 
       if (planError) {
-        throw planError;
+        throw new Error(planError);
       }
 
       toast.success(tier === "free" ? "User moved to Free" : "User upgraded to Pro");
@@ -1023,6 +1024,7 @@ function PreviewCard({ icon: Icon, title, detail, onClick }: { icon: typeof Brie
 export default function Admin1Page() {
   return <AdminPanel />;
 }
+
 
 
 

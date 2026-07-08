@@ -25,6 +25,7 @@ interface CandidateSearchProps {
  onUpgrade?: () => void;
  onViewMessages: (conversationId?: string) => void;
  onViewCandidateDetail: (candidate: Candidate) => void;
+ savedOnly?: boolean;
 }
 
 interface SearchFilters {
@@ -43,12 +44,20 @@ interface SearchFilters {
  hasPortfolio: boolean;
 }
 
-export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandidateDetail }: CandidateSearchProps) {
+export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandidateDetail, savedOnly = false }: CandidateSearchProps) {
  const { user } = useAuth();
  const [activeTab, setActiveTab] = useState('search');
   const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState('match');
-  const [savedCandidates, setSavedCandidates] = useState<string[]>([]);
+  const [savedCandidates, setSavedCandidates] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = window.localStorage.getItem('hirevify_saved_candidates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
  keywords: '',
  location: '',
@@ -273,8 +282,12 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  const [isLoadingAI, setIsLoadingAI] = useState(false);
  const [showAiRecommendations, setShowAiRecommendations] = useState(true);
  useEffect(() => {
+ if (savedOnly) {
+ setFilteredCandidates(candidates.filter((candidate) => savedCandidates.includes(candidate.id)));
+ return;
+ }
  setFilteredCandidates(candidates);
-}, [candidates]);
+}, [candidates, savedCandidates, savedOnly]);
 
 
 
@@ -286,7 +299,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  if (isLoadingCandidates) return;
  applyFilters();
  loadAIRecommendations();
- }, [searchFilters, sortBy, candidates, isLoadingCandidates]);
+ }, [searchFilters, sortBy, candidates, isLoadingCandidates, savedCandidates, savedOnly]);
 
  const loadAIRecommendations = async () => {
  if (user?.userType!== 'recruiter') return;
@@ -321,6 +334,10 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  setIsLoading(true);
 
  let filtered = candidates.filter(candidate => {
+ if (savedOnly && !savedCandidates.includes(candidate.id)) {
+ return false;
+ }
+
  // Keywords filter
  if (searchFilters.keywords) {
  const keywords = searchFilters.keywords.toLowerCase();
@@ -439,10 +456,18 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
 
  const saveCandidate = (candidateId: string) => {
  if (savedCandidates.includes(candidateId)) {
- setSavedCandidates(prev => prev.filter(id => id!== candidateId));
+ const next = savedCandidates.filter(id => id!== candidateId);
+ setSavedCandidates(next);
+ if (typeof window !== 'undefined') {
+ window.localStorage.setItem('hirevify_saved_candidates', JSON.stringify(next));
+ }
  toast.success('Candidate removed from saved list');
  } else {
- setSavedCandidates(prev => [...prev, candidateId]);
+ const next = [...savedCandidates, candidateId];
+ setSavedCandidates(next);
+ if (typeof window !== 'undefined') {
+ window.localStorage.setItem('hirevify_saved_candidates', JSON.stringify(next));
+ }
  toast.success('Candidate saved to your list');
  }
  };
@@ -811,10 +836,18 @@ const getAvailabilityBadge = (availability: string) => {
  <div className="flex items-center justify-between">
  <div>
  <h2 className="text-xl font-semibold">
- {isResultsLoading? 'Loading candidates...': `${filteredCandidates.length} candidate profile${filteredCandidates.length!== 1? 's': ''}`}
+ {isResultsLoading
+ ? 'Loading candidates...'
+ : savedOnly
+ ? `${filteredCandidates.length} saved candidate${filteredCandidates.length!== 1? 's': ''}`
+ : `${filteredCandidates.length} candidate profile${filteredCandidates.length!== 1? 's': ''}`}
  </h2>
  <p className="text-sm text-muted-foreground">
- {isResultsLoading? 'Fetching real candidate profiles': 'Click a profile to open the full recruiter view'}
+ {isResultsLoading
+ ? 'Fetching real candidate profiles'
+ : savedOnly
+ ? 'Showing only candidates you saved'
+ : 'Click a profile to open the full recruiter view'}
  </p>
  </div>
  
@@ -865,9 +898,9 @@ const getAvailabilityBadge = (availability: string) => {
  <Card>
  <CardContent className="text-center py-12">
  <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
- <h3 className="text-lg font-semibold mb-2">No candidates found</h3>
+ <h3 className="text-lg font-semibold mb-2">{savedOnly ? 'No saved candidates yet' : 'No candidates found'}</h3>
  <p className="text-muted-foreground mb-4">
- Try adjusting your search criteria or removing some filters
+ {savedOnly ? 'Save candidates from the search results to see them here.' : 'Try adjusting your search criteria or removing some filters'}
  </p>
  <Button variant="outline" onClick={clearAllFilters}>
  Clear All Filters
