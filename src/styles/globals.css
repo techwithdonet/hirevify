@@ -2802,3 +2802,15 @@ body [role="dialog"] .auth-tab-trigger[data-state="active"] {
   }
 }
 
+
+/* Prevent white flash during client-only dashboard loading */
+html,
+body {
+  background: #020617;
+}
+
+#__next,
+body > div {
+  min-height: 100vh;
+  background: #020617;
+}

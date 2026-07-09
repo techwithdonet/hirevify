@@ -1,28 +1,12 @@
-'use client';
+﻿'use client';
 
-import { useEffect } from 'react';
-import HireVifyApp from '../src/hirevify-app/App';
+import dynamic from 'next/dynamic';
+
+const HireVifyApp = dynamic(() => import('../src/hirevify-app/App'), {
+  ssr: false,
+  loading: () => <div className="min-h-screen bg-slate-950" aria-hidden="true" />,
+});
 
 export default function HireVifyClient() {
-  useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-
-    const scrollToTop = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    };
-
-    scrollToTop();
-
-    const frame = window.requestAnimationFrame(scrollToTop);
-    const timer = window.setTimeout(scrollToTop, 80);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
-    };
-  }, []);
-
   return <HireVifyApp />;
 }
