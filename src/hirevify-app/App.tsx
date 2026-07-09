@@ -279,6 +279,16 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
 
     hasSyncedUrlScreen.current = true;
     setCurrentScreenState(nextScreen);
+    
+    // Ensure URL has correct screen parameter for dashboard screens
+    if (nextScreen === 'recruiter-dashboard' || nextScreen === 'candidate-dashboard') {
+      const params = new URLSearchParams(searchParams.toString());
+      if (params.get('screen') !== nextScreen) {
+        params.set('screen', nextScreen);
+        window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+      }
+    }
+    
     if (nextCandidateId) {
       const stored = sessionStorage.getItem('selectedCandidate');
       if (stored) {
@@ -294,32 +304,44 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     window.localStorage.setItem(SCREEN_STORAGE_KEY, nextScreen);
   }, [pathname, router, searchParams]);
 
- useEffect(() => {
- if (!authInitialized) {
- return;
- }
+  useEffect(() => {
+  if (!authInitialized) {
+  return;
+  }
 
- if (user) {
- hadAuthenticatedUser.current = true;
- const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
+  if (user) {
+  hadAuthenticatedUser.current = true;
+  const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
 
- if (isScreenForOtherRole(currentScreen, user.userType)) {
- setSelectedProject(null);
- setSelectedApplication(null);
- navigateScreen(dashboardScreen, { replace: true });
- }
+  if (isScreenForOtherRole(currentScreen, user.userType)) {
+  setSelectedProject(null);
+  setSelectedApplication(null);
+  navigateScreen(dashboardScreen, { replace: true });
+  }
 
- return;
- }
+  // Ensure URL has correct screen parameter when user is authenticated
+  if (currentScreen === 'homepage') {
+    const params = new URLSearchParams(window.location.search);
+    const currentScreenParam = params.get('screen');
+    const expectedScreen = dashboardScreen;
+    
+    if (currentScreenParam !== expectedScreen) {
+      params.set('screen', expectedScreen);
+      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    }
+  }
 
- if (!PUBLIC_SCREENS.has(currentScreen)) {
- navigateScreen('homepage', { replace: true });
- setSelectedProject(null);
- setSelectedApplication(null);
- setProjectChallengeData(null);
- setAssessmentBuilderData(null);
- }
- }, [user, currentScreen, authInitialized, navigateScreen]);
+  return;
+  }
+
+  if (!PUBLIC_SCREENS.has(currentScreen)) {
+  navigateScreen('homepage', { replace: true });
+  setSelectedProject(null);
+  setSelectedApplication(null);
+  setProjectChallengeData(null);
+  setAssessmentBuilderData(null);
+  }
+  }, [user, currentScreen, authInitialized, navigateScreen]);
 
   const navigation = useAppNavigation({
     user,
@@ -335,36 +357,62 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     signOut,
   });
 
- const handleUserTypeSelection = useMemo(() => {
- return (userType: 'recruiter' | 'candidate') => {
- console.log(`Force opening ${userType} dashboard from homepage test button`);
+  const handleUserTypeSelection = useMemo(() => {
+  return (userType: 'recruiter' | 'candidate') => {
+  console.log(`Force opening ${userType} dashboard from homepage test button`);
 
- setSelectedProject(null);
- setSelectedApplication(null);
- navigateScreen(userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard', { replace: true });
- };
- }, [navigateScreen]);
-
-const effectiveScreen = useMemo<Screen>(() => {
-  if (user) {
-  const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
-  return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
-  ? dashboardScreen
-  : currentScreen;
+  setSelectedProject(null);
+  setSelectedApplication(null);
+  const dashboardScreen = userType === 'recruiter' ? 'recruiter-dashboard' : 'candidate-dashboard';
+  
+  // Update URL directly before navigation
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    params.set('screen', dashboardScreen);
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
   }
+  
+  navigateScreen(dashboardScreen, { replace: true });
+  };
+  }, [navigateScreen]);
 
-  // While auth is still initializing, preserve whatever screen was resolved
-  // from the URL / history / localStorage. Falling back to `homepage` here
-  // causes a flash of the marketing page on every hard refresh from the
-  // candidate or recruiter portal (e.g. user refreshes the dashboard, the
-  // session is briefly null while Supabase hydrates, and the homepage hero
-  // shows for a frame before the portal re-renders).
-  if (!authInitialized) {
-  return currentScreen;
-  }
+ const effectiveScreen = useMemo<Screen>(() => {
+   if (user) {
+   const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
+   return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
+   ? dashboardScreen
+   : currentScreen;
+   }
 
-  return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
-  }, [currentScreen, user, authInitialized]);
+   // While auth is still initializing, preserve whatever screen was resolved
+   // from the URL / history / localStorage. Falling back to `homepage` here
+   // causes a flash of the marketing page on every hard refresh from the
+   // candidate or recruiter portal (e.g. user refreshes the dashboard, the
+   // session is briefly null while Supabase hydrates, and the homepage hero
+   // shows for a frame before the portal re-renders).
+   if (!authInitialized) {
+   return currentScreen;
+   }
+
+   return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
+   }, [currentScreen, user, authInitialized]);
+
+  // Direct URL sync for dashboard screens - ensures URL is always updated when dashboard is shown
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const dashboardScreens = ['recruiter-dashboard', 'candidate-dashboard'];
+    if (!dashboardScreens.includes(effectiveScreen)) return;
+    
+    const params = new URLSearchParams(window.location.search);
+    const currentScreenParam = params.get('screen');
+    
+    // Only update URL if it's different from effectiveScreen
+    if (currentScreenParam !== effectiveScreen) {
+      params.set('screen', effectiveScreen);
+      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    }
+  }, [effectiveScreen]);
 
    const useWorkspaceTheme = effectiveScreen !== 'homepage';
 

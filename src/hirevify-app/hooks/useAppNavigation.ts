@@ -275,17 +275,31 @@ export const useAppNavigation = ({
  setCurrentScreen('one-way-interview');
  }, [requireAuth, setCurrentScreen]);
 
- const navigateToRecruiterDashboard = useCallback(() => {
- if (!requireAuth('access the dashboard', 'recruiter')) return;
- setCurrentScreen('recruiter-dashboard', { replace: true });
- setSelectedProject(null);
- setSelectedApplication(null);
- }, [requireAuth, setCurrentScreen, setSelectedProject, setSelectedApplication]);
+  const navigateToRecruiterDashboard = useCallback(() => {
+  if (!requireAuth('access the dashboard', 'recruiter')) return;
+  setCurrentScreen('recruiter-dashboard', { replace: true });
+  setSelectedProject(null);
+  setSelectedApplication(null);
+  
+  // Ensure URL is updated with recruiter-dashboard screen parameter
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    params.set('screen', 'recruiter-dashboard');
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+  }
+  }, [requireAuth, setCurrentScreen, setSelectedProject, setSelectedApplication]);
 
- const navigateToCandidateDashboard = useCallback(() => {
- if (!requireAuth('access the dashboard', 'candidate')) return;
- setCurrentScreen('candidate-dashboard', { replace: true });
- }, [requireAuth, setCurrentScreen]);
+  const navigateToCandidateDashboard = useCallback(() => {
+  if (!requireAuth('access the dashboard', 'candidate')) return;
+  setCurrentScreen('candidate-dashboard', { replace: true });
+  
+  // Ensure URL is updated with candidate-dashboard screen parameter
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    params.set('screen', 'candidate-dashboard');
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+  }
+  }, [requireAuth, setCurrentScreen]);
 
  const navigateToMessages = useCallback((conversationId?: string) => {
  if (!requireAuth('access messages')) return;

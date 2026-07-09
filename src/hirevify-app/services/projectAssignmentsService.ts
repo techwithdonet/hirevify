@@ -362,7 +362,12 @@ class ProjectAssignmentsService {
     const { data, error } = await this.supabase.from('job_project_assignments').select('assignment_status').eq('recruiter_id', recruiterId);
 
     if (error) {
-      console.error('Error fetching assignment stats:', error);
+      console.warn('Assignment stats unavailable:', {
+        message: (error as any)?.message,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+        code: (error as any)?.code,
+      });
       return { data: null, error };
     }
 

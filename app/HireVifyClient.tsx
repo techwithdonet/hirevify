@@ -1,12 +1,15 @@
 ﻿'use client';
 
-import dynamic from 'next/dynamic';
+import App from '../src/hirevify-app/App';
 
-const HireVifyApp = dynamic(() => import('../src/hirevify-app/App'), {
-  ssr: false,
-  loading: () => <div className="min-h-screen bg-slate-950" aria-hidden="true" />,
-});
+type HireVifyClientProps = {
+  initialScreen?: any;
+  initialCandidateId?: string | null;
+};
 
-export default function HireVifyClient() {
-  return <HireVifyApp />;
+export default function HireVifyClient({
+  initialScreen,
+  initialCandidateId,
+}: HireVifyClientProps) {
+  return <App initialScreen={initialScreen} initialCandidateId={initialCandidateId ?? null} />;
 }
