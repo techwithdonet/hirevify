@@ -976,16 +976,16 @@ body .fixed button[class*="bg-lime"] {
 
 /* Auth modal login/signup tabs visibility fix */
 .auth-tabs {
-  background: #ffffff !important;
-  border: 1px solid #dbe5ef !important;
+  background: #ecfdf5 !important;
+  border: 1px solid #bbf7d0 !important;
   padding: 4px !important;
-  gap: 8px !important;
+  gap: 4px !important;
 }
 
 .auth-tab-trigger,
 .auth-tab-trigger[data-state="inactive"] {
-  background: #ffffff !important;
-  color: #0f172a !important;
+  background: #f7fee7 !important;
+  color: #064e3b !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -994,6 +994,25 @@ body .fixed button[class*="bg-lime"] {
   background: #9cf02f !important;
   color: #052e16 !important;
   opacity: 1 !important;
+}
+
+body [role="dialog"] .auth-tab-trigger,
+body [role="dialog"] .auth-tab-trigger *,
+body [role="dialog"] .auth-tab-trigger[data-state="inactive"],
+body [role="dialog"] .auth-tab-trigger[data-state="inactive"] * {
+  color: #064e3b !important;
+  -webkit-text-fill-color: #064e3b !important;
+  opacity: 1 !important;
+}
+
+body [role="dialog"] .auth-tab-trigger[data-state="inactive"] {
+  background: #ecfdf5 !important;
+}
+
+body [role="dialog"] .auth-tab-trigger[data-state="active"] {
+  background: #9cf02f !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
 }
 
 .dark {

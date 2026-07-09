@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
@@ -89,33 +89,59 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  return (
  <Dialog open={isOpen} onOpenChange={handleClose}>
- <DialogContent className="overflow-hidden border-slate-200 bg-white p-0 shadow-xl sm:max-w-md">
- <DialogHeader className="border-b border-slate-100 bg-slate-50/80 px-6 py-5">
- <DialogTitle className="flex items-center gap-2">
+ <DialogContent className="overflow-hidden border border-emerald-950/10 bg-white p-0 text-slate-950 shadow-2xl sm:max-w-md [&>button]:right-4 [&>button]:top-4 [&>button]:text-emerald-950/60 [&>button:hover]:bg-emerald-50 [&>button:hover]:text-emerald-950">
+ <DialogHeader className="border-b border-emerald-100 bg-[#f4fbf7] px-6 py-5">
+ <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-emerald-950">
  Welcome to HireVify
  <Badge
- variant={connectionStatus === 'connected'? 'default': 'destructive'}
- className="text-xs"
+  variant={connectionStatus === 'connected'? 'default': 'destructive'}
+ className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+ connectionStatus === 'connected'
+ ? 'bg-teal-500 text-white hover:bg-teal-500'
+ : connectionStatus === 'checking'
+ ? 'bg-amber-100 text-amber-900 hover:bg-amber-100'
+ : 'bg-red-100 text-red-900 hover:bg-red-100'
+ }`}
  >
  {connectionStatus === 'connected'? 'Online': connectionStatus === 'checking'? 'Connecting': 'Offline'}
  </Badge>
  </DialogTitle>
 
- <DialogDescription>
+ <DialogDescription className="max-w-sm text-sm leading-6 text-slate-600">
  Sign in to your existing account or create a new account to get started with HireVify&apos;s skills-first hiring platform.
  </DialogDescription>
  </DialogHeader>
 
  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="px-6 py-5">
- <TabsList className="auth-tabs grid w-full grid-cols-2 rounded-lg bg-slate-100">
- <TabsTrigger value="signin" className="auth-tab-trigger">Sign In</TabsTrigger>
- <TabsTrigger value="signup" className="auth-tab-trigger">Sign Up</TabsTrigger>
+ <TabsList className="auth-tabs grid h-11 w-full grid-cols-2 rounded-md bg-emerald-50 p-1">
+ <TabsTrigger
+ value="signin"
+ className="auth-tab-trigger rounded-sm text-sm font-semibold shadow-none"
+ style={{
+ backgroundColor: activeTab === 'signin' ? '#9cf02f' : '#ecfdf5',
+ color: '#064e3b',
+ opacity: 1,
+ }}
+ >
+ Sign In
+ </TabsTrigger>
+ <TabsTrigger
+ value="signup"
+ className="auth-tab-trigger rounded-sm text-sm font-semibold shadow-none"
+ style={{
+ backgroundColor: activeTab === 'signup' ? '#9cf02f' : '#ecfdf5',
+ color: '#064e3b',
+ opacity: 1,
+ }}
+ >
+ Sign Up
+ </TabsTrigger>
  </TabsList>
 
  <form onSubmit={handleSubmit} className="space-y-4 pt-2">
  <TabsContent value="signin" className="space-y-4">
  <div className="space-y-2">
- <Label htmlFor="signin-email">Email</Label>
+ <Label htmlFor="signin-email" className="text-sm font-medium text-slate-800">Email</Label>
  <Input
  id="signin-email"
  type="email"
@@ -124,12 +150,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setEmail(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="bg-background"
+ className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
  <div className="space-y-2">
- <Label htmlFor="signin-password">Password</Label>
+ <Label htmlFor="signin-password" className="text-sm font-medium text-slate-800">Password</Label>
  <div className="relative">
  <Input
  id="signin-password"
@@ -139,14 +165,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setPassword(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="bg-background pr-10"
+ className="h-10 rounded-sm border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
 
  <Button
  type="button"
  variant="ghost"
  size="sm"
- className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+ className="absolute right-0 top-0 h-full px-3 py-2 text-slate-700 hover:bg-transparent hover:text-emerald-800"
  onClick={() => setShowPassword(!showPassword)}
  disabled={formLoading || isLoading}
  >
@@ -161,7 +187,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  <Button
  type="submit"
- className="w-full"
+ className="h-10 w-full rounded-sm bg-lime-400 font-semibold text-emerald-950 shadow-none hover:bg-lime-300 disabled:bg-lime-200 disabled:text-emerald-950/45"
  disabled={
  formLoading ||
  isLoading ||
@@ -181,7 +207,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  <TabsContent value="signup" className="space-y-4">
  <div className="space-y-2">
- <Label htmlFor="signup-name">Full Name</Label>
+ <Label htmlFor="signup-name" className="text-sm font-medium text-slate-800">Full Name</Label>
  <Input
  id="signup-name"
  type="text"
@@ -190,12 +216,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setName(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="bg-background"
+ className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
  <div className="space-y-2">
- <Label htmlFor="signup-email">Email</Label>
+ <Label htmlFor="signup-email" className="text-sm font-medium text-slate-800">Email</Label>
  <Input
  id="signup-email"
  type="email"
@@ -204,12 +230,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setEmail(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="bg-background"
+ className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
  <div className="space-y-2">
- <Label htmlFor="signup-password">Password</Label>
+ <Label htmlFor="signup-password" className="text-sm font-medium text-slate-800">Password</Label>
  <div className="relative">
  <Input
  id="signup-password"
@@ -220,14 +246,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  required
  minLength={8}
  disabled={formLoading || isLoading}
- className="bg-background pr-10"
+ className="h-10 rounded-sm border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
 
  <Button
  type="button"
  variant="ghost"
  size="sm"
- className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+ className="absolute right-0 top-0 h-full px-3 py-2 text-slate-700 hover:bg-transparent hover:text-emerald-800"
  onClick={() => setShowPassword(!showPassword)}
  disabled={formLoading || isLoading}
  >
@@ -241,7 +267,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </div>
 
  <div className="space-y-3">
- <Label>I am a...</Label>
+ <Label className="text-sm font-medium text-slate-800">I am a...</Label>
 
  <RadioGroup
  value={userType}
@@ -250,22 +276,22 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  >
  <div className="flex items-center space-x-2">
  <RadioGroupItem value="candidate" id="candidate" />
- <Label htmlFor="candidate" className="flex items-center gap-2 cursor-pointer">
+ <Label htmlFor="candidate" className="flex cursor-pointer items-center gap-2 text-slate-800">
  <Users className="h-4 w-4" />
  <div>
  <div className="font-medium">Candidate</div>
- <div className="text-sm text-muted-foreground">Looking for opportunities</div>
+ <div className="text-sm text-slate-500">Looking for opportunities</div>
  </div>
  </Label>
  </div>
 
  <div className="flex items-center space-x-2">
  <RadioGroupItem value="recruiter" id="recruiter" />
- <Label htmlFor="recruiter" className="flex items-center gap-2 cursor-pointer">
+ <Label htmlFor="recruiter" className="flex cursor-pointer items-center gap-2 text-slate-800">
  <Briefcase className="h-4 w-4" />
  <div>
  <div className="font-medium">Recruiter</div>
- <div className="text-sm text-muted-foreground">Hiring talent</div>
+ <div className="text-sm text-slate-500">Hiring talent</div>
  </div>
  </Label>
  </div>
@@ -274,7 +300,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  <Button
  type="submit"
- className="w-full"
+ className="h-10 w-full rounded-sm bg-lime-400 font-semibold text-emerald-950 shadow-none hover:bg-lime-300 disabled:bg-lime-200 disabled:text-emerald-950/45"
  disabled={
  formLoading ||
  isLoading ||
@@ -311,6 +337,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </Dialog>
  );
 }
+
 
 
 
