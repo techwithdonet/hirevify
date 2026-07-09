@@ -9,5 +9,14 @@ body {
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+}
+
+html, body {
+  scroll-padding-top: 0;
+}
+
+/* Prevent any initial scroll flash */
+body:not([data-scroll-initialized]) {
+  scroll-behavior: auto;
 }

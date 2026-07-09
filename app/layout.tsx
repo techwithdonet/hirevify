@@ -105,11 +105,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        {/* Immediate scroll to top - executes before body renders */}
+        <script
+          dangerouslySetInnerHTML={{ __html: "window.scrollTo(0,0);" }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <style
           dangerouslySetInnerHTML={{
             __html:
-              "html,body{min-height:100%;background:#f1f5f9;}body:has([class*='bg-[#0b1a0f]']),body:has([class*='bg-[#112318]']){background:#0b1a0f;}",
+              "html,body{min-height:100%;background:#f1f5f9;scroll-behavior:auto!important;}body:has([class*='bg-[#0b1a0f]']),body:has([class*='bg-[#112318]']){background:#0b1a0f;}",
           }}
         />
         <script

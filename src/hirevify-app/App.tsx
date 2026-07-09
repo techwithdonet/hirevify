@@ -414,6 +414,16 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     }
   }, [effectiveScreen]);
 
+  // Scroll to top on mount (browser refresh)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Use requestAnimationFrame for immediate but clean scroll
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+    }
+  }, []);
+
    const useWorkspaceTheme = effectiveScreen !== 'homepage';
 
    return (
