@@ -153,7 +153,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  if (!user) {
  setAuthModalTab('signin');
  setAuthModalOpen(true);
- toast.info('Please sign in to find projects');
+ toast.info('Please sign in to find jobs');
  } else {
  onFindProject();
  }
@@ -336,7 +336,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  onClick={handleFindProject}
  className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/50 underline underline-offset-4 hover:bg-transparent hover:text-white"
  >
- Find a Project &rarr;
+ Find a Job &rarr;
  </Button>
  </div>
 
@@ -660,7 +660,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  onClick={handleFindProject}
  className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/40 underline underline-offset-4 hover:bg-transparent hover:text-white"
  >
- Find a Project &rarr;
+ Find a Job &rarr;
  </Button>
  </div>
  </div>
