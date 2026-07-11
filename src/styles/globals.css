@@ -1635,6 +1635,143 @@ body [role="dialog"] .auth-tab-trigger[data-state="active"] {
 }
 /* HireVify Auth Modal Header Contrast Fix END */
 
+/* Homepage auth uses a compact light popup over the landing page. */
+.auth-modal-dialog,
+.auth-modal-dialog * {
+  color-scheme: light;
+}
+
+.auth-modal-dialog {
+  display: block !important;
+  width: min(92vw, 360px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 2rem) !important;
+  overflow-y: auto !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(6, 78, 59, 0.14) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 24px 70px rgba(2, 6, 23, 0.3) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+.auth-modal-dialog [data-slot="dialog-header"],
+.auth-modal-dialog.auth-modal-dialog > div:first-child {
+  min-height: 0 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #d1fae5 !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.auth-modal-dialog .auth-modal-body {
+  padding: 0.75rem 1rem 1rem !important;
+}
+
+.auth-modal-dialog [data-slot="dialog-description"].sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.auth-modal-dialog [data-slot="dialog-title"],
+.auth-modal-dialog h1,
+.auth-modal-dialog h2,
+.auth-modal-dialog h3 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.auth-modal-dialog [data-slot="dialog-description"],
+.auth-modal-dialog p,
+.auth-modal-dialog label {
+  color: #475569 !important;
+}
+
+.auth-modal-dialog .bg-teal-500,
+.auth-modal-dialog .bg-cyan-500,
+.auth-modal-dialog .bg-emerald-500 {
+  background: #14b8a6 !important;
+  color: #ffffff !important;
+}
+
+.auth-modal-dialog input {
+  height: 2.25rem !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.auth-modal-dialog input::placeholder {
+  color: #64748b !important;
+}
+
+.auth-modal-dialog input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.16) !important;
+}
+
+.auth-modal-dialog button {
+  border-radius: 4px !important;
+}
+
+.auth-modal-dialog button[type="submit"] {
+  background: #65a83d !important;
+  color: #ffffff !important;
+  border: 1px solid #65a83d !important;
+  font-weight: 700 !important;
+}
+
+.auth-modal-dialog button[type="submit"]:hover {
+  background: #4f8d2d !important;
+  border-color: #4f8d2d !important;
+}
+
+.auth-modal-dialog button[type="submit"]:disabled {
+  background: #d9f99d !important;
+  border-color: #d9f99d !important;
+  color: rgba(5, 46, 22, 0.45) !important;
+}
+
+.auth-modal-dialog [role="tablist"],
+.auth-modal-dialog [data-slot="tabs-list"] {
+  background: #ecfdf5 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 6px !important;
+}
+
+.auth-modal-dialog [role="tab"] {
+  color: #064e3b !important;
+  border-radius: 4px !important;
+}
+
+.auth-modal-dialog [role="tab"][data-state="active"] {
+  background: #65a83d !important;
+  color: #ffffff !important;
+}
+
+.auth-modal-dialog button[aria-label="Close"],
+.auth-modal-dialog button.absolute {
+  color: rgba(15, 23, 42, 0.56) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.auth-modal-dialog button[aria-label="Close"]:hover,
+.auth-modal-dialog button.absolute:hover {
+  color: #064e3b !important;
+}
+
 
 /* HireVify Candidate Dashboard Premium Redesign START */
 @layer components {

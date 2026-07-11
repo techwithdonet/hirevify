@@ -89,13 +89,16 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  return (
  <Dialog open={isOpen} onOpenChange={handleClose}>
- <DialogContent className="overflow-hidden border border-emerald-950/10 bg-white p-0 text-slate-950 shadow-2xl sm:max-w-md [&>button]:right-4 [&>button]:top-4 [&>button]:text-emerald-950/60 [&>button:hover]:bg-emerald-50 [&>button:hover]:text-emerald-950">
- <DialogHeader className="border-b border-emerald-100 bg-[#f4fbf7] px-6 py-5">
- <DialogTitle className="flex items-center gap-2 text-xl font-semibold text-emerald-950">
+ <DialogContent
+ overlayClassName="!bg-slate-950/25"
+ className="auth-modal-dialog border border-emerald-950/10 bg-white p-0 text-slate-950 shadow-2xl sm:max-w-[360px] [&>button]:right-3 [&>button]:top-3 [&>button]:text-emerald-950/60 [&>button:hover]:bg-emerald-50 [&>button:hover]:text-emerald-950"
+ >
+ <DialogHeader className="auth-modal-header border-b border-emerald-100 bg-white px-4 py-3">
+ <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-950">
  Welcome to HireVify
  <Badge
   variant={connectionStatus === 'connected'? 'default': 'destructive'}
- className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+ className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
  connectionStatus === 'connected'
  ? 'bg-teal-500 text-white hover:bg-teal-500'
  : connectionStatus === 'checking'
@@ -107,19 +110,19 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </Badge>
  </DialogTitle>
 
- <DialogDescription className="max-w-sm text-sm leading-6 text-slate-600">
- Sign in to your existing account or create a new account to get started with HireVify&apos;s skills-first hiring platform.
+ <DialogDescription className="sr-only">
+ Sign in to your existing account or create a new account to continue.
  </DialogDescription>
  </DialogHeader>
 
- <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="px-6 py-5">
- <TabsList className="auth-tabs grid h-11 w-full grid-cols-2 rounded-md bg-emerald-50 p-1">
+ <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="auth-modal-body gap-2 px-4 py-3">
+ <TabsList className="auth-tabs grid h-9 w-full grid-cols-2 rounded-md bg-emerald-50 p-1">
  <TabsTrigger
  value="signin"
- className="auth-tab-trigger rounded-sm text-sm font-semibold shadow-none"
+ className="auth-tab-trigger rounded-sm text-xs font-semibold shadow-none"
  style={{
- backgroundColor: activeTab === 'signin' ? '#9cf02f' : '#ecfdf5',
- color: '#064e3b',
+ backgroundColor: activeTab === 'signin' ? '#65a83d' : '#ecfdf5',
+ color: activeTab === 'signin' ? '#ffffff' : '#064e3b',
  opacity: 1,
  }}
  >
@@ -127,10 +130,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </TabsTrigger>
  <TabsTrigger
  value="signup"
- className="auth-tab-trigger rounded-sm text-sm font-semibold shadow-none"
+ className="auth-tab-trigger rounded-sm text-xs font-semibold shadow-none"
  style={{
- backgroundColor: activeTab === 'signup' ? '#9cf02f' : '#ecfdf5',
- color: '#064e3b',
+ backgroundColor: activeTab === 'signup' ? '#65a83d' : '#ecfdf5',
+ color: activeTab === 'signup' ? '#ffffff' : '#064e3b',
  opacity: 1,
  }}
  >
@@ -138,10 +141,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </TabsTrigger>
  </TabsList>
 
- <form onSubmit={handleSubmit} className="space-y-4 pt-2">
- <TabsContent value="signin" className="space-y-4">
- <div className="space-y-2">
- <Label htmlFor="signin-email" className="text-sm font-medium text-slate-800">Email</Label>
+ <form onSubmit={handleSubmit} className="space-y-2 pt-0">
+ <TabsContent value="signin" className="space-y-2.5">
+ <div className="space-y-1.5">
+ <Label htmlFor="signin-email" className="text-xs font-medium text-slate-800">Email</Label>
  <Input
  id="signin-email"
  type="email"
@@ -150,12 +153,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setEmail(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
- <div className="space-y-2">
- <Label htmlFor="signin-password" className="text-sm font-medium text-slate-800">Password</Label>
+ <div className="space-y-1.5">
+ <Label htmlFor="signin-password" className="text-xs font-medium text-slate-800">Password</Label>
  <div className="relative">
  <Input
  id="signin-password"
@@ -165,7 +168,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setPassword(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="h-10 rounded-sm border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ className="h-9 rounded-sm border-slate-300 bg-white pr-10 text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
 
  <Button
@@ -187,7 +190,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  <Button
  type="submit"
- className="h-10 w-full rounded-sm bg-lime-400 font-semibold text-emerald-950 shadow-none hover:bg-lime-300 disabled:bg-lime-200 disabled:text-emerald-950/45"
+ className="h-9 w-full rounded-sm bg-[#65a83d] text-sm font-semibold text-white shadow-none hover:bg-[#4f8d2d] disabled:bg-emerald-200 disabled:text-emerald-950/45"
  disabled={
  formLoading ||
  isLoading ||
@@ -205,9 +208,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </Button>
  </TabsContent>
 
- <TabsContent value="signup" className="space-y-4">
- <div className="space-y-2">
- <Label htmlFor="signup-name" className="text-sm font-medium text-slate-800">Full Name</Label>
+ <TabsContent value="signup" className="space-y-2.5">
+ <div className="space-y-1.5">
+ <Label htmlFor="signup-name" className="text-xs font-medium text-slate-800">Full Name</Label>
  <Input
  id="signup-name"
  type="text"
@@ -216,12 +219,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setName(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
- <div className="space-y-2">
- <Label htmlFor="signup-email" className="text-sm font-medium text-slate-800">Email</Label>
+ <div className="space-y-1.5">
+ <Label htmlFor="signup-email" className="text-xs font-medium text-slate-800">Email</Label>
  <Input
  id="signup-email"
  type="email"
@@ -230,12 +233,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  onChange={(e) => setEmail(e.target.value)}
  required
  disabled={formLoading || isLoading}
- className="h-10 rounded-sm border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
 
- <div className="space-y-2">
- <Label htmlFor="signup-password" className="text-sm font-medium text-slate-800">Password</Label>
+ <div className="space-y-1.5">
+ <Label htmlFor="signup-password" className="text-xs font-medium text-slate-800">Password</Label>
  <div className="relative">
  <Input
  id="signup-password"
@@ -246,7 +249,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  required
  minLength={8}
  disabled={formLoading || isLoading}
- className="h-10 rounded-sm border-slate-300 bg-white pr-10 text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ className="h-9 rounded-sm border-slate-300 bg-white pr-10 text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
 
  <Button
@@ -266,8 +269,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </div>
  </div>
 
- <div className="space-y-3">
- <Label className="text-sm font-medium text-slate-800">I am a...</Label>
+ <div className="space-y-2">
+ <Label className="text-xs font-medium text-slate-800">I am a...</Label>
 
  <RadioGroup
  value={userType}
@@ -279,8 +282,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  <Label htmlFor="candidate" className="flex cursor-pointer items-center gap-2 text-slate-800">
  <Users className="h-4 w-4" />
  <div>
- <div className="font-medium">Candidate</div>
- <div className="text-sm text-slate-500">Looking for opportunities</div>
+ <div className="text-sm font-medium">Candidate</div>
+ <div className="text-xs text-slate-500">Looking for opportunities</div>
  </div>
  </Label>
  </div>
@@ -290,8 +293,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  <Label htmlFor="recruiter" className="flex cursor-pointer items-center gap-2 text-slate-800">
  <Briefcase className="h-4 w-4" />
  <div>
- <div className="font-medium">Recruiter</div>
- <div className="text-sm text-slate-500">Hiring talent</div>
+ <div className="text-sm font-medium">Recruiter</div>
+ <div className="text-xs text-slate-500">Hiring talent</div>
  </div>
  </Label>
  </div>
@@ -300,7 +303,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
 
  <Button
  type="submit"
- className="h-10 w-full rounded-sm bg-lime-400 font-semibold text-emerald-950 shadow-none hover:bg-lime-300 disabled:bg-lime-200 disabled:text-emerald-950/45"
+ className="h-9 w-full rounded-sm bg-[#65a83d] text-sm font-semibold text-white shadow-none hover:bg-[#4f8d2d] disabled:bg-emerald-200 disabled:text-emerald-950/45"
  disabled={
  formLoading ||
  isLoading ||
@@ -322,8 +325,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </Tabs>
 
  {connectionStatus!== 'connected' && (
- <Card className="bg-yellow-50 border-yellow-200">
- <CardContent className="pt-4">
+ <Card className="mx-4 mb-4 border-yellow-200 bg-yellow-50">
+ <CardContent className="pt-3">
  <div className="flex items-center gap-2 text-yellow-800">
  <AlertCircle className="h-4 w-4" />
  <span className="text-sm">

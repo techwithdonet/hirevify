@@ -14,6 +14,7 @@ import { ATSView } from './ATSView';
 import { ResumeBuilder } from './ResumeBuilder';
 import { LiveInterviewScreen } from './LiveInterviewScreen';
 import { PricingPage } from './PricingPage';
+import { MarketingInfoPage } from './MarketingInfoPage';
 import { RecruiterAnalytics } from './RecruiterAnalytics';
 import { CandidatePortfolio } from './CandidatePortfolio';
 import { SkillsAssessment } from './SkillsAssessment';
@@ -187,6 +188,8 @@ interface AppRouterProps {
   navigation: NavigationMethods;
   handleLogout: () => Promise<void>;
   handleUserTypeSelection: (userType: UserType) => void;
+  loginPromptSignal: number;
+  onOpenHomepageLogin: () => void;
   setCurrentScreen: (screen: Screen, options?: ScreenNavigationOptions) => void;
   setUnreadMessages: (count: number) => void;
   setUnreadNotifications: (count: number) => void;
@@ -210,6 +213,8 @@ export function AppRouter({
   navigation,
   handleLogout,
   handleUserTypeSelection,
+  loginPromptSignal,
+  onOpenHomepageLogin,
   setCurrentScreen,
   setUnreadMessages,
   setUnreadNotifications,
@@ -238,6 +243,8 @@ export function AppRouter({
  onSelectUserType={handleUserTypeSelection}
  onPostProject={navigation.navigateToPostProject}
  onFindProject={navigation.navigateToProjectSearch}
+ onNavigateScreen={setCurrentScreen}
+ loginPromptSignal={loginPromptSignal}
  />
  );
  
@@ -892,6 +899,26 @@ case 'candidate-dashboard':
  }}
  />
  );
+
+ case 'product-features':
+ case 'product-api':
+ case 'product-integrations':
+ case 'company-about':
+ case 'company-blog':
+ case 'company-careers':
+ case 'company-contact':
+ case 'support-help-center':
+ case 'support-privacy-policy':
+ case 'support-terms-of-service':
+ case 'support-status':
+ return (
+ <MarketingInfoPage
+ page={currentScreen}
+ onBack={navigation.navigateHome}
+ onNavigate={setCurrentScreen}
+ onOpenHomepageLogin={onOpenHomepageLogin}
+ />
+ );
  
  default:
  return (
@@ -899,6 +926,8 @@ case 'candidate-dashboard':
  onSelectUserType={handleUserTypeSelection}
  onPostProject={navigation.navigateToPostProject}
  onFindProject={navigation.navigateToProjectSearch}
+ onNavigateScreen={setCurrentScreen}
+ loginPromptSignal={loginPromptSignal}
  />
  );
  }

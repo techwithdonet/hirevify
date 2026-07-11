@@ -80,6 +80,17 @@ const ALL_SCREENS: Screen[] = [
  'candidate-professional-ats',
  'ai-smart-notifications',
  'ats-diagnostic',
+ 'product-features',
+ 'product-api',
+ 'product-integrations',
+ 'company-about',
+ 'company-blog',
+ 'company-careers',
+ 'company-contact',
+ 'support-help-center',
+ 'support-privacy-policy',
+ 'support-terms-of-service',
+ 'support-status',
  'pricing',
  'subscription-manager',
  'beta-program',
@@ -89,7 +100,21 @@ const ALL_SCREENS: Screen[] = [
  'notifications',
 ];
 
-const PUBLIC_SCREENS = new Set<Screen>(['homepage', 'pricing']);
+const PUBLIC_SCREENS = new Set<Screen>([
+ 'homepage',
+ 'pricing',
+ 'product-features',
+ 'product-api',
+ 'product-integrations',
+ 'company-about',
+ 'company-blog',
+ 'company-careers',
+ 'company-contact',
+ 'support-help-center',
+ 'support-privacy-policy',
+ 'support-terms-of-service',
+ 'support-status',
+]);
 
 function isScreen(value: unknown): value is Screen {
  return typeof value === 'string' && ALL_SCREENS.includes(value as Screen);
@@ -181,6 +206,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     challengeDescription?: string;
   } | null>(null);
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
+  const [loginPromptSignal, setLoginPromptSignal] = useState(0);
   const hadAuthenticatedUser = useRef(false);
   const hasSyncedUrlScreen = useRef(false);
 
@@ -246,6 +272,11 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
  window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
  }
  }, [pathname, router, searchParams]);
+
+ const openHomepageLogin = useCallback(() => {
+ setLoginPromptSignal((signal) => signal + 1);
+ navigateScreen('homepage');
+ }, [navigateScreen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -446,6 +477,8 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
      navigation={navigation}
      handleLogout={navigation.handleLogout}
      handleUserTypeSelection={handleUserTypeSelection}
+     loginPromptSignal={loginPromptSignal}
+     onOpenHomepageLogin={openHomepageLogin}
      setCurrentScreen={navigateScreen}
      setUnreadMessages={setUnreadMessages}
      setUnreadNotifications={setUnreadNotifications}

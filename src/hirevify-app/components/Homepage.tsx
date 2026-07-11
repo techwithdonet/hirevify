@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useScrollReveal } from './useScrollReveal';
 import { Button } from './ui/button';
 import { AuthModal } from './AuthModal';
@@ -10,26 +10,123 @@ import {
  Settings,
  User,
  MessageCircle,
- Link,
+ Link as LinkIcon,
  GitBranch,
  Menu,
  X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Screen } from '../types/app';
 
 interface HomepageProps {
  onSelectUserType: (userType: 'recruiter' | 'candidate') => void;
  onPostProject: () => void;
  onFindProject: () => void;
+ onNavigateScreen: (screen: Screen) => void;
+ loginPromptSignal: number;
 }
 
-export function Homepage({ onPostProject, onFindProject }: HomepageProps) {
+type FooterLink = {
+ label: string;
+ screen?: Screen;
+ sectionId?: string;
+ href?: string;
+ external?: boolean;
+};
+
+const footerSections: Array<{ heading: string; links: FooterLink[] }> = [
+ {
+ heading: 'Product',
+ links: [
+ { label: 'Features', screen: 'product-features' },
+ { label: 'API', screen: 'product-api' },
+ { label: 'Integrations', screen: 'product-integrations' },
+ { label: 'Pricing', screen: 'pricing' },
+ ],
+ },
+ {
+ heading: 'Company',
+ links: [
+ { label: 'About', screen: 'company-about' },
+ { label: 'Blog', screen: 'company-blog' },
+ { label: 'Careers', screen: 'company-careers' },
+ { label: 'Contact', screen: 'company-contact' },
+ ],
+ },
+ {
+ heading: 'Support',
+ links: [
+ { label: 'Help Center', screen: 'support-help-center' },
+ { label: 'Privacy Policy', screen: 'support-privacy-policy' },
+ { label: 'Terms of Service', screen: 'support-terms-of-service' },
+ { label: 'Status', screen: 'support-status' },
+ ],
+ },
+];
+
+const screenHref = (screen: Screen) => (screen === 'homepage' ? '/' : `/?screen=${screen}`);
+
+const hasOpenLoginIntent = () => {
+ if (typeof window === 'undefined') {
+ return false;
+ }
+
+ const params = new URLSearchParams(window.location.search);
+ if (params.get('openLogin') === '1') {
+ return true;
+ }
+
+ try {
+ return window.sessionStorage?.getItem('hirevify_open_login') === '1';
+ } catch (error) {
+ console.warn('Unable to read login intent:', error);
+ return false;
+ }
+};
+
+const clearOpenLoginIntent = () => {
+ if (typeof window === 'undefined') {
+ return;
+ }
+
+ try {
+ window.sessionStorage?.removeItem('hirevify_open_login');
+ } catch (error) {
+ console.warn('Unable to clear login intent:', error);
+ }
+
+ const params = new URLSearchParams(window.location.search);
+ if (!params.has('openLogin')) {
+ return;
+ }
+
+ params.delete('openLogin');
+ const query = params.toString();
+ window.history.replaceState(null, '', query ? `${window.location.pathname}?${query}` : window.location.pathname);
+};
+
+export function Homepage({ onPostProject, onFindProject, onNavigateScreen, loginPromptSignal }: HomepageProps) {
  const { user } = useAuth();
  const [authModalOpen, setAuthModalOpen] = useState(false);
  const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signin');
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
  useScrollReveal();
+
+ useEffect(() => {
+ if (typeof window === 'undefined') {
+ return;
+ }
+
+ if (loginPromptSignal <= 0 && !hasOpenLoginIntent()) {
+ return;
+ }
+
+ clearOpenLoginIntent();
+ setAuthModalTab('signin');
+ setAuthModalOpen(true);
+ toast.info('Please sign in to explore HireVify');
+ }, [loginPromptSignal]);
 
  const scrollToSection = (sectionId: string) => {
  document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
@@ -60,6 +157,40 @@ export function Homepage({ onPostProject, onFindProject }: HomepageProps) {
  } else {
  onFindProject();
  }
+ };
+
+ const handleFooterLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, link: FooterLink) => {
+ if (link.href || link.external) {
+ return;
+ }
+
+ event.preventDefault();
+
+ if (link.sectionId) {
+ scrollToSection(link.sectionId);
+ return;
+ }
+
+ if (link.screen) {
+ onNavigateScreen(link.screen);
+ }
+ };
+
+ const handleCopySiteLink = async () => {
+ const fallbackUrl = 'https://hirevify.com';
+ const url = typeof window !== 'undefined' ? window.location.origin : fallbackUrl;
+
+ try {
+ if (typeof navigator !== 'undefined' && navigator.clipboard) {
+ await navigator.clipboard.writeText(url);
+ toast.success('HireVify link copied');
+ return;
+ }
+ } catch (error) {
+ console.warn('Failed to copy HireVify link:', error);
+ }
+
+ toast.info(url);
  };
 
  return (
@@ -566,27 +697,54 @@ export function Homepage({ onPostProject, onFindProject }: HomepageProps) {
  Skill-based hiring. Real proof. Better decisions.
  </p>
  <div className="mt-6 flex gap-3">
- {[MessageCircle, Link, GitBranch].map((Icon, index) => (
- <Button key={index} variant="ghost" size="icon" className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300">
- <Icon className="h-5 w-5" />
+ <Button
+ type="button"
+ variant="ghost"
+ size="icon"
+ aria-label="Contact HireVify"
+ onClick={() => onNavigateScreen('company-contact')}
+ className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ >
+ <MessageCircle className="h-5 w-5" />
  </Button>
- ))}
+ <Button
+ type="button"
+ variant="ghost"
+ size="icon"
+ aria-label="Copy HireVify link"
+ onClick={handleCopySiteLink}
+ className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ >
+ <LinkIcon className="h-5 w-5" />
+ </Button>
+ <Button
+ type="button"
+ variant="ghost"
+ size="icon"
+ aria-label="View system status"
+ onClick={() => onNavigateScreen('support-status')}
+ className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ >
+ <GitBranch className="h-5 w-5" />
+ </Button>
  </div>
  </div>
 
  <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
- {[
- { heading: 'Product', links: ['Features', 'API', 'Integrations', 'Pricing'] },
- { heading: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
- { heading: 'Support', links: ['Help Center', 'Privacy Policy', 'Terms of Service', 'Status'] },
- ].map((section) => (
+ {footerSections.map((section) => (
  <div key={section.heading}>
  <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-white/30">{section.heading}</h3>
  <ul className="mt-4 space-y-3">
  {section.links.map((item) => (
- <li key={item}>
- <a href="#" className="text-sm font-normal text-white/40 transition hover:text-white">
- {item}
+ <li key={item.label}>
+ <a
+ href={item.href ?? (item.screen ? screenHref(item.screen) : `#${item.sectionId}`)}
+ onClick={(event) => handleFooterLinkClick(event, item)}
+ className="text-sm font-normal text-white/40 transition hover:text-white"
+ target={item.external ? '_blank' : undefined}
+ rel={item.external ? 'noreferrer' : undefined}
+ >
+ {item.label}
  </a>
  </li>
  ))}
