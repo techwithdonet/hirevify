@@ -214,6 +214,100 @@ const ACCEPTED_CV_TYPES = [
 ];
 const ACCEPTED_CV_EXTENSIONS = '.pdf,.doc,.docx';
 const MAX_CV_BYTES = 10 * 1024 * 1024;
+const PROFILE_EDITOR_PROFILE_COLUMNS = 'id, auth_user_id, email, full_name, phone, location, bio';
+const PROFILE_EDITOR_CANDIDATE_COLUMNS = [
+ 'full_name',
+ 'phone',
+ 'location',
+ 'bio',
+ 'date_of_birth',
+ 'headline',
+ 'experience_level',
+ 'experience_summary',
+ 'years_of_experience',
+ 'portfolio_url',
+ 'linkedin_url',
+ 'github_url',
+ 'resume_url',
+ 'skills',
+ 'preferred_job_type',
+ 'preferred_work_type',
+ 'salary_min',
+ 'salary_max',
+ 'salary_currency',
+ 'availability',
+ 'timezone',
+ 'current_company',
+ 'current_designation',
+ 'industry',
+ 'career_level',
+ 'total_experience',
+ 'employment_status',
+ 'notice_period',
+ 'available_from',
+ 'expected_salary',
+ 'preferred_roles',
+ 'preferred_locations',
+ 'employment_type',
+ 'work_mode',
+ 'willing_to_relocate',
+ 'work_authorization',
+ 'country',
+ 'state',
+ 'city',
+ 'current_location',
+ 'languages',
+ 'education',
+ 'updated_at',
+].join(', ');
+const PROFILE_EDITOR_CACHE_VERSION = 1;
+
+interface ProfileEditorCacheSnapshot {
+ version: typeof PROFILE_EDITOR_CACHE_VERSION;
+ userId: string;
+ profileData: ProfileData;
+ skillsPreferences: SkillsPreferences;
+ professionalData: ProfessionalProfileData;
+ education: EducationEntry[];
+ cachedAt: string;
+}
+
+const getProfileEditorCacheKey = (userId: string) => `hirevify_candidate_profile_editor:${userId}`;
+
+const readProfileEditorCache = (userId?: string | null): ProfileEditorCacheSnapshot | null => {
+ if (typeof window === 'undefined' || !userId) return null;
+
+ try {
+ const raw = window.sessionStorage.getItem(getProfileEditorCacheKey(userId));
+ if (!raw) return null;
+ const parsed = JSON.parse(raw) as ProfileEditorCacheSnapshot;
+ if (parsed.version !== PROFILE_EDITOR_CACHE_VERSION || parsed.userId !== userId) return null;
+ return parsed;
+ } catch {
+ return null;
+ }
+};
+
+const writeProfileEditorCache = (
+ userId: string | undefined,
+ snapshot: Omit<ProfileEditorCacheSnapshot, 'version' | 'userId' | 'cachedAt'>
+) => {
+ if (typeof window === 'undefined' || !userId) return;
+
+ try {
+ window.sessionStorage.setItem(
+ getProfileEditorCacheKey(userId),
+ JSON.stringify({
+ version: PROFILE_EDITOR_CACHE_VERSION,
+ userId,
+ cachedAt: new Date().toISOString(),
+ ...snapshot,
+ } satisfies ProfileEditorCacheSnapshot)
+ );
+ } catch {
+ // Session cache is only a refresh speed-up; failing silently is fine.
+ }
+};
 
 const normalizeOptionalUrl = (value: string) => {
  const trimmed = value.trim();
@@ -526,14 +620,30 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  try {
  setIsLoadingProfile(true);
 
- const supabase = createSupabaseBrowserClient();
- const { data: authData, error: authError } = await supabase.auth.getUser();
-
- if (authError ||!authData?.user?.id) {
- throw new Error('No active Supabase login found.');
+ if (!user?.id) {
+ setIsLoadingProfile(false);
+ return;
  }
 
-  const { data: profileRow, error: profileError } = await supabase.from('profiles').select('*').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).maybeSingle();
+ const supabase = createSupabaseBrowserClient();
+  const profileRequest = supabase
+  .from('profiles')
+  .select(PROFILE_EDITOR_PROFILE_COLUMNS)
+  .or(`auth_user_id.eq.${user.id},id.eq.${user.id}`)
+  .maybeSingle();
+
+  const directCandidateRequest = supabase
+  .from('candidate_profiles')
+  .select(PROFILE_EDITOR_CANDIDATE_COLUMNS)
+  .eq('user_id', user.id)
+  .order('updated_at', { ascending: false })
+  .limit(1)
+  .maybeSingle();
+
+  const [
+  { data: profileRow, error: profileError },
+  { data: directCandidateProfileRow, error: directCandidateError },
+  ] = await Promise.all([profileRequest, directCandidateRequest]);
 
  if (profileError) {
  throw new Error(profileError.message);
@@ -544,15 +654,23 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  return;
  }
 
- const candidateProfileUserIds = Array.from(new Set([profileRow.id, authData.user.id].filter(Boolean)));
+ let candidateProfileRow = directCandidateProfileRow;
+ let candidateError = directCandidateError;
+ const candidateProfileUserIds = Array.from(new Set([profileRow.auth_user_id, profileRow.id].filter((id) => id && id !== user.id)));
 
-const { data: candidateProfile, error: candidateError } = await supabase
+ if (!candidateProfileRow && candidateProfileUserIds.length > 0) {
+ const fallbackCandidateResult = await supabase
   .from('candidate_profiles')
-  .select('*, experience_level, preferred_job_type')
+  .select(PROFILE_EDITOR_CANDIDATE_COLUMNS)
   .in('user_id', candidateProfileUserIds)
   .order('updated_at', { ascending: false })
   .limit(1)
   .maybeSingle();
+
+ candidateProfileRow = fallbackCandidateResult.data;
+ candidateError = fallbackCandidateResult.error;
+ }
+ const candidateProfile = candidateProfileRow as any;
 
  if (candidateError) {
  console.error('Candidate profile load error:', candidateError);
@@ -560,7 +678,7 @@ const { data: candidateProfile, error: candidateError } = await supabase
 
  const nameParts = String(profileRow.full_name || user?.name || '').split(' ').filter(Boolean);
 
- setProfileData({
+ const nextProfileData: ProfileData = {
  firstName: candidateProfile?.full_name?.split(' ')[0] || nameParts[0] || '',
  lastName: candidateProfile?.full_name?.split(' ').slice(1).join(' ') || nameParts.slice(1).join(' ') || '',
  email: profileRow.email || user?.email || '',
@@ -576,9 +694,9 @@ const { data: candidateProfile, error: candidateError } = await supabase
  GitBranch: candidateProfile?.github_url || '',
  portfolio: candidateProfile?.portfolio_url || '',
  resumeUrl: candidateProfile?.resume_url || '',
- });
+ };
 
-  setSkillsPreferences({
+  const nextSkillsPreferences: SkillsPreferences = {
   skills: candidateProfile?.skills || [],
   jobTypes: Array.isArray(candidateProfile?.preferred_job_type) ? candidateProfile.preferred_job_type : [],
   workArrangement: candidateProfile?.preferred_work_type || [],
@@ -587,9 +705,9 @@ const { data: candidateProfile, error: candidateError } = await supabase
   currency: candidateProfile?.salary_currency || 'USD',
   noticePeriod: candidateProfile?.availability || '',
   timezone: candidateProfile?.timezone || 'IST',
-  });
+  };
 
-  setProfessionalData({
+  const nextProfessionalData: ProfessionalProfileData = {
   currentCompany: candidateProfile?.current_company || '',
   currentDesignation: candidateProfile?.current_designation || candidateProfile?.headline || '',
   industry: candidateProfile?.industry || '',
@@ -610,16 +728,16 @@ const { data: candidateProfile, error: candidateError } = await supabase
   city: candidateProfile?.city || '',
   currentLocation: candidateProfile?.current_location || candidateProfile?.location || profileRow.location || '',
   languages: candidateProfile?.languages || [],
-  });
+  };
 
-  // Load education
+  let nextEducation: EducationEntry[] = [];
   if (candidateProfile?.education) {
     try {
       const parsed = typeof candidateProfile.education === 'string'
         ? JSON.parse(candidateProfile.education)
         : candidateProfile.education;
       if (Array.isArray(parsed) && parsed.length > 0) {
-        setEducation(parsed.map((e: any, i: number) => ({
+        nextEducation = parsed.map((e: any, i: number) => ({
           id: e.id || String(Date.now() + i),
           degree: e.degree || '',
           fieldOfStudy: e.fieldOfStudy || e.field || '',
@@ -627,12 +745,23 @@ const { data: candidateProfile, error: candidateError } = await supabase
           startYear: e.startYear || e.startDate || '',
           endYear: e.endYear || e.endDate || '',
           grade: e.grade || '',
-        })));
+        }));
       }
     } catch {
       // ignore parse errors
     }
   }
+
+ setProfileData(nextProfileData);
+ setSkillsPreferences(nextSkillsPreferences);
+ setProfessionalData(nextProfessionalData);
+ setEducation(nextEducation);
+ writeProfileEditorCache(user.id, {
+ profileData: nextProfileData,
+ skillsPreferences: nextSkillsPreferences,
+ professionalData: nextProfessionalData,
+ education: nextEducation,
+ });
   } catch (error) {
  console.error('Failed to load candidate profile:', error);
  toast.error(error instanceof Error? error.message: 'Failed to load candidate profile');
@@ -642,6 +771,14 @@ const { data: candidateProfile, error: candidateError } = await supabase
  };
 
  useEffect(() => {
+ const cachedProfile = readProfileEditorCache(user?.id);
+ if (cachedProfile) {
+ setProfileData(cachedProfile.profileData);
+ setSkillsPreferences(cachedProfile.skillsPreferences);
+ setProfessionalData(cachedProfile.professionalData);
+ setEducation(cachedProfile.education || []);
+ }
+
  loadCandidateProfile();
  }, [user?.id]);
 
@@ -880,10 +1017,20 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  return result.data;
  };
 
+ const cacheCurrentProfileEditorState = () => {
+ writeProfileEditorCache(user?.id, {
+ profileData,
+ skillsPreferences,
+ professionalData,
+ education,
+ });
+ };
+
  const handleSaveDraft = async () => {
  try {
  setIsLoading(true);
  await saveCandidateProfileToDatabase(false);
+ cacheCurrentProfileEditorState();
  toast.success('Saved');
  } catch (error) {
  console.error('Failed to save draft:', error);
@@ -899,6 +1046,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  try {
  setIsLoading(true);
  await saveCandidateProfileToDatabase(false);
+ cacheCurrentProfileEditorState();
  setCurrentStep((step) => Math.min(step + 1, steps.length - 1));
  } catch (error) {
  console.error('Failed to save step:', error);
@@ -917,6 +1065,7 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  try {
  setIsLoading(true);
  await saveCandidateProfileToDatabase(true);
+ cacheCurrentProfileEditorState();
  toast.success('Profile completed and visible to recruiters');
  onBack();
  } catch (error) {
