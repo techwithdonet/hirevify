@@ -28,12 +28,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [name, setName] = useState('');
+ const [companyName, setCompanyName] = useState('');
  const [userType, setUserType] = useState<'recruiter' | 'candidate'>('candidate');
 
  const resetForm = () => {
  setEmail('');
  setPassword('');
  setName('');
+ setCompanyName('');
  setUserType('candidate');
  setShowPassword(false);
  };
@@ -67,7 +69,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  } else {
  console.log('Attempting signup for:', email, userType);
 
- const result = await signUp(email, password, name, userType);
+ const result = await signUp(email, password, name, userType, companyName);
 
  if (result.success) {
  console.log('Signup successful');
@@ -209,6 +211,61 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </TabsContent>
 
  <TabsContent value="signup" className="space-y-2.5">
+ <div className="space-y-2">
+ <div className="flex items-center justify-between gap-3">
+ <Label className="text-xs font-medium text-slate-800">Choose account type</Label>
+ <span className="text-[11px] font-medium text-slate-500">Required</span>
+ </div>
+
+ <RadioGroup
+ value={userType}
+ onValueChange={(value: 'recruiter' | 'candidate') => {
+ setUserType(value);
+ if (value === 'candidate') {
+ setCompanyName('');
+ }
+ }}
+ disabled={formLoading || isLoading}
+ className="grid grid-cols-2 gap-2"
+ >
+ <div>
+ <RadioGroupItem value="candidate" id="signup-candidate" className="sr-only" />
+ <Label
+ htmlFor="signup-candidate"
+ className={`flex min-h-[76px] cursor-pointer flex-col justify-between rounded-md border p-3 transition ${
+ userType === 'candidate'
+ ? 'border-[#65a83d] bg-emerald-50 text-emerald-950 shadow-sm'
+ : 'border-slate-200 bg-white text-slate-800 hover:border-emerald-200 hover:bg-emerald-50/40'
+ }`}
+ >
+ <span className="flex items-center gap-2 text-sm font-semibold">
+ <Users className="h-4 w-4" />
+ Candidate
+ </span>
+ <span className="mt-1 text-xs leading-4 text-slate-500">Find jobs and prove your skills</span>
+ </Label>
+ </div>
+
+ <div>
+ <RadioGroupItem value="recruiter" id="signup-recruiter" className="sr-only" />
+ <Label
+ htmlFor="signup-recruiter"
+ className={`flex min-h-[76px] cursor-pointer flex-col justify-between rounded-md border p-3 transition ${
+ userType === 'recruiter'
+ ? 'border-[#65a83d] bg-emerald-50 text-emerald-950 shadow-sm'
+ : 'border-slate-200 bg-white text-slate-800 hover:border-emerald-200 hover:bg-emerald-50/40'
+ }`}
+ >
+ <span className="flex items-center gap-2 text-sm font-semibold">
+ <Briefcase className="h-4 w-4" />
+ Recruiter
+ </span>
+ <span className="mt-1 text-xs leading-4 text-slate-500">Post jobs and hire talent</span>
+ </Label>
+ </div>
+ </RadioGroup>
+ </div>
+
  <div className="space-y-1.5">
  <Label htmlFor="signup-name" className="text-xs font-medium text-slate-800">Full Name</Label>
  <Input
@@ -222,6 +279,22 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
  />
  </div>
+
+ {userType === 'recruiter' && (
+ <div className="space-y-1.5">
+ <Label htmlFor="signup-company-name" className="text-xs font-medium text-slate-800">Company Name</Label>
+ <Input
+ id="signup-company-name"
+ type="text"
+ placeholder="Enter your company name"
+ value={companyName}
+ onChange={(e) => setCompanyName(e.target.value)}
+ required
+ disabled={formLoading || isLoading}
+ className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+ />
+ </div>
+ )}
 
  <div className="space-y-1.5">
  <Label htmlFor="signup-email" className="text-xs font-medium text-slate-800">Email</Label>
@@ -269,45 +342,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
  </div>
  </div>
 
- <div className="space-y-2">
- <Label className="text-xs font-medium text-slate-800">I am a...</Label>
-
- <RadioGroup
- value={userType}
- onValueChange={(value: 'recruiter' | 'candidate') => setUserType(value)}
- disabled={formLoading || isLoading}
- >
- <div className="flex items-center space-x-2">
- <RadioGroupItem value="candidate" id="candidate" />
- <Label htmlFor="candidate" className="flex cursor-pointer items-center gap-2 text-slate-800">
- <Users className="h-4 w-4" />
- <div>
- <div className="text-sm font-medium">Candidate</div>
- <div className="text-xs text-slate-500">Looking for opportunities</div>
- </div>
- </Label>
- </div>
-
- <div className="flex items-center space-x-2">
- <RadioGroupItem value="recruiter" id="recruiter" />
- <Label htmlFor="recruiter" className="flex cursor-pointer items-center gap-2 text-slate-800">
- <Briefcase className="h-4 w-4" />
- <div>
- <div className="text-sm font-medium">Recruiter</div>
- <div className="text-xs text-slate-500">Hiring talent</div>
- </div>
- </Label>
- </div>
- </RadioGroup>
- </div>
-
  <Button
  type="submit"
  className="h-9 w-full rounded-sm bg-[#65a83d] text-sm font-semibold text-white shadow-none hover:bg-[#4f8d2d] disabled:bg-emerald-200 disabled:text-emerald-950/45"
  disabled={
  formLoading ||
  isLoading ||
- connectionStatus!== 'connected' ||!name ||!email ||!password ||
+ connectionStatus!== 'connected' ||!name.trim() ||!email ||!password ||
+ (userType === 'recruiter' &&!companyName.trim()) ||
  password.length < 8
  }
  >

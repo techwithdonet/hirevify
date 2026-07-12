@@ -89,7 +89,7 @@ export const useAppNavigation = ({
  setCurrentScreen('recruiter-post-project');
  }, [requireAuth, setSelectedProject, setCurrentScreen]);
 
- // Enhanced navigation for "Find a Project" - requires authentication
+ // Enhanced navigation for "Find a Job" - requires authentication
   const navigateToProjectSearch = useCallback(() => {
   if (!requireAuth('search for projects', 'candidate')) return;
   

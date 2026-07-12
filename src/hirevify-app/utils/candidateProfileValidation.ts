@@ -61,6 +61,12 @@ export type CompletionItem = {
 export const MIN_CANDIDATE_PROFILE_COMPLETENESS = 100;
 
 const hasText = (value: unknown) => typeof value === 'string' && value.trim().length > 0;
+export const hasCompleteCandidateName = (value: unknown) => {
+  if (typeof value !== 'string') return false;
+  return value.trim().split(/\s+/).filter(Boolean).length >= 2;
+};
+const hasOwn = (profile: Record<string, unknown>, key: string) =>
+  Object.prototype.hasOwnProperty.call(profile, key);
 const hasArray = (value: unknown) => Array.isArray(value) && value.length > 0;
 const hasArrayCount = (value: unknown, count: number) => Array.isArray(value) && value.length >= count;
 const hasNumericValue = (value: unknown) => {
@@ -106,8 +112,16 @@ export function getCandidateProfileCompletionChecklist(profile: Record<string, u
     hasNumericValue(profile.years_of_experience) ||
     hasText(profile.experience_level);
 
+  const nameChecklist =
+    hasOwn(profile, 'first_name') || hasOwn(profile, 'last_name')
+      ? [
+          { key: 'first_name', label: 'First name', complete: hasText(profile.first_name) },
+          { key: 'last_name', label: 'Last name', complete: hasText(profile.last_name) },
+        ]
+      : [{ key: 'full_name', label: 'First and last name', complete: hasCompleteCandidateName(profile.full_name) }];
+
   return [
-    { key: 'full_name', label: 'Full name', complete: hasText(profile.full_name) },
+    ...nameChecklist,
     { key: 'phone', label: 'Phone number', complete: hasText(profile.phone) },
     { key: 'location', label: 'Location', complete: locationComplete },
     { key: 'headline', label: 'Current title / headline', complete: hasText(profile.headline) || hasText(profile.current_designation) },

@@ -198,7 +198,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     return [];
   });
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [projectChallengeData, setProjectChallengeData] = useState<{
     projectId: string;

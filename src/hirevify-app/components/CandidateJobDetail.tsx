@@ -13,6 +13,7 @@ import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../serv
 import type { Application as ServiceApplication } from '../services/applicationsService';
 import { calculateAtsMatch, type AtsMatchResult } from '../services/atsMatchingService';
 import { extractResumeText } from '../utils/ats/resumeTextExtractor';
+import { hasCompleteCandidateName } from '../utils/candidateProfileValidation';
 
 interface CandidateJobDetailProps {
   job: Job;
@@ -123,12 +124,14 @@ function applyOptimizedScore(
 }
 
 interface CandidateExtras {
+  full_name: string | null;
   headline: string | null;
   skills: string[] | null;
   experience_summary: string | null;
   years_of_experience: number | null;
   resume_url: string | null;
   profile_completeness: number | null;
+  profile_completed?: boolean | null;
 }
 
 function formatBudget(job: Job): string | null {
@@ -193,7 +196,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
         const candidateIds = [profileRow?.id, authData.user.id].filter(Boolean) as string[];
         const { data: extrasRow } = await supabase
           .from('candidate_profiles')
-          .select('headline, skills, experience_summary, years_of_experience, resume_url, profile_completeness')
+          .select('full_name, headline, skills, experience_summary, years_of_experience, resume_url, profile_completeness, profile_completed')
           .in('user_id', candidateIds)
           .order('updated_at', { ascending: false })
           .limit(1)
@@ -282,13 +285,18 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
     checkExistingApplication();
   }, [candidateProfileId, authUserId, job.id, supabase]);
 
+  const hasRequiredCandidateName = hasCompleteCandidateName(candidateExtras?.full_name);
+  const isProfileReadyToApply =
+    hasRequiredCandidateName &&
+    (Boolean(candidateExtras?.profile_completed) || profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS);
+
   const handleApplyClick = () => {
     if (!user) {
       toast.error('Please sign in to apply.');
       return;
     }
     // Check profile completeness - show modal if below threshold
-    if (profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS) {
+    if (!isProfileReadyToApply) {
       setShowProfileIncompleteModal(true);
       return;
     }
@@ -818,7 +826,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
             </h2>
             <p className="mb-6 text-center text-sm text-slate-600">
               Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
-              Recruiters can only see candidates with complete profiles. Please add more information before applying.
+              Recruiters can only see candidates with complete profiles. {!hasRequiredCandidateName ? 'Add your first and last name before applying.' : 'Please add more information before applying.'}
             </p>
             <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -831,7 +839,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                 />
               </div>
               <p className="mt-2 text-xs text-slate-500">
-                Complete all required profile fields to apply and become visible to recruiters.
+                {!hasRequiredCandidateName ? 'Last Name is required before you can apply or become visible to recruiters.' : 'Complete all required profile fields to apply and become visible to recruiters.'}
               </p>
             </div>
             <div className="space-y-3">
@@ -981,7 +989,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
           {/* Sidebar */}
           <aside className="space-y-4">
             {/* Profile Completeness Warning */}
-            {profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS && (
+            {!isProfileReadyToApply && (
               <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-sm">
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100">
@@ -991,7 +999,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                     <p className="text-sm font-semibold text-slate-950">Profile too incomplete</p>
                     <p className="mt-1 text-xs text-slate-600">
                       Your profile is only <span className="font-semibold text-amber-600">{profileCompleteness}%</span> complete. 
-                      Complete all required profile fields to apply for jobs.
+                      {!hasRequiredCandidateName ? 'Add your first and last name before applying for jobs.' : 'Complete all required profile fields to apply for jobs.'}
                     </p>
                     <button
                       type="button"
@@ -1032,7 +1040,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                               {getCvFileName()}
                             </p>
                           )}
-                          {profileCompleteness < 100 ? (
+                          {!isProfileReadyToApply ? (
                             <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
                               <p className="text-xs text-amber-800">
                                 Complete your profile to check CV match.{' '}
@@ -1391,7 +1399,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                       Your application is in. The recruiter will review your profile and may assign the project.
                     </p>
                   </div>
-                ) : profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS ? (
+                ) : !isProfileReadyToApply ? (
                   <div className="space-y-2">
                     <Button
                       disabled
@@ -1402,7 +1410,7 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                     </Button>
                     <p className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
                       Your profile is only <span className="font-semibold">{profileCompleteness}%</span> complete.
-                      Please complete it before checking your CV match for this job.{' '}
+                      {!hasRequiredCandidateName ? ' Add your first and last name before checking your CV match for this job. ' : ' Please complete it before checking your CV match for this job. '}
                       <button
                         type="button"
                         onClick={onEditProfile}
@@ -1416,9 +1424,9 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
                   <Button
                     className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
                     onClick={handleApplyClick}
-                    disabled={profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS || !cvMatch || isCvBelowThreshold}
+                    disabled={!isProfileReadyToApply || !cvMatch || isCvBelowThreshold}
                   >
-                    {profileCompleteness < MIN_CANDIDATE_PROFILE_COMPLETENESS
+                    {!isProfileReadyToApply
                       ? 'Complete profile to apply'
                       : !cvMatch
                         ? 'Check CV match to apply'

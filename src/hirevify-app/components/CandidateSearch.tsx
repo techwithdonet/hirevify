@@ -19,6 +19,7 @@ import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import type { Candidate } from '@/src/hirevify-app/types/app';
 import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
+import { hasCompleteCandidateName } from '../utils/candidateProfileValidation';
 
 interface CandidateSearchProps {
  onBack: () => void;
@@ -41,8 +42,10 @@ interface SearchFilters {
  minMatchScore: number;
  responseTime: string;
  timezone: string;
- hasPortfolio: boolean;
+  hasPortfolio: boolean;
 }
+
+const formatExperienceYears = (years: number) => `${years} ${years === 1 ? 'year' : 'years'}`;
 
 export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandidateDetail, savedOnly = false }: CandidateSearchProps) {
  const { user } = useAuth();
@@ -184,7 +187,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  matchScore: Math.max(60, 95 - index * 4),
  responseRate: Number(details.response_rate || Math.max(50, 90 - index * 3)),
  preferredWorkType: details.preferred_work_type || [],
- experience: yearsOfExperience > 0? `${yearsOfExperience} years`: 'Not specified',
+ experience: yearsOfExperience > 0? formatExperienceYears(yearsOfExperience): 'Not specified',
  yearsOfExperience,
  totalExperience: Number(details.total_experience ?? yearsOfExperience),
  currentCompany: details.current_company || '',
@@ -248,7 +251,7 @@ export function CandidateSearch({ onBack, onUpgrade, onViewMessages, onViewCandi
  languages: details.languages || [],
  hiringSuccessRate: 0,
  };
- });
+ }).filter((candidate: any) => hasCompleteCandidateName(candidate.name));
 
   setCandidates(mapped as unknown as Candidate[]);
   setFilteredCandidates(mapped as unknown as Candidate[]);

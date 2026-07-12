@@ -86,6 +86,38 @@ const getAvailabilityBadge = (availability: string) => {
   return config[normalizedAvailability] || { label: 'Availability unknown', className: 'bg-slate-100 text-slate-600 border-slate-200' };
 };
 
+const normalizeUrlForCompare = (url?: string | null) =>
+  String(url || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+
+const isGitHubRepoUrl = (url?: string | null) => {
+  const value = String(url || '').trim();
+  if (!value) return false;
+
+  try {
+    const parsed = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    const pathParts = parsed.pathname.split('/').filter(Boolean);
+    return parsed.hostname.replace(/^www\./i, '').toLowerCase() === 'github.com' && pathParts.length >= 2;
+  } catch {
+    return false;
+  }
+};
+
+const formatYearsOfExperience = (years?: number | null, includeExperience = false) => {
+  const numericYears = Number(years || 0);
+  const safeYears = Number.isFinite(numericYears) ? numericYears : 0;
+  const value = Number.isInteger(safeYears)
+    ? String(safeYears)
+    : safeYears.toFixed(1).replace(/\.0$/, '');
+  const unit = safeYears === 1 ? 'year' : 'years';
+
+  return includeExperience ? `${value} ${unit} of experience` : `${value} ${unit}`;
+};
+
 export function RecruiterCandidateDetail({
   candidate,
   onBack,
@@ -177,6 +209,13 @@ export function RecruiterCandidateDetail({
   const primarySkills = candidate.skills.slice(0, 6);
   const extraSkillCount = Math.max(candidate.skills.length - primarySkills.length, 0);
   const lastActive = candidate.lastActive ? new Date(candidate.lastActive).toLocaleDateString() : 'Unknown';
+  const githubLinkLabel = isGitHubRepoUrl(candidate.githubUrl) ? 'GitHub Repo' : 'GitHub';
+  const mainOnlinePresenceKeys = new Set(
+    [candidate.linkedinUrl, candidate.githubUrl, candidate.portfolioUrl].map(normalizeUrlForCompare).filter(Boolean)
+  );
+  const extraPortfolioLinks = (candidate.portfolioLinks || []).filter(
+    (link) => !mainOnlinePresenceKeys.has(normalizeUrlForCompare(link))
+  );
 
   return (
     <DashboardPageLayout
@@ -242,7 +281,7 @@ export function RecruiterCandidateDetail({
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Briefcase className="h-4 w-4 text-emerald-200" />
-                      {displayExperience} years experience
+                      {formatYearsOfExperience(displayExperience, true)}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Home className="h-4 w-4 text-emerald-200" />
@@ -464,22 +503,22 @@ export function RecruiterCandidateDetail({
               <ContactRow icon={Phone} value={candidate.phone} />
               <ContactRow icon={Clock} value={candidate.timezone} />
               <LinkButton label="Portfolio" url={candidate.portfolioUrl} onOpen={openExternalUrl} />
-              <LinkButton label="GitHub" url={candidate.githubUrl} onOpen={openExternalUrl} />
+              <LinkButton label={githubLinkLabel} url={candidate.githubUrl} onOpen={openExternalUrl} />
             </SidebarPanel>
 
-            {(candidate.linkedinUrl || candidate.githubUrl || candidate.portfolioUrl || (candidate.portfolioLinks && candidate.portfolioLinks.length > 0)) && (
+            {(candidate.linkedinUrl || candidate.githubUrl || candidate.portfolioUrl || extraPortfolioLinks.length > 0) && (
               <SidebarPanel title="Online Presence">
                 <LinkButton label="LinkedIn" url={candidate.linkedinUrl} onOpen={openExternalUrl} />
-                <LinkButton label="GitHub" url={candidate.githubUrl} onOpen={openExternalUrl} />
+                <LinkButton label={githubLinkLabel} url={candidate.githubUrl} onOpen={openExternalUrl} />
                 <LinkButton label="Portfolio" url={candidate.portfolioUrl} onOpen={openExternalUrl} />
-                {candidate.portfolioLinks?.map((link, index) => (
+                {extraPortfolioLinks.map((link, index) => (
                   <LinkButton key={index} label={link.replace(/^https?:\/\//, '')} url={link} onOpen={openExternalUrl} />
                 ))}
               </SidebarPanel>
             )}
 
             <SidebarPanel title="Role Preferences">
-              <InfoLine label="Experience" value={`${displayExperience} years`} />
+              <InfoLine label="Experience" value={formatYearsOfExperience(displayExperience)} />
               <InfoLine label="Availability" value={candidate.employmentStatus || availability.label} />
               <InfoLine label="Notice Period" value={candidate.noticePeriod || availability.label} />
               <InfoLine label="Employment Type" value={candidate.employmentType || 'Not provided'} />

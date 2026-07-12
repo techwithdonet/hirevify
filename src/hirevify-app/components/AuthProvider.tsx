@@ -35,7 +35,8 @@ interface AuthContextType {
  email: string,
  password: string,
  name: string,
- userType: "recruiter" | "candidate"
+ userType: "recruiter" | "candidate",
+ companyName?: string
  ) => Promise<{ success: boolean; message: string; user?: User }>;
  signIn: (
  email: string,
@@ -161,15 +162,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
  email: string,
  password: string,
  name: string,
- userType: "recruiter" | "candidate"
+ userType: "recruiter" | "candidate",
+ companyName?: string
  ) => {
  try {
  setIsLoading(true);
 
  const cleanEmail = email.toLowerCase().trim();
+ const cleanName = name.trim();
+ const cleanCompanyName = userType === "recruiter"? (companyName || "").trim(): "";
 
- if (!cleanEmail ||!password ||!name ||!userType) {
+ if (!cleanEmail ||!password ||!cleanName ||!userType) {
  throw new Error("All fields are required");
+ }
+
+ if (userType === "recruiter" &&!cleanCompanyName) {
+ throw new Error("Company name is required for recruiter accounts");
  }
 
  if (password.length < 8) {
@@ -186,8 +194,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
  password,
  options: {
  data: {
- name,
+ name: cleanName,
  userType,
+ companyName: cleanCompanyName || undefined,
  },
  },
  });
@@ -205,10 +214,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 const { data: profile, error: profileError } = await supabase.from("profiles").upsert(
  {
  auth_user_id: data.user.id,
- full_name: name,
+ full_name: cleanName,
  email: cleanEmail,
  role: dbRole,
- company_name: userType === "recruiter"? name: null,
+ company_name: userType === "recruiter"? cleanCompanyName: null,
  },
  {
  onConflict: "auth_user_id",
@@ -221,12 +230,29 @@ if (profileError) {
  throw new Error(`Profile creation failed: ${errorMessage}`);
 }
 
+if (userType === "recruiter" && cleanCompanyName && profile?.id) {
+ const { error: recruiterProfileError } = await supabase.from("recruiter_profiles").upsert(
+ {
+ id: profile.id,
+ user_id: profile.id,
+ company_name: cleanCompanyName,
+ },
+ {
+ onConflict: "id",
+ }
+ );
+
+ if (recruiterProfileError) {
+ console.warn("Recruiter profile bootstrap failed:", recruiterProfileError.message);
+ }
+}
+
  const session = data.session;
 
  const newUser: User = {
  id: profile?.id || data.user.id,
  email: cleanEmail,
- name,
+ name: cleanName,
  userType,
  isEmailVerified:!!data.user.email_confirmed_at,
  profileComplete: true,

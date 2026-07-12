@@ -5,7 +5,7 @@
 
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { calculateDeterministicAtsMatch } from './deterministicAtsService';
-import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../utils/candidateProfileValidation';
+import { hasCompleteCandidateName, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../utils/candidateProfileValidation';
 
 export { MIN_CANDIDATE_PROFILE_COMPLETENESS };
 
@@ -84,7 +84,7 @@ class ApplicationsService {
   ) {
   const { data: candidateProfile, error: candidateProfileError } = await this.supabase
     .from('candidate_profiles')
-    .select('profile_completeness, profile_completed, resume_url')
+    .select('full_name, profile_completeness, profile_completed, resume_url')
     .eq('user_id', candidateId)
     .maybeSingle();
 
@@ -94,16 +94,20 @@ class ApplicationsService {
   }
 
   const profileCompleteness = Number(candidateProfile?.profile_completeness || 0);
+  const hasRequiredName = hasCompleteCandidateName(candidateProfile?.full_name);
   const hasCompletedProfile =
-    Boolean(candidateProfile?.profile_completed) ||
-    profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+    hasRequiredName &&
+    (Boolean(candidateProfile?.profile_completed) ||
+    profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS);
   const hasResume = Boolean(candidateProfile?.resume_url);
 
   if (!hasCompletedProfile || !hasResume) {
     return {
       data: null,
       error: {
-        message: 'Complete all required candidate profile fields and upload your CV before applying.',
+        message: hasRequiredName
+          ? 'Complete all required candidate profile fields and upload your CV before applying.'
+          : 'Add your first and last name in your candidate profile before applying.',
       } as any,
     };
   }

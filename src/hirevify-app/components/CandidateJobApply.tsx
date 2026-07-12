@@ -37,6 +37,7 @@ import { DashboardPageLayout } from './shared/DashboardPageLayout';
 import { dashboardTheme } from '../theme/dashboardTheme';
 import type { Job } from '../types/app';
 import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
+import { hasCompleteCandidateName } from '../utils/candidateProfileValidation';
 
 interface CandidateJobApplyProps {
   job: Job;
@@ -67,6 +68,7 @@ interface ProfileRow {
 
 // Subset of `candidate_profiles` we care about for the review step
 interface CandidateExtras {
+  full_name: string | null;
   headline: string | null;
   years_of_experience: number | null;
   skills: string[];
@@ -98,6 +100,11 @@ export function CandidateJobApply({ job, onBack, onApplied }: CandidateJobApplyP
   const [isSubmitting, setIsSubmitting] = useState(false);
 const [showCvPrompt, setShowCvPrompt] = useState(true);
 const [isReplacingCv, setIsReplacingCv] = useState(false);
+const profileCompleteness = Number(extras?.profile_completeness || 0);
+const hasRequiredCandidateName = hasCompleteCandidateName(profile?.full_name || extras?.full_name);
+const isProfileReadyToApply =
+  hasRequiredCandidateName &&
+  (Boolean(extras?.profile_completed) || profileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS);
 
   // Resolve the candidate's profile row (from `profiles`) and the
   // candidate-specific extras (from `candidate_profiles`) from the
@@ -218,10 +225,14 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       toast.error('Could not load your account profile. Please refresh and try again.');
       return;
     }
-    const hasCompletedProfile = Boolean(profile);
+    const hasCompletedProfile = Boolean(profile) && isProfileReadyToApply;
 
     if (!hasCompletedProfile) {
-      toast.error('Could not load your candidate profile. Please refresh and try again.');
+      toast.error(
+        hasRequiredCandidateName
+          ? 'Complete all required candidate profile fields before applying.'
+          : 'Add your first and last name in your candidate profile before applying.'
+      );
       return;
     }
     if (coverLetter.length > MAX_COVER_LETTER) {
@@ -236,7 +247,7 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
       hasExtras: !!extras,
       extrasResumeUrl: extras?.resume_url,
       candidateId: user.id,
-      profileCompleteness: extras?.profile_completeness,
+      profileCompleteness,
     });
     
     const savedCvPath = extras?.resume_url || (extras as any)?.resume_file_url || (extras as any)?.cv_url || null;
@@ -309,6 +320,19 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleContinueToReview = () => {
+    if (!isProfileReadyToApply) {
+      toast.error(
+        hasRequiredCandidateName
+          ? 'Complete all required candidate profile fields before applying.'
+          : 'Add your first and last name in your candidate profile before applying.'
+      );
+      return;
+    }
+
+    setStep('review');
   };
 
   // ─── Success state ────────────────────────────────────────────────────
@@ -793,6 +817,13 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
                   will be attached to this application automatically. You'll
                   see the full review on the next step.
                 </p>
+                {!isProfileReadyToApply && (
+                  <p className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
+                    {!hasRequiredCandidateName
+                      ? 'Add your first and last name in Profile before applying.'
+                      : `Complete all required profile fields before applying (${profileCompleteness}% done).`}
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -801,8 +832,8 @@ const [isReplacingCv, setIsReplacingCv] = useState(false);
           <div className="space-y-2">
             <Button
               type="button"
-              onClick={() => setStep('review')}
-              disabled={false}
+              onClick={handleContinueToReview}
+              disabled={isProfileLoading || !isProfileReadyToApply}
               className="w-full bg-emerald-600 font-bold text-white shadow-sm hover:bg-emerald-700"
             >
               Continue to review

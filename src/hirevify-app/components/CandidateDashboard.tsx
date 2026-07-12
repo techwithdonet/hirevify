@@ -38,6 +38,7 @@ import { applicationsService, MIN_CANDIDATE_PROFILE_COMPLETENESS } from '@/src/h
 import { portfolioService } from '@/src/hirevify-app/services/portfolioService';
 import { savedJobsService } from '@/src/hirevify-app/services/savedJobsService';
 import { jobsService } from '@/src/hirevify-app/services/jobsService';
+import { hasCompleteCandidateName } from '../utils/candidateProfileValidation';
 import { useConversations } from '../hooks/useConversations';
 import { useNotifications } from '../hooks/useNotifications';
 import { toast } from 'sonner';
@@ -119,13 +120,18 @@ export function CandidateDashboard({
   const checkProfileForJobSearch = () => {
     const completeness = Number(candidateProfile?.profile_completeness || 0);
     const hasResume = Boolean(candidateProfile?.resume_url);
+    const hasRequiredName = hasCompleteCandidateName(candidateProfile?.full_name);
     const isProfileComplete =
-      Boolean(candidateProfile?.profile_completed) || completeness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+      hasRequiredName &&
+      (Boolean(candidateProfile?.profile_completed) || completeness >= MIN_CANDIDATE_PROFILE_COMPLETENESS);
 
     if (!isProfileComplete || !hasResume) {
       const missing: string[] = [];
+      if (!hasRequiredName) missing.push('add first and last name');
       if (!hasResume) missing.push('upload a CV');
-      if (!isProfileComplete) missing.push(`complete all required profile fields (${completeness}% done)`);
+      if (!isProfileComplete && completeness < MIN_CANDIDATE_PROFILE_COMPLETENESS) {
+        missing.push(`complete all required profile fields (${completeness}% done)`);
+      }
 
       toast.error(
         `Please ${missing.join(' and ')} before finding jobs and applying.`,
@@ -200,9 +206,11 @@ export function CandidateDashboard({
     : 'Free';
   const candidateProfileCompleteness = Number(candidateProfile?.profile_completeness || 0);
   const visibleProgress = Math.min(candidateProfileCompleteness, 100);
+  const hasRequiredCandidateName = hasCompleteCandidateName(candidateProfile?.full_name);
   const isCandidateProfileComplete =
-    Boolean(candidateProfile?.profile_completed) ||
-    candidateProfileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS;
+    hasRequiredCandidateName &&
+    (Boolean(candidateProfile?.profile_completed) ||
+    candidateProfileCompleteness >= MIN_CANDIDATE_PROFILE_COMPLETENESS);
 
   const metrics = [
     { label: 'Applied', value: applications.length, icon: FileText, action: onViewAppliedJobs, tone: 'tone-mint' },

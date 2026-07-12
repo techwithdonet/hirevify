@@ -9,7 +9,6 @@ import {
   ChevronRight,
   FileText,
   GraduationCap,
-  Loader,
   Plus,
   Save,
   Trash2,
@@ -396,6 +395,8 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
 
  const completion = useMemo(() => {
  const calculated = calculateCandidateProfileCompletion({
+ first_name: profileData.firstName,
+ last_name: profileData.lastName,
  full_name: fullName,
  phone: profileData.phone,
  email: profileData.email,
@@ -437,7 +438,8 @@ const mapYearsToExperienceLevel = (years?: number | null) => {
  const validateCurrentStep = () => {
  if (currentStep === 0) {
  const missing = [];
- if (!fullName) missing.push('full name');
+ if (!profileData.firstName.trim()) missing.push('first name');
+ if (!profileData.lastName.trim()) missing.push('last name');
  if (!profileData.phone.trim()) missing.push('phone');
  if (!profileData.location.trim()) missing.push('location');
  if (!profileData.currentTitle.trim()) missing.push('current title');
@@ -1691,13 +1693,13 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  </div>
 
  <div>
- <Label>GitHub URL</Label>
- <Input value={profileData.GitBranch} onChange={(event) => setProfileData({...profileData, GitBranch: event.target.value })} placeholder="https://github.com/username" />
+ <Label>LinkedIn URL</Label>
+ <Input value={profileData.Link} onChange={(event) => setProfileData({...profileData, Link: event.target.value })} placeholder="https://linkedin.com/in/username" />
  </div>
 
  <div>
- <Label>LinkedIn URL</Label>
- <Input value={profileData.Link} onChange={(event) => setProfileData({...profileData, Link: event.target.value })} placeholder="https://linkedin.com/in/username" />
+ <Label>GitHub Repo URL</Label>
+ <Input value={profileData.GitBranch} onChange={(event) => setProfileData({...profileData, GitBranch: event.target.value })} placeholder="https://github.com/username/repository" />
  </div>
 
  <ChipEditor
@@ -1805,17 +1807,6 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  );
  };
 
- if (isLoadingProfile) {
- return (
- <div className={`${dashboardTheme.page} flex items-center justify-center`}>
- <div className="text-center">
- <Loader className="w-10 h-10 animate-spin text-emerald-600 mx-auto mb-4" />
- <p className="text-muted-foreground">Loading profile...</p>
- </div>
- </div>
- );
- }
-
  const CurrentIcon = steps[currentStep].icon;
 
  return (
@@ -1833,9 +1824,9 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  </div>
  </div>
 
- <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
+ <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading || isLoadingProfile}>
  <Save className="w-4 h-4 mr-2" />
- Save Draft
+ {isLoadingProfile ? 'Loading...' : 'Save Draft'}
  </Button>
  </div>
  </header>
@@ -1864,11 +1855,18 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  <div className="h-3 rounded-full bg-emerald-600 transition-all" style={{ width: ((currentStep + 1) / steps.length) * 100 + '%' }} />
  </div>
 
+ {isLoadingProfile && (
+ <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+ Loading your saved profile details...
+ </div>
+ )}
+
  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
  {steps.map((step, index) => (
  <button
  key={step.title}
  type="button"
+ disabled={isLoadingProfile}
  onClick={() => setCurrentStep(index)}
  className={index === currentStep? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm': index < currentStep? 'rounded-lg bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800': 'rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200'}
  >
@@ -1884,30 +1882,30 @@ payload.full_name = keepTextValue(payload.full_name, existingProfile.full_name);
  <Button
  variant="outline"
  onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
- disabled={currentStep === 0 || isLoading}
+ disabled={currentStep === 0 || isLoading || isLoadingProfile}
  >
  <ChevronLeft className="w-4 h-4 mr-2" />
  Back
  </Button>
 
  <div className="flex gap-3">
- <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
- {isLoading? 'Saving...': 'Save Draft'}
+ <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading || isLoadingProfile}>
+ {isLoadingProfile ? 'Loading...' : isLoading? 'Saving...': 'Save Draft'}
  </Button>
 
  {currentStep < steps.length - 1? (
- <Button onClick={handleNext} disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
- {isLoading? 'Saving...': 'Next'}
+ <Button onClick={handleNext} disabled={isLoading || isLoadingProfile} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+ {isLoadingProfile ? 'Loading...' : isLoading? 'Saving...': 'Next'}
  <ChevronRight className="w-4 h-4 ml-2" />
  </Button>
  ): (
  <Button
  onClick={handleCompleteProfile}
- disabled={isLoading ||!completion.isComplete}
+ disabled={isLoading || isLoadingProfile ||!completion.isComplete}
  className="bg-emerald-600 hover:bg-emerald-700 text-white"
  >
  <CheckCircle2 className="w-4 h-4 mr-2" />
- {isLoading? 'Completing...': 'Complete Profile'}
+ {isLoadingProfile ? 'Loading...' : isLoading? 'Completing...': 'Complete Profile'}
  </Button>
  )}
  </div>
