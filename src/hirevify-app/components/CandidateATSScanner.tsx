@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from 'sonner';
 import { FilesAPI } from '../utils/api/files';
 import { useAuth } from './AuthProvider';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { CandidateATSResults } from './CandidateATSResults';
 
 interface CandidateATSScannerProps {
@@ -84,125 +83,16 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
 
  // Step 3: Real ATS processing with OpenAI
  setScanProgress(75);
- let accessToken = user?.accessToken || localStorage.getItem('hirevify_access_token');
- 
- console.log('...... Calling real ATS API with OpenAI integration...');
- console.log('...‹ User info:', { 
- hasUser:!!user, 
- userId: user?.id, 
- hasToken:!!accessToken, 
- userType: user?.userType, 
- email: user?.email,
- tokenFirst20: accessToken?.substring(0, 20) + '...'
- });
+ const accessToken = user?.accessToken || localStorage.getItem('hirevify_access_token');
  
  if (!user) {
  throw new Error('Authentication required. Please log in to analyze your resume.');
  }
  
- // Enhanced authentication flow with multiple fallback strategies
- console.log('... Pre-flight: Enhanced authentication check...');
- try {
- // Strategy 1: Try current token if available
- if (accessToken) {
- console.log('... Testing current token with auth service...');
- const authTestResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/verify-token`, {
- method: 'POST',
- headers: {
- 'Authorization': `Bearer ${publicAnonKey}`,
- 'Content-Type': 'application/json'
- },
- body: JSON.stringify({ token: accessToken })
- });
- 
- const authTestResult = await authTestResponse.json();
- console.log('... Auth verification response:', { 
- status: authTestResponse.status, 
- valid: authTestResult.valid, 
- error: authTestResult.error,
- userId: authTestResult.user?.id 
- });
- 
- if (authTestResponse.ok && authTestResult.valid) {
- console.log('... Current token is valid, proceeding with ATS call');
- // Token is valid, proceed with ATS processing
- setScanProgress(85);
- } else {
- console.log('... Current token invalid, attempting refresh...');
- accessToken = null; // Clear invalid token
- }
- }
- 
- // Strategy 2: Generate fresh token if current token is invalid or missing
  if (!accessToken) {
- console.log('... Generating fresh authentication token...');
- 
- // For test accounts, we can auto-refresh
- if (user.email?.includes('@hirevify.com')) {
- console.log('... Auto-refreshing test account session...');
- const refreshResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/signin`, {
- method: 'POST',
- headers: {
- 'Authorization': `Bearer ${publicAnonKey}`,
- 'Content-Type': 'application/json'
- },
- body: JSON.stringify({
- email: user.email,
- password: 'TestPassword123!'
- })
- });
- 
- if (refreshResponse.ok) {
- const refreshResult = await refreshResponse.json();
- accessToken = refreshResult.accessToken;
- console.log('... Fresh token generated successfully');
- 
- // Update storage with new token
- if (accessToken) localStorage.setItem('hirevify_access_token', accessToken);
- 
- // Update user object in local storage
- const updatedUser = {...user, accessToken };
- localStorage.setItem('hirevify_user', JSON.stringify(updatedUser));
- 
- } else {
- const refreshError = await refreshResponse.json();
- console.error('...„ Token refresh failed:', refreshError);
- throw new Error('Failed to refresh authentication. Please log out and log in again.');
- }
- } else {
  throw new Error('Authentication session expired. Please log out and log in again.');
  }
- }
- 
- // Strategy 3: Final validation of working token
- if (!accessToken) {
- throw new Error('Unable to obtain valid authentication token. Please log out and log in again.');
- }
- 
- // Final verification
- console.log('... Final token verification before ATS call...');
- const finalVerifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/auth/verify-token`, {
- method: 'POST',
- headers: {
- 'Authorization': `Bearer ${publicAnonKey}`,
- 'Content-Type': 'application/json'
- },
- body: JSON.stringify({ token: accessToken })
- });
- 
- if (!finalVerifyResponse.ok) {
- const verifyError = await finalVerifyResponse.json();
- console.error('...„ Final token verification failed:', verifyError);
- throw new Error('Authentication token verification failed. Please log out and log in again.');
- }
- 
- console.log('... Authentication fully validated, proceeding with ATS processing');
  setScanProgress(90);
- 
- } catch (authError) {
- console.error('...„ Authentication validation failed:', authError);
- throw new Error(`Authentication error: ${authError instanceof Error? authError.message: 'Unknown authentication error'}`);
- }
  
  const atsResult = await FilesAPI.processResumeATS(
  file,
@@ -319,7 +209,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
  <div className="flex items-start gap-2">
  <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
  <div>
- <h4 className="text-sm font-semibold text-yellow-800 mb-1">..." Upload Requirements</h4>
+ <h4 className="text-sm font-semibold text-yellow-800 mb-1">Upload requirements</h4>
  <div className="text-xs text-yellow-700 space-y-1">
  <div> <strong>Files:</strong> 1 resume per scan</div>
  <div> <strong>Size:</strong> Maximum 10MB</div>
@@ -389,7 +279,7 @@ export function CandidateATSScanner({ showUploadDialog, setShowUploadDialog }: C
  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
  <div className="flex items-center gap-2 mb-2">
  <CheckCircle className="w-4 h-4 text-green-600" />
- <span className="text-sm font-medium text-green-800">You'll Get</span>
+ <span className="text-sm font-medium text-green-800">You&apos;ll get</span>
  </div>
  <ul className="text-xs text-green-700 space-y-1">
  <li> ATS compatibility score</li>

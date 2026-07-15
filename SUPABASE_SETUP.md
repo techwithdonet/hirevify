@@ -75,13 +75,13 @@ ORDER BY tablename;
 1. Go to Supabase Dashboard → Authentication → Users
 2. Click "Create new user"
 3. Email: `recruiter@hirevify.com`
-4. Password: `TestPassword123!`
+4. Password: use a unique password from your password manager
 5. Click "Create user"
 
 ### Test Candidate Account
 1. Click "Create new user"
 2. Email: `candidate@hirevify.com`
-3. Password: `TestPassword123!`
+3. Password: use a different unique password from your password manager
 4. Click "Create user"
 
 ### Create Profiles for Test Users (Run in SQL Editor)

@@ -1,37 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
+import { authorizeAiRequest } from '@/src/lib/server/aiRequest';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({ error: 'Supabase environment variables are missing.' }, { status: 503 });
-    }
-
-    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-
-    if (!bearerToken) {
-      return NextResponse.json({ error: 'No active Supabase session found. Please login again.' }, { status: 401 });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${bearerToken}`
-        }
-      }
-    });
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
-
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: 'Invalid Supabase session. Please logout and login again.' }, { status: 401 });
-    }
+    const authorization = await authorizeAiRequest(request, 'parse-resume', { requirePremium: true });
+    if (!authorization.ok) return authorization.response;
 
     const body = await request.json();
     const rawResumeText = String(body.rawResumeText || '').trim();
@@ -117,7 +93,7 @@ ${truncated}
 
     const parsed = JSON.parse(extractJsonObject(aiText));
 
-    return NextResponse.json({ resumeData: parsed });
+    return NextResponse.json({ resumeData: parsed }, { headers: authorization.headers });
   } catch (error) {
     console.error('Parse resume route failed:', error);
     return NextResponse.json(

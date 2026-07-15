@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Crown, Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { Crown, Lock, ArrowRight } from 'lucide-react';
 import { usePremiumAccess, PremiumFeatureKey, PREMIUM_FEATURES } from '../utils/premium';
 
 interface PremiumGateProps {
@@ -29,7 +29,7 @@ export function PremiumGate({
  className = ""
 }: PremiumGateProps) {
  // Call hooks at top level
- const { checkAccess, getFeatureInfo, isTestAccount, getSubscription } = usePremiumAccess();
+ const { checkAccess, getFeatureInfo, getSubscription } = usePremiumAccess();
  
  // Simple access check
  const hasAccess = checkAccess(featureKey);
@@ -62,21 +62,6 @@ export function PremiumGate({
  </p>
  </CardHeader>
  <CardContent className="text-center space-y-6">
- {isTestAccount && (
- <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
- <div className="flex items-center justify-center mb-2">
- <Sparkles className="w-5 h-5 text-blue-600 mr-2" />
- <Badge className="bg-blue-100 text-blue-800 border-blue-200">
- Test Account
- </Badge>
- </div>
- <p className="text-sm text-blue-700">
- This is a premium feature. As a test account, you should have access to all features.
- If you're seeing this message, there might be a configuration issue.
- </p>
- </div>
- )}
-
  <div className="bg-white rounded-lg p-6 border border-border">
  <h4 className="font-semibold text-foreground mb-3">This premium feature includes:</h4>
  <ul className="text-sm text-muted-foreground space-y-2 mb-6">
@@ -105,12 +90,12 @@ export function PremiumGate({
  className="w-full bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-white font-semibold py-3"
  >
  <Crown className="w-5 h-5 mr-2" />
- Upgrade to Pro
+ View Pro Access
  <ArrowRight className="w-5 h-5 ml-2" />
  </Button>
  
  <p className="text-xs text-muted-foreground">
- Start your 14-day free trial Cancel anytime No setup fees
+ Pro access is currently enabled manually while online payments are being prepared.
  </p>
  </div>
  </div>
@@ -155,14 +140,9 @@ export function PremiumGate({
  className="w-full bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary text-white font-medium"
  >
  <Crown className="w-4 h-4 mr-2" />
- Upgrade to Access
+ View Pro Access
  </Button>
  
- {isTestAccount && (
- <div className="mt-3 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
- Test Account - Should have access
- </div>
- )}
  </CardContent>
  </Card>
  );

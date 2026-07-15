@@ -1,0 +1,482 @@
+E:\hirevify-next\src\hirevify-app\components\analytics\HiringFunnel.tsx:18: <h4 className="text-green-800 mb-2">Real-Time Funnel Analysis</h4>
+E:\hirevify-next\src\hirevify-app\components\career-switcher\utils.ts:5: case 'Beginner': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\career-switcher\utils.ts:8: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\common\ModernForm.tsx:33: <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+E:\hirevify-next\src\hirevify-app\components\common\ModernForm.tsx:55: <label className="text-sm font-semibold text-slate-900">{label}</label>
+E:\hirevify-next\src\hirevify-app\components\common\ModernForm.tsx:72: <h4 className="font-semibold text-slate-950">{title}</h4>
+E:\hirevify-next\src\hirevify-app\components\common\SkillMultiSelect.tsx:35: <Badge key={skill} variant="secondary" className="gap-1 bg-emerald-50 text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\integration-hub\AddIntegrationDialog.tsx:308: <div className="text-sm text-green-800">
+E:\hirevify-next\src\hirevify-app\components\layout\AppLayout.tsx:44: <h1 className="text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">{title}</h1>
+E:\hirevify-next\src\hirevify-app\components\layout\AppLayout.tsx:88: <p className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">{value}</p>
+E:\hirevify-next\src\hirevify-app\components\layout\AppLayout.tsx:127: <h3 className="text-base font-semibold text-slate-950">{title}</h3>
+E:\hirevify-next\src\hirevify-app\components\layout\AppLayout.tsx:164: className={cn('h-9 w-9 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950', className)}
+E:\hirevify-next\src\hirevify-app\components\micro-internships\utils.ts:3: case 'Beginner': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\micro-internships\utils.ts:6: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\micro-internships\utils.ts:13: return { className: 'bg-green-100 text-green-800 border-green-200', label: 'Completed' };
+E:\hirevify-next\src\hirevify-app\components\micro-internships\utils.ts:21: return { className: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Applied' };
+E:\hirevify-next\src\hirevify-app\components\portfolio\utils.ts:16: case 'GitBranch': return 'bg-gray-100 text-gray-800';
+E:\hirevify-next\src\hirevify-app\components\portfolio\utils.ts:18: case 'document': return 'bg-green-100 text-green-800';
+E:\hirevify-next\src\hirevify-app\components\portfolio\utils.ts:19: default: return 'bg-gray-100 text-gray-800';
+E:\hirevify-next\src\hirevify-app\components\ui\sonner.tsx:24: success: "group-[.toaster]:border-emerald-200 group-[.toaster]:bg-emerald-50 group-[.toaster]:text-emerald-900",
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:370: <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:382: <Badge variant="secondary" className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:419: <p className="font-medium text-gray-900">{uploadState.file?.name}</p>
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:423: <Badge className="bg-green-100 text-green-800 border-green-200">
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:444: <p className="text-lg font-medium text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:503: <h3 className="text-lg font-medium text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\AccuracyFirstATSScanner.tsx:803: <Badge key={index} className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\AdvancedAnalyticsDashboard.tsx:295: <h4 className="font-semibold text-gray-800 mb-2">Data Requirements</h4>
+E:\hirevify-next\src\hirevify-app\components\AdvancedAnalyticsDashboard.tsx:372: source.conversionRate >= 5? 'bg-green-100 text-green-800':
+E:\hirevify-next\src\hirevify-app\components\AdvancedAnalyticsDashboard.tsx:394: <h4 className="font-semibold text-green-800 mb-2">... Top Performer: HireVify Skills Platform</h4>
+E:\hirevify-next\src\hirevify-app\components\AdvancedAnalyticsDashboard.tsx:570: <h4 className="font-semibold text-green-800 mb-2">...... Conversion Success</h4>
+E:\hirevify-next\src\hirevify-app\components\AdvancedAnalyticsDashboard.tsx:611: <h5 className="font-medium text-green-800 mb-1">Success Factor</h5>
+E:\hirevify-next\src\hirevify-app\components\AIATSScanner.tsx:893: <h3 className="text-lg font-medium text-gray-900 mb-2">No results match your filters</h3>
+E:\hirevify-next\src\hirevify-app\components\AIATSScanner.tsx:921: <h3 className="text-lg font-semibold text-gray-900 mb-2">No resumes analyzed yet</h3>
+E:\hirevify-next\src\hirevify-app\components\AICareerAdvisor.tsx:558: <Badge className={`text-xs ${insight.impact === 'high'? 'bg-red-100 text-red-800': insight.impact === 'medium'? 'bg-yellow-100 text-yellow-800': 'bg-green-100 text-green-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\AICareerAdvisor.tsx:605: <Badge className="bg-green-100 text-green-800">High</Badge>
+E:\hirevify-next\src\hirevify-app\components\AICareerAdvisor.tsx:931: <Badge className={`${selectedPath.stress === 'high'? 'bg-red-100 text-red-800': selectedPath.stress === 'medium'? 'bg-yellow-100 text-yellow-800': 'bg-green-100 text-green-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\AIInterviewCoach.tsx:983: <Badge className="bg-green-100 text-green-800 text-xs">Technical Explanations</Badge>
+E:\hirevify-next\src\hirevify-app\components\AIInterviewCoach.tsx:984: <Badge className="bg-green-100 text-green-800 text-xs">Problem Solving</Badge>
+E:\hirevify-next\src\hirevify-app\components\AIInterviewCoach.tsx:985: <Badge className="bg-green-100 text-green-800 text-xs">Examples</Badge>
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:118: case 'hired': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:119: case 'offer': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:123: case 'viewed': return 'bg-slate-100 text-slate-800 border-slate-200';
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:125: default: return 'bg-slate-100 text-slate-800 border-slate-200';
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:540: tone="border-emerald-200 bg-emerald-50 text-emerald-800"
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:588: <p className="font-medium text-slate-900">No applications to score yet</p>
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:598: <span className="font-medium text-slate-950">{match.candidateName}</span>
+E:\hirevify-next\src\hirevify-app\components\AIMatchingDashboard.tsx:674: <span className="font-medium text-slate-950">{value}</span>
+E:\hirevify-next\src\hirevify-app\components\AIResumeBuilder.tsx:500: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\AIResumeBuilder.tsx:572: <Badge key={index} className="bg-green-100 text-green-800">{skill}</Badge>
+E:\hirevify-next\src\hirevify-app\components\AISkillsDevelopment.tsx:746: <Badge className={`${path.enrolled? 'bg-green-100 text-green-800': 'bg-gray-100 text-gray-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\AISkillsDevelopment.tsx:836: <Badge className={`${rec.impact === 'high'? 'bg-red-100 text-red-800': rec.impact === 'medium'? 'bg-yellow-100 text-yellow-800': 'bg-green-100 text-green-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\AssessmentEcosystem.tsx:128: case 'company_sponsor': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\AssessmentEcosystem.tsx:130: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\AssessmentResults.tsx:244: assessment.difficulty === 'beginner'? 'bg-green-100 text-green-800 border-green-200':
+E:\hirevify-next\src\hirevify-app\components\AssessmentTaking.tsx:501: currentQuestion.difficulty === 'easy'? 'bg-green-100 text-green-800 border-green-200':
+E:\hirevify-next\src\hirevify-app\components\ATSErrorHandler.tsx:226: <Badge className="mt-1 bg-green-100 text-green-800 border-green-200">
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:417: className="text-gray-600 hover:text-gray-900"
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:424: <h1 className="text-xl font-semibold text-gray-900">ATS Resume Scanner</h1>
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:454: <p className="text-2xl font-bold text-gray-900">{resumes.length}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:468: <p className="text-2xl font-bold text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:484: <p className="text-2xl font-bold text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:501: <p className="text-2xl font-bold text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:588: <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes found</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:606: <h3 className="font-medium text-gray-900">{resume.candidateName}</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSResumeScanner.tsx:609: resume.atsScore.overall >= 90? 'bg-green-100 text-green-800':
+E:\hirevify-next\src\hirevify-app\components\ATSUploadDiagnostic.tsx:237: return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\ATSUploadDiagnostic.tsx:252: <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:955: hired: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:969: hired: { class: 'bg-emerald-100 text-emerald-800 border-emerald-300', icon: Check, label: 'Hired' },
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1119: <h1 className="truncate text-2xl font-semibold text-slate-950">Candidate Pipeline</h1>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1131: : 'text-slate-600 hover:text-slate-900'
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1142: : 'text-slate-600 hover:text-slate-900'
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1163: <DialogTitle className="text-xl font-semibold text-slate-950">AI CV match analysis</DialogTitle>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1188: <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Why this candidate is suitable</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1189: <h2 className="mt-1 text-2xl font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1200: <li key={reason} className="flex gap-3 rounded-lg border border-slate-300 bg-white p-3 text-sm font-medium leading-6 text-slate-800 shadow-sm">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1211: <p className="mt-1 text-2xl font-bold text-slate-950">{getJobSkillMatches(selectedCandidateProfile).length}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1228: <p className="mb-1 flex items-center gap-2 text-sm font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1232: <p className="text-sm font-medium leading-6 text-slate-800">{selectedCandidateProfile.atsExplanation}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1238: <p className="mb-3 text-sm font-semibold text-slate-950">Score breakdown</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1243: <p className="text-sm font-semibold text-slate-800">{category.category}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1244: <span className="text-sm font-bold text-slate-950">{category.score}/{category.maxScore}</span>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1261: <p className="mb-3 flex items-center gap-2 text-sm font-bold text-emerald-900">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1309: <h2 className="truncate text-xl font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1351: <p className="mt-1 text-lg font-bold text-slate-900">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1403: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Zap className="h-4 w-4 text-emerald-600" />Skills</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1414: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Briefcase className="h-4 w-4 text-slate-500" />Experience</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1419: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><GraduationCap className="h-4 w-4 text-slate-500" />Education</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1433: <p className="font-medium text-sm text-slate-800">{edu.degree || 'Degree not specified'}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1455: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Award className="h-4 w-4 text-slate-500" />Certifications</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1507: <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1522: <p className="mt-0.5 text-sm font-semibold text-slate-900">{c.currentDesignation}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1535: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1544: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1575: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1597: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1606: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1615: <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-slate-800">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1624: <p className="mt-0.5 text-sm font-medium text-slate-800">{c.employmentType}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1630: <p className="mt-0.5 text-sm font-medium text-slate-800">{c.employmentStatus}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1770: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1781: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><Globe className="h-4 w-4 text-slate-500" />Portfolio Links</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1794: <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-950"><FileText className="h-4 w-4 text-slate-500" />Cover Letter</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1813: <h2 className="text-lg font-semibold text-slate-950">Select a Job</h2>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1855: <p className="line-clamp-2 text-sm font-semibold text-slate-950">{job.title}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1867: <p className="text-sm font-semibold text-slate-950">Candidate assignment status</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1884: : 'text-slate-600 hover:text-slate-950'
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:1990: className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-950 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2004: ? 'border-slate-400 bg-slate-900 text-white'
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2101: className="truncate text-left text-base font-semibold text-slate-950 hover:text-emerald-700 hover:underline"
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2224: <h3 className="font-semibold text-slate-950">Video Verification</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2309: <h3 className="font-semibold text-slate-950">Application Status</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2335: <p className="truncate text-sm font-semibold text-slate-950">{a.candidateName}</p>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2396: <h3 className="text-lg font-semibold text-slate-950 mb-4">Recruitment Pipeline</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2443: <h3 className="text-lg font-semibold text-slate-950">Candidates Progress</h3>
+E:\hirevify-next\src\hirevify-app\components\ATSView.tsx:2469: <p className="font-semibold text-slate-950">{assignment.candidateName}</p>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:95: overlayClassName="!bg-slate-950/25"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:96: className="auth-modal-dialog border border-emerald-950/10 bg-white p-0 text-slate-950 shadow-2xl sm:max-w-[360px] [&>button]:right-3 [&>button]:top-3 [&>button]:text-emerald-950/60 [&>button:hover]:bg-emerald-50 [&>button:hover]:text-emerald-950"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:99: <DialogTitle className="flex items-center gap-2 text-base font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:149: <Label htmlFor="signin-email" className="text-xs font-medium text-slate-800">Email</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:158: className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:163: <Label htmlFor="signin-password" className="text-xs font-medium text-slate-800">Password</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:173: className="h-9 rounded-sm border-slate-300 bg-white pr-10 text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:180: className="absolute right-0 top-0 h-full px-3 py-2 text-slate-700 hover:bg-transparent hover:text-emerald-800"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:195: className="h-9 w-full rounded-sm bg-[#65a83d] text-sm font-semibold text-white shadow-none hover:bg-[#4f8d2d] disabled:bg-emerald-200 disabled:text-emerald-950/45"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:216: <Label className="text-xs font-medium text-slate-800">Choose account type</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:237: ? 'border-[#65a83d] bg-emerald-50 text-emerald-950 shadow-sm'
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:238: : 'border-slate-200 bg-white text-slate-800 hover:border-emerald-200 hover:bg-emerald-50/40'
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:255: ? 'border-[#65a83d] bg-emerald-50 text-emerald-950 shadow-sm'
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:256: : 'border-slate-200 bg-white text-slate-800 hover:border-emerald-200 hover:bg-emerald-50/40'
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:270: <Label htmlFor="signup-name" className="text-xs font-medium text-slate-800">Full Name</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:279: className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:285: <Label htmlFor="signup-company-name" className="text-xs font-medium text-slate-800">Company Name</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:294: className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:300: <Label htmlFor="signup-email" className="text-xs font-medium text-slate-800">Email</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:309: className="h-9 rounded-sm border-slate-300 bg-white text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:314: <Label htmlFor="signup-password" className="text-xs font-medium text-slate-800">Password</Label>
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:325: className="h-9 rounded-sm border-slate-300 bg-white pr-10 text-sm text-slate-950 placeholder:text-slate-500 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:332: className="absolute right-0 top-0 h-full px-3 py-2 text-slate-700 hover:bg-transparent hover:text-emerald-800"
+E:\hirevify-next\src\hirevify-app\components\AuthModal.tsx:347: className="h-9 w-full rounded-sm bg-[#65a83d] text-sm font-semibold text-white shadow-none hover:bg-[#4f8d2d] disabled:bg-emerald-200 disabled:text-emerald-950/45"
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:601: case 'strong_yes': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:606: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:623: case 'pending': return 'bg-gray-100 text-gray-800';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:624: case 'auto-approved': return 'bg-green-100 text-green-800';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:628: case 'hired': return 'bg-emerald-100 text-emerald-800';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:629: default: return 'bg-gray-100 text-gray-800';
+E:\hirevify-next\src\hirevify-app\components\AutomatedScreening.tsx:1125: <Badge className="bg-green-100 text-green-800">Enabled</Badge>
+E:\hirevify-next\src\hirevify-app\components\BetaProgram.tsx:232: case 'resolved': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\BetaProgram.tsx:234: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\BillingSettingsCard.tsx:119: <p className="mt-2 font-medium text-slate-950">{formatDate(subscription?.expires_at)}</p>
+E:\hirevify-next\src\hirevify-app\components\BillingSettingsCard.tsx:123: <p className="mt-2 font-medium text-slate-950">{remainingDays === null ? 'Not applicable' : `${remainingDays} days`}</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:483: <h3 className="mt-4 text-lg font-bold text-slate-950">No applications match your filters</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:491: <h3 className="mt-4 text-lg font-bold text-slate-950">No applications yet</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:543: <h3 className="truncate text-lg font-bold text-slate-950">{jobTitle}</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:829: <h4 className="mt-1 text-base font-bold text-slate-950">{title}</h4>
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:845: <h4 className="mt-1 text-base font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateAppliedJobs.tsx:931: <p className={`text-sm font-semibold ${done ? 'text-slate-950' : 'text-slate-700'}`}>{title}</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:44: if (score >= 85) return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:140: <h3 className="text-lg font-semibold text-gray-900">Overall ATS Compatibility Score</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:184: <span className="text-sm font-semibold text-gray-900">{score}%</span>
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:234: <span className="text-green-800">{strength}</span>
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:278: <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:294: <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+E:\hirevify-next\src\hirevify-app\components\CandidateATSResults.tsx:334: <div className="text-lg font-semibold text-green-900 mb-1">
+E:\hirevify-next\src\hirevify-app\components\CandidateATSScanner.tsx:282: <span className="text-sm font-medium text-green-800">You&apos;ll get</span>
+E:\hirevify-next\src\hirevify-app\components\CandidateGrowthPage.tsx:36: return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\CandidateGrowthPage.tsx:42: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\CandidateGrowthPage.tsx:49: return <Badge className="bg-green-100 text-green-800 border-green-200">Completed</Badge>;
+E:\hirevify-next\src\hirevify-app\components\CandidateGrowthPage.tsx:58: return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Withdrawn</Badge>;
+E:\hirevify-next\src\hirevify-app\components\CandidateGrowthPage.tsx:504: <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:382: <h3 className="text-base font-semibold text-slate-950">You're all set</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:468: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:496: <p className="truncate text-base font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:557: <h3 className="mb-3 text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:561: <p className="text-base font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:579: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:607: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:622: <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:630: <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:648: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:730: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:751: <h3 className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:789: <h3 className="text-sm font-semibold text-slate-950">Your profile</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobApply.tsx:802: <p className="truncate text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:824: <h2 className="mb-2 text-center text-xl font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:933: <h3 className="mb-2 text-base font-bold text-slate-950">Description</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:941: <h3 className="mb-3 text-base font-bold text-slate-950">Requirements</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:955: <h3 className="mb-3 text-base font-bold text-slate-950">Skills</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:977: <p className="text-sm font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1003: <p className="text-sm font-semibold text-slate-950">Profile too incomplete</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1022: <h3 className="text-base font-bold text-slate-950">Ready to apply?</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1030: <p className="text-sm font-bold text-slate-950">Current CV</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1088: <p className="text-sm font-semibold text-slate-950">Analyzing your CV</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1105: <span className={`text-lg font-black ${isCvBelowThreshold ? 'text-red-800' : 'text-emerald-800'}`}>{cvMatch.score}%</span>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1135: <li key={i} className="flex items-start gap-1 text-xs text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1183: <div className="mt-3 rounded-lg border border-emerald-200 bg-white p-3 text-xs text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1193: className="mt-3 w-full bg-slate-900 text-white hover:bg-slate-800"
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1209: <p className="text-sm font-semibold text-slate-950">Applying HireVify fixes</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1227: <p className="text-sm font-semibold text-emerald-800">Optimized CV Ready</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1308: <p className="text-xs font-semibold text-emerald-800 mb-2">Strengths:</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1317: <li key={idx} className="flex items-start gap-1 text-xs text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1325: <li className="flex items-start gap-1 text-xs text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1330: <li className="flex items-start gap-1 text-xs text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1359: <p className="text-xs font-semibold text-emerald-800">Profile CV Updated!</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1370: <p className="text-xs font-semibold text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1448: <span className="font-bold capitalize text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\CandidateJobDetail.tsx:1464: <h4 className="mb-3 text-sm font-bold text-slate-950">At a glance</h4>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1595: <h3 className="text-base font-semibold text-slate-900">Professional Information</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1709: <h3 className="text-base font-semibold text-slate-900">Location</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1726: className={skillsPreferences.jobTypes.includes(type)? 'rounded-lg border border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-800': 'rounded-lg border border-border bg-card p-3 text-sm'}
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1742: className={skillsPreferences.workArrangement.includes(arrangement)? 'rounded-lg border border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-800': 'rounded-lg border border-border bg-card p-3 text-sm'}
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1809: <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100">
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1892: <h3 className="font-semibold text-emerald-900">Profile Completion</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1909: <span className={item.complete ? 'text-slate-800' : 'text-slate-500'}>{item.label}</span>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1930: <AlertDescription className="text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1971: <h1 className="text-2xl font-bold text-gray-900">Complete Candidate Profile</h1>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:1992: <h2 className="text-xl font-semibold text-gray-900">{steps[currentStep].title}</h2>
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:2008: <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:2020: className={index === currentStep? 'rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm': index < currentStep? 'rounded-lg bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-800': 'rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200'}
+E:\hirevify-next\src\hirevify-app\components\CandidateProfileEditor.tsx:2114: className={items.includes(suggestion) ? 'rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800' : 'rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600'}
+E:\hirevify-next\src\hirevify-app\components\CandidateProjectAssignment.tsx:616: <p className="text-sm font-medium text-slate-900">{file.name}</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateProjectAssignment.tsx:723: <h2 className="text-xl font-semibold text-emerald-800">Hired</h2>
+E:\hirevify-next\src\hirevify-app\components\CandidateProjectAssignment.tsx:724: <p className="text-sm text-emerald-900/80">
+E:\hirevify-next\src\hirevify-app\components\CandidateSavedJobs.tsx:200: <h3 className="mt-4 text-lg font-bold text-slate-950">No saved jobs yet</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateSavedJobs.tsx:211: <h3 className="mt-4 text-lg font-bold text-slate-950">No matches</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateSavedJobs.tsx:248: <h3 className="truncate text-lg font-bold text-slate-950">{title}</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateSearch.tsx:551: 'immediate': { label: 'Available Now', className: 'bg-green-100 text-green-800' },
+E:\hirevify-next\src\hirevify-app\components\CandidateSearch.tsx:554: 'not-looking': { label: 'Not Looking', className: 'bg-gray-100 text-gray-800' }
+E:\hirevify-next\src\hirevify-app\components\CandidateSearch.tsx:815: <h3 className="truncate text-base font-semibold text-slate-950 group-hover:text-emerald-700">{candidate.name}</h3>
+E:\hirevify-next\src\hirevify-app\components\CandidateSettings.tsx:149: <h1 className="text-2xl font-bold text-slate-950">Settings</h1>
+E:\hirevify-next\src\hirevify-app\components\CandidateSettings.tsx:176: <p className="font-medium text-slate-950">{user?.name || 'Not set'}</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateSettings.tsx:180: <p className="font-medium text-slate-950">{user?.email || 'Not set'}</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateSettings.tsx:189: <p className="font-semibold text-slate-950">Candidate profile</p>
+E:\hirevify-next\src\hirevify-app\components\CandidateSettings.tsx:300: Need help? Contact support from your registered email: <span className="font-medium text-slate-800">{user?.email}</span>
+E:\hirevify-next\src\hirevify-app\components\CreateJobFlow.tsx:107: <h1 className="text-xl font-semibold text-slate-950">HireVify</h1>
+E:\hirevify-next\src\hirevify-app\components\CustomAssessmentBuilder.tsx:616: className={assessment.status === 'published'? 'bg-green-100 text-green-800': 'bg-yellow-100 text-yellow-800'}
+E:\hirevify-next\src\hirevify-app\components\EmployerEducation.tsx:696: case 'beginner': return 'bg-green-100 text-green-800';
+E:\hirevify-next\src\hirevify-app\components\EmployerEducation.tsx:699: default: return 'bg-gray-100 text-gray-800';
+E:\hirevify-next\src\hirevify-app\components\EmployerEducation.tsx:849: <p className="font-medium text-green-800">Pro Tip</p>
+E:\hirevify-next\src\hirevify-app\components\EmployerEducation.tsx:945: <div className={`mt-3 p-3 rounded ${quizResults[questionIndex]? 'bg-green-50 text-green-800': 'bg-red-50 text-red-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:232: className="text-gray-600 hover:text-gray-900"
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:238: <h1 className="text-xl font-semibold text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:383: className="text-gray-600 hover:text-gray-900"
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:390: <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:440: <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:454: <p className="text-2xl font-bold text-gray-900">{stats.highPerformers}</p>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:468: <p className="text-2xl font-bold text-gray-900">{stats.analyzed}</p>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:482: <p className="text-2xl font-bold text-gray-900">{stats.averageScore}</p>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:504: <h3 className="font-medium text-gray-900 truncate">{candidate.candidateName}</h3>
+E:\hirevify-next\src\hirevify-app\components\EnhancedATSScanner.tsx:556: <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes uploaded yet</h3>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:495: if (confidence >= 90) return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:505: <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:521: <Badge variant="secondary" className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:550: <p className="font-medium text-gray-900">{uploadedFile.name}</p>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:560: <p className="text-lg font-medium text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:725: <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:738: <span className="ml-2 text-gray-900">{value as string}</span>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:749: <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:758: <div className="font-medium text-gray-900">{exp.position}</div>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:775: <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:881: <span className="ml-2 text-gray-900">{scanResult.ocrResults.confidence}%</span>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:885: <span className="ml-2 text-gray-900">{scanResult.ocrResults.bestProvider}</span>
+E:\hirevify-next\src\hirevify-app\components\EnhancedProductionATSScanner.tsx:889: <span className="ml-2 text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\EnhancedVideoInterview.tsx:634: <div className="flex items-center text-sm text-green-800">
+E:\hirevify-next\src\hirevify-app\components\EnhancedVideoInterview.tsx:745: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\EnhancedVideoInterview.tsx:819: <h1 className="text-2xl font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\EnhancedVideoInterview.tsx:833: <Badge className={isRecording? 'bg-red-100 text-red-800': 'bg-gray-100 text-gray-800'}>
+E:\hirevify-next\src\hirevify-app\components\ErrorBoundary.tsx:86: <h1 className="text-xl font-semibold text-gray-900 mb-2">
+E:\hirevify-next\src\hirevify-app\components\FunctionalATSScanner.tsx:829: if (score >= 90) return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\FunctionalATSScanner.tsx:872: <Badge variant="secondary" className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:151: <h3 className="text-lg font-semibold text-gray-900 mb-2">No job selected</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:172: <h1 className="text-2xl font-bold text-gray-900">Applicants for: {job.title}</h1>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:224: <h3 className="text-lg font-semibold text-gray-900 mb-2">
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:256: <h3 className="text-lg font-semibold text-gray-900">{candidateName}</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:338: <h2 className="text-xl font-bold text-gray-900">{candidateName}</h2>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:349: <h3 className="mb-3 font-semibold text-gray-900">Basic Details</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:360: <h3 className="mb-3 font-semibold text-gray-900">Experience & Availability</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:376: <h3 className="mb-3 font-semibold text-gray-900">Bio</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:383: <h3 className="mb-3 font-semibold text-gray-900">Experience Summary</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:390: <h3 className="mb-3 font-semibold text-gray-900">Skills</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:402: <h3 className="mb-3 font-semibold text-gray-900">Application Details</h3>
+E:\hirevify-next\src\hirevify-app\components\JobApplicants.tsx:415: <h3 className="mb-3 font-semibold text-gray-900">CV / Resume</h3>
+E:\hirevify-next\src\hirevify-app\components\JobPostingFlow.tsx:813: <h3 className="text-base font-semibold text-gray-900">Associated Project</h3>
+E:\hirevify-next\src\hirevify-app\components\JobPostingFlow.tsx:832: <p className="text-sm font-semibold text-gray-900">{project.project_title || project.title}</p>
+E:\hirevify-next\src\hirevify-app\components\JobPostingFlow.tsx:862: <p className="text-sm font-semibold text-gray-900">{projectTitle}</p>
+E:\hirevify-next\src\hirevify-app\components\LiveInterviewScreen.tsx:183: <div className="h-full bg-gray-900 rounded-lg relative overflow-hidden">
+E:\hirevify-next\src\hirevify-app\components\MarketIntelligenceDashboard.tsx:384: <span className="font-medium text-green-800">Strong Market Demand</span>
+E:\hirevify-next\src\hirevify-app\components\MarketIntelligenceDashboard.tsx:457: <span className="font-medium text-green-800">Market Trend</span>
+E:\hirevify-next\src\hirevify-app\components\MarketIntelligenceDashboard.tsx:516: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\MarketIntelligenceDashboard.tsx:556: skill.trend === 'rising'? 'bg-green-100 text-green-800':
+E:\hirevify-next\src\hirevify-app\components\MarketIntelligenceDashboard.tsx:668: <Badge className="bg-green-100 text-green-800 mt-2 text-xs">
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:240: <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">HireVify Inbox</h1>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:267: <p className="font-semibold text-slate-900">No conversations yet</p>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:297: <p className="truncate font-semibold text-slate-900">{conversation.otherUser.name || 'User'}</p>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:327: <h2 className="font-semibold text-slate-900">{selectedConversation.otherUser.name || 'User'}</h2>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:345: <p className="font-semibold text-slate-900">No messages in this thread</p>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:356: <div className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${mine ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:408: <p className="truncate text-sm font-medium text-slate-800">{selectedFile.name}</p>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:445: className="min-h-[48px] resize-none border-0 bg-transparent text-slate-950 shadow-none focus-visible:ring-0"
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:465: <h2 className="text-lg font-semibold text-slate-950">Select a conversation</h2>
+E:\hirevify-next\src\hirevify-app\components\MessagingCenter.tsx:482: <h3 className="mt-3 font-semibold text-slate-950">{selectedConversation.otherUser.name || 'User'}</h3>
+E:\hirevify-next\src\hirevify-app\components\NotificationCenter.tsx:360: <h4 className="font-semibold text-slate-900">{notification.title}</h4>
+E:\hirevify-next\src\hirevify-app\components\OneWayVideoInterview.tsx:364: <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center relative">
+E:\hirevify-next\src\hirevify-app\components\OneWayVideoInterview.tsx:515: <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center">
+E:\hirevify-next\src\hirevify-app\components\OngoingProjects.tsx:234: <h3 className="font-semibold text-slate-900">
+E:\hirevify-next\src\hirevify-app\components\OngoingProjects.tsx:485: <h1 className="text-xl font-bold text-slate-900">All Projects</h1>
+E:\hirevify-next\src\hirevify-app\components\OngoingProjects.tsx:499: <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+E:\hirevify-next\src\hirevify-app\components\OngoingProjects.tsx:574: <h3 className="mb-2 text-lg font-semibold text-slate-900">No projects yet</h3>
+E:\hirevify-next\src\hirevify-app\components\OngoingProjects.tsx:590: <h2 className="font-semibold text-slate-900">
+E:\hirevify-next\src\hirevify-app\components\PremiumTestingPanel.tsx:99: subscription.isActive? 'bg-green-100 text-green-800 border-green-200': 'bg-gray-100 text-gray-800 border-gray-200'
+E:\hirevify-next\src\hirevify-app\components\PricingPage.tsx:181: <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\PricingPage.tsx:188: <h1 className="text-2xl font-bold text-slate-950">HireVify Pricing</h1>
+E:\hirevify-next\src\hirevify-app\components\PricingPage.tsx:207: <h1 className="mb-4 text-4xl font-semibold tracking-normal text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\PricingPage.tsx:363: <h2 className="text-2xl font-semibold tracking-normal text-slate-950 text-center mb-8">
+E:\hirevify-next\src\hirevify-app\components\ProductionATSScanner.tsx:508: <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\ProductionATSScanner.tsx:511: <Badge className="ml-2 bg-green-100 text-green-800">Live Results</Badge>
+E:\hirevify-next\src\hirevify-app\components\ProductionATSScanner.tsx:543: <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+E:\hirevify-next\src\hirevify-app\components\ProductionATSScanner.tsx:643: <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Analyze Resumes</h3>
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSDashboard.tsx:88: if (accuracy >= 95) return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSDashboard.tsx:238: <span className="text-sm font-medium text-green-800">
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSScanner.tsx:584: <h1 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-3">
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSScanner.tsx:596: <Badge variant="secondary" className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSScanner.tsx:678: <p className="text-xl font-medium text-gray-900">{uploadedFile.name}</p>
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSScanner.tsx:682: <Badge className="bg-green-100 text-green-800 border-green-200">
+E:\hirevify-next\src\hirevify-app\components\ProfessionalATSScanner.tsx:693: <p className="text-xl font-medium text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ProjectChallengeVideoRecording.tsx:577: <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:523: <h1 className="text-3xl font-bold text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:544: ? 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-sm'
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:561: ? 'border-emerald-300 bg-emerald-50 text-emerald-950 shadow-sm'
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:579: <CardTitle className="flex items-center gap-2 text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:587: <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:833: <h3 className="text-lg font-bold text-gray-900">{opportunity.title}</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:834: <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">{label}</Badge>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:868: <p className="font-semibold text-gray-900">Schedule</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:872: <p className="font-semibold text-gray-900">Dates</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:877: <p className="font-semibold text-gray-900">Requirements</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:883: <p className="font-semibold text-gray-900">Deliverables</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:892: <h4 className="text-sm font-semibold text-gray-900 mb-3">Applicants</h4>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:906: <p className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:937: <p className="font-semibold text-slate-900">Submitted work</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1014: <h3 className="text-lg font-bold text-gray-900">{opportunity.title}</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1015: <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">{label}</Badge>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1046: <p className="text-sm font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1077: <p className="font-semibold text-slate-900">Submitted work</p>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1157: <h1 className="text-3xl font-bold text-gray-900">Job Management</h1>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1166: <CardTitle className="flex items-center gap-2 text-gray-900">
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1193: <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs yet</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1207: <h3 className="text-xl font-bold text-gray-900">{job.title}</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectManagement.tsx:1208: <Badge className={job.status === 'published'? 'bg-emerald-100 text-emerald-800 border border-emerald-200': 'bg-gray-100 text-gray-800 border border-gray-200'}>
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:492: case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:495: case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:496: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:816: case 'selected': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:819: case 'submitted': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:820: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:892: className="bg-red-600 hover:bg-red-700 text-slate-900"
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1093: <h3 className="text-lg font-bold text-slate-950 mb-2">No jobs available</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1115: <h2 className="text-lg font-bold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1149: className="font-semibold text-lg text-slate-950 hover:text-emerald-600 cursor-pointer"
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1359: <h3 className="font-semibold text-sm text-slate-950">AI Recommendations</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1371: <h4 className="font-medium text-sm text-slate-950">{project.title}</h4>
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1386: <h3 className="text-sm font-bold text-slate-950 mb-3">Quick Stats</h3>
+E:\hirevify-next\src\hirevify-app\components\ProjectSearch.tsx:1390: <span className="font-semibold text-slate-950">{filteredProjects.length}</span>
+E:\hirevify-next\src\hirevify-app\components\QuestionBank.tsx:303: case 'easy': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\QuestionBank.tsx:306: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:242: className="rounded-full bg-slate-950 px-5 text-white shadow-sm hover:bg-slate-800"
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:372: <p className="font-semibold text-slate-950">{edu.degree}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:459: <h2 className="mt-1 text-lg font-bold text-slate-950">Shortlist decision</h2>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:461: <div className="mb-5 rounded-lg bg-slate-950 p-4 text-white">
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:541: <h3 className="text-base font-bold text-slate-950">Unlock full candidate intelligence</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:543: <Button onClick={onUpgrade} className="mt-4 w-full rounded-lg bg-slate-950 text-white hover:bg-slate-800">
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:572: <p className="truncate text-sm font-semibold text-slate-900">{value}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:597: <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:608: <h3 className="mb-3 text-sm font-bold text-slate-900">{title}</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:617: <h3 className="mb-4 text-base font-bold text-slate-950">{title}</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:668: <span className="text-right text-sm font-semibold text-slate-800">{value}</span>
+E:\hirevify-next\src\hirevify-app\components\RecruiterCandidateDetail.tsx:677: <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:318: <div className="min-h-screen bg-white text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:327: <h1 className="text-xl font-bold text-slate-950 sm:text-2xl">Dashboard</h1>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:417: <h2 className="mt-3 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:436: className="h-11 rounded-full border-emerald-200 bg-white px-5 font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:444: className="h-11 rounded-full border-emerald-200 bg-white px-5 font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50"
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:471: <p className="text-3xl font-semibold tracking-normal text-slate-950">{item.value}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:479: <aside className="border-t border-emerald-100 bg-white px-5 py-7 text-slate-950 sm:px-7 lg:border-l lg:border-t-0">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:483: <h3 className="mt-2 text-base font-semibold text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:490: ? 'bg-emerald-100 text-emerald-800'
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:532: <h2 className="mt-1 text-lg font-semibold text-slate-950">Application Pipeline</h2>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:556: <h3 className="text-base font-semibold text-slate-950">{section.title}</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:579: <h2 className="mt-1 text-lg font-semibold text-slate-950">Hiring Tools</h2>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:602: <span className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-100 text-emerald-800 transition-colors group-hover:bg-emerald-200 group-hover:text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:606: <span className="block font-semibold text-slate-950">{tool.label}</span>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:612: tool.access ? 'bg-emerald-100 text-emerald-800' : 'bg-white text-emerald-700 ring-1 ring-emerald-100'
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:632: <h3 className="mt-1 text-lg font-semibold text-slate-950">Messages</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:637: className="text-sm font-semibold text-emerald-800 hover:text-emerald-700"
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:646: <p className="text-sm font-semibold text-slate-950">No conversations yet</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:658: <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-800">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:662: <p className="truncate text-sm font-semibold text-slate-950">{conversation.otherUser.name || 'User'}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:683: <h3 className="text-lg font-semibold text-slate-950">Recent Applications</h3>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:694: <p className="line-clamp-1 text-sm font-semibold text-slate-950">{application.candidate}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:695: <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:709: <p className="text-sm font-semibold text-slate-950">No applications yet</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterDashboard.tsx:719: <section className="mt-6 overflow-hidden rounded-[28px] border border-emerald-100 bg-white text-slate-950 shadow-[0_16px_44px_rgba(15,23,42,0.06)]">
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:523: case 'viewer': return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:524: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:530: case 'active': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:532: case 'inactive': return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:533: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\RecruiterProfileEditor.tsx:1214: <Badge className={`${billingInfo.status === 'active'? 'bg-green-100 text-green-800': 'bg-red-100 text-red-800'}`}>
+E:\hirevify-next\src\hirevify-app\components\RecruiterSettings.tsx:123: <h1 className="text-2xl font-bold text-slate-950">Settings</h1>
+E:\hirevify-next\src\hirevify-app\components\RecruiterSettings.tsx:150: <p className="font-medium text-slate-950">{user?.name || 'Not set'}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterSettings.tsx:154: <p className="font-medium text-slate-950">{user?.email || 'Not set'}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterSettings.tsx:165: <p className="font-semibold text-slate-950">{companyName || 'Company profile not configured'}</p>
+E:\hirevify-next\src\hirevify-app\components\RecruiterSettings.tsx:244: Need help? Contact support from your registered email: <span className="font-medium text-slate-800">{user?.email}</span>
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:978: if (score >= 80) return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:998: className="mt-1 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:1004: <CardTitle className="flex items-center gap-2 text-2xl text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:1052: <h3 className="font-semibold text-slate-950">{selectedJob.title}</h3>
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:1249: <h3 className="text-2xl font-bold text-slate-950">{optimizedResumeData.contactInfo.fullName || 'Your Name'}</h3>
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:1276: <div className="font-semibold text-slate-950">{item.jobTitle || 'Role'}{item.companyName ? ` - ${item.companyName}` : ''}</div>
+E:\hirevify-next\src\hirevify-app\components\ReliableATSScanner.tsx:1339: <span className="block truncate font-semibold text-slate-950">{result.fileName}</span>
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1612: <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1633: <Button variant="ghost" onClick={() => setCurrentStep('review')} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1655: <Button variant="ghost" onClick={currentStep === 'template'? onBack: prevStep} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1670: <span className="font-medium text-slate-800">Resume Builder Progress</span>
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1685: isActive? 'border-emerald-300 bg-emerald-50 text-emerald-800': isComplete? 'border-slate-200 bg-white text-slate-700': 'border-slate-200 bg-white/70 text-slate-500'
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1760: <h3 className="text-sm font-bold uppercase tracking-normal text-slate-900 border-b border-slate-300 pb-1 mb-3">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1771: <h4 className="font-bold text-slate-900">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1803: <h4 className="font-bold text-slate-900">{cleanBrokenText(edu.degree || 'Degree')}</h4>
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1829: <div data-resume-template="modern" className="bg-white text-slate-900 shadow-sm border border-slate-200 max-w-4xl mx-auto">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1831: <aside className="col-span-4 bg-slate-900 text-white p-8">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1892: <div className="bg-white text-slate-900 border border-slate-200 max-w-4xl mx-auto p-10">
+E:\hirevify-next\src\hirevify-app\components\ResumeBuilder.tsx:1930: <div className="bg-white text-slate-900 border border-slate-200 max-w-4xl mx-auto p-10">
+E:\hirevify-next\src\hirevify-app\components\SkillsAssessment.tsx:505: case 'beginner': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsAssessment.tsx:508: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsCertification.tsx:230: case 'Beginner': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsCertification.tsx:234: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsCertification.tsx:242: case 'company_sponsor': return 'bg-green-100 text-green-800 border-green-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsCertification.tsx:244: default: return 'bg-gray-100 text-gray-800 border-gray-200';
+E:\hirevify-next\src\hirevify-app\components\SkillsCertification.tsx:252: <Badge className="bg-green-100 text-green-800 border-green-200">
+E:\hirevify-next\src\hirevify-app\components\SkillsDevelopmentAI.tsx:428: <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
+E:\hirevify-next\src\hirevify-app\components\SkillsDevelopmentAI.tsx:620: <Badge className="bg-green-100 text-green-800 text-xs">
+E:\hirevify-next\src\hirevify-app\components\SkillsDevelopmentAI.tsx:724: <Badge className={resource.cost === 'free'? 'bg-green-100 text-green-800': 'bg-blue-100 text-blue-800'} style={{ fontSize: '10px', padding: '1px 4px' }}>
+E:\hirevify-next\src\hirevify-app\components\SkillsDevelopmentAI.tsx:752: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\SkillsDevelopmentAI.tsx:833: <Badge className={path.demandTrend === 'increasing'? 'bg-green-100 text-green-800': 'bg-blue-100 text-blue-800'}>
+E:\hirevify-next\src\hirevify-app\components\SkillsFirstHiring.tsx:355: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\SkillsFirstHiring.tsx:438: <Badge className="bg-green-100 text-green-800">
+E:\hirevify-next\src\hirevify-app\components\SubscriptionManager.tsx:57: <h1 className="text-xl font-bold text-slate-950">Plan and access</h1>
+E:\hirevify-next\src\hirevify-app\components\SubscriptionManager.tsx:83: <Badge className={isPro ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}>
+E:\hirevify-next\src\hirevify-app\components\SubscriptionManager.tsx:89: <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
+E:\hirevify-next\src\hirevify-app\components\SubscriptionManager.tsx:107: <p className="font-semibold text-slate-900">You are using the Free plan.</p>
+E:\hirevify-next\src\hirevify-app\components\VideoPreview.tsx:53: <p className="text-sm font-medium text-emerald-900">Introduction Video</p>
+E:\hirevify-next\src\hirevify-app\components\VideoPreview.tsx:79: <h3 className="font-semibold text-slate-900">Introduction Video</h3>
+E:\hirevify-next\src\hirevify-app\components\VideoRecorder.tsx:332: <h3 className="font-semibold text-slate-900 mb-2">Record Introduction Video</h3>
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:17: pageTitle: 'text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:22: cardTitle: 'text-base font-semibold text-slate-950',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:30: tab: 'rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:31: activeTab: 'bg-slate-950 text-white shadow-sm hover:bg-slate-950 hover:text-white',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:33: 'inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:37: 'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 disabled:pointer-events-none disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:39: 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:41: 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:43: 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200',
+E:\hirevify-next\src\hirevify-app\theme\dashboardTheme.ts:46: 'inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-950',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:210: primary: 'inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:212: ghost: 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:215: icon: 'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:221: base: 'flex h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200/50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:226: base: 'flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-200/50 focus:border-slate-400 disabled:cursor-not-allowed disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:230: base: 'flex min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200/50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:240: sidebarItem: 'flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:241: sidebarItemActive: 'bg-slate-900 text-white hover:bg-slate-800 hover:text-white',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:242: tab: 'inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:243: tabActive: 'bg-slate-900 text-white',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:279: title: 'mt-4 text-lg font-semibold text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:299: title: 'text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:308: value: 'mt-2 text-3xl font-bold tracking-tight text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:317: icon: 'mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-slate-900 group-hover:text-white',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:318: title: 'text-base font-semibold text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:327: title: 'text-base font-semibold text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:335: title: 'text-lg font-semibold text-slate-900',
+E:\hirevify-next\src\hirevify-app\theme\premiumTheme.ts:342: container: 'z-50 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-lg',

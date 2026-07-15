@@ -1,4 +1,4 @@
-﻿import { Suspense } from 'react';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import HireVifyClient from './HireVifyClient';
 
@@ -28,16 +28,21 @@ function firstValue(value: any): string | null {
   return Array.isArray(value) ? value[0] ?? null : value;
 }
 
+
 export default async function Home(props: any) {
   const searchParams = await props.searchParams;
 
-  const initialScreen = firstValue(searchParams?.screen);
+  const requestedScreen = firstValue(searchParams?.screen);
+  // Pass the URL screen through to App.tsx.
+  // App.tsx validates it against the complete ALL_SCREENS list.
+  const initialScreen = requestedScreen ?? 'homepage';
   const initialCandidateId = firstValue(searchParams?.candidateId);
 
   return (
     <Suspense fallback={null}>
       <HireVifyClient
         initialScreen={initialScreen}
+        requestedScreen={requestedScreen}
         initialCandidateId={initialCandidateId}
       />
     </Suspense>

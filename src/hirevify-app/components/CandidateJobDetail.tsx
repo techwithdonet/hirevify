@@ -843,13 +843,17 @@ export function CandidateJobDetail({ job, onBack, onViewAssignment, onApply, onE
               </p>
             </div>
             <div className="space-y-3">
-              <a
-                href="/candidate/settings"
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProfileIncompleteModal(false);
+                  onEditProfile?.();
+                }}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
                 <UserCircle className="h-4 w-4" />
                 Complete your profile
-              </a>
+              </button>
               <button
                 onClick={() => setShowProfileIncompleteModal(false)}
                 className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"

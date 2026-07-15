@@ -1,6 +1,8 @@
 ﻿import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
+import { z } from "zod";
+import { authorizeAiRequest } from "@/src/lib/server/aiRequest";
 
 export const runtime = "nodejs";
 
@@ -29,7 +31,7 @@ function asArray(value: any) {
 }
 
 function fallbackOptimizedResume(body: any) {
-  const parsed = body?.parsedResume || {};
+  const parsed = body?.parsedResume || body?.resumeData || {};
   const missingKeywords = asArray(body?.missingKeywords).slice(0, 12);
 
   const existingSkills = asArray(parsed.skills)
@@ -68,9 +70,10 @@ function fallbackOptimizedResume(body: any) {
 }
 
 function buildPrompt(body: any) {
-  const parsedResume = body?.parsedResume || {};
+  const parsedResume = body?.parsedResume || body?.resumeData || {};
   const currentResumeText =
     body?.currentResumeText ||
+    body?.rawResumeText ||
     body?.resumeText ||
     body?.cvText ||
     JSON.stringify(parsedResume, null, 2);
@@ -189,7 +192,44 @@ async function askGroq(prompt: string) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({}));
+  const authorization = await authorizeAiRequest(request, "rewrite-resume", {
+    requirePremium: true,
+  });
+  if (!authorization.ok) return authorization.response;
+
+  const parsed = z
+    .object({
+      currentResumeText: z.string().max(30000).optional(),
+      resumeText: z.string().max(30000).optional(),
+      cvText: z.string().max(30000).optional(),
+      targetJobDescription: z.string().max(20000).optional(),
+      jobDescription: z.string().max(20000).optional(),
+      description: z.string().max(20000).optional(),
+      missingKeywords: z.array(z.string().max(100)).max(100).optional(),
+      currentScore: z.number().min(0).max(100).optional(),
+      categories: z.array(z.unknown()).max(50).optional(),
+      parsedResume: z.record(z.string(), z.unknown()).optional(),
+      resumeData: z.record(z.string(), z.unknown()).optional(),
+      rawResumeText: z.string().max(30000).optional(),
+      atsScore: z.unknown().optional(),
+    })
+    .passthrough()
+    .safeParse(await request.json().catch(() => null));
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Resume optimization data is invalid or too large." },
+      { status: 400, headers: authorization.headers },
+    );
+  }
+
+  const body = parsed.data;
+  if (!body.parsedResume && !body.resumeData && !body.currentResumeText && !body.rawResumeText) {
+    return NextResponse.json(
+      { error: "Resume data is required." },
+      { status: 400, headers: authorization.headers },
+    );
+  }
   const prompt = buildPrompt(body);
 
   const errors: string[] = [];
@@ -202,7 +242,7 @@ export async function POST(request: Request) {
       ...fallbackOptimizedResume(body),
       ...result,
       provider: "gemini",
-    });
+    }, { headers: authorization.headers });
   } catch (error) {
     errors.push(`Gemini failed: ${getErrorMessage(error)}`);
   }
@@ -216,7 +256,7 @@ export async function POST(request: Request) {
       ...result,
       provider: "groq",
       warning: errors.join(" | "),
-    });
+    }, { headers: authorization.headers });
   } catch (error) {
     errors.push(`Groq failed: ${getErrorMessage(error)}`);
   }
@@ -224,5 +264,5 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ...fallbackOptimizedResume(body),
     warning: errors.join(" | "),
-  });
+  }, { headers: authorization.headers });
 }

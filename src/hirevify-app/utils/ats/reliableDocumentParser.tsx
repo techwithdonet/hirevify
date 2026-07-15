@@ -12,8 +12,8 @@ export interface ReliableResumeData {
  email: string;
  phone: string;
  location: string;
- Link?: string;
- GitBranch?: string;
+ linkedin?: string;
+ github?: string;
  portfolio?: string;
  };
  professionalSummary: string;
@@ -105,7 +105,6 @@ export class ReliableDocumentParser {
  const extractedText = await this.extractTextFromFile(file);
  
  console.log('„ Text extracted successfully, length:', extractedText.length);
- console.log('„ First 200 characters:', extractedText.substring(0, 200));
  
  // Step 2: Parse the extracted text
  console.log('„ Starting resume text parsing...');
@@ -341,7 +340,13 @@ export class ReliableDocumentParser {
  }
 
  private cleanText(text: string): string {
- return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\s+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+ return text
+ .replace(/\r\n/g, '\n')
+ .replace(/\r/g, '\n')
+ .replace(/[ \t]+/g, ' ')
+ .replace(/\n[ \t]+/g, '\n')
+ .replace(/\n{3,}/g, '\n\n')
+ .trim();
  }
 
  private extractPersonalInfo(text: string, lines: string[]) {
@@ -406,11 +411,11 @@ export class ReliableDocumentParser {
  }
  
  // Social links
- const linkedinMatch = text.match(/Link\.com\/in\/[a-zA-Z0-9-]+/);
- const Link = linkedinMatch? linkedinMatch[0]: '';
+ const linkedinMatch = text.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?/i);
+ const linkedin = linkedinMatch? linkedinMatch[0]: '';
  
- const githubMatch = text.match(/GitBranch\.com\/[a-zA-Z0-9-]+/);
- const GitBranch = githubMatch? githubMatch[0]: '';
+ const githubMatch = text.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9_-]+\/?/i);
+ const github = githubMatch? githubMatch[0]: '';
  
  const portfolioMatch = text.match(/https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
  const portfolio = portfolioMatch? portfolioMatch[0]: '';
@@ -422,8 +427,8 @@ export class ReliableDocumentParser {
  email,
  phone,
  location,
- Link,
- GitBranch,
+ linkedin,
+ github,
  portfolio
  };
  }

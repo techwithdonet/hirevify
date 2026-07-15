@@ -349,6 +349,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewNotifications} 
+                aria-label="Open notifications"
                 className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Bell className="h-5 w-5" />
@@ -363,6 +364,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewMessages} 
+                aria-label="Open messages"
                 className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <MessageSquare className="h-5 w-5" />
@@ -377,6 +379,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewSettings} 
+                aria-label="Open settings"
                 className="rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Settings className="h-5 w-5" />
@@ -386,6 +389,7 @@ export function RecruiterDashboard({
                 variant="ghost" 
                 size="icon" 
                 onClick={onLogout} 
+                aria-label="Log out"
                 className="rounded-full text-slate-700 hover:bg-red-50 hover:text-red-600"
               >
                 <LogOut className="h-5 w-5" />
@@ -460,12 +464,12 @@ export function RecruiterDashboard({
                       index > 0 && "border-t border-emerald-100 sm:border-l sm:border-t-0"
                     )}
                   >
-                    <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700 group-hover:text-emerald-700">
+                    <p className="text-xs font-semibold uppercase tracking-normal !text-emerald-50 group-hover:!text-white">
                       {item.label}
                     </p>
                     <div className="mt-2 flex items-end justify-between gap-3">
-                      <p className="text-3xl font-semibold tracking-normal text-slate-950">{item.value}</p>
-                      <ArrowUpRight className="mb-1 h-4 w-4 text-slate-400 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-700" />
+                      <p className="text-3xl font-semibold tracking-normal !text-white">{item.value}</p>
+                      <ArrowUpRight className="mb-1 h-4 w-4 !text-emerald-100 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:!text-white" />
                     </div>
                   </button>
                 ))}

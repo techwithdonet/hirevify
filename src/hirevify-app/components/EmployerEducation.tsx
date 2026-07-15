@@ -637,10 +637,10 @@ export function EmployerEducation({ onBack, onUpgrade }: EmployerEducationProps)
 
  // Reset states when starting a new module
  const startModule = (moduleId: string) => {
- const module = trainingModules.find(m => m.id === moduleId);
- if (!module) return;
+ const selectedTrainingModule = trainingModules.find(m => m.id === moduleId);
+ if (!selectedTrainingModule) return;
 
- setSelectedModule(module);
+ setSelectedModule(selectedTrainingModule);
  setCurrentChapterIndex(0);
  setCurrentSlideIndex(0);
  setShowFinalQuiz(false);
@@ -648,7 +648,7 @@ export function EmployerEducation({ onBack, onUpgrade }: EmployerEducationProps)
  setQuizAnswers({});
  setQuizResults(null);
  setChapterProgress({});
- toast.success(`Starting "${module.title}" training module`);
+ toast.success(`Starting "${selectedTrainingModule.title}" training module`);
  };
 
  const downloadResource = (resourceId: string) => {

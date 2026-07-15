@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -16,24 +16,17 @@ import {
  Star,
  Zap,
  Shield,
- CreditCard,
- Smartphone,
- Wallet,
- AlertCircle,
  CheckCircle,
- Loader2,
- Settings,
  Info
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
-import { 
- PaymentsAPI, 
- SubscriptionPlan, 
- SUBSCRIPTION_PLANS, 
+import {
+ SubscriptionPlan,
+ SUBSCRIPTION_PLANS,
  CANDIDATE_SUBSCRIPTION_PLANS,
- formatIndianCurrency,
- RazorpayPaymentResponse 
+ formatIndianCurrency
 } from '../utils/api/payments';
+import { subscriptionsService } from '../services/subscriptionsService';
 import { toast } from 'sonner';
 import { HireVifyLogo } from './HireVifyLogo';
 
@@ -44,31 +37,17 @@ interface PricingPageProps {
 }
 
 export function PricingPage({ onBack, onManageSubscription, userType }: PricingPageProps) {
- const { user, accessToken } = useAuth();
+ const { user } = useAuth();
  const [isAnnual, setIsAnnual] = useState(false);
- const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
- const [loading, setLoading] = useState(true);
- const [processingPayment, setProcessingPayment] = useState(false);
- const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+ const [plans, setPlans] = useState<SubscriptionPlan[]>(() =>
+ userType === 'candidate'? CANDIDATE_SUBSCRIPTION_PLANS: SUBSCRIPTION_PLANS
+ );
+ const [loading, setLoading] = useState(false);
  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
- const [developmentMode, setDevelopmentMode] = useState(false);
 
  useEffect(() => {
  loadPlansAndSubscription();
- checkDevelopmentMode();
- }, [userType, accessToken]);
-
- const checkDevelopmentMode = async () => {
- try {
- const response = await fetch('/api/payments/health');
- if (response.ok) {
- const healthData = await response.json();
- setDevelopmentMode(healthData.developmentMode || false);
- }
- } catch (error) {
- console.log('Could not check payment health status');
- }
- };
+ }, [userType, user?.id]);
 
  const loadPlansAndSubscription = async () => {
  try {
@@ -79,15 +58,11 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
  
  setPlans(availablePlans);
 
- // Load current subscription if user is authenticated
- if (accessToken) {
- try {
- const subscription = await PaymentsAPI.getCurrentSubscription(accessToken);
- setCurrentSubscription(subscription);
- } catch (error) {
- // No subscription found is ok
- console.log('No current subscription found');
- }
+ if (user?.id) {
+ const subscription = await subscriptionsService.getUserSubscription(user.id);
+ setCurrentSubscription(subscription.data);
+ } else {
+ setCurrentSubscription(null);
  }
  } catch (error) {
  console.error('Error loading pricing data:', error);
@@ -98,7 +73,11 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
  };
 
  const handleSubscribe = async (plan: SubscriptionPlan) => {
-  alert(`${plan.name} plan payments are coming soon. For now, please contact admin to activate Pro.`);
+  if (plan.price === 0) {
+  onBack();
+  return;
+  }
+  alert('Online payments are not open yet. Ask the HireVify admin to activate Pro for your account.');
 };
 
   // Function to get the current price based on billing period
@@ -143,10 +122,8 @@ export function PricingPage({ onBack, onManageSubscription, userType }: PricingP
  });
 
  const isPlanCurrent = (plan: SubscriptionPlan) => {
- if (!currentSubscription) {
- return plan.price === 0; // Free plan is current if no subscription
- }
- return currentSubscription.planId === plan.id;
+ const currentTier = currentSubscription?.isActive? 'pro': 'free';
+ return plan.price === 0? currentTier === 'free': currentTier === 'pro';
  };
 
  if (loading) {
@@ -218,29 +195,12 @@ return (
       </header>
 
       <main className="premium-content">
- {/* Development Mode Banner */}
- {developmentMode && (
- <Alert className="mb-8 border-blue-200 bg-blue-50">
- <Info className="h-4 w-4 text-blue-600" />
- <AlertDescription className="text-blue-800">
- <div className="flex items-center justify-between">
- <div>
- <strong>Development Mode:</strong> Payment features are running with test data. 
- Subscriptions will work but no real money will be charged.
- </div>
- <Button 
- variant="outline" 
- size="sm"
- onClick={() => window.open('/RAZORPAY_SETUP.md', '_blank')}
- className="text-blue-600 border-blue-200 hover:bg-blue-100"
- >
- <Settings className="w-4 h-4 mr-2" />
- Setup Guide
- </Button>
- </div>
+ <Alert className="mb-8 border-amber-200 bg-amber-50">
+ <Info className="h-4 w-4 text-amber-700" />
+ <AlertDescription className="text-amber-900">
+ <strong>Online payments are coming soon.</strong> Until Razorpay is ready, HireVify admins can activate or revoke Pro access manually for registered accounts.
  </AlertDescription>
  </Alert>
- )}
 
  {/* Hero Section */}
  <div className="text-center mb-12 sm:mb-16">
@@ -251,47 +211,58 @@ return (
  {userType === 'recruiter'? 'Scale your hiring process with advanced tools and analytics': 'Advance your career with premium job search tools'
  }
  </p>
- 
- {/* Pricing Toggle */}
- <div className="mb-8 inline-flex items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
- <Button
- variant={isAnnual? "ghost": "default"}
- size="sm"
- onClick={() => setIsAnnual(false)}
- className={`px-6 ${!isAnnual? 'bg-background shadow-sm': 'hover:bg-transparent'}`}
- >
- Monthly
- </Button>
- <Button
- variant={isAnnual? "default": "ghost"}
- size="sm"
- onClick={() => setIsAnnual(true)}
- className={`px-6 ${isAnnual? 'bg-background shadow-sm': 'hover:bg-transparent'}`}
- >
-Annual
-  <Badge variant="secondary" className="ml-2 bg-green-100 text-green-700 text-xs">
-  Save up to 26%
-  </Badge>
- </Button>
- </div>
+        {/* Pricing Toggle */}
+        <div
+          className="hv-pricing-toggle mb-8"
+          role="group"
+          aria-label="Billing period"
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-active={!isAnnual ? "true" : "false"}
+            aria-pressed={!isAnnual}
+            onClick={() => setIsAnnual(false)}
+            className="hv-pricing-toggle-option"
+          >
+            Monthly
+          </Button>
 
- {/* Trust Indicators */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-active={isAnnual ? "true" : "false"}
+            aria-pressed={isAnnual}
+            onClick={() => setIsAnnual(true)}
+            className="hv-pricing-toggle-option"
+          >
+            Annual
+
+            <Badge
+              variant="secondary"
+              data-active={isAnnual ? "true" : "false"}
+              className="hv-pricing-toggle-badge"
+            >
+              Save up to 26%
+            </Badge>
+          </Button>
+        </div>
+
+        {/* Availability indicators */}
  <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-600 sm:gap-8">
  <div className="flex items-center gap-2">
  <Shield className="w-4 h-4 text-primary" />
- <span>Secure Payments</span>
+ <span>Admin-approved access</span>
  </div>
  <div className="flex items-center gap-2">
- <CreditCard className="w-4 h-4 text-primary" />
- <span>All Cards Accepted</span>
+ <CheckCircle className="w-4 h-4 text-primary" />
+ <span>Free plan available</span>
  </div>
  <div className="flex items-center gap-2">
- <Smartphone className="w-4 h-4 text-primary" />
- <span>UPI & Netbanking</span>
- </div>
- <div className="flex items-center gap-2">
- <Wallet className="w-4 h-4 text-primary" />
- <span>Digital Wallets</span>
+ <Info className="w-4 h-4 text-primary" />
+ <span>Razorpay pending</span>
  </div>
  </div>
  </div>
@@ -301,13 +272,7 @@ Annual
  <Alert className="mb-8 border-primary bg-primary/5">
  <CheckCircle className="h-4 w-4 text-primary" />
  <AlertDescription className="text-primary">
- You're currently subscribed to the{' '}
- <strong>{plans.find(p => p.id === currentSubscription.planId)?.name || 'Professional'}</strong> plan.
- {currentSubscription.cancelAtPeriodEnd && (
- <span className="text-warning ml-2">
- (Cancelling at period end)
- </span>
- )}
+ Your current plan is <strong>{currentSubscription.isActive? 'Pro': 'Free'}</strong>.
  </AlertDescription>
  </Alert>
  )}
@@ -316,7 +281,6 @@ Annual
  <div className="mb-16 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
  {filteredPlans.map((plan) => {
  const isCurrent = isPlanCurrent(plan);
- const isProcessing = processingPayment && selectedPlan === plan.id;
  const savings = getSavingsText(plan);
  
  return (
@@ -374,22 +338,15 @@ Annual
  isCurrent? 'bg-muted text-muted-foreground cursor-default': plan.popular? 'bg-primary hover:bg-primary/90 text-primary-foreground': 'border-border text-foreground hover:bg-muted'
  }`}
  variant={isCurrent? 'secondary': plan.popular? 'default': 'outline'}
- disabled={isCurrent || isProcessing}
+ disabled={isCurrent}
  onClick={() => handleSubscribe(plan)}
  >
- {isProcessing? (
- <>
- <Loader2 className="w-4 h-4 mr-2 animate-spin" />
- {developmentMode? 'Activating...': 'Processing...'}
- </>
- ): isCurrent? (
+ {isCurrent? (
  'Current Plan'
  ): plan.price === 0? (
  'Get Started Free'
  ): (
- <>
- {developmentMode? 'Try Now (Test)': 'Subscribe Now'}
- </>
+ 'Request Pro Access'
  )}
  </Button>
 
@@ -409,32 +366,10 @@ Annual
  })}
  </div>
 
- {/* Payment Methods */}
- <div className="text-center mb-16">
- <h3 className="text-xl text-foreground mb-6">
- {developmentMode? 'Test Payment Options': 'Secure Payment Options'}
- </h3>
- <div className="flex items-center justify-center gap-12 flex-wrap">
- <div className="text-center">
- <CreditCard className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
- <p className="text-sm text-muted-foreground">Credit/Debit Cards</p>
- </div>
- <div className="text-center">
- <Smartphone className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
- <p className="text-sm text-muted-foreground">UPI</p>
- </div>
- <div className="text-center">
- <Briefcase className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
- <p className="text-sm text-muted-foreground">Net Banking</p>
- </div>
- <div className="text-center">
- <Wallet className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
- <p className="text-sm text-muted-foreground">Digital Wallets</p>
- </div>
- </div>
- <p className="text-xs text-muted-foreground mt-4">
- {developmentMode? 'Development mode - no real payments will be charged': 'Payments processed securely by Razorpay'
- }
+ <div className="mb-16 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
+ <h3 className="text-xl font-semibold text-amber-950">Temporary Pro activation</h3>
+ <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-amber-900">
+ Registered users can receive Pro access from the HireVify admin while online checkout is pending. No payment details are collected on this page.
  </p>
  </div>
 
@@ -546,16 +481,6 @@ Annual
  <Button variant="outline" className="border-border text-foreground hover:bg-muted">
  View FAQ
  </Button>
- {developmentMode && (
- <Button 
- variant="outline" 
- onClick={() => window.open('/RAZORPAY_SETUP.md', '_blank')}
- className="border-blue-200 text-blue-600 hover:bg-blue-50"
- >
- <Settings className="w-4 h-4 mr-2" />
- Setup Payments
- </Button>
- )}
  </div>
  </div>
  </main>

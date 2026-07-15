@@ -407,7 +407,7 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  fullName: cleanBrokenText(data.personalInfo.name || user?.name || ''),
  email: cleanBrokenText(data.personalInfo.email || user?.email || ''),
  phone: cleanBrokenText(data.personalInfo.phone || ''),
- linkedinUrl: cleanBrokenText(data.personalInfo.Link || ''),
+ linkedinUrl: cleanBrokenText(data.personalInfo.linkedin || ''),
  portfolioUrl: cleanBrokenText(data.personalInfo.portfolio || ''),
  location: cleanBrokenText(data.personalInfo.location || ''),
  },
@@ -1438,19 +1438,19 @@ export function ReliableATSScanner({ onBack, userType = 'candidate' }: ReliableA
  </div>
  
  <div className="space-y-3">
- {scanResult.data.personalInfo.Link && (
+ {scanResult.data.personalInfo.linkedin && (
  <div className="flex items-center gap-2">
  <ExternalLink className="h-4 w-4 text-muted-foreground" />
- <span className="font-medium">Link:</span>
- <span className="text-blue-600">{scanResult.data.personalInfo.Link}</span>
+ <span className="font-medium">LinkedIn:</span>
+ <span className="text-blue-600">{scanResult.data.personalInfo.linkedin}</span>
  </div>
  )}
  
- {scanResult.data.personalInfo.GitBranch && (
+ {scanResult.data.personalInfo.github && (
  <div className="flex items-center gap-2">
  <ExternalLink className="h-4 w-4 text-muted-foreground" />
- <span className="font-medium">GitBranch:</span>
- <span className="text-blue-600">{scanResult.data.personalInfo.GitBranch}</span>
+ <span className="font-medium">GitHub:</span>
+ <span className="text-blue-600">{scanResult.data.personalInfo.github}</span>
  </div>
  )}
  

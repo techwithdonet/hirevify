@@ -64,7 +64,23 @@ const footerSections: Array<{ heading: string; links: FooterLink[] }> = [
  },
 ];
 
-const screenHref = (screen: Screen) => (screen === 'homepage' ? '/' : `/?screen=${screen}`);
+const screenHref = (screen: Screen) => {
+ const routes: Partial<Record<Screen, string>> = {
+ 'product-features': '/features',
+ 'product-api': '/api',
+ 'product-integrations': '/integrations',
+ pricing: '/pricing',
+ 'company-about': '/about',
+ 'company-blog': '/blog',
+ 'company-careers': '/careers',
+ 'company-contact': '/contact',
+ 'support-help-center': '/help',
+ 'support-privacy-policy': '/privacy',
+ 'support-terms-of-service': '/terms',
+ 'support-status': '/status',
+ };
+ return screen === 'homepage'? '/': routes[screen] || `/?screen=${screen}`;
+};
 
 const hasOpenLoginIntent = () => {
  if (typeof window === 'undefined') {
@@ -105,7 +121,7 @@ const clearOpenLoginIntent = () => {
  window.history.replaceState(null, '', query ? `${window.location.pathname}?${query}` : window.location.pathname);
 };
 
-export function Homepage({ onPostProject, onFindProject, onNavigateScreen, loginPromptSignal }: HomepageProps) {
+export function Homepage({ onPostProject, onFindProject, loginPromptSignal }: HomepageProps) {
  const { user } = useAuth();
  const [authModalOpen, setAuthModalOpen] = useState(false);
  const [authModalTab, setAuthModalTab] = useState<'signin' | 'signup'>('signin');
@@ -160,7 +176,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  };
 
  const handleFooterLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, link: FooterLink) => {
- if (link.href || link.external) {
+ if (link.href || link.external || link.screen) {
  return;
  }
 
@@ -171,9 +187,6 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  return;
  }
 
- if (link.screen) {
- onNavigateScreen(link.screen);
- }
  };
 
  const handleCopySiteLink = async () => {
@@ -201,7 +214,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="flex h-16 items-center justify-between sm:h-20">
  {/* HireVify Logo */}
  <div className="flex items-center gap-2.5">
- <img src="/hirevify-logo-mark.png" alt="HireVify" className="h-10 w-10 object-contain opacity-90" />
+ <img src="/hirevify-logo-mark.png" alt="" aria-hidden="true" className="h-10 w-10 object-contain opacity-90" />
  <span className="text-lg font-semibold tracking-tight text-white">
  Hire<span className="text-lime-300">Vify</span>
  </span>
@@ -334,16 +347,16 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  size="lg"
  variant="ghost"
  onClick={handleFindProject}
- className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/50 underline underline-offset-4 hover:bg-transparent hover:text-white"
+ className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/75 underline underline-offset-4 hover:bg-transparent hover:text-white"
  >
  Find a Job &rarr;
  </Button>
  </div>
 
  <hr className="mt-12 max-w-sm border-t border-white/10" />
- <div className="mt-4 flex gap-8 text-sm text-white/40">
- <span><strong className="font-semibold text-white">92%</strong> match accuracy</span>
- <span><strong className="font-semibold text-white">3&times;</strong> faster shortlisting</span>
+ <div className="mt-4 flex gap-8 text-sm text-white/70">
+ <span><strong className="font-semibold text-white">Skills</strong> matched to roles</span>
+ <span><strong className="font-semibold text-white">Proof</strong> reviewed in context</span>
  </div>
  </div>
 
@@ -353,22 +366,22 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="mb-6 flex items-center justify-between">
  <div>
  <div className="text-3xl font-semibold leading-none text-[#102417]">Skill Match</div>
- <div className="mt-2 text-sm font-normal text-[#7a9478]">Save time. Hire with proof.</div>
+ <div className="mt-2 text-sm font-normal text-[#4f6b55]">Save time. Hire with proof.</div>
  </div>
  <div className="bg-lime-400 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#102417]">
- Live
+ Product preview
  </div>
  </div>
 
  <div className="grid grid-cols-3 gap-3">
  {[
- ['92%', 'match score'],
- ['18', 'projects live'],
- ['7', 'interviews'],
+ ['Skills', 'role alignment'],
+ ['Proof', 'project evidence'],
+ ['Flow', 'review workspace'],
  ].map(([value, label]) => (
  <div key={label} className="border border-[#e8f0e4] bg-white p-4 shadow-sm">
  <div className="text-3xl font-semibold text-[#183b22]">{value}</div>
- <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#7a9478]">{label}</div>
+ <div className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-[#4f6b55]">{label}</div>
  </div>
  ))}
  </div>
@@ -377,7 +390,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="mb-5 flex items-center justify-between">
  <div>
  <div className="text-xl font-semibold text-[#0f2418]">Candidate Proof Board</div>
- <div className="mt-1 text-xs font-normal text-[#7a9478]">Ranked by real project signals</div>
+ <div className="mt-1 text-xs font-normal text-[#4f6b55]">Ranked by real project signals</div>
  </div>
  <div className="h-9 w-24 bg-[#65a83d]" />
  </div>
@@ -418,7 +431,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  Why Choose
  <span className="block font-bold text-[#102417]">HireVify?</span>
  </h2>
- <p className="mx-auto mt-5 max-w-lg text-base font-light leading-7 text-[#8a9e89] sm:text-lg">
+ <p className="mx-auto mt-5 max-w-lg text-base font-light leading-7 text-[#4f6b55] sm:text-lg">
  A clean skills-first platform that turns hiring from resume guessing into real proof, scored matches, and faster decisions.
  </p>
  </div>
@@ -433,26 +446,26 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  Evaluate talent like you
  <span className="block font-bold">evaluate real work.</span>
  </h3>
- <p className="mt-5 max-w-xl text-base font-light leading-7 text-white/55">
+ <p className="mt-5 max-w-xl text-base font-light leading-7 text-white/75">
  HireVify brings project work, assessments, AI matching, and recruiter dashboards into one polished flow.
  </p>
 
  <div className="mt-8 grid gap-4 sm:grid-cols-2">
  {[
- ['92%', 'Skill match clarity'],
- ['60%', 'Less screening time'],
- ['Real', 'Project evidence'],
- ['Live', 'Candidate pipeline'],
+ ['Skills', 'Role-aware matching'],
+ ['Proof', 'Work evidence'],
+ ['Clear', 'Review criteria'],
+ ['Shared', 'Candidate pipeline'],
  ].map(([value, label]) => (
  <div key={label} className="border border-white/10 p-5">
  <div className="text-3xl font-semibold text-white">{value}</div>
- <div className="mt-2 text-xs font-semibold uppercase tracking-wide text-white/40">{label}</div>
+ <div className="mt-2 text-xs font-semibold uppercase tracking-wide text-white/70">{label}</div>
  </div>
  ))}
  </div>
 
- <div className="mt-6 border border-white/10 p-4 text-sm font-light leading-6 text-white/45">
- Built for recruiters demoing, candidates proving, and founders showing a polished product flow without noise.
+ <div className="mt-6 border border-white/10 p-4 text-sm font-light leading-6 text-white/75">
+ Built for recruiters evaluating real work and candidates presenting evidence of what they can do.
  </div>
  </div>
 
@@ -472,9 +485,9 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  },
  {
  icon: Shield,
- title: 'Secure & Verified',
- description: 'Keep recruiter and candidate flows clean with verified profiles, assessments, and trusted data states.',
- badge: 'Trusted',
+ title: 'Structured Workflows',
+ description: 'Keep recruiter and candidate work organized with clear profiles, assessments, and review states.',
+ badge: 'Organized',
  },
  {
  icon: BarChart3,
@@ -488,10 +501,10 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="flex h-10 w-10 items-center justify-center border border-[#c5dfc0] text-[#3f7a2c]">
  <feature.icon className="h-5 w-5" />
  </div>
- <span className="text-[10px] font-semibold uppercase tracking-widest text-[#65a83d]/60">{feature.badge}</span>
+ <span className="text-[10px] font-semibold uppercase tracking-widest text-[#3f7f24]">{feature.badge}</span>
  </div>
  <h3 className="text-lg font-semibold text-[#0f2418]">{feature.title}</h3>
- <p className="mt-3 text-sm font-normal leading-6 text-[#7a9478]">{feature.description}</p>
+ <p className="mt-3 text-sm font-normal leading-6 text-[#4f6b55]">{feature.description}</p>
  </div>
  ))}
  </div>
@@ -517,7 +530,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="border border-[#e4ede0] bg-white p-5 sm:p-7">
  <div className="mb-6 flex items-start justify-between gap-4">
  <div>
- <div className="border-l-2 border-[#65a83d] pl-3 text-xs font-semibold uppercase tracking-widest text-[#65a83d]">
+ <div className="border-l-2 border-[#3f7f24] pl-3 text-xs font-semibold uppercase tracking-widest text-[#3f7f24]">
  For Companies
  </div>
  <h3 className="mt-4 text-2xl font-semibold text-[#102417]">Find the right talent</h3>
@@ -532,10 +545,10 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  ['Evaluate Through Projects', 'Shortlist talent using practical work, portfolio proof, and recruiter notes.'],
  ].map(([title, description], index) => (
  <div key={title} className="flex items-start gap-4 border-t border-[#f0f5ee] py-4">
- <span className="mt-0.5 w-5 shrink-0 text-sm font-semibold text-[#65a83d]">{index + 1}.</span>
+ <span className="mt-0.5 w-5 shrink-0 text-sm font-semibold text-[#3f7f24]">{index + 1}.</span>
  <div>
  <h4 className="text-sm font-semibold text-[#0f2418]">{title}</h4>
- <p className="mt-1 text-sm font-normal leading-6 text-[#8a9e89]">{description}</p>
+ <p className="mt-1 text-sm font-normal leading-6 text-[#4f6b55]">{description}</p>
  </div>
  </div>
  ))}
@@ -545,7 +558,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="border border-[#e4ede0] bg-white p-5 sm:p-7">
  <div className="mb-6 flex items-start justify-between gap-4">
  <div>
- <div className="border-l-2 border-[#65a83d] pl-3 text-xs font-semibold uppercase tracking-widest text-[#65a83d]">
+ <div className="border-l-2 border-[#3f7f24] pl-3 text-xs font-semibold uppercase tracking-widest text-[#3f7f24]">
  For Candidates
  </div>
  <h3 className="mt-4 text-2xl font-semibold text-[#102417]">Showcase your skills</h3>
@@ -560,10 +573,10 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  ['Work on Real Projects', 'Demonstrate ability through meaningful work that recruiters can trust.'],
  ].map(([title, description], index) => (
  <div key={title} className="flex items-start gap-4 border-t border-[#f0f5ee] py-4">
- <span className="mt-0.5 w-5 shrink-0 text-sm font-semibold text-[#65a83d]">{index + 1}.</span>
+ <span className="mt-0.5 w-5 shrink-0 text-sm font-semibold text-[#3f7f24]">{index + 1}.</span>
  <div>
  <h4 className="text-sm font-semibold text-[#0f2418]">{title}</h4>
- <p className="mt-1 text-sm font-normal leading-6 text-[#8a9e89]">{description}</p>
+ <p className="mt-1 text-sm font-normal leading-6 text-[#4f6b55]">{description}</p>
  </div>
  </div>
  ))}
@@ -573,56 +586,48 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  </div>
  </section>
 
- {/* Testimonials Section */}
+ {/* Product principles */}
  <section id="testimonials" className="relative overflow-hidden bg-white px-3 py-16 sm:px-6 lg:px-8 lg:py-24">
  <div className="relative mx-auto max-w-7xl">
  <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
  <div className="max-w-2xl">
  <h2 className="text-4xl font-light tracking-tight text-[#0f2418] sm:text-5xl">
- What industry experts
- <span className="block font-bold text-[#0f2418]">are saying</span>
+ A clearer way to
+ <span className="block font-bold text-[#0f2418]">evaluate talent</span>
  </h2>
  </div>
- <p className="max-w-xl text-base font-light leading-7 text-[#a0b09e]">
- A more believable, modern presentation for your MVP demo &mdash; clean cards, strong spacing, and premium green styling.
+ <p className="max-w-xl text-base font-light leading-7 text-[#526b56]">
+ HireVify is designed around practical evidence, transparent criteria, and focused collaboration between candidates and recruiters.
  </p>
  </div>
 
  <div className="grid gap-8 lg:grid-cols-3">
  {[
  {
- rating: 5,
- text: 'This skills-first approach could transform talent acquisition by replacing guesswork with practical evidence and better matching signals.',
- author: 'Dr. Jennifer Walsh',
- position: 'Workforce Innovation, Stanford',
+ eyebrow: '01 / Evidence',
+ title: 'Review work, not only keywords',
+ text: 'Projects, portfolios, assessments, and role context help recruiters understand how a candidate applies their skills.',
  },
  {
- rating: 5,
- text: 'Project-based hiring with AI matching is a powerful next step for teams that want faster shortlisting and stronger quality signals.',
- author: 'Alex Thompson',
- position: 'Future of Work, McKinsey',
+ eyebrow: '02 / Context',
+ title: 'Make matching explainable',
+ text: 'Role requirements and candidate evidence stay visible alongside match signals so teams can review the reasoning.',
  },
  {
- rating: 5,
- text: 'Showcasing skills through actual work helps close the gap between polished resumes and real-world capability.',
- author: 'Maya Patel',
- position: 'HR Technology, Deloitte',
+ eyebrow: '03 / Decisions',
+ title: 'Keep the hiring flow organized',
+ text: 'Bring applications, conversations, assessments, and project reviews into a consistent workspace.',
  },
- ].map((testimonial) => (
- <div key={testimonial.author} className="border-t-2 border-[#0f2418] bg-white px-0 pb-0 pt-6">
- <span className="text-xs font-semibold tracking-[0.15em] text-[#65a83d]">
- {String.fromCharCode(9733).repeat(testimonial.rating)}
+ ].map((principle) => (
+ <div key={principle.title} className="border-t-2 border-[#0f2418] bg-white px-0 pb-0 pt-6">
+ <span className="text-xs font-semibold tracking-[0.15em] text-[#3f7f24]">
+ {principle.eyebrow}
  </span>
 
- <p className="mt-6 min-h-[10rem] text-base font-normal italic leading-8 text-[#2d4a35]">
- {testimonial.text}
+ <h3 className="mt-6 text-xl font-semibold text-[#0f2418]">{principle.title}</h3>
+ <p className="mt-4 min-h-[8rem] text-base font-normal leading-8 text-[#2d4a35]">
+ {principle.text}
  </p>
-
- <div className="mt-6">
- <div className="mb-3 mt-6 h-px w-8 bg-[#65a83d]" />
- <div className="text-sm font-semibold text-[#0f2418]">{testimonial.author}</div>
- <div className="mt-1 text-xs font-normal text-[#a0b09e]">{testimonial.position}</div>
- </div>
  </div>
  ))}
  </div>
@@ -635,14 +640,14 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_0.85fr] lg:items-center">
  <div>
  <span className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-400/60">
- Launch with confidence
+ Build a stronger hiring process
  </span>
  <h2 className="mt-6 max-w-3xl text-5xl font-light leading-tight tracking-tight text-white lg:text-7xl">
  Make every hiring
- <span className="block font-bold">demo feel premium.</span>
+ <span className="block font-bold">decision more informed.</span>
  </h2>
- <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/40 sm:text-lg">
- Present a clear product story for recruiters, candidates, partners, and early users &mdash; built around proof, trust, and better decisions.
+ <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/70 sm:text-lg">
+ Give recruiters and candidates a shared workflow built around evidence, role context, and clear next steps.
  </p>
 
  <div className="mt-9 flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -658,7 +663,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  size="lg"
  variant="ghost"
  onClick={handleFindProject}
- className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/40 underline underline-offset-4 hover:bg-transparent hover:text-white"
+ className="h-auto rounded-none bg-transparent px-0 py-0 text-sm font-medium text-white/75 underline underline-offset-4 hover:bg-transparent hover:text-white"
  >
  Find a Job &rarr;
  </Button>
@@ -667,14 +672,14 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
 
  <dl className="grid gap-x-10 sm:grid-cols-2">
  {[
- ['Demo story', 'Clear flow for partners'],
- ['Trust layer', 'Proof before interviews'],
- ['Shortlists', 'Less noise, better fit'],
- ['Launch path', 'Early users aligned'],
+ ['Candidate proof', 'Work shown in context'],
+ ['Review criteria', 'Requirements stay visible'],
+ ['Shortlists', 'Evidence supports fit'],
+ ['Next steps', 'A consistent hiring flow'],
  ].map(([title, text]) => (
  <div key={title} className="border-b border-white/10 py-5">
  <dt className="text-lg font-semibold text-white">{title}</dt>
- <dd className="mt-2 text-sm text-white/30">{text}</dd>
+ <dd className="mt-2 text-sm text-white/65">{text}</dd>
  </div>
  ))}
  </dl>
@@ -688,12 +693,12 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="grid gap-10 lg:grid-cols-[1.1fr_1.6fr]">
  <div>
  <div className="flex items-center gap-2.5">
- <img src="/hirevify-logo-mark.png" alt="HireVify" className="h-10 w-10 object-contain opacity-90" />
+ <img src="/hirevify-logo-mark.png" alt="" aria-hidden="true" className="h-10 w-10 object-contain opacity-90" />
  <span className="text-lg font-semibold tracking-tight text-white">
  Hire<span className="text-lime-300">Vify</span>
  </span>
  </div>
- <p className="mt-5 max-w-sm text-sm font-light leading-7 text-white/30">
+ <p className="mt-5 max-w-sm text-sm font-light leading-7 text-white/70">
  Skill-based hiring. Real proof. Better decisions.
  </p>
  <div className="mt-6 flex gap-3">
@@ -702,8 +707,8 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  variant="ghost"
  size="icon"
  aria-label="Contact HireVify"
- onClick={() => onNavigateScreen('company-contact')}
- className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ onClick={() => window.location.assign(screenHref('company-contact'))}
+ className="rounded-none bg-transparent text-white/65 hover:bg-transparent hover:text-lime-300"
  >
  <MessageCircle className="h-5 w-5" />
  </Button>
@@ -713,7 +718,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  size="icon"
  aria-label="Copy HireVify link"
  onClick={handleCopySiteLink}
- className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ className="rounded-none bg-transparent text-white/65 hover:bg-transparent hover:text-lime-300"
  >
  <LinkIcon className="h-5 w-5" />
  </Button>
@@ -722,8 +727,8 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  variant="ghost"
  size="icon"
  aria-label="View system status"
- onClick={() => onNavigateScreen('support-status')}
- className="rounded-none bg-transparent text-white/25 hover:bg-transparent hover:text-lime-300"
+ onClick={() => window.location.assign(screenHref('support-status'))}
+ className="rounded-none bg-transparent text-white/65 hover:bg-transparent hover:text-lime-300"
  >
  <GitBranch className="h-5 w-5" />
  </Button>
@@ -733,14 +738,14 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
  {footerSections.map((section) => (
  <div key={section.heading}>
- <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-white/30">{section.heading}</h3>
+ <h3 className="text-xs font-medium uppercase tracking-[0.15em] text-white/65">{section.heading}</h3>
  <ul className="mt-4 space-y-3">
  {section.links.map((item) => (
  <li key={item.label}>
  <a
  href={item.href ?? (item.screen ? screenHref(item.screen) : `#${item.sectionId}`)}
  onClick={(event) => handleFooterLinkClick(event, item)}
- className="text-sm font-normal text-white/40 transition hover:text-white"
+ className="text-sm font-normal text-white/75 transition hover:text-white"
  target={item.external ? '_blank' : undefined}
  rel={item.external ? 'noreferrer' : undefined}
  >
@@ -754,7 +759,7 @@ export function Homepage({ onPostProject, onFindProject, onNavigateScreen, login
  </div>
  </div>
 
- <div className="mt-10 flex flex-col gap-4 border-t border-white/5 pt-6 text-left text-xs text-white/20 sm:flex-row sm:items-center">
+ <div className="mt-10 flex flex-col gap-4 border-t border-white/10 pt-6 text-left text-xs text-white/65 sm:flex-row sm:items-center">
  <p>&copy; 2026 HireVify</p>
  <p>Built for better hiring decisions.</p>
  </div>

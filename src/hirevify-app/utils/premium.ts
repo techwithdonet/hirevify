@@ -1,301 +1,282 @@
-﻿// Premium Features Access Control System
-import { useAuth } from '../components/AuthProvider';
-import { useMemo, useCallback } from 'react';
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "../components/AuthProvider";
+import { subscriptionsService } from "../services/subscriptionsService";
 
 export interface SubscriptionStatus {
- isActive: boolean;
- tier: 'free' | 'pro';
- expiresAt: string | null;
- trialEndsAt: string | null;
+  isActive: boolean;
+  tier: "free" | "pro";
+  expiresAt: string | null;
+  trialEndsAt: string | null;
 }
 
-// Define premium features by category
 export const PREMIUM_FEATURES = {
- // Recruiter Premium Features
- 'ai-matching': {
- name: 'AI Matching Dashboard',
- description: 'Advanced AI-powered candidate matching with compatibility scoring',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
- 'ats-scanner': {
- name: 'ATS Resume Scanner',
- description: 'Automated resume screening and ATS compatibility checking',
- requiredTier: 'pro', 
- userType: 'recruiter'
- },
- 'advanced-analytics': {
- name: 'Advanced Analytics',
- description: 'Comprehensive hiring metrics, diversity insights, and ROI analysis',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
- 'custom-assessments': {
- name: 'Custom Assessment Builder',
- description: 'Create tailored technical assessments and coding challenges',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
- 'enhanced-video-interviews': {
- name: 'Enhanced Video Interviews',
- description: 'AI-powered video interview analysis and candidate evaluation',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
- 'candidate-search': {
- name: 'Advanced Candidate Search',
- description: 'AI-enhanced candidate discovery and talent pool access',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
- 'integrations': {
- name: 'Third-party Integrations',
- description: 'Connect with popular HR tools, CRMs, and job boards',
- requiredTier: 'pro',
- userType: 'recruiter'
- },
-
- // Candidate Premium Features
- 'ai-resume-builder': {
- name: 'AI Resume Builder',
- description: 'AI-powered resume optimization with ATS scanning and smart suggestions',
- requiredTier: 'pro',
- userType: 'candidate'
- },
- 'portfolio-premium': {
- name: 'Premium Portfolio Features',
- description: 'Advanced portfolio customization and analytics',
- requiredTier: 'pro',
- userType: 'candidate'
- },
- 'ai-skills-development': {
- name: 'AI Skills Development',
- description: 'Personalized learning paths and skill gap analysis',
- requiredTier: 'pro',
- userType: 'candidate'
- },
- 'ai-career-advisor': {
- name: 'AI Career Advisor',
- description: 'Personalized career guidance and opportunity recommendations',
- requiredTier: 'pro',
- userType: 'candidate'
- },
- 'enhanced-project-search': {
- name: 'Enhanced Project Search',
- description: 'Advanced filtering and AI-powered project recommendations',
- requiredTier: 'pro',
- userType: 'candidate'
- }
+  "ai-matching": {
+    name: "AI Matching Dashboard",
+    description: "AI-powered candidate matching and compatibility scoring.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "ats-scanner": {
+    name: "Recruiter ATS Scanner",
+    description: "Automated resume screening and ATS compatibility analysis.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "automated-screening": {
+    name: "Automated Screening",
+    description: "Automated screening rules, ranking, and review workflows.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "advanced-analytics": {
+    name: "Advanced Analytics",
+    description: "Hiring metrics, funnel analysis, and operational insights.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "custom-assessments": {
+    name: "Custom Assessment Builder",
+    description: "Create tailored assessments and technical challenges.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "enhanced-video-interviews": {
+    name: "Enhanced Video Interviews",
+    description: "Structured video interview and candidate evaluation tools.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "candidate-search": {
+    name: "Advanced Candidate Search",
+    description: "Search, filter, and save candidates from the talent pool.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "market-intelligence-recruiter": {
+    name: "Recruiting Market Intelligence",
+    description: "Market, skill-demand, and talent availability insights.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  integrations: {
+    name: "Third-party Integrations",
+    description: "Connect supported HR tools and recruiting services.",
+    requiredTier: "pro",
+    userType: "recruiter",
+  },
+  "ai-resume-builder": {
+    name: "AI Resume Builder",
+    description: "AI writing, parsing, ATS analysis, and resume optimization.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "candidate-ats-scanner": {
+    name: "Candidate ATS Scanner",
+    description: "Analyze a resume against a target role and optimize its match.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "enhanced-video-interviews-candidate": {
+    name: "Enhanced Video Interview Practice",
+    description: "Structured video practice and interview review tools.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "portfolio-premium": {
+    name: "Portfolio Pro",
+    description: "Advanced portfolio customization and performance insights.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "ai-skills-development": {
+    name: "AI Skills Development",
+    description: "Personalized learning paths and skill-gap guidance.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "ai-career-advisor": {
+    name: "AI Career Advisor",
+    description: "Personalized career guidance and opportunity recommendations.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "ai-interview-coach": {
+    name: "AI Interview Coach",
+    description: "Guided interview practice and evidence-based feedback.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "market-intelligence-candidate": {
+    name: "Career Market Intelligence",
+    description: "Skill-demand, role, and career market insights.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
+  "enhanced-project-search": {
+    name: "Enhanced Project Search",
+    description: "Advanced filters and personalized project recommendations.",
+    requiredTier: "pro",
+    userType: "candidate",
+  },
 } as const;
 
 export type PremiumFeatureKey = keyof typeof PREMIUM_FEATURES;
 
-// 🔒 DEV MODE SWITCH
-// While HireVify is still in development, all premium gates are disabled
-// so messaging/contact and every other feature work for everyone.
-// When you're ready to launch paid tiers, flip this to `true` and decide
-// per-feature pricing in PREMIUM_FEATURES above — no other code changes needed.
-export const PREMIUM_ENABLED = false;
+export const PREMIUM_ENABLED = true;
+export const TEMPORARY_PREMIUM_ADMIN_ENABLED = true;
+const DEVELOPMENT_OVERRIDE_ENABLED = process.env.NODE_ENV === "development";
+const STORAGE_KEY = "hirevify_subscription";
 
-// Testing account domains - these get full premium access
-const TESTING_DOMAINS = [
- 'test.hirevify.com',
- 'demo.hirevify.com',
- 'internal.hirevify.com'
-];
-
-// Test user emails - these get full premium access
-const TEST_USER_EMAILS = [
- 'test@hirevify.com',
- 'demo@hirevify.com',
- 'admin@hirevify.com',
- 'recruiter@test.com',
- 'candidate@test.com'
-];
-
-// Cache for subscription status to prevent repeated calculations
-let subscriptionCache: { email?: string; status: SubscriptionStatus; timestamp: number } | null = null;
-const CACHE_DURATION = 30000; // 30 seconds
-
-/**
- * Get user's subscription status with caching
- * For now, we'll simulate this with localStorage or test accounts
- * In production, this would fetch from the backend/payment provider
- */
-export const getSubscriptionStatus = (userEmail?: string): SubscriptionStatus => {
- try {
- // Check cache first
- if (subscriptionCache && 
- subscriptionCache.email === userEmail && 
- Date.now() - subscriptionCache.timestamp < CACHE_DURATION) {
- return subscriptionCache.status;
- }
-
- // Check if it's a testing account
- if (userEmail) {
- const domain = userEmail.split('@')[1];
- if (TESTING_DOMAINS.includes(domain) || TEST_USER_EMAILS.includes(userEmail.toLowerCase())) {
- const status = {
- isActive: true,
- tier: 'pro' as const,
- expiresAt: null, // Never expires for test accounts
- trialEndsAt: null
- };
- 
- // Cache the result
- subscriptionCache = { email: userEmail, status, timestamp: Date.now() };
- return status;
- }
- }
-
- // Check localStorage for subscription status (for testing purposes)
- const storedSubscription = localStorage.getItem('hirevify_subscription');
- if (storedSubscription) {
- try {
- const parsed = JSON.parse(storedSubscription);
- const status = {
- isActive: parsed.isActive || false,
- tier: parsed.tier || 'free',
- expiresAt: parsed.expiresAt || null,
- trialEndsAt: parsed.trialEndsAt || null
- };
- 
- // Cache the result
- subscriptionCache = { email: userEmail, status, timestamp: Date.now() };
- return status;
- } catch (error) {
- console.error('Error parsing stored subscription:', error);
- }
- }
-
- // Default to free tier
- const status = {
- isActive: false,
- tier: 'free' as const,
- expiresAt: null,
- trialEndsAt: null
- };
- 
- // Cache the result
- subscriptionCache = { email: userEmail, status, timestamp: Date.now() };
- return status;
- } catch (error) {
- console.error('Error getting subscription status:', error);
- // Return safe fallback
- return {
- isActive: false,
- tier: 'free',
- expiresAt: null,
- trialEndsAt: null
- };
- }
+const FREE_SUBSCRIPTION: SubscriptionStatus = {
+  isActive: false,
+  tier: "free",
+  expiresAt: null,
+  trialEndsAt: null,
 };
 
-/**
- * Check if user has access to a premium feature
- */
-export const hasPremiumAccess = (
- featureKey: PremiumFeatureKey, 
- userEmail?: string,
- userType?: 'recruiter' | 'candidate'
-): boolean => {
- // Dev mode: every feature is unlocked for every user until launch
- if (!PREMIUM_ENABLED) {
- return true;
- }
+function normalizeStoredSubscription(value: unknown): SubscriptionStatus {
+  if (!value || typeof value !== "object") return FREE_SUBSCRIPTION;
+  const record = value as Record<string, unknown>;
+  const tier = record.tier === "pro" ? "pro" : "free";
+  const expiresAt = typeof record.expiresAt === "string" ? record.expiresAt : null;
+  const isExpired = expiresAt ? new Date(expiresAt).getTime() <= Date.now() : false;
+  return {
+    isActive: tier === "pro" && record.isActive === true && !isExpired,
+    tier,
+    expiresAt,
+    trialEndsAt: typeof record.trialEndsAt === "string" ? record.trialEndsAt : null,
+  };
+}
 
- const feature = PREMIUM_FEATURES[featureKey];
- 
- // Check if feature exists and user type matches
- if (!feature || (userType && feature.userType!== userType)) {
- return false;
- }
+export function getSubscriptionStatus(): SubscriptionStatus {
+  if (!DEVELOPMENT_OVERRIDE_ENABLED || typeof window === "undefined") {
+    return FREE_SUBSCRIPTION;
+  }
 
- const subscription = getSubscriptionStatus(userEmail);
- 
- // If it's a test account, grant access
- if (userEmail) {
- const domain = userEmail.split('@')[1];
- if (TESTING_DOMAINS.includes(domain) || TEST_USER_EMAILS.includes(userEmail.toLowerCase())) {
- return true;
- }
- }
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored ? normalizeStoredSubscription(JSON.parse(stored)) : FREE_SUBSCRIPTION;
+  } catch {
+    return FREE_SUBSCRIPTION;
+  }
+}
 
- // Check subscription status
- if (!subscription.isActive) {
- return false;
- }
+export function hasPremiumAccess(
+  featureKey: PremiumFeatureKey,
+  _userEmail?: string,
+  userType?: "recruiter" | "candidate",
+  subscriptionOverride?: SubscriptionStatus,
+) {
+  const feature = PREMIUM_FEATURES[featureKey];
+  if (!feature || (userType && feature.userType !== userType)) return false;
+  if (!PREMIUM_ENABLED) return true;
 
- // Check tier requirements
- const tierHierarchy = { 'free': 0, 'pro': 1 };
- const userTierLevel = tierHierarchy[subscription.tier];
- const requiredTierLevel = tierHierarchy[feature.requiredTier];
+  const subscription = subscriptionOverride || getSubscriptionStatus();
+  return subscription.isActive && subscription.tier === "pro";
+}
 
- return userTierLevel >= requiredTierLevel;
-};
+export function usePremiumAccess() {
+  const { user } = useAuth();
+  const [subscription, setSubscription] = useState<SubscriptionStatus>(() =>
+    getSubscriptionStatus(),
+  );
+  const [isLoading, setIsLoading] = useState(Boolean(user?.id));
 
-/**
- * Custom hook for premium feature access with memoization
- */
-export const usePremiumAccess = () => {
- const { user } = useAuth();
- 
- // Memoize expensive calculations
- const isTestAccount = useMemo(() => {
- if (!user?.email) return false;
- const domain = user.email.split('@')[1];
- return TESTING_DOMAINS.includes(domain) || TEST_USER_EMAILS.includes(user.email.toLowerCase());
- }, [user?.email]);
+  useEffect(() => {
+    let active = true;
 
- const subscription = useMemo(() => {
- return getSubscriptionStatus(user?.email);
- }, [user?.email]);
+    async function loadSubscription() {
+      const developmentOverride = getSubscriptionStatus();
+      if (developmentOverride.isActive) {
+        if (active) {
+          setSubscription(developmentOverride);
+          setIsLoading(false);
+        }
+        return;
+      }
 
- const checkAccess = useCallback((featureKey: PremiumFeatureKey): boolean => {
- return hasPremiumAccess(featureKey, user?.email, user?.userType);
- }, [user?.email, user?.userType]);
+      if (!user?.id) {
+        if (active) {
+          setSubscription(FREE_SUBSCRIPTION);
+          setIsLoading(false);
+        }
+        return;
+      }
 
- const getSubscription = useCallback((): SubscriptionStatus => {
- return subscription;
- }, [subscription]);
+      setIsLoading(true);
+      const result = await subscriptionsService.getUserSubscription(user.id);
+      if (!active) return;
 
- const getFeatureInfo = useCallback((featureKey: PremiumFeatureKey) => {
- return PREMIUM_FEATURES[featureKey];
- }, []);
+      const row = result.data;
+      const expiresAt = row?.expires_at || null;
+      const isExpired = expiresAt ? new Date(expiresAt).getTime() <= Date.now() : false;
+      setSubscription({
+        isActive:
+          row?.tier === "pro" && row?.status === "active" && !isExpired,
+        tier: row?.tier === "pro" ? "pro" : "free",
+        expiresAt,
+        trialEndsAt: row?.trial_ends_at || null,
+      });
+      setIsLoading(false);
+    }
 
- return {
- checkAccess,
- getSubscription,
- getFeatureInfo,
- isTestAccount
- };
-};
+    void loadSubscription();
+    const refresh = () => void loadSubscription();
+    window.addEventListener("storage", refresh);
+    window.addEventListener("hirevify:premium-change", refresh);
+    return () => {
+      active = false;
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("hirevify:premium-change", refresh);
+    };
+  }, [user?.id]);
 
-/**
- * Utility to set subscription status for testing
- */
-export const setTestSubscription = (tier: 'free' | 'pro') => {
- const subscription = {
- isActive: tier!== 'free',
- tier,
- expiresAt: tier!== 'free'? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(): null,
- trialEndsAt: null
- };
+  const checkAccess = useCallback(
+    (featureKey: PremiumFeatureKey) =>
+      hasPremiumAccess(featureKey, user?.email, user?.userType, subscription),
+    [subscription, user?.email, user?.userType],
+  );
 
- localStorage.setItem('hirevify_subscription', JSON.stringify(subscription));
- console.log('Test subscription set to:', tier);
-};
+  const getSubscription = useCallback(() => subscription, [subscription]);
+  const getFeatureInfo = useCallback(
+    (featureKey: PremiumFeatureKey) => PREMIUM_FEATURES[featureKey],
+    [],
+  );
+  const isTestAccount = useMemo(
+    () => DEVELOPMENT_OVERRIDE_ENABLED && getSubscriptionStatus().isActive,
+    [subscription],
+  );
 
-/**
- * Utility to clear subscription status
- */
-export const clearTestSubscription = () => {
- localStorage.removeItem('hirevify_subscription');
- console.log('Test subscription cleared');
-};
+  return {
+    checkAccess,
+    getSubscription,
+    getFeatureInfo,
+    isTestAccount,
+    isLoading,
+  };
+}
 
+export function setTestSubscription(tier: "free" | "pro") {
+  if (!DEVELOPMENT_OVERRIDE_ENABLED || typeof window === "undefined") {
+    throw new Error("The local premium override is available only in development.");
+  }
+  const subscription: SubscriptionStatus = {
+    isActive: tier === "pro",
+    tier,
+    expiresAt:
+      tier === "pro"
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        : null,
+    trialEndsAt: null,
+  };
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(subscription));
+  window.dispatchEvent(new Event("hirevify:premium-change"));
+}
 
-
-
-
-
+export function clearTestSubscription() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.dispatchEvent(new Event("hirevify:premium-change"));
+}

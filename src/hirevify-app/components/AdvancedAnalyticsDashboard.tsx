@@ -517,7 +517,7 @@ export function AdvancedAnalyticsDashboard({ onBack, onUpgrade }: AdvancedAnalyt
 
   <main className="premium-content">
  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
- <TabsList className="grid w-full grid-cols-5">
+ <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
  <TabsTrigger value="overview">Overview</TabsTrigger>
  <TabsTrigger value="funnel">Hiring Funnel</TabsTrigger>
  <TabsTrigger value="diversity">Diversity</TabsTrigger>

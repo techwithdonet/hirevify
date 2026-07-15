@@ -220,7 +220,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   // Populate selectedCandidate from sessionStorage AFTER mount. We can't do
   // this in the useState initializer without creating a server/client
   // mismatch (server has no sessionStorage, so it would render `null` while
-  // the client first render would have the real candidate — causing different
+  // the client first render would have the real candidate â€” causing different
   // subtrees to be rendered and a hydration error).
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -415,12 +415,9 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
    : currentScreen;
    }
 
-   // While auth is still initializing, preserve whatever screen was resolved
-   // from the URL / history / localStorage. Falling back to `homepage` here
-   // causes a flash of the marketing page on every hard refresh from the
-   // candidate or recruiter portal (e.g. user refreshes the dashboard, the
-   // session is briefly null while Supabase hydrates, and the homepage hero
-   // shows for a frame before the portal re-renders).
+   // Keep rendering the exact URL-resolved screen while Supabase restores the
+   // session. This prevents hard refreshes from flashing the homepage or the
+   // default dashboard before returning to the requested workspace page.
    if (!authInitialized) {
    return currentScreen;
    }
@@ -457,9 +454,22 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
 
    const useWorkspaceTheme = effectiveScreen !== 'homepage';
 
+   const isRestoringProtectedScreen =
+     !authInitialized && !PUBLIC_SCREENS.has(currentScreen);
    return (
-   <div className={`min-h-screen ${useWorkspaceTheme ? 'hirevify-workspace-theme' : ''}`}>
-    <AppRouter
+   <div
+    id="main-content"
+    tabIndex={-1}
+    data-workspace-screen={useWorkspaceTheme ? effectiveScreen : undefined}
+    className={`min-h-screen ${useWorkspaceTheme ? 'hirevify-workspace-theme' : ''}`}
+   >
+    {isRestoringProtectedScreen ? (
+      <div
+        className="min-h-screen"
+        aria-hidden="true"
+      />
+    ) : (
+      <AppRouter
      currentScreen={effectiveScreen}
      user={user}
      selectedProject={selectedProject}
@@ -483,6 +493,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
      setUnreadMessages={setUnreadMessages}
      setUnreadNotifications={setUnreadNotifications}
     />
+    )}
    <Toaster />
    </div>
    );
@@ -497,7 +508,7 @@ export default function App({
 }) {
   // Prefer the server-provided values so the SSR HTML matches the client tree.
   // Fall back to client-only readInitialScreen() (URL / history / localStorage)
-  // when the prop is missing — this is harmless because the server already
+  // when the prop is missing â€” this is harmless because the server already
   // returned the default in that case, and the client will agree.
   const { screen: clientScreen, candidateId: clientCandidateId } = readInitialScreen();
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { callConfiguredAI } from "@/src/lib/server/aiChat";
+import { hasAdminSession } from "@/src/lib/server/adminSession";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,6 +65,10 @@ function safeError(error: unknown) {
 }
 
 export async function GET() {
+  if (!(await hasAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const checkedAt = new Date().toISOString();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -174,27 +178,23 @@ export async function GET() {
     return { name: bucket, bucket, status: "warning" as HealthStatus, detail: "Bucket missing or not readable with current permissions." };
   });
 
-  try {
-    if (!process.env.OPENAI_API_KEY && !process.env.OPENROUTER_API_KEY) {
-      ai = { name: "AI", status: "warning", detail: "missing API key" };
-      errors.push("AI: missing API key");
-    } else {
-      await callConfiguredAI({
-        purpose: "Admin health check",
-        messages: [
-          { role: "system", content: "Return the word ok." },
-          { role: "user", content: "Health check." },
-        ],
-        temperature: 0,
-        maxTokens: 8,
-      });
-      ai = { name: "AI", status: "healthy", detail: "AI provider responded to a minimal server-side request." };
-    }
-  } catch (error) {
-    const detail = safeError(error);
-    ai = { name: "AI", status: detail === "missing API key" ? "warning" : "error", detail };
-    errors.push(`AI: ${detail}`);
-  }
+  const configuredProvider =
+    process.env.AI_PROVIDER ||
+    (process.env.GEMINI_API_KEY
+      ? "gemini"
+      : process.env.OPENAI_API_KEY
+        ? "openai"
+        : process.env.OPENROUTER_API_KEY
+          ? "openrouter"
+          : "none");
+  ai =
+    configuredProvider === "none"
+      ? { name: "AI", status: "warning", detail: "No AI provider is configured." }
+      : {
+          name: "AI",
+          status: "healthy",
+          detail: `${configuredProvider} credentials are configured. No paid test request was sent.`,
+        };
 
   return NextResponse.json({
     checkedAt,
@@ -204,7 +204,7 @@ export async function GET() {
     environment: {
       nextRuntime: "nodejs",
       supabaseConfigured: true,
-      aiProvider: process.env.AI_PROVIDER || (process.env.OPENAI_API_KEY ? "openai" : process.env.OPENROUTER_API_KEY ? "openrouter" : "none"),
+      aiProvider: configuredProvider,
     },
     errors,
   });

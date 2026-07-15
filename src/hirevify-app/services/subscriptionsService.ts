@@ -20,7 +20,8 @@ export interface Subscription {
  frozen_at?: string | null;
  frozen_remaining_days?: number | null;
   created_at: string;
-  updated_at: string;
+ updated_at: string;
+ isActive: boolean;
 }
 
 class SubscriptionsService {
@@ -40,6 +41,15 @@ class SubscriptionsService {
  auto_renew: false,
  created_at: new Date().toISOString(),
  updated_at: new Date().toISOString(),
+ isActive: false,
+ };
+ }
+
+ private withAccessState(subscription: Subscription): Subscription {
+ const expiresAt = subscription.expires_at ? new Date(subscription.expires_at).getTime() : Number.POSITIVE_INFINITY;
+ return {
+ ...subscription,
+ isActive: subscription.tier === 'pro' && subscription.status === 'active' && expiresAt > Date.now(),
  };
  }
 
@@ -53,7 +63,7 @@ class SubscriptionsService {
  return { data: this.freeSubscription(userId), error: null };
  }
 
- return { data: data || this.freeSubscription(userId), error: null };
+ return { data: data ? this.withAccessState(data) : this.freeSubscription(userId), error: null };
  }
 
  /**
@@ -83,11 +93,7 @@ class SubscriptionsService {
  }
 
  const now = new Date();
- const isActive =
- data &&
- data.tier === 'pro' &&
- (data.status === 'active' || data.status === 'past_due' || data.status === 'canceled') &&
- (!data.expires_at || new Date(data.expires_at) > now);
+ const isActive = data && data.tier === 'pro' && data.status === 'active' && (!data.expires_at || new Date(data.expires_at) > now);
 
  return { hasPremium:!!isActive, subscription: data, error: null };
  }

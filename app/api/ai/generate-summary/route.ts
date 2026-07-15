@@ -1,52 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { callConfiguredAI } from '@/src/lib/server/aiChat';
+import { authorizeAiRequest } from '@/src/lib/server/aiRequest';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json(
-        { error: 'Supabase environment variables are missing.' },
-        { status: 503 }
-      );
-    }
-
-    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-
-    if (!bearerToken) {
-      return NextResponse.json(
-        { error: 'No active Supabase session found. Please login again.' },
-        { status: 401 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${bearerToken}`
-        }
-      }
-    });
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
-
-    if (userError || !userData.user) {
-      return NextResponse.json(
-        { error: 'Invalid Supabase session. Please logout and login again.' },
-        { status: 401 }
-      );
-    }
+    const authorization = await authorizeAiRequest(request, 'generate-summary', { requirePremium: true });
+    if (!authorization.ok) return authorization.response;
 
     const body = await request.json();
-    const name = String(body.name || 'the candidate');
-    const headline = String(body.headline || '');
-    const skills = Array.isArray(body.skills) ? body.skills.filter(Boolean) : [];
-    const experience = Array.isArray(body.experience) ? body.experience : [];
+    const name = String(body.name || 'the candidate').slice(0, 120);
+    const headline = String(body.headline || '').slice(0, 3000);
+    const skills = Array.isArray(body.skills) ? body.skills.filter(Boolean).slice(0, 100) : [];
+    const experience = Array.isArray(body.experience) ? body.experience.slice(0, 50) : [];
 
     const experienceText = experience
       .map((item: any) =>
@@ -98,7 +65,7 @@ Requirements:
       .replace(/^["']|["']$/g, '')
       .trim();
 
-    return NextResponse.json({ summary });
+    return NextResponse.json({ summary }, { headers: authorization.headers });
   } catch (error) {
     console.error('Generate summary route failed:', error);
     return NextResponse.json(

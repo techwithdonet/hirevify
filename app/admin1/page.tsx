@@ -2,11 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/src/hirevify-app/components/AuthProvider";
 import { Button } from "@/src/hirevify-app/components/ui/button";
 import { Toaster } from "@/src/hirevify-app/components/ui/sonner";
-import { createSupabaseBrowserClient } from "@/src/lib/supabase";
 import {
   Activity,
   ArrowRight,
@@ -31,9 +28,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { upsertSubscription } from "../../src/hirevify-app/utils/api/subscriptions";
 
-type SectionId = "dashboard" | "top" | "reports" | "plans" | "assessments" | "health" | "preview";
+type SectionId = "dashboard" | "top" | "reports" | "plans" | "assessments" | "health";
 type Row = Record<string, unknown>;
 type HealthStatus = "healthy" | "warning" | "error";
 
@@ -121,7 +117,6 @@ const sections: { id: SectionId; label: string; icon: typeof LayoutDashboard }[]
   { id: "plans", label: "Pro Plans", icon: Star },
   { id: "assessments", label: "Assessments", icon: ClipboardList },
   { id: "health", label: "System Health", icon: HeartPulse },
-  { id: "preview", label: "Quick Preview", icon: ShieldCheck },
 ];
 
 const initialData: AdminData = {
@@ -207,14 +202,7 @@ function statusBadgeClass(status: HealthStatus) {
   return "border-red-200 bg-red-50 text-red-700";
 }
 
-function isPermissionWarning(warning: string) {
-  return /permission denied|row-level security|rls/i.test(warning);
-}
-
 function AdminPanel() {
-  const router = useRouter();
-  const { signIn, setUser } = useAuth();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
   const [data, setData] = useState<AdminData>(initialData);
   const [loading, setLoading] = useState(true);
@@ -225,114 +213,24 @@ function AdminPanel() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [planUpdatingId, setPlanUpdatingId] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (table: string, orderColumn?: string) => {
-      const selectByTable: Record<string, string> = {
-        profiles: "id,auth_user_id,email,full_name,role,created_at",
-        candidate_profiles: "id,years_of_experience,experience_summary,skills,resume_url,location,phone,created_at",
-        recruiter_profiles: "id,company_name,contact_person,email,industry,location,created_at",
-        jobs: "id,recruiter_id,title,status,has_project,created_at",
-        applications: "id,job_id,candidate_id,status,match_score,created_at",
-        subscriptions: "*",
-        skills_assessments: "*",
-        assessments: "*",
-      };
-
-      const limitByTable: Record<string, number> = {
-        applications: 1000,
-        jobs: 1000,
-        profiles: 1000,
-        candidate_profiles: 1000,
-        recruiter_profiles: 1000,
-        subscriptions: 1000,
-        skills_assessments: 500,
-        assessments: 500,
-      };
-
-      const runQuery = async (columns: string) => {
-        let request = supabase
-          .from(table)
-          .select(columns)
-          .limit(limitByTable[table] || 500);
-
-        // Ordering large application rows can slow the dashboard. Metrics do not need order.
-        if (orderColumn && table !== "applications") {
-          request = request.order(orderColumn, { ascending: false });
-        }
-
-        return request;
-      };
-
-      let { data: rows, error: tableError } = await runQuery(selectByTable[table] || "*");
-
-      // If a selected optional column is missing, safely fall back to old behavior.
-      if (tableError && selectByTable[table] && selectByTable[table] !== "*") {
-        const fallback = await runQuery("*");
-        rows = fallback.data;
-        tableError = fallback.error;
-      }
-
-      if (tableError) {
-        if (isPermissionWarning(tableError.message || "")) {
-          return { rows: [] as Row[], warning: "" };
-        }
-        return { rows: [] as Row[], warning: `${table}: ${tableError.message}` };
-      }
-
-      return { rows: (rows || []) as unknown as Row[], warning: "" };
-    },
-    [supabase],
-  );
   const loadAdminData = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const [
-        profiles,
-        candidateProfiles,
-        recruiterProfiles,
-        jobs,
-        applications,
-        subscriptions,
-        skillAssessments,
-        assessments,
-      ] = await Promise.all([
-        fetchRows("profiles", "created_at"),
-        fetchRows("candidate_profiles", "created_at"),
-        fetchRows("recruiter_profiles", "created_at"),
-        fetchRows("jobs", "created_at"),
-        fetchRows("applications", "created_at"),
-        fetchRows("subscriptions", "created_at"),
-        fetchRows("skills_assessments", "created_at"),
-        fetchRows("assessments", "created_at"),
-      ]);
-
-      setData({
-        profiles: profiles.rows,
-        candidateProfiles: candidateProfiles.rows,
-        recruiterProfiles: recruiterProfiles.rows,
-        jobs: jobs.rows,
-        applications: applications.rows,
-        subscriptions: subscriptions.rows,
-        assessments: skillAssessments.rows.length > 0 ? skillAssessments.rows : assessments.rows,
-        warnings: [
-          profiles.warning,
-          candidateProfiles.warning,
-          recruiterProfiles.warning,
-          jobs.warning,
-          applications.warning,
-          subscriptions.warning,
-          skillAssessments.rows.length > 0 ? "" : assessments.warning,
-        ].filter(Boolean),
-      });
+      const response = await fetch("/api/admin/data", { cache: "no-store" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to load admin analytics.");
+      }
+      setData(result as AdminData);
     } catch (loadError) {
       console.error("Failed to load admin analytics:", loadError);
       setError(loadError instanceof Error ? loadError.message : "Failed to load admin analytics.");
     } finally {
       setLoading(false);
     }
-  }, [fetchRows]);
+  }, []);
   useEffect(() => {
     void loadAdminData();
   }, [loadAdminData]);
@@ -488,32 +386,6 @@ function AdminPanel() {
       .filter((profile) => profile.id);
   }, [data.profiles, data.subscriptions]);
 
-  const openDashboard = (type: "recruiter" | "candidate") => {
-    localStorage.setItem("hirevify_admin_auto_open", type);
-    router.push("/");
-  };
-
-  const handlePreviewLogin = async (type: "recruiter" | "candidate") => {
-    const email = type === "recruiter" ? "recruiter@hirevify.com" : "candidate@hirevify.com";
-    const result = await signIn(email, "TestPassword123!");
-
-    if (result.success && result.user) {
-      const previewUser = {
-        ...result.user,
-        email,
-        userType: type,
-        profileComplete: true,
-      };
-
-      setUser(previewUser);
-      localStorage.setItem("hirevify_user", JSON.stringify(previewUser));
-      localStorage.setItem("hirevify_access_token", previewUser.accessToken || "");
-      openDashboard(type);
-    } else {
-      toast.error(result.message || `${type} login failed`);
-    }
-  };
-
   const runHealthCheck = async () => {
     setHealthLoading(true);
     try {
@@ -552,28 +424,21 @@ function AdminPanel() {
   const updateUserPlan = async (profileId: string, tier: "free" | "pro") => {
     setPlanUpdatingId(profileId);
     try {
-      const expiresAt = tier === "free" ? null : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-      const { error: planError } = await upsertSubscription(
-        {
-          user_id: profileId,
-          tier,
-          status: "active",
-          expires_at: expiresAt,
-          auto_renew: tier === "pro",
-          updated_at: new Date().toISOString(),
-        },
-        "user_id",
-      );
-
-      if (planError) {
-        throw new Error(planError);
+      const response = await fetch("/api/admin/data", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: profileId, tier }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Plan update failed.");
       }
 
       toast.success(tier === "free" ? "User moved to Free" : "User upgraded to Pro");
       await loadAdminData();
     } catch (updateError) {
       console.error("Admin subscription update failed:", updateError);
-      toast.error(updateError instanceof Error ? updateError.message : "Plan update failed. Check subscriptions RLS policies.");
+      toast.error(updateError instanceof Error ? updateError.message : "Plan update failed.");
     } finally {
       setPlanUpdatingId(null);
     }
@@ -897,19 +762,6 @@ function AdminPanel() {
             </div>
           )}
 
-          {activeSection === "preview" && (
-            <div className="grid gap-4 md:grid-cols-3">
-              <PreviewCard icon={BriefcaseBusiness} title="Open Recruiter" detail="Preview recruiter dashboard with existing test account." onClick={() => void handlePreviewLogin("recruiter")} />
-              <PreviewCard icon={GraduationCap} title="Open Candidate" detail="Preview candidate dashboard with existing test account." onClick={() => void handlePreviewLogin("candidate")} />
-              <Link href="/admin1/assessments" className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-                <ClipboardList className="h-7 w-7 text-violet-700" />
-                <h3 className="mt-5 text-lg font-black">Assessments Management</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Manage questions and assessment content.</p>
-                <p className="mt-5 inline-flex items-center text-sm font-black text-violet-700">Open module <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></p>
-              </Link>
-            </div>
-          )}
-
           {loading && (
             <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-600" />
@@ -1007,17 +859,6 @@ function HealthCard({ label, check }: { label: string; check: HealthCheck }) {
       </div>
       <p className="mt-4 text-sm leading-6 text-slate-600">{check.detail}</p>
     </div>
-  );
-}
-
-function PreviewCard({ icon: Icon, title, detail, onClick }: { icon: typeof BriefcaseBusiness; title: string; detail: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="group rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-      <Icon className="h-7 w-7 text-emerald-700" />
-      <h3 className="mt-5 text-lg font-black">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
-      <p className="mt-5 inline-flex items-center text-sm font-black text-emerald-700">Open preview <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1" /></p>
-    </button>
   );
 }
 

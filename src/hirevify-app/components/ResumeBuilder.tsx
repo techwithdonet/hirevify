@@ -1247,7 +1247,7 @@ setCurrentStep('review');
  <Input
  value={resumeData.contactInfo.linkedinUrl}
  onChange={(e) => updateContactInfo('linkedinUrl', e.target.value)}
- placeholder="Link.com/in/johndoe"
+ placeholder="linkedin.com/in/johndoe"
  />
  </div>
  <div>

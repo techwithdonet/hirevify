@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Edit, Plus, Save, Search, Trash2, X } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/src/lib/supabase";
 import { Button } from "@/src/hirevify-app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/hirevify-app/components/ui/card";
 import { Input } from "@/src/hirevify-app/components/ui/input";
@@ -62,8 +61,6 @@ const emptyForm: Assessment = {
 };
 
 export default function AdminAssessmentsPage() {
-  const supabase = createSupabaseBrowserClient();
-
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [form, setForm] = useState<Assessment>(emptyForm);
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
@@ -97,54 +94,17 @@ export default function AdminAssessmentsPage() {
 
   async function loadAssessments() {
     setLoading(true);
-
-    const { data: assessmentRows, error } = await supabase
-      .from("skills_assessments")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      alert("Failed to load assessments: " + error.message);
+    try {
+      const response = await fetch("/api/admin/assessments", { cache: "no-store" });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Failed to load assessments.");
+      setAssessments(result.assessments || []);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to load assessments.");
       setAssessments([]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const assessmentIds = (assessmentRows || [])
-      .map((item: Assessment) => item.id)
-      .filter(Boolean);
-
-    let questionRows: AssessmentQuestion[] = [];
-
-    if (assessmentIds.length > 0) {
-      const { data: loadedQuestions, error: questionError } = await supabase
-        .from("assessment_questions")
-        .select("*")
-        .in("assessment_id", assessmentIds)
-        .order("sort_order", { ascending: true });
-
-      if (questionError) {
-        console.error("Failed to load assessment questions:", questionError);
-      } else {
-        questionRows = loadedQuestions || [];
-      }
-    }
-
-    const mapped = (assessmentRows || []).map((assessment: Assessment) => {
-      const relatedQuestions = questionRows.filter(
-        (question: AssessmentQuestion) => question.assessment_id === assessment.id
-      );
-
-      return {
-        ...assessment,
-        skills: assessment.skills || [],
-        questions: relatedQuestions,
-        questions_count: relatedQuestions.length,
-      };
-    });
-
-    setAssessments(mapped);
-    setLoading(false);
   }
 
   function resetForm() {
@@ -157,20 +117,7 @@ export default function AdminAssessmentsPage() {
   async function startEdit(assessment: Assessment) {
     const assessmentId = assessment.id || null;
 
-    let loadedQuestions: AssessmentQuestion[] = [];
-
-    if (assessmentId) {
-      const { data, error } = await supabase
-        .from("assessment_questions")
-        .select("*")
-        .eq("assessment_id", assessmentId)
-        .order("sort_order", { ascending: true });
-
-      if (error) {
-        alert("Failed to load questions: " + error.message);
-      }
-
-      loadedQuestions = (data || []).map((question: AssessmentQuestion, index: number) => ({
+    const loadedQuestions = (assessment.questions || []).map((question, index) => ({
         id: question.id,
         assessment_id: question.assessment_id,
         question_text: question.question_text || "",
@@ -183,7 +130,6 @@ export default function AdminAssessmentsPage() {
         points: Number(question.points || 1),
         sort_order: Number(question.sort_order ?? index),
       }));
-    }
 
     setEditingId(assessmentId);
     setForm({
@@ -323,9 +269,8 @@ export default function AdminAssessmentsPage() {
 
     setSaving(true);
 
-    const effectiveEditingId = editingId || form.id || null;
-
     const payload = {
+      id: editingId || form.id || null,
       title: form.title.trim(),
       description: form.description.trim(),
       category: form.category.trim() || "General",
@@ -335,71 +280,33 @@ export default function AdminAssessmentsPage() {
         .split(",")
         .map((skill) => skill.trim())
         .filter(Boolean),
-      questions_count: questions.length,
       passing_score: Number(form.passing_score || 70),
       status: form.status || "active",
-      updated_at: new Date().toISOString(),
+      questions: questions.map((question) => ({
+        question_text: question.question_text.trim(),
+        question_type: question.question_type || "multiple_choice",
+        options: (question.options || []).map((option) => option.trim()).filter(Boolean),
+        correct_answer: question.correct_answer.trim(),
+        points: Number(question.points || 1),
+      })),
     };
 
-    const assessmentResult = effectiveEditingId
-      ? await supabase
-          .from("skills_assessments")
-          .update(payload)
-          .eq("id", effectiveEditingId)
-          .select("id")
-          .single()
-      : await supabase
-          .from("skills_assessments")
-          .insert(payload)
-          .select("id")
-          .single();
-
-    if (assessmentResult.error || !assessmentResult.data?.id) {
-      alert("Save failed: " + assessmentResult.error?.message);
+    try {
+      const response = await fetch("/api/admin/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Assessment could not be saved.");
+      await loadAssessments();
+      resetForm();
+      alert("Assessment and questions saved.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Assessment could not be saved.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    const assessmentId = effectiveEditingId || assessmentResult.data.id;
-
-    const deleteOldQuestions = await supabase
-      .from("assessment_questions")
-      .delete()
-      .eq("assessment_id", assessmentId);
-
-    if (deleteOldQuestions.error) {
-      alert("Assessment saved, but old questions could not be cleared: " + deleteOldQuestions.error.message);
-      setSaving(false);
-      return;
-    }
-
-    const questionPayload = questions.map((question, index) => ({
-      assessment_id: assessmentId,
-      question_text: question.question_text.trim(),
-      question_type: question.question_type || "multiple_choice",
-      options: (question.options || []).map((option) => option.trim()).filter(Boolean),
-      correct_answer: question.correct_answer.trim(),
-      points: Number(question.points || 1),
-      sort_order: index,
-      updated_at: new Date().toISOString(),
-    }));
-
-    if (questionPayload.length > 0) {
-      const insertQuestions = await supabase
-        .from("assessment_questions")
-        .insert(questionPayload);
-
-      if (insertQuestions.error) {
-        alert("Assessment saved, but questions failed: " + insertQuestions.error.message);
-        setSaving(false);
-        return;
-      }
-    }
-
-    await loadAssessments();
-    resetForm();
-    setSaving(false);
-    alert("Assessment and questions saved.");
   }
 
   async function deleteAssessment(id?: string) {
@@ -413,16 +320,14 @@ export default function AdminAssessmentsPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("skills_assessments")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("Delete failed: " + error.message);
+    const response = await fetch(`/api/admin/assessments?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      alert(result.error || "Delete failed.");
       return;
     }
-
     await loadAssessments();
   }
 

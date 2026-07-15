@@ -1,5 +1,4 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import type {
   ATSScore,
   JobDescription,
@@ -8,6 +7,7 @@ import type {
   SkillsAnalysis
 } from '@/src/hirevify-app/types/resume';
 import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
+import { authorizeAiRequest } from '@/src/lib/server/aiRequest';
 
 export const runtime = 'nodejs';
 
@@ -224,41 +224,8 @@ async function callAnthropic(prompt: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json(
-        { error: 'Supabase environment variables are missing.' },
-        { status: 503 }
-      );
-    }
-
-    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-
-    if (!bearerToken) {
-      return NextResponse.json(
-        { error: 'No active Supabase session found. Please login again.' },
-        { status: 401 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${bearerToken}`
-        }
-      }
-    });
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(bearerToken);
-
-    if (userError || !userData.user) {
-      return NextResponse.json(
-        { error: 'Invalid Supabase session. Please logout and login again.' },
-        { status: 401 }
-      );
-    }
+    const authorization = await authorizeAiRequest(request, 'resume-analysis', { requirePremium: true });
+    if (!authorization.ok) return authorization.response;
 
     const body = await request.json();
     const resumeData = body.resumeData as ResumeData | undefined;
@@ -307,7 +274,7 @@ export async function POST(request: NextRequest) {
     const parsed = JSON.parse(extractJsonObject(aiText));
     const result = validateResult(parsed);
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: authorization.headers });
   } catch (error) {
     console.error('Resume AI route failed:', error);
     return NextResponse.json(

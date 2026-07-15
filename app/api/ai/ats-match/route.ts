@@ -1,43 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import type { AtsCandidateInput, AtsJobInput, AtsMatchResult } from '@/src/hirevify-app/services/atsMatchingService';
 import { callConfiguredAI, extractJsonObject } from '@/src/lib/server/aiChat';
+import { authorizeAiRequest } from '@/src/lib/server/aiRequest';
 
 export const runtime = 'nodejs';
 
 function sanitizeStringArray(value: unknown) {
  if (!Array.isArray(value)) return [];
  return value.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 16);
-}
-
-async function verifySupabaseSession(request: NextRequest) {
- const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
- const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
- const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-
- if (!supabaseUrl || !supabaseAnonKey) {
- return { error: 'Supabase environment variables are missing.', status: 503 };
- }
-
- if (!bearerToken) {
- return { error: 'No active Supabase session found. Please login again.', status: 401 };
- }
-
- const supabase = createClient(supabaseUrl, supabaseAnonKey, {
- global: {
- headers: {
- Authorization: `Bearer ${bearerToken}`,
- },
- },
- });
-
- const { data, error } = await supabase.auth.getUser(bearerToken);
-
- if (error || !data.user) {
- return { error: 'Invalid Supabase session. Please logout and login again.', status: 401 };
- }
-
- return { error: null, status: 200 };
 }
 
 function buildPrompt(job: AtsJobInput, candidate: AtsCandidateInput, fallback: AtsMatchResult) {
@@ -75,11 +45,8 @@ ${JSON.stringify(fallback, null, 2)}
 
 export async function POST(request: NextRequest) {
  try {
- const session = await verifySupabaseSession(request);
-
- if (session.error) {
- return NextResponse.json({ error: session.error }, { status: session.status });
- }
+ const authorization = await authorizeAiRequest(request, 'ats-match', { requirePremium: true });
+ if (!authorization.ok) return authorization.response;
 
  const body = await request.json();
  const job = body.job as AtsJobInput | undefined;
@@ -119,7 +86,7 @@ export async function POST(request: NextRequest) {
  matchedKeywords: sanitizeStringArray(parsed.matchedKeywords),
  missingKeywords: sanitizeStringArray(parsed.missingKeywords).slice(0, 12),
  explanation: String(parsed.explanation || fallback.explanation || '').trim(),
- });
+ }, { headers: authorization.headers });
  } catch (error) {
  console.error('ATS AI route failed:', error);
  return NextResponse.json(

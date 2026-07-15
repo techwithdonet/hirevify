@@ -50,6 +50,7 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import { openOrCreateConversationAndNavigate } from '../utils/openConversation';
 import { dashboardTheme } from '../theme/dashboardTheme';
+import { applicationsService } from '../services/applicationsService';
 
 interface AutomatedScreeningProps {
  onBack: () => void;
@@ -183,16 +184,101 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  };
 
  useEffect(() => {
- loadApplications();
+ void loadApplications();
  loadScreeningCriteria();
- loadStats();
- }, [projectId]);
+ }, [projectId, user?.id]);
+
+ useEffect(() => {
+ const autoApproved = applications.filter((item) => item.status === 'auto-approved').length;
+ const autoRejected = applications.filter((item) => item.status === 'auto-rejected').length;
+ setStats({
+ totalApplications: applications.length,
+ autoApproved,
+ autoRejected,
+ needsReview: applications.filter((item) => item.status === 'needs-review' || item.status === 'pending').length,
+ timeSaved: 0,
+ avgProcessingTime: 0,
+ accuracyRate: 0,
+ });
+ }, [applications]);
 
  useEffect(() => {
  applyFilters();
  }, [applications, filters]);
 
- const loadApplications = () => {
+ const loadApplications = async () => {
+ if (!user?.id) {
+ setApplications([]);
+ return;
+ }
+
+ const result = await applicationsService.getRecruiterApplications(user.id);
+ if (result.error) {
+ toast.error('Could not load applications for screening.');
+ setApplications([]);
+ return;
+ }
+
+ const realApplications: CandidateApplication[] = (result.data || []).map((application: any) => {
+ const score = Math.max(0, Math.min(100, Number(application.match_score ?? application.ats_score ?? 0)));
+ const recommendation = score >= 85? 'strong_yes': score >= 70? 'yes': score >= 50? 'maybe': score > 0? 'no': 'maybe';
+ const storedStatus = String(application.status || 'applied').toLowerCase();
+ const status: CandidateApplication['status'] = storedStatus === 'hired'
+ ? 'hired'
+ : storedStatus === 'interview'
+ ? 'interviewed'
+ : storedStatus === 'rejected'
+ ? 'auto-rejected'
+ : score >= 85
+ ? 'auto-approved'
+ : score > 0 && score < 40
+ ? 'auto-rejected'
+ : 'needs-review';
+
+ return {
+ id: String(application.id),
+ candidateId: String(application.candidate_id || ''),
+ candidateName: application.candidate_name || application.candidate_profile?.full_name || 'Candidate',
+ candidateEmail: application.candidate_email || application.candidate_profile?.email || '',
+ jobTitle: application.job?.title || application.job_title || 'Role',
+ appliedAt: application.submitted_at || application.created_at || new Date(0).toISOString(),
+ resumeUrl: application.resume_url || undefined,
+ coverLetter: application.cover_letter || undefined,
+ status,
+ aiScore: score,
+ screeningResult: {
+ recommendation,
+ confidence: score > 0? Math.min(95, Math.max(50, score)): 0,
+ reasoning: score > 0? ['Based on the stored ATS match score for this application.']: ['ATS analysis has not been completed.'],
+ strengths: [],
+ concerns: [],
+ keyMetrics: {
+ skillsMatch: score,
+ experienceMatch: 0,
+ educationMatch: 0,
+ locationFit: 0,
+ salaryAlignment: 0,
+ },
+ timeToReview: 0,
+ },
+ candidateProfile: {
+ skills: application.skills || [],
+ yearsExperience: Number(application.years_of_experience || 0),
+ education: application.education || 'Not provided',
+ location: application.location || 'Not provided',
+ expectedSalary: application.expected_salary || undefined,
+ availability: application.availability || 'Not provided',
+ },
+ interviewReadiness: {
+ score: 0,
+ preparationAreas: [],
+ suggestedQuestions: [],
+ },
+ };
+ });
+
+ setApplications(realApplications);
+ if (process.env.NODE_ENV === 'test' && process.env.NEXT_PUBLIC_USE_SCREENING_FIXTURES === 'true') {
  // Mock application data with AI screening results
  const mockApplications: CandidateApplication[] = [
  {
@@ -238,8 +324,8 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  availability: 'Available in 2 weeks',
  portfolio: {
  projects: 8,
- githubUrl: 'GitBranch.com/sarahchen',
- linkedinUrl: 'Link.com/in/sarahchen'
+ githubUrl: 'github.com/sarahchen',
+ linkedinUrl: 'linkedin.com/in/sarahchen'
  }
  },
  interviewReadiness: {
@@ -299,8 +385,8 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  availability: 'Immediate',
  portfolio: {
  projects: 5,
- githubUrl: 'GitBranch.com/michaelr',
- linkedinUrl: 'Link.com/in/michaelrodriguez'
+ githubUrl: 'github.com/michaelr',
+ linkedinUrl: 'linkedin.com/in/michaelrodriguez'
  }
  },
  interviewReadiness: {
@@ -359,7 +445,7 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  availability: 'Immediate',
  portfolio: {
  projects: 3,
- linkedinUrl: 'Link.com/in/jenniferpark'
+ linkedinUrl: 'linkedin.com/in/jenniferpark'
  }
  },
  interviewReadiness: {
@@ -374,10 +460,11 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  ];
 
  setApplications(mockApplications);
+ }
  };
 
  const loadScreeningCriteria = () => {
- const mockCriteria: ScreeningCriteria = {
+ const defaultCriteria: ScreeningCriteria = {
  requiredSkills: [
  { skill: 'React', importance: 'critical', minimumLevel: 'advanced' },
  { skill: 'TypeScript', importance: 'critical', minimumLevel: 'intermediate' },
@@ -410,21 +497,7 @@ export function AutomatedScreening({ onBack, onUpgrade, onViewMessages, projectI
  }
  };
 
- setScreeningCriteria(mockCriteria);
- };
-
- const loadStats = () => {
- const mockStats: ScreeningStats = {
- totalApplications: 247,
- autoApproved: 23,
- autoRejected: 156,
- needsReview: 68,
- timeSaved: 32.5,
- avgProcessingTime: 2.3,
- accuracyRate: 92
- };
-
- setStats(mockStats);
+ setScreeningCriteria(defaultCriteria);
  };
 
  const applyFilters = () => {

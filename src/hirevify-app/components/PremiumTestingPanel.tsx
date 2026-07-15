@@ -19,7 +19,7 @@ import { toast } from 'sonner';
  */
 export function PremiumTestingPanel() {
  const { user } = useAuth();
- const { getSubscription, isTestAccount } = usePremiumAccess();
+ const { getSubscription } = usePremiumAccess();
  const [selectedTier, setSelectedTier] = useState<'free' | 'pro'>('free');
  const [isVisible, setIsVisible] = useState(false);
 
@@ -30,17 +30,7 @@ export function PremiumTestingPanel() {
 
  const subscription = getSubscription();
 
- // Only show in development or for test accounts
- let isDevelopment = false;
- try {
- isDevelopment = process.env.NODE_ENV === 'development' || 
- window.location.hostname === 'localhost' || 
- window.location.hostname.includes('localhost') ||
- isTestAccount;
- } catch (error) {
- console.warn('Error checking development environment:', error);
- isDevelopment = false;
- }
+ const isDevelopment = process.env.NODE_ENV === 'development';
 
  // Only render if in development and user exists
  if (!isDevelopment ||!user) {
@@ -114,14 +104,6 @@ export function PremiumTestingPanel() {
  </Badge>
  </div>
  
- {user && (
- <div className="flex items-center justify-between">
- <span className="text-xs font-medium text-blue-700">Account Type:</span>
- <Badge className="text-xs bg-blue-100 text-blue-800 border-blue-200">
- {isTestAccount? 'Test Account': 'Regular'}
- </Badge>
- </div>
- )}
  </div>
 
  {/* Tier Selection */}
@@ -179,7 +161,7 @@ export function PremiumTestingPanel() {
  )}
 
  <div className="text-xs text-blue-600 bg-blue-100 rounded p-2 border border-blue-200">
- <strong>Note:</strong> This panel only appears in development mode or for test accounts. 
+ <strong>Note:</strong> This local override only appears in development mode.
  Changes require a page refresh to take effect.
  </div>
 

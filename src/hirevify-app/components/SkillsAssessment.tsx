@@ -727,43 +727,89 @@ const mappedAssessments: Assessment[] = (data || []).map((item: any) => ({
  </div>
  </TabsContent>
  </Tabs>
+      {/* Assignment Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent
+          data-hv-assign-dialog
+          className="hv-assign-dialog !top-4 !bottom-auto !translate-y-0 !max-h-[calc(100dvh-2rem)] !overflow-y-auto"
+        >
+          <DialogHeader className="hv-assign-dialog-header">
+            <DialogTitle className="hv-assign-dialog-title">
+              Assign Assessment
+            </DialogTitle>
 
- {/* Assignment Dialog */}
- <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
- <DialogContent>
- <DialogHeader>
- <DialogTitle>Assign Assessment</DialogTitle>
- <DialogDescription>
- Send "{selectedAssessment?.title}" assessment to a candidate
- </DialogDescription>
- </DialogHeader>
- <div className="space-y-4">
- <div>
- <Label htmlFor="candidate-email">Candidate Email</Label>
- <Input
- id="candidate-email"
- type="email"
- placeholder="candidate@example.com"
- value={candidateEmail}
- onChange={(e) => setCandidateEmail(e.target.value)}
- />
- </div>
- <div className="text-sm text-muted-foreground">
- <p><strong>Assessment:</strong> {selectedAssessment?.title}</p>
- <p><strong>Duration:</strong> {selectedAssessment?.duration} minutes</p>
- <p><strong>Passing Score:</strong> {selectedAssessment?.passingScore}%</p>
- </div>
- <div className="flex justify-end space-x-2">
- <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
- Cancel
- </Button>
- <Button onClick={handleSendAssignment}>
- Send Assignment
- </Button>
- </div>
- </div>
- </DialogContent>
- </Dialog>
+            <DialogDescription className="hv-assign-dialog-description">
+              Send &quot;{selectedAssessment?.title}&quot; assessment to a candidate.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="hv-assign-dialog-body">
+            <div className="hv-assign-dialog-field">
+              <Label
+                htmlFor="candidate-email"
+                className="hv-assign-dialog-label"
+              >
+                Candidate email
+              </Label>
+
+              <Input
+                id="candidate-email"
+                type="email"
+                placeholder="candidate@example.com"
+                value={candidateEmail}
+                onChange={(e) => setCandidateEmail(e.target.value)}
+                className="hv-assign-dialog-input"
+              />
+            </div>
+
+            <div className="hv-assign-dialog-summary">
+              <div>
+                <p className="hv-assign-dialog-summary-label">
+                  Assessment
+                </p>
+                <p className="hv-assign-dialog-summary-value">
+                  {selectedAssessment?.title || "Not selected"}
+                </p>
+              </div>
+
+              <div>
+                <p className="hv-assign-dialog-summary-label">
+                  Duration
+                </p>
+                <p className="hv-assign-dialog-summary-value">
+                  {selectedAssessment?.duration || 0} minutes
+                </p>
+              </div>
+
+              <div>
+                <p className="hv-assign-dialog-summary-label">
+                  Passing score
+                </p>
+                <p className="hv-assign-dialog-summary-value">
+                  {selectedAssessment?.passingScore || 0}%
+                </p>
+              </div>
+            </div>
+
+            <div className="hv-assign-dialog-actions">
+              <Button
+                variant="outline"
+                onClick={() => setShowAssignDialog(false)}
+                className="hv-assign-dialog-cancel"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleSendAssignment}
+                className="hv-assign-dialog-submit"
+              >
+                Send Assignment
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
  </div>
  );
 

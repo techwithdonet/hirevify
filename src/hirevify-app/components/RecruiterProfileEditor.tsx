@@ -661,10 +661,10 @@ export function RecruiterProfileEditor({ onBack, onUpgrade }: RecruiterProfileEd
  <h4 className="font-semibold">Professional Links</h4>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div>
- <Label htmlFor="Link">Link Profile</Label>
+ <Label htmlFor="Link">LinkedIn Profile</Label>
  <Input
  id="Link"
- placeholder="https://Link.com/in/username"
+ placeholder="https://linkedin.com/in/username"
  value={profileData.linkedin}
  onChange={(e) => {
  setProfileData(prev => ({...prev, linkedin: e.target.value }));

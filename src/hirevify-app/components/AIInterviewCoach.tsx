@@ -211,80 +211,21 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  }, []);
 
  const loadSessionHistory = () => {
- // Mock session history
- const mockSessions: InterviewSession[] = [
- {
- id: '1',
- jobTitle: 'Frontend Developer',
- companyName: 'TechCorp',
- questions: questionBank.slice(0, 3),
- responses: [
- {
- questionId: '1',
- response: 'I led a team through a challenging project...',
- duration: 115,
- timestamp: new Date(Date.now() - 86400000),
- aiAnalysis: {
- score: 85,
- strengths: ['Clear structure', 'Good examples'],
- improvements: ['Add more specific metrics', 'Expand on leadership style'],
- keywordMatch: 80,
- clarity: 90,
- confidence: 85
- }
- }
- ],
- overallScore: 82,
- completedAt: new Date(Date.now() - 86400000)
- }
- ];
- setSessionHistory(mockSessions);
+ setSessionHistory([]);
  };
 
  const generateCoachingInsights = () => {
- const insights: CoachingInsight[] = [
- {
- type: 'strength',
- category: 'Communication',
- title: 'Strong Technical Explanations',
- description: 'You consistently provide clear, well-structured technical explanations with good examples.',
- actionItems: ['Continue using the STAR method for behavioral questions', 'Keep providing concrete examples']
- },
- {
- type: 'improvement',
- category: 'Confidence',
- title: 'Reduce Filler Words',
- description: 'You tend to use "um" and "like" frequently, which can impact perceived confidence.',
- actionItems: [
- 'Practice speaking more slowly and deliberately',
- 'Use brief pauses instead of filler words',
- 'Record yourself practicing to build awareness'
- ],
- resources: ['Toastmasters public speaking tips', 'Confidence building exercises']
- },
- {
+ const insights: CoachingInsight[] = [{
  type: 'tip',
  category: 'Preparation',
- title: 'Research Company Culture',
- description: 'Your answers would be stronger with more specific company knowledge and cultural references.',
+ title: 'Complete a practice session',
+ description: 'Coaching insights will be based on the answers you provide in this workspace.',
  actionItems: [
- 'Read recent company blog posts and news',
- 'Check employee reviews on Glassdoor',
- 'Look up the interviewer on Link'
+ 'Choose a target role and company',
+ 'Answer each prompt with a concrete example',
+ 'Review the evidence-based response rubric after the session'
  ]
- },
- {
- type: 'warning',
- category: 'Technical Skills',
- title: 'Update on Latest Technologies',
- description: 'Some of your technical examples are from older projects. Consider refreshing with recent technologies.',
- actionItems: [
- 'Work on a small project with modern frameworks',
- 'Update your portfolio with recent work',
- 'Practice explaining new concepts you\'ve learned'
- ]
- }
- ];
+ }];
 
  setCoachingInsights(insights);
  };
@@ -442,15 +383,20 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  };
 
  const analyzeResponse = async (response: string, question: InterviewQuestion) => {
- // Mock AI analysis - in real implementation, this would use NLP and ML models
- const wordCount = response.split(' ').length;
- const hasStructure = response.includes('situation') || response.includes('task') || 
- response.includes('action') || response.includes('result') ||
- response.toLowerCase().includes('example');
- 
- const keywordMatch = Math.random() * 40 + 60; // 60-100%
- const clarity = wordCount > 50? Math.random() * 20 + 80: Math.random() * 30 + 50;
- const confidence = hasStructure? Math.random() * 20 + 80: Math.random() * 30 + 60;
+ // Deterministic written-response rubric. It does not infer voice, emotion,
+ // identity, or facts that are not present in the submitted answer.
+ const normalizedResponse = response.trim().toLowerCase();
+ const wordCount = normalizedResponse.split(/\s+/).filter(Boolean).length;
+ const hasStructure = ['situation', 'task', 'action', 'result', 'example']
+ .some((term) => normalizedResponse.includes(term));
+ const criteriaTerms = question.evaluationCriteria
+ .flatMap((criterion) => criterion.toLowerCase().split(/[^a-z0-9]+/))
+ .filter((term) => term.length >= 5);
+ const uniqueCriteria = new Set(criteriaTerms);
+ const matchedCriteria = new Set(criteriaTerms.filter((term) => normalizedResponse.includes(term)));
+ const keywordMatch = uniqueCriteria.size? Math.round((matchedCriteria.size / uniqueCriteria.size) * 100): 70;
+ const clarity = wordCount >= 60 && wordCount <= 220? 90: wordCount >= 30? 75: 50;
+ const confidence = hasStructure? 85: wordCount >= 50? 70: 55;
  const score = Math.round((keywordMatch + clarity + confidence) / 3);
 
  const strengths = [];
@@ -764,7 +710,7 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
  <h2 className="text-2xl font-bold mb-2">Interview Session Complete!</h2>
  <p className="text-muted-foreground mb-4">
- You've answered {currentSession.responses.length} questions
+ You&apos;ve answered {currentSession.responses.length} questions
  </p>
  
  <div className="flex justify-center items-center gap-4 mb-6">
@@ -804,7 +750,7 @@ export function AIInterviewCoach({ onBack, onUpgrade, jobId, jobTitle, companyNa
  {currentSession.questions[index]?.category}
  </p>
  <div className="text-xs">
- <p className="text-green-600">..." {response.aiAnalysis?.strengths[0] || 'Good response'}
+ <p className="text-green-600">&ldquo;{response.aiAnalysis?.strengths[0] || 'Good response'}&rdquo;
  </p>
  <p className="text-orange-600">
  ž {response.aiAnalysis?.improvements[0] || 'Keep practicing'}

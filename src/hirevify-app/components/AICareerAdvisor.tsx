@@ -330,7 +330,7 @@ export function AICareerAdvisor({ onBack, onUpgrade }: AICareerAdvisorProps) {
  impact: 'medium',
  urgency: 'low',
  recommendations: [
- 'Optimize your Link for remote positions',
+ 'Optimize your LinkedIn profile for remote positions',
  'Join remote-first tech communities',
  'Showcase async communication skills',
  'Consider timezone-flexible roles'

@@ -4,64 +4,69 @@
  * Handles screen rendering logic based on current screen state
  */
 
-import { FunctionalATSScanner } from './FunctionalATSScanner'; // Functional prototype ATS scanner
-import { AccuracyFirstATSScanner } from './AccuracyFirstATSScanner'; // Accuracy-first ATS scanner
-import { ProfessionalATSScanner } from './ProfessionalATSScanner'; // Professional third-party integration ATS scanner
-import { ReliableATSScanner } from './ReliableATSScanner'; // New reliable and simple ATS scanner
+import dynamic from 'next/dynamic';
 import { Homepage } from './Homepage'; // Homepage component
-import { ProjectPostingFlow } from './ProjectPostingFlow';
-import { ATSView } from './ATSView';
-import { ResumeBuilder } from './ResumeBuilder';
-import { LiveInterviewScreen } from './LiveInterviewScreen';
-import { PricingPage } from './PricingPage';
-import { MarketingInfoPage } from './MarketingInfoPage';
-import { RecruiterAnalytics } from './RecruiterAnalytics';
-import { CandidatePortfolio } from './CandidatePortfolio';
-import { SkillsAssessment } from './SkillsAssessment';
-import { OneWayVideoInterview } from './OneWayVideoInterview';
-import { IntegrationHub } from './IntegrationHub';
-import { NotificationCenter } from './NotificationCenter';
-import { MessagingCenter } from './MessagingCenter';
-import { ProjectSearch } from './ProjectSearch';
-import { CandidateSearch } from './CandidateSearch';
-import { RecruiterCandidateDetail } from './RecruiterCandidateDetail';
-import { ProjectManagement } from './ProjectManagement';
-import { JobApplicants } from './JobApplicants';
-import { InterviewManagement } from './InterviewManagement';
-import { EnhancedVideoInterview } from './EnhancedVideoInterview';
-import { RecruiterSettings } from './RecruiterSettings';
-import { RecruiterProfileEditor } from './RecruiterProfileEditor';
-import { AIMatchingDashboard } from './AIMatchingDashboard';
-import { AutomatedScreening } from './AutomatedScreening';
-import { MarketIntelligenceDashboard } from './MarketIntelligenceDashboard';
-import { AdvancedAnalyticsDashboard } from './AdvancedAnalyticsDashboard';
-import { CustomAssessmentBuilder } from './CustomAssessmentBuilder';
-import { SkillsFirstHiring } from './SkillsFirstHiring';
-import { EmployerEducation } from './EmployerEducation';
-import { OngoingProjects } from './OngoingProjects';
-import { CandidateSettings } from './CandidateSettings';
-import { CandidateProfileEditor } from './CandidateProfileEditor';
-import { AIInterviewCoach } from './AIInterviewCoach';
-import { SkillsDevelopmentAI } from './SkillsDevelopmentAI';
-import { ExperienceBuilder } from './ExperienceBuilder';
-import { MicroInternships } from './MicroInternships';
-import { MentorshipProgram } from './MentorshipProgram';
-import { CareerSwitcherTrack } from './CareerSwitcherTrack';
-import { ProjectChallengeVideoRecording } from './ProjectChallengeVideoRecording';
-import { ATSUploadDiagnostic } from './ATSUploadDiagnostic';
 import { RecruiterDashboard } from './RecruiterDashboard';
 import { CandidateDashboard } from './CandidateDashboard';
-import { SubscriptionManager } from './SubscriptionManager';
-import { BetaProgram } from './BetaProgram';
-import { JobPostingFlow } from './JobPostingFlow';
-import { CandidateJobDetail } from './CandidateJobDetail';
-import { CandidateJobApply } from './CandidateJobApply';
-import { CandidateProjectAssignment } from './CandidateProjectAssignment';
-import { CandidateAppliedJobs } from './CandidateAppliedJobs';
-import { CandidateSavedJobs } from './CandidateSavedJobs';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { PremiumGate } from './PremiumGate';
 import { toast } from 'sonner';
 import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment, Candidate } from '../types/app';
+
+const ScreenLoading = () => <div className="premium-loading" role="status"><div className="premium-spinner" /><span className="sr-only">Loading screen</span></div>;
+
+const FunctionalATSScanner = dynamic(() => import('./FunctionalATSScanner').then((mod) => mod.FunctionalATSScanner), { loading: ScreenLoading });
+const AccuracyFirstATSScanner = dynamic(() => import('./AccuracyFirstATSScanner').then((mod) => mod.AccuracyFirstATSScanner), { loading: ScreenLoading });
+const ProfessionalATSScanner = dynamic(() => import('./ProfessionalATSScanner').then((mod) => mod.ProfessionalATSScanner), { loading: ScreenLoading });
+const ReliableATSScanner = dynamic(() => import('./ReliableATSScanner').then((mod) => mod.ReliableATSScanner), { loading: ScreenLoading });
+const ProjectPostingFlow = dynamic(() => import('./ProjectPostingFlow').then((mod) => mod.ProjectPostingFlow), { loading: ScreenLoading });
+const ATSView = dynamic(() => import('./ATSView').then((mod) => mod.ATSView), { loading: ScreenLoading });
+const ResumeBuilder = dynamic(() => import('./ResumeBuilder').then((mod) => mod.ResumeBuilder), { loading: ScreenLoading });
+const LiveInterviewScreen = dynamic(() => import('./LiveInterviewScreen').then((mod) => mod.LiveInterviewScreen), { loading: ScreenLoading });
+const PricingPage = dynamic(() => import('./PricingPage').then((mod) => mod.PricingPage), { loading: ScreenLoading });
+const MarketingInfoPage = dynamic(() => import('./MarketingInfoPage').then((mod) => mod.MarketingInfoPage), { loading: ScreenLoading });
+const RecruiterAnalytics = dynamic(() => import('./RecruiterAnalytics').then((mod) => mod.RecruiterAnalytics), { loading: ScreenLoading });
+const CandidatePortfolio = dynamic(() => import('./CandidatePortfolio').then((mod) => mod.CandidatePortfolio), { loading: ScreenLoading });
+const SkillsAssessment = dynamic(() => import('./SkillsAssessment').then((mod) => mod.SkillsAssessment), { loading: ScreenLoading });
+const OneWayVideoInterview = dynamic(() => import('./OneWayVideoInterview').then((mod) => mod.OneWayVideoInterview), { loading: ScreenLoading });
+const IntegrationHub = dynamic(() => import('./IntegrationHub').then((mod) => mod.IntegrationHub), { loading: ScreenLoading });
+const NotificationCenter = dynamic(() => import('./NotificationCenter').then((mod) => mod.NotificationCenter), { loading: ScreenLoading });
+const MessagingCenter = dynamic(() => import('./MessagingCenter').then((mod) => mod.MessagingCenter), { loading: ScreenLoading });
+const ProjectSearch = dynamic(() => import('./ProjectSearch').then((mod) => mod.ProjectSearch), { loading: ScreenLoading });
+const CandidateSearch = dynamic(() => import('./CandidateSearch').then((mod) => mod.CandidateSearch), { loading: ScreenLoading });
+const RecruiterCandidateDetail = dynamic(() => import('./RecruiterCandidateDetail').then((mod) => mod.RecruiterCandidateDetail), { loading: ScreenLoading });
+const ProjectManagement = dynamic(() => import('./ProjectManagement').then((mod) => mod.ProjectManagement), { loading: ScreenLoading });
+const JobApplicants = dynamic(() => import('./JobApplicants').then((mod) => mod.JobApplicants), { loading: ScreenLoading });
+const InterviewManagement = dynamic(() => import('./InterviewManagement').then((mod) => mod.InterviewManagement), { loading: ScreenLoading });
+const EnhancedVideoInterview = dynamic(() => import('./EnhancedVideoInterview').then((mod) => mod.EnhancedVideoInterview), { loading: ScreenLoading });
+const RecruiterSettings = dynamic(() => import('./RecruiterSettings').then((mod) => mod.RecruiterSettings), { loading: ScreenLoading });
+const RecruiterProfileEditor = dynamic(() => import('./RecruiterProfileEditor').then((mod) => mod.RecruiterProfileEditor), { loading: ScreenLoading });
+const AIMatchingDashboard = dynamic(() => import('./AIMatchingDashboard').then((mod) => mod.AIMatchingDashboard), { loading: ScreenLoading });
+const AutomatedScreening = dynamic(() => import('./AutomatedScreening').then((mod) => mod.AutomatedScreening), { loading: ScreenLoading });
+const MarketIntelligenceDashboard = dynamic(() => import('./MarketIntelligenceDashboard').then((mod) => mod.MarketIntelligenceDashboard), { loading: ScreenLoading });
+const AdvancedAnalyticsDashboard = dynamic(() => import('./AdvancedAnalyticsDashboard').then((mod) => mod.AdvancedAnalyticsDashboard), { loading: ScreenLoading });
+const CustomAssessmentBuilder = dynamic(() => import('./CustomAssessmentBuilder').then((mod) => mod.CustomAssessmentBuilder), { loading: ScreenLoading });
+const SkillsFirstHiring = dynamic(() => import('./SkillsFirstHiring').then((mod) => mod.SkillsFirstHiring), { loading: ScreenLoading });
+const EmployerEducation = dynamic(() => import('./EmployerEducation').then((mod) => mod.EmployerEducation), { loading: ScreenLoading });
+const OngoingProjects = dynamic(() => import('./OngoingProjects').then((mod) => mod.OngoingProjects), { loading: ScreenLoading });
+const CandidateSettings = dynamic(() => import('./CandidateSettings').then((mod) => mod.CandidateSettings), { loading: ScreenLoading });
+const CandidateProfileEditor = dynamic(() => import('./CandidateProfileEditor').then((mod) => mod.CandidateProfileEditor), { loading: ScreenLoading });
+const AIInterviewCoach = dynamic(() => import('./AIInterviewCoach').then((mod) => mod.AIInterviewCoach), { loading: ScreenLoading });
+const SkillsDevelopmentAI = dynamic(() => import('./SkillsDevelopmentAI').then((mod) => mod.SkillsDevelopmentAI), { loading: ScreenLoading });
+const ExperienceBuilder = dynamic(() => import('./ExperienceBuilder').then((mod) => mod.ExperienceBuilder), { loading: ScreenLoading });
+const MicroInternships = dynamic(() => import('./MicroInternships').then((mod) => mod.MicroInternships), { loading: ScreenLoading });
+const MentorshipProgram = dynamic(() => import('./MentorshipProgram').then((mod) => mod.MentorshipProgram), { loading: ScreenLoading });
+const CareerSwitcherTrack = dynamic(() => import('./CareerSwitcherTrack').then((mod) => mod.CareerSwitcherTrack), { loading: ScreenLoading });
+const ProjectChallengeVideoRecording = dynamic(() => import('./ProjectChallengeVideoRecording').then((mod) => mod.ProjectChallengeVideoRecording), { loading: ScreenLoading });
+const ATSUploadDiagnostic = dynamic(() => import('./ATSUploadDiagnostic').then((mod) => mod.ATSUploadDiagnostic), { loading: ScreenLoading });
+const SubscriptionManager = dynamic(() => import('./SubscriptionManager').then((mod) => mod.SubscriptionManager), { loading: ScreenLoading });
+const BetaProgram = dynamic(() => import('./BetaProgram').then((mod) => mod.BetaProgram), { loading: ScreenLoading });
+const JobPostingFlow = dynamic(() => import('./JobPostingFlow').then((mod) => mod.JobPostingFlow), { loading: ScreenLoading });
+const CandidateJobDetail = dynamic(() => import('./CandidateJobDetail').then((mod) => mod.CandidateJobDetail), { loading: ScreenLoading });
+const CandidateJobApply = dynamic(() => import('./CandidateJobApply').then((mod) => mod.CandidateJobApply), { loading: ScreenLoading });
+const CandidateProjectAssignment = dynamic(() => import('./CandidateProjectAssignment').then((mod) => mod.CandidateProjectAssignment), { loading: ScreenLoading });
+const CandidateAppliedJobs = dynamic(() => import('./CandidateAppliedJobs').then((mod) => mod.CandidateAppliedJobs), { loading: ScreenLoading });
+const CandidateSavedJobs = dynamic(() => import('./CandidateSavedJobs').then((mod) => mod.CandidateSavedJobs), { loading: ScreenLoading });
 
 // Define the navigation methods that we expect from useAppNavigation
 interface NavigationMethods {
@@ -325,6 +330,7 @@ case 'recruiter-projects':
 
  case 'recruiter-enhanced-video-interview':
  return (
+ <PremiumGate featureKey="enhanced-video-interviews" onUpgrade={navigation.navigateToPricing} showFullPage>
  <EnhancedVideoInterview 
  onBack={navigation.navigateToRecruiterDashboard}
  onComplete={(recordings) => {
@@ -334,6 +340,7 @@ case 'recruiter-projects':
  }}
  mode="recruiter-preview"
  />
+ </PremiumGate>
  );
 
   case 'recruiter-settings':
@@ -366,10 +373,12 @@ case 'recruiter-ats':
 
  case 'recruiter-ats-scanner':
  return (
+ <PremiumGate featureKey="ats-scanner" onUpgrade={navigation.navigateToPricing} showFullPage>
  <ReliableATSScanner
  onBack={navigation.navigateToRecruiterDashboard}
  userType="recruiter"
  />
+ </PremiumGate>
  );
 
  case 'recruiter-functional-ats':
@@ -389,27 +398,33 @@ case 'recruiter-ats':
 
  case 'recruiter-ai-matching-dashboard':
  return (
+ <PremiumGate featureKey="ai-matching" onUpgrade={navigation.navigateToPricing} showFullPage>
  <AIMatchingDashboard 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
 
  case 'recruiter-automated-screening':
  return (
+ <PremiumGate featureKey="automated-screening" onUpgrade={navigation.navigateToPricing} showFullPage>
  <AutomatedScreening 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
  onViewMessages={navigation.navigateToMessages}
  />
+ </PremiumGate>
  );
 
  case 'recruiter-market-intelligence':
  return (
+ <PremiumGate featureKey="market-intelligence-recruiter" onUpgrade={navigation.navigateToPricing} showFullPage>
  <MarketIntelligenceDashboard 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
  
  case 'recruiter-analytics':
@@ -422,10 +437,12 @@ case 'recruiter-ats':
 
  case 'recruiter-advanced-analytics':
  return (
+ <PremiumGate featureKey="advanced-analytics" onUpgrade={navigation.navigateToPricing} showFullPage>
  <AdvancedAnalyticsDashboard 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
  
  case 'recruiter-skills-assessment':
@@ -439,6 +456,7 @@ case 'recruiter-ats':
 
  case 'recruiter-custom-assessment-builder':
  return (
+ <PremiumGate featureKey="custom-assessments" onUpgrade={navigation.navigateToPricing} showFullPage>
  <CustomAssessmentBuilder 
  onBack={() => setCurrentScreen('recruiter-skills-assessment', { replace: true })}
  existingAssessment={assessmentBuilderData}
@@ -448,18 +466,22 @@ case 'recruiter-ats':
  setCurrentScreen('recruiter-skills-assessment', { replace: true });
  }}
  />
+ </PremiumGate>
  );
  
  case 'recruiter-integrations':
  return (
+ <PremiumGate featureKey="integrations" onUpgrade={navigation.navigateToPricing} showFullPage>
  <IntegrationHub 
  onBack={navigation.navigateToRecruiterDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
  
  case 'recruiter-search-candidates':
   return (
+  <PremiumGate featureKey="candidate-search" onUpgrade={navigation.navigateToPricing} showFullPage>
   <CandidateSearch 
   onBack={navigation.navigateToRecruiterDashboard}
   onUpgrade={navigation.navigateToPricing}
@@ -467,6 +489,7 @@ case 'recruiter-ats':
   onViewCandidateDetail={navigation.navigateToCandidateDetail}
   savedOnly={typeof window !== 'undefined' && window.localStorage.getItem('hirevify_show_saved_candidates') === '1'}
   />
+  </PremiumGate>
   );
 
  case 'recruiter-candidate-detail':
@@ -569,6 +592,7 @@ case 'candidate-dashboard':
 
  case 'candidate-enhanced-video-interview':
  return (
+ <PremiumGate featureKey="enhanced-video-interviews-candidate" onUpgrade={navigation.navigateToPricing} showFullPage>
  <EnhancedVideoInterview 
  onBack={navigation.navigateToCandidateDashboard}
  onComplete={(recordings) => {
@@ -578,6 +602,7 @@ case 'candidate-dashboard':
  }}
  mode="candidate"
  />
+ </PremiumGate>
  );
 
   case 'candidate-settings':
@@ -598,34 +623,42 @@ case 'candidate-dashboard':
  case 'candidate-ai-resume-builder':
  case 'candidate-resume-builder':
  return (
+ <PremiumGate featureKey="ai-resume-builder" onUpgrade={navigation.navigateToPricing} showFullPage>
  <ResumeBuilder
  onBack={navigation.navigateToCandidateDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
 
  case 'candidate-ai-interview-coach':
  return (
+ <PremiumGate featureKey="ai-interview-coach" onUpgrade={navigation.navigateToPricing} showFullPage>
  <AIInterviewCoach 
  onBack={navigation.navigateToCandidateDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
 
  case 'candidate-skills-development-ai':
  return (
+ <PremiumGate featureKey="ai-skills-development" onUpgrade={navigation.navigateToPricing} showFullPage>
  <SkillsDevelopmentAI 
  onBack={navigation.navigateToCandidateDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
 
  case 'candidate-market-intelligence':
  return (
+ <PremiumGate featureKey="market-intelligence-candidate" onUpgrade={navigation.navigateToPricing} showFullPage>
  <MarketIntelligenceDashboard 
  onBack={navigation.navigateToCandidateDashboard}
  onUpgrade={navigation.navigateToPricing}
  />
+ </PremiumGate>
  );
  
  case 'candidate-portfolio':
@@ -803,10 +836,12 @@ case 'candidate-dashboard':
  
  case 'candidate-ats-scanner':
  return (
+ <PremiumGate featureKey="candidate-ats-scanner" onUpgrade={navigation.navigateToPricing} showFullPage>
  <ReliableATSScanner
  onBack={navigation.navigateToCandidateDashboard}
  userType="candidate"
  />
+ </PremiumGate>
  ); 
 
  case 'candidate-functional-ats':

@@ -267,7 +267,7 @@ export function AISmartNotifications({ onBack, onUpgrade, onUpdateUnreadCount }:
  message: 'Congratulations! You\'ve completed 50 hours of AWS learning. You\'re now in the top 25% of cloud engineers.',
  aiReasoning: 'This achievement significantly boosts your market value and opens up cloud architecture opportunities.',
  actions: [
- { id: '1', label: 'Share Achievement', type: 'primary', action: () => toast.success('Shared on Link') },
+ { id: '1', label: 'Share Achievement', type: 'primary', action: () => toast.success('Sharing options opened') },
  { id: '2', label: 'Next Milestone', type: 'secondary', action: () => toast.info('Setting next goal') }
  ],
  timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
