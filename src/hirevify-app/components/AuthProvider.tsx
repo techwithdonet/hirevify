@@ -1,13 +1,11 @@
-"use client";
+﻿"use client";
 
-import {
- createContext,
+import { createContext,
  useCallback,
  useContext,
  useEffect,
  useState,
- ReactNode,
-} from "react";
+ ReactNode, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/src/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -61,6 +59,7 @@ function mapDbRoleToUserType(role: string): "recruiter" | "candidate" {
 export function AuthProvider({ children }: AuthProviderProps) {
  const [user, setUser] = useState<User | null>(null);
  const [isLoading, setIsLoading] = useState(true);
+ const signInInFlightRef = useRef(false);
  const [authInitialized, setAuthInitialized] = useState(false);
  const [connectionStatus, setConnectionStatus] =
  useState<"checking" | "connected" | "error">("checking");
@@ -281,6 +280,15 @@ if (userType === "recruiter" && cleanCompanyName && profile?.id) {
  };
 
  const signIn = async (email: string, password: string) => {
+ if (signInInFlightRef.current) {
+ return {
+ success: false,
+ message: "Sign in is already in progress.",
+ };
+ }
+
+ signInInFlightRef.current = true;
+
  try {
  setIsLoading(true);
 
@@ -321,6 +329,7 @@ if (userType === "recruiter" && cleanCompanyName && profile?.id) {
  };
  } finally {
  setIsLoading(false);
+ signInInFlightRef.current = false;
  }
  };
 
@@ -376,6 +385,8 @@ export function useAuth() {
 
  return context;
 }
+
+
 
 
 
