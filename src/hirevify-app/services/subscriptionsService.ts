@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Subscriptions Service
  * Handles subscription and premium access from Supabase
  */
