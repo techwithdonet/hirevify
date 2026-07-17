@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
 import { Toaster } from './components/ui/sonner';
 import { AppRouter } from './components/AppRouter';
+import { ProUpgradeCleanup } from './components/ProUpgradeCleanup';
 import { useAppNavigation } from './hooks/useAppNavigation';
 import type { Application, Project, Screen, Job, JobProjectAssignment, Candidate } from './types/app';
 
@@ -220,7 +221,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   // Populate selectedCandidate from sessionStorage AFTER mount. We can't do
   // this in the useState initializer without creating a server/client
   // mismatch (server has no sessionStorage, so it would render `null` while
-  // the client first render would have the real candidate â€” causing different
+  // the client first render would have the real candidate Ã¢â‚¬â€ causing different
   // subtrees to be rendered and a hydration error).
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -469,30 +470,59 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
         aria-hidden="true"
       />
     ) : (
-      <AppRouter
-     currentScreen={effectiveScreen}
-     user={user}
-     selectedProject={selectedProject}
-     selectedApplication={selectedApplication}
-     selectedJob={selectedJob}
-     selectedAssignment={selectedAssignment}
-     selectedCandidate={selectedCandidate}
-     savedCandidates={savedCandidates}
-     onToggleSavedCandidate={toggleSavedCandidate}
-     unreadNotifications={unreadNotifications}
-     unreadMessages={unreadMessages}
-     selectedConversationId={selectedConversationId}
-     projectChallengeData={projectChallengeData}
-     assessmentBuilderData={assessmentBuilderData}
-     navigation={navigation}
-     handleLogout={navigation.handleLogout}
-     handleUserTypeSelection={handleUserTypeSelection}
-     loginPromptSignal={loginPromptSignal}
-     onOpenHomepageLogin={openHomepageLogin}
-     setCurrentScreen={navigateScreen}
-     setUnreadMessages={setUnreadMessages}
-     setUnreadNotifications={setUnreadNotifications}
-    />
+      <>
+
+        <ProUpgradeCleanup />
+
+        <AppRouter
+
+             currentScreen={effectiveScreen}
+
+             user={user}
+
+             selectedProject={selectedProject}
+
+             selectedApplication={selectedApplication}
+
+             selectedJob={selectedJob}
+
+             selectedAssignment={selectedAssignment}
+
+             selectedCandidate={selectedCandidate}
+
+             savedCandidates={savedCandidates}
+
+             onToggleSavedCandidate={toggleSavedCandidate}
+
+             unreadNotifications={unreadNotifications}
+
+             unreadMessages={unreadMessages}
+
+             selectedConversationId={selectedConversationId}
+
+             projectChallengeData={projectChallengeData}
+
+             assessmentBuilderData={assessmentBuilderData}
+
+             navigation={navigation}
+
+             handleLogout={navigation.handleLogout}
+
+             handleUserTypeSelection={handleUserTypeSelection}
+
+             loginPromptSignal={loginPromptSignal}
+
+             onOpenHomepageLogin={openHomepageLogin}
+
+             setCurrentScreen={navigateScreen}
+
+             setUnreadMessages={setUnreadMessages}
+
+             setUnreadNotifications={setUnreadNotifications}
+
+            />
+
+      </>
     )}
    <Toaster />
    </div>
@@ -508,7 +538,7 @@ export default function App({
 }) {
   // Prefer the server-provided values so the SSR HTML matches the client tree.
   // Fall back to client-only readInitialScreen() (URL / history / localStorage)
-  // when the prop is missing â€” this is harmless because the server already
+  // when the prop is missing Ã¢â‚¬â€ this is harmless because the server already
   // returned the default in that case, and the client will agree.
   const { screen: clientScreen, candidateId: clientCandidateId } = readInitialScreen();
 
