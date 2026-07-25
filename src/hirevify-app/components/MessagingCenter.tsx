@@ -229,18 +229,24 @@ export function MessagingCenter({ onBack, onUpdateUnreadCount, selectedConversat
 
   return (
     <div className="premium-page flex h-dvh flex-col overflow-hidden">
-      <header className="premium-header">
+      <header className="premium-header workspace-messaging-header">
         <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack} className="premium-btn-icon-ghost">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              aria-label="Back to Dashboard"
+              className="premium-btn-icon-ghost workspace-messaging-back workspace-header-back inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+            >
               <ArrowLeft className="h-5 w-5" />
+              <span>Back to Dashboard</span>
             </Button>
             <div>
-              <p className="premium-eyebrow text-blue-600">Messages</p>
-              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">HireVify Inbox</h1>
+              <p className="premium-eyebrow workspace-messaging-eyebrow">Messages</p>
+              <h1 className="workspace-messaging-title text-xl font-bold sm:text-2xl">HireVify Inbox</h1>
             </div>
           </div>
-          <Badge className="premium-badge-success">HireVify Chat</Badge>
+          <Badge className="premium-badge-success workspace-messaging-badge">HireVify Chat</Badge>
         </div>
       </header>
 

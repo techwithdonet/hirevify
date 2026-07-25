@@ -126,6 +126,8 @@ export function RecruiterDashboard({
     (sum, conversation) => sum + (conversation.unreadCount || 0),
     0
   );
+  const recruiterName = user?.name?.split(' ')[0] || 'Recruiter';
+  const isSubscriptionResolved = subscription !== null;
   
   // Safe premium access with fallbacks
   let checkAccess, getSubscription;
@@ -315,42 +317,46 @@ export function RecruiterDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-950">
+    <div className="recruiter-workbench min-h-screen bg-white text-slate-950">
       {/* Premium Header */}
-      <header className="sticky top-0 z-40 border-b border-emerald-100 bg-white/95 shadow-[0_14px_36px_rgba(16,185,129,0.08)] backdrop-blur-xl">
-        <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <header className="recruiter-workbench-header sticky top-0 z-40 border-b border-emerald-100 bg-white/95 shadow-[0_14px_36px_rgba(16,185,129,0.08)] backdrop-blur-xl">
+        <div className="recruiter-workbench-header-inner mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo and Title */}
-          <div className="flex min-w-0 items-center gap-4">
+          <div className="recruiter-brand-lockup flex min-w-0 items-center gap-4">
             <HireVifyLogo size="md" />
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-normal text-emerald-700">Recruiter workspace</p>
-              <h1 className="text-xl font-bold text-slate-950 sm:text-2xl">Dashboard</h1>
+              <p className="recruiter-small-label text-xs font-bold uppercase tracking-normal text-emerald-700">Recruiter workspace</p>
+              <h1 className="recruiter-desk-title text-xl font-bold text-slate-950 sm:text-2xl">{recruiterName}&apos;s desk</h1>
             </div>
           </div>
           
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="recruiter-header-actions flex items-center gap-2">
             {/* Premium Status */}
-            {subscription?.isActive? (
-                <Badge className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700 md:flex">
-                <Crown className="h-3.5 w-3.5" />
-                {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)} Plan
-              </Badge>
-            ): (
-              <Button onClick={onUpgrade} className="hidden items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 font-semibold text-white shadow-[0_14px_30px_rgba(5,150,105,0.22)] hover:bg-emerald-700 md:flex">
-                <Crown className="h-4 w-4" />
-                Upgrade to Pro
-              </Button>
-            )}
+            <div className="recruiter-plan-slot" aria-busy={!isSubscriptionResolved}>
+              {isSubscriptionResolved && (
+                subscription?.isActive ? (
+                  <Badge className="recruiter-plan-pill items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700">
+                    <Crown className="h-3.5 w-3.5" />
+                    {subscription.tier?.charAt(0).toUpperCase() + subscription.tier?.slice(1)}
+                  </Badge>
+                ) : (
+                  <Button onClick={onUpgrade} className="recruiter-upgrade-button items-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 font-semibold text-white shadow-[0_14px_30px_rgba(5,150,105,0.22)] hover:bg-emerald-700">
+                    <Crown className="h-4 w-4" />
+                    Upgrade
+                  </Button>
+                )
+              )}
+            </div>
             
             {/* Icon Buttons */}
-            <div className="flex items-center gap-1">
+            <div className="recruiter-icon-cluster flex items-center gap-1">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={onViewNotifications} 
                 aria-label="Open notifications"
-                className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                className="recruiter-icon-button relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Bell className="h-5 w-5" />
                 {visibleUnreadNotifications > 0 && (
@@ -365,7 +371,7 @@ export function RecruiterDashboard({
                 size="icon" 
                 onClick={onViewMessages} 
                 aria-label="Open messages"
-                className="relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                className="recruiter-icon-button relative rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <MessageSquare className="h-5 w-5" />
                 {totalUnreadMessages > 0 && (
@@ -380,7 +386,7 @@ export function RecruiterDashboard({
                 size="icon" 
                 onClick={onViewSettings} 
                 aria-label="Open settings"
-                className="rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                className="recruiter-icon-button rounded-full text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
               >
                 <Settings className="h-5 w-5" />
               </Button>
@@ -390,7 +396,7 @@ export function RecruiterDashboard({
                 size="icon" 
                 onClick={onLogout} 
                 aria-label="Log out"
-                className="rounded-full text-slate-700 hover:bg-red-50 hover:text-red-600"
+                className="recruiter-icon-button danger rounded-full text-slate-700 hover:bg-red-50 hover:text-red-600"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -464,12 +470,12 @@ export function RecruiterDashboard({
                       index > 0 && "border-t border-emerald-100 sm:border-l sm:border-t-0"
                     )}
                   >
-                    <p className="text-xs font-semibold uppercase tracking-normal !text-emerald-50 group-hover:!text-white">
+                    <p className="text-xs font-semibold uppercase tracking-normal text-emerald-700 group-hover:text-emerald-800">
                       {item.label}
                     </p>
                     <div className="mt-2 flex items-end justify-between gap-3">
-                      <p className="text-3xl font-semibold tracking-normal !text-white">{item.value}</p>
-                      <ArrowUpRight className="mb-1 h-4 w-4 !text-emerald-100 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:!text-white" />
+                      <p className="text-3xl font-semibold tracking-normal text-slate-950">{item.value}</p>
+                      <ArrowUpRight className="mb-1 h-4 w-4 text-emerald-600 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-emerald-800" />
                     </div>
                   </button>
                 ))}

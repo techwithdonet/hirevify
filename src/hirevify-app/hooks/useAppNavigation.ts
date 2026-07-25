@@ -280,25 +280,11 @@ export const useAppNavigation = ({
   setCurrentScreen('recruiter-dashboard', { replace: true });
   setSelectedProject(null);
   setSelectedApplication(null);
-  
-  // Ensure URL is updated with recruiter-dashboard screen parameter
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    params.set('screen', 'recruiter-dashboard');
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-  }
   }, [requireAuth, setCurrentScreen, setSelectedProject, setSelectedApplication]);
 
   const navigateToCandidateDashboard = useCallback(() => {
   if (!requireAuth('access the dashboard', 'candidate')) return;
   setCurrentScreen('candidate-dashboard', { replace: true });
-  
-  // Ensure URL is updated with candidate-dashboard screen parameter
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    params.set('screen', 'candidate-dashboard');
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-  }
   }, [requireAuth, setCurrentScreen]);
 
  const navigateToMessages = useCallback((conversationId?: string) => {

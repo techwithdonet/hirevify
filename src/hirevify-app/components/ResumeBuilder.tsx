@@ -13,7 +13,7 @@ import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 import { profilesService } from '../services/profilesService';
 import { applicationsService } from '../services/applicationsService';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
@@ -1606,17 +1606,15 @@ case 'education':
  if (currentStep === 'welcome') {
  return (
  <div className="hv-page-shell">
- <header className="hv-dashboard-header">
- <div className="hv-container flex items-center justify-between py-4">
- <div className="flex items-center gap-3">
- <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
- </div>
- </div>
- </header>
+  <header className="hv-dashboard-header">
+  <div className="hv-container flex items-center justify-between py-4">
+  <Button variant="ghost" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Dashboard
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </header>
  <main className="px-4 py-8 sm:px-6 lg:px-8">
  {renderStepContent()}
  </main>
@@ -1627,17 +1625,15 @@ case 'education':
  if (currentStep === 'ats-report') {
  return (
  <div className="hv-page-shell">
- <header className="hv-dashboard-header">
- <div className="hv-container flex items-center justify-between py-4">
- <div className="flex items-center gap-3">
- <Button variant="ghost" onClick={() => setCurrentStep('review')} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Review
- </Button>
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
- </div>
- </div>
- </header>
+  <header className="hv-dashboard-header">
+  <div className="hv-container flex items-center justify-between py-4">
+  <Button variant="ghost" onClick={() => setCurrentStep('review')} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Review
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </header>
  <main className="px-4 py-8 sm:px-6 lg:px-8">
  {renderStepContent()}
  </main>
@@ -1650,20 +1646,18 @@ case 'education':
  {/* Header with Progress */}
  <header className="hv-dashboard-header">
  <div className="hv-container py-4">
- <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
- <div className="flex items-center gap-3">
- <Button variant="ghost" onClick={currentStep === 'template'? onBack: prevStep} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
- <ArrowLeft className="w-4 h-4 mr-2" />
- {currentStep === 'template'? 'Back to Dashboard': 'Previous'}
- </Button>
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
- </div>
- <div className="flex items-center gap-3">
- <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
- Step {getCurrentStepIndex() + 1} of {steps.length}
- </span>
- </div>
- </div>
+  <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <Button variant="ghost" onClick={currentStep === 'template'? onBack: prevStep} className="rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  {currentStep === 'template'? 'Back to Dashboard': 'Previous'}
+  </Button>
+  <div className="flex items-center gap-3">
+  <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-100">
+  Step {getCurrentStepIndex() + 1} of {steps.length}
+  </span>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </div>
 
  <div className="space-y-2">
  <div className="flex justify-between text-sm text-slate-600">

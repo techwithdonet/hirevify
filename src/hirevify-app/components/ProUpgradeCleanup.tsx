@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { usePremiumAccess } from "../utils/premium";
 
 const UPGRADE_ACTION_TEXT =
@@ -25,21 +25,32 @@ function hideElement(element: HTMLElement): void {
   element.style.setProperty("display", "none", "important");
 }
 
+function restoreElement(element: HTMLElement): void {
+  element.style.removeProperty("display");
+  delete element.dataset.hirevifyProUpgradeHidden;
+}
+
 function restoreElements(): void {
   document
     .querySelectorAll<HTMLElement>(
       '[data-hirevify-pro-upgrade-hidden="true"]'
     )
-    .forEach((element) => {
-      element.style.removeProperty("display");
-      delete element.dataset.hirevifyProUpgradeHidden;
-    });
+    .forEach(restoreElement);
 }
 
 function hideUpgradeElementsForPro(): void {
+  // Older cleanup passes could mark a text-only wrapper instead of the
+  // upgrade control itself. Restore those wrappers first so adjacent header
+  // actions (messages, notifications, settings, and logout) remain visible.
   document
     .querySelectorAll<HTMLElement>(
-      'button, a, [role="button"], [data-slot="badge"], span, div'
+      'div[data-hirevify-pro-upgrade-hidden="true"]:not([data-slot="card"]), span[data-hirevify-pro-upgrade-hidden="true"]'
+    )
+    .forEach(restoreElement);
+
+  document
+    .querySelectorAll<HTMLElement>(
+      'button, a, [role="button"], [data-slot="badge"]'
     )
     .forEach((element) => {
       const text = normalizeText(element.textContent || "");
@@ -81,7 +92,9 @@ export function ProUpgradeCleanup() {
     subscription?.tier === "pro" &&
     subscription?.isActive === true;
 
-  useEffect(() => {
+  // Apply the entitlement-only cleanup before paint. Running this as a normal
+  // effect lets upgrade cards appear for a frame on every refresh.
+  useLayoutEffect(() => {
     if (!isActivePro) {
       restoreElements();
       return;

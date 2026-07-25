@@ -1,3 +1,4 @@
 @import "tailwindcss";
 @import "./default_theme.css";
 @import "./globals.css";
+@import "./workspace_theme.css";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { subscriptionsService } from "../services/subscriptionsService";
 
@@ -182,7 +182,10 @@ export function usePremiumAccess() {
   const [subscription, setSubscription] = useState<SubscriptionStatus>(() =>
     getSubscriptionStatus(),
   );
-  const [isLoading, setIsLoading] = useState(Boolean(user?.id));
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const userId = user?.id ?? null;
+  const isLoading = requestLoading || Boolean(userId && resolvedUserId !== userId);
 
   useEffect(() => {
     let active = true;
@@ -192,34 +195,45 @@ export function usePremiumAccess() {
       if (developmentOverride.isActive) {
         if (active) {
           setSubscription(developmentOverride);
-          setIsLoading(false);
+          setResolvedUserId(userId);
+          setRequestLoading(false);
         }
         return;
       }
 
-      if (!user?.id) {
+      if (!userId) {
         if (active) {
           setSubscription(FREE_SUBSCRIPTION);
-          setIsLoading(false);
+          setResolvedUserId(null);
+          setRequestLoading(false);
         }
         return;
       }
 
-      setIsLoading(true);
-      const result = await subscriptionsService.getUserSubscription(user.id);
-      if (!active) return;
+      setRequestLoading(true);
+      try {
+        const result = await subscriptionsService.getUserSubscription(userId);
+        if (!active) return;
 
-      const row = result.data;
-      const expiresAt = row?.expires_at || null;
-      const isExpired = expiresAt ? new Date(expiresAt).getTime() <= Date.now() : false;
-      setSubscription({
-        isActive:
-          row?.tier === "pro" && row?.status === "active" && !isExpired,
-        tier: row?.tier === "pro" ? "pro" : "free",
-        expiresAt,
-        trialEndsAt: row?.trial_ends_at || null,
-      });
-      setIsLoading(false);
+        const row = result.data;
+        const expiresAt = row?.expires_at || null;
+        const isExpired = expiresAt ? new Date(expiresAt).getTime() <= Date.now() : false;
+        setSubscription({
+          isActive:
+            row?.tier === "pro" && row?.status === "active" && !isExpired,
+          tier: row?.tier === "pro" ? "pro" : "free",
+          expiresAt,
+          trialEndsAt: row?.trial_ends_at || null,
+        });
+        setResolvedUserId(userId);
+      } catch (error) {
+        if (!active) return;
+        console.error("Failed to load premium access:", error);
+        setSubscription(FREE_SUBSCRIPTION);
+        setResolvedUserId(userId);
+      } finally {
+        if (active) setRequestLoading(false);
+      }
     }
 
     void loadSubscription();
@@ -231,7 +245,7 @@ export function usePremiumAccess() {
       window.removeEventListener("storage", refresh);
       window.removeEventListener("hirevify:premium-change", refresh);
     };
-  }, [user?.id]);
+  }, [userId]);
 
   const checkAccess = useCallback(
     (featureKey: PremiumFeatureKey) =>
@@ -244,10 +258,8 @@ export function usePremiumAccess() {
     (featureKey: PremiumFeatureKey) => PREMIUM_FEATURES[featureKey],
     [],
   );
-  const isTestAccount = useMemo(
-    () => DEVELOPMENT_OVERRIDE_ENABLED && getSubscriptionStatus().isActive,
-    [subscription],
-  );
+  const isTestAccount =
+    DEVELOPMENT_OVERRIDE_ENABLED && getSubscriptionStatus().isActive;
 
   return {
     checkAccess,

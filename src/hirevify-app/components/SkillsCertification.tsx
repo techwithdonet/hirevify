@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { useAuth } from './AuthProvider';
 import { AssessmentEcosystem } from './AssessmentEcosystem';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 
 interface SkillsCertificationProps {
  onBack: () => void;
@@ -279,11 +279,10 @@ export function SkillsCertification({ onBack, onUpgrade }: SkillsCertificationPr
  <div className="max-w-7xl mx-auto flex items-center justify-between">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack}>
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-12" />
- </div>
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Dashboard
+  </Button>
+  </div>
  <div className="flex items-center space-x-4">
  <Dialog open={showEcosystemInfo} onOpenChange={setShowEcosystemInfo}>
  <DialogTrigger asChild>
@@ -300,10 +299,11 @@ export function SkillsCertification({ onBack, onUpgrade }: SkillsCertificationPr
  </DialogContent>
  </Dialog>
  <Badge className="bg-primary/10 text-primary border-primary/20">
- <Shield className="w-3 h-3 mr-1" />
- Industry Recognized
- </Badge>
- </div>
+  <Shield className="w-3 h-3 mr-1" />
+  Industry Recognized
+  </Badge>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
  </div>
  </header>
 

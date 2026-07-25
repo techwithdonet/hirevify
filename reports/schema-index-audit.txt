@@ -1,0 +1,1041 @@
+﻿.\supabase_verify_candidate_profiles.sql:2:-- Verification script for candidate_profiles schema.
+.\supabase_verify_candidate_profiles.sql:6:-- 1) Full column list of candidate_profiles (name, type, nullable, default)
+.\supabase_verify_candidate_profiles.sql:14:  AND table_name = 'candidate_profiles'
+.\supabase_verify_candidate_profiles.sql:24:  AND table_name = 'candidate_profiles'
+.\supabase_verify_candidate_profiles.sql:71:    ('portfolio_url',        'text'),
+.\supabase_verify_candidate_profiles.sql:104: AND c.table_name = 'candidate_profiles'
+.\supabase_verify_candidate_profiles.sql:108:-- 4) Indexes on candidate_profiles
+.\supabase_verify_candidate_profiles.sql:114:  AND tablename = 'candidate_profiles'
+.\supabase_verify_candidate_profiles.sql:121:  COUNT(*) FILTER (WHERE profile_completed = TRUE) AS completed_profiles
+.\supabase_verify_candidate_profiles.sql:122:FROM public.candidate_profiles;
+.\supabase_verify_candidate_profiles.sql:126:FROM public.candidate_profiles
+.\recruiter_growth_mvp_migration.sql:16:create table if not exists public.career_growth_opportunities (
+.\recruiter_growth_mvp_migration.sql:21:  recruiter_id uuid not null references public.recruiter_profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:43:  created_by_profile_id uuid references public.profiles(id) on delete set null,
+.\recruiter_growth_mvp_migration.sql:143:create table if not exists public.career_growth_applications (
+.\recruiter_growth_mvp_migration.sql:146:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:154:  unique(opportunity_id, candidate_profile_id)
+.\recruiter_growth_mvp_migration.sql:157:alter table public.career_growth_applications
+.\recruiter_growth_mvp_migration.sql:161:alter table public.career_growth_applications
+.\recruiter_growth_mvp_migration.sql:162:  drop constraint if exists career_growth_applications_status_check;
+.\recruiter_growth_mvp_migration.sql:164:alter table public.career_growth_applications
+.\recruiter_growth_mvp_migration.sql:165:  add constraint career_growth_applications_status_check
+.\recruiter_growth_mvp_migration.sql:168:create table if not exists public.career_growth_submissions (
+.\recruiter_growth_mvp_migration.sql:170:  application_id uuid not null references public.career_growth_applications(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:171:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:184:create table if not exists public.job_project_challenges (
+.\recruiter_growth_mvp_migration.sql:186:  job_id uuid references public.jobs(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:187:  recruiter_id uuid not null references public.recruiter_profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:201:create table if not exists public.assigned_projects (
+.\recruiter_growth_mvp_migration.sql:203:  application_id uuid references public.applications(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:204:  job_id uuid references public.jobs(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:206:  recruiter_id uuid not null references public.recruiter_profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:207:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:217:create table if not exists public.project_submissions (
+.\recruiter_growth_mvp_migration.sql:220:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:233:create table if not exists public.conversation_threads (
+.\recruiter_growth_mvp_migration.sql:235:  recruiter_profile_id uuid not null references public.recruiter_profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:236:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:237:  application_id uuid references public.applications(id) on delete set null,
+.\recruiter_growth_mvp_migration.sql:238:  career_growth_application_id uuid references public.career_growth_applications(id) on delete set null,
+.\recruiter_growth_mvp_migration.sql:243:create table if not exists public.conversation_messages (
+.\recruiter_growth_mvp_migration.sql:246:  sender_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\recruiter_growth_mvp_migration.sql:252:create index if not exists idx_cgo_recruiter_type_status on public.career_growth_opportunities(recruiter_id, type, status);
+.\recruiter_growth_mvp_migration.sql:253:create index if not exists idx_cga_opportunity_id on public.career_growth_applications(opportunity_id);
+.\recruiter_growth_mvp_migration.sql:254:create index if not exists idx_cga_candidate_profile_id on public.career_growth_applications(candidate_profile_id);
+.\recruiter_growth_mvp_migration.sql:255:create index if not exists idx_cgs_application_id on public.career_growth_submissions(application_id);
+.\recruiter_growth_mvp_migration.sql:256:create index if not exists idx_job_project_challenges_job_id on public.job_project_challenges(job_id);
+.\recruiter_growth_mvp_migration.sql:257:create index if not exists idx_assigned_projects_application_id on public.assigned_projects(application_id);
+.\recruiter_growth_mvp_migration.sql:258:create index if not exists idx_project_submissions_assigned_project_id on public.project_submissions(assigned_project_id);
+.\recruiter_growth_mvp_migration.sql:259:create index if not exists idx_conversation_threads_participants on public.conversation_threads(recruiter_profile_id, candidate_profile_id);
+.\recruiter_growth_mvp_migration.sql:260:create index if not exists idx_conversation_messages_thread_id on public.conversation_messages(thread_id, created_at);
+.\recruiter_growth_mvp_migration.sql:263:alter table public.career_growth_applications enable row level security;
+.\recruiter_growth_mvp_migration.sql:269:alter table public.conversation_messages enable row level security;
+.\recruiter_growth_mvp_migration.sql:277:    select 1 from public.profiles p
+.\recruiter_growth_mvp_migration.sql:286:using (exists (select 1 from public.profiles p where p.auth_user_id = auth.uid() and p.id = career_growth_opportunities.recruiter_id))
+.\recruiter_growth_mvp_migration.sql:287:with check (exists (select 1 from public.profiles p where p.auth_user_id = auth.uid() and p.id = career_growth_opportunities.recruiter_id and p.role = 'recruiter'));
+.\recruiter_growth_mvp_migration.sql:289:drop policy if exists "career growth applications readable" on public.career_growth_applications;
+.\recruiter_growth_mvp_migration.sql:290:create policy "career growth applications readable"
+.\recruiter_growth_mvp_migration.sql:291:on public.career_growth_applications for select to authenticated
+.\recruiter_growth_mvp_migration.sql:293:  exists (select 1 from public.profiles p where p.auth_user_id = auth.uid() and p.id = career_growth_applications.candidate_profile_id)
+.\recruiter_growth_mvp_migration.sql:297:    join public.profiles p on p.id = o.recruiter_id
+.\recruiter_growth_mvp_migration.sql:298:    where o.id = career_growth_applications.opportunity_id
+.\recruiter_growth_mvp_migration.sql:303:drop policy if exists "candidates apply career growth" on public.career_growth_applications;
+.\recruiter_growth_mvp_migration.sql:305:on public.career_growth_applications for insert to authenticated
+.\recruiter_growth_mvp_migration.sql:306:with check (exists (select 1 from public.profiles p where p.auth_user_id = auth.uid() and p.id = career_growth_applications.candidate_profile_id and p.role = 'candidate'));
+.\recruiter_growth_mvp_migration.sql:308:drop policy if exists "recruiters update career growth applications" on public.career_growth_applications;
+.\recruiter_growth_mvp_migration.sql:309:create policy "recruiters update career growth applications"
+.\recruiter_growth_mvp_migration.sql:310:on public.career_growth_applications for update to authenticated
+.\recruiter_growth_mvp_migration.sql:315:    join public.profiles p on p.id = o.recruiter_id
+.\recruiter_growth_mvp_migration.sql:316:    where o.id = career_growth_applications.opportunity_id
+.\recruiter_growth_mvp_migration.sql:324:    join public.profiles p on p.id = o.recruiter_id
+.\recruiter_growth_mvp_migration.sql:325:    where o.id = career_growth_applications.opportunity_id
+.\recruiter_growth_mvp_migration.sql:360:drop policy if exists "conversation messages authenticated access" on public.conversation_messages;
+.\recruiter_growth_mvp_migration.sql:361:create policy "conversation messages authenticated access"
+.\recruiter_growth_mvp_migration.sql:362:on public.conversation_messages for all to authenticated
+.\recruiter_growth_mvp_migration.sql:372:    'career_growth_applications',
+.\recruiter_growth_mvp_migration.sql:386:  public.career_growth_applications,
+.\recruiter_growth_mvp_migration.sql:392:  public.conversation_messages
+.\supabase_fix_missing_columns.sql:6:-- 1. candidate_profiles.response_rate
+.\supabase_fix_missing_columns.sql:9:ALTER TABLE public.candidate_profiles
+.\supabase_fix_missing_columns.sql:13:-- 2. portfolio_items.live_url
+.\supabase_fix_missing_columns.sql:14:--    ATSView reads this when building the candidate portfolio
+.\supabase_fix_missing_columns.sql:16:ALTER TABLE public.portfolio_items
+.\supabase_fix_missing_columns.sql:19:-- 3. recruiter_profiles.user_id
+.\supabase_fix_missing_columns.sql:20:--    FK to profiles.id; nullable so existing recruiter rows
+.\supabase_fix_missing_columns.sql:22:ALTER TABLE public.recruiter_profiles
+.\supabase_fix_missing_columns.sql:24:  REFERENCES public.profiles(id) ON DELETE SET NULL;
+.\supabase_fix_missing_columns.sql:26:CREATE INDEX IF NOT EXISTS idx_recruiter_profiles_user_id
+.\supabase_fix_missing_columns.sql:27:  ON public.recruiter_profiles (user_id);
+.\supabase_fix_missing_columns.sql:29:-- 4. saved_jobs.created_at
+.\supabase_fix_missing_columns.sql:30:ALTER TABLE public.saved_jobs
+.\supabase_fix_missing_columns.sql:34:-- 5. subscriptions.plan
+.\supabase_fix_missing_columns.sql:36:ALTER TABLE public.subscriptions
+.\supabase_migration.sql:5:-- Tables: users, candidates, recruiters, jobs, applications, portfolios, etc.
+.\supabase_migration.sql:9:-- 1. PROFILES TABLE (Auth User Profiles)
+.\supabase_migration.sql:11:CREATE TABLE IF NOT EXISTS profiles (
+.\supabase_migration.sql:13:  auth_user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+.\supabase_migration.sql:28:CREATE INDEX idx_profiles_auth_user_id ON profiles(auth_user_id);
+.\supabase_migration.sql:29:CREATE INDEX idx_profiles_role ON profiles(role);
+.\supabase_migration.sql:30:CREATE INDEX idx_profiles_email ON profiles(email);
+.\supabase_migration.sql:33:-- 2. CANDIDATE PROFILES TABLE
+.\supabase_migration.sql:35:CREATE TABLE IF NOT EXISTS candidate_profiles (
+.\supabase_migration.sql:37:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:48:  portfolio_url TEXT,
+.\supabase_migration.sql:63:CREATE INDEX idx_candidate_profiles_user_id ON candidate_profiles(user_id);
+.\supabase_migration.sql:64:CREATE INDEX idx_candidate_profiles_skills ON candidate_profiles USING GIN(skills);
+.\supabase_migration.sql:67:-- 3. RECRUITER PROFILES TABLE
+.\supabase_migration.sql:69:CREATE TABLE IF NOT EXISTS recruiter_profiles (
+.\supabase_migration.sql:71:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:84:CREATE INDEX idx_recruiter_profiles_user_id ON recruiter_profiles(user_id);
+.\supabase_migration.sql:85:CREATE INDEX idx_recruiter_profiles_company_name ON recruiter_profiles(company_name);
+.\supabase_migration.sql:88:-- 4. JOBS/PROJECTS TABLE
+.\supabase_migration.sql:90:CREATE TABLE IF NOT EXISTS jobs (
+.\supabase_migration.sql:92:  recruiter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:110:  applications_count INTEGER DEFAULT 0,
+.\supabase_migration.sql:112:  has_assessment BOOLEAN DEFAULT FALSE,
+.\supabase_migration.sql:113:  assessment_id UUID,
+.\supabase_migration.sql:120:CREATE INDEX idx_jobs_recruiter_id ON jobs(recruiter_id);
+.\supabase_migration.sql:121:CREATE INDEX idx_jobs_status ON jobs(status);
+.\supabase_migration.sql:122:CREATE INDEX idx_jobs_skills ON jobs USING GIN(skills);
+.\supabase_migration.sql:123:CREATE INDEX idx_jobs_created_at ON jobs(created_at DESC);
+.\supabase_migration.sql:126:-- 5. APPLICATIONS TABLE
+.\supabase_migration.sql:128:CREATE TABLE IF NOT EXISTS applications (
+.\supabase_migration.sql:130:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\supabase_migration.sql:131:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:143:  UNIQUE(job_id, candidate_id)
+.\supabase_migration.sql:146:CREATE INDEX idx_applications_job_id ON applications(job_id);
+.\supabase_migration.sql:147:CREATE INDEX idx_applications_candidate_id ON applications(candidate_id);
+.\supabase_migration.sql:148:CREATE INDEX idx_applications_status ON applications(status);
+.\supabase_migration.sql:149:CREATE INDEX idx_applications_submitted_at ON applications(submitted_at DESC);
+.\supabase_migration.sql:152:-- 6. PORTFOLIO ITEMS TABLE
+.\supabase_migration.sql:154:CREATE TABLE IF NOT EXISTS portfolio_items (
+.\supabase_migration.sql:156:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:166:CREATE INDEX idx_portfolio_items_user_id ON portfolio_items(user_id);
+.\supabase_migration.sql:167:CREATE INDEX idx_portfolio_items_created_at ON portfolio_items(created_at DESC);
+.\supabase_migration.sql:170:-- 7. SAVED JOBS TABLE
+.\supabase_migration.sql:172:CREATE TABLE IF NOT EXISTS saved_jobs (
+.\supabase_migration.sql:174:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:175:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\supabase_migration.sql:177:  UNIQUE(candidate_id, job_id)
+.\supabase_migration.sql:180:CREATE INDEX idx_saved_jobs_candidate_id ON saved_jobs(candidate_id);
+.\supabase_migration.sql:181:CREATE INDEX idx_saved_jobs_job_id ON saved_jobs(job_id);
+.\supabase_migration.sql:184:-- 8. ASSESSMENTS/TESTS TABLE
+.\supabase_migration.sql:186:CREATE TABLE IF NOT EXISTS assessments (
+.\supabase_migration.sql:188:  created_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:191:  assessment_type TEXT DEFAULT 'technical' CHECK (assessment_type IN ('technical', 'soft-skills', 'coding', 'custom')),
+.\supabase_migration.sql:201:CREATE INDEX idx_assessments_created_by ON assessments(created_by);
+.\supabase_migration.sql:202:CREATE INDEX idx_assessments_type ON assessments(assessment_type);
+.\supabase_migration.sql:207:CREATE TABLE IF NOT EXISTS test_attempts (
+.\supabase_migration.sql:209:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:210:  assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+.\supabase_migration.sql:211:  job_id UUID REFERENCES jobs(id) ON DELETE SET NULL,
+.\supabase_migration.sql:221:CREATE INDEX idx_test_attempts_user_id ON test_attempts(user_id);
+.\supabase_migration.sql:222:CREATE INDEX idx_test_attempts_assessment_id ON test_attempts(assessment_id);
+.\supabase_migration.sql:223:CREATE INDEX idx_test_attempts_completed_at ON test_attempts(completed_at DESC);
+.\supabase_migration.sql:228:CREATE TABLE IF NOT EXISTS video_submissions (
+.\supabase_migration.sql:230:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:231:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\supabase_migration.sql:240:CREATE INDEX idx_video_submissions_candidate_id ON video_submissions(candidate_id);
+.\supabase_migration.sql:241:CREATE INDEX idx_video_submissions_job_id ON video_submissions(job_id);
+.\supabase_migration.sql:244:-- 11. SUBSCRIPTIONS TABLE
+.\supabase_migration.sql:246:CREATE TABLE IF NOT EXISTS subscriptions (
+.\supabase_migration.sql:248:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:261:CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
+.\supabase_migration.sql:262:CREATE INDEX idx_subscriptions_tier ON subscriptions(tier);
+.\supabase_migration.sql:263:CREATE INDEX idx_subscriptions_expires_at ON subscriptions(expires_at);
+.\supabase_migration.sql:266:-- 12. NOTIFICATIONS TABLE
+.\supabase_migration.sql:268:CREATE TABLE IF NOT EXISTS notifications (
+.\supabase_migration.sql:270:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:282:CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+.\supabase_migration.sql:283:CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+.\supabase_migration.sql:284:CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+.\supabase_migration.sql:287:-- 13. MESSAGES/CONVERSATIONS TABLE
+.\supabase_migration.sql:289:CREATE TABLE IF NOT EXISTS conversations (
+.\supabase_migration.sql:291:  initiator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:292:  recipient_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:293:  job_id UUID REFERENCES jobs(id) ON DELETE SET NULL,
+.\supabase_migration.sql:299:CREATE INDEX idx_conversations_initiator_id ON conversations(initiator_id);
+.\supabase_migration.sql:300:CREATE INDEX idx_conversations_recipient_id ON conversations(recipient_id);
+.\supabase_migration.sql:301:CREATE INDEX idx_conversations_last_message_at ON conversations(last_message_at DESC);
+.\supabase_migration.sql:303:CREATE TABLE IF NOT EXISTS messages (
+.\supabase_migration.sql:305:  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+.\supabase_migration.sql:306:  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:313:CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+.\supabase_migration.sql:314:CREATE INDEX idx_messages_sender_id ON messages(sender_id);
+.\supabase_migration.sql:315:CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+.\supabase_migration.sql:320:CREATE TABLE IF NOT EXISTS activity_logs (
+.\supabase_migration.sql:322:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:332:CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+.\supabase_migration.sql:333:CREATE INDEX idx_activity_logs_entity_type ON activity_logs(entity_type);
+.\supabase_migration.sql:334:CREATE INDEX idx_activity_logs_created_at ON activity_logs(created_at DESC);
+.\supabase_migration.sql:339:CREATE TABLE IF NOT EXISTS cv_evaluations (
+.\supabase_migration.sql:341:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_migration.sql:353:CREATE INDEX idx_cv_evaluations_candidate_id ON cv_evaluations(candidate_id);
+.\supabase_migration.sql:354:CREATE INDEX idx_cv_evaluations_evaluated_at ON cv_evaluations(evaluated_at DESC);
+.\supabase_migration.sql:361:ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:362:ALTER TABLE candidate_profiles ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:363:ALTER TABLE recruiter_profiles ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:364:ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:365:ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:366:ALTER TABLE portfolio_items ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:367:ALTER TABLE saved_jobs ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:368:ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:371:ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:372:ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:373:ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:374:ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+.\supabase_migration.sql:379:-- PROFILES POLICIES
+.\supabase_migration.sql:382:-- Users can view all profiles (public info)
+.\supabase_migration.sql:383:CREATE POLICY "profiles_select_all" ON profiles
+.\supabase_migration.sql:387:CREATE POLICY "profiles_update_own" ON profiles
+.\supabase_migration.sql:392:CREATE POLICY "profiles_insert_own" ON profiles
+.\supabase_migration.sql:396:-- CANDIDATE PROFILES POLICIES
+.\supabase_migration.sql:399:-- Candidates and recruiters can view all candidate profiles
+.\supabase_migration.sql:400:CREATE POLICY "candidate_profiles_select_all" ON candidate_profiles
+.\supabase_migration.sql:404:CREATE POLICY "candidate_profiles_insert_own" ON candidate_profiles
+.\supabase_migration.sql:406:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\supabase_migration.sql:410:CREATE POLICY "candidate_profiles_update_own" ON candidate_profiles
+.\supabase_migration.sql:412:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\supabase_migration.sql:414:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\supabase_migration.sql:418:-- RECRUITER PROFILES POLICIES
+.\supabase_migration.sql:421:-- Recruiters can view all recruiter profiles
+.\supabase_migration.sql:422:CREATE POLICY "recruiter_profiles_select_all" ON recruiter_profiles
+.\supabase_migration.sql:426:CREATE POLICY "recruiter_profiles_update_own" ON recruiter_profiles
+.\supabase_migration.sql:428:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\supabase_migration.sql:430:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\supabase_migration.sql:434:-- JOBS POLICIES
+.\supabase_migration.sql:437:-- Anyone can view published jobs
+.\supabase_migration.sql:438:CREATE POLICY "jobs_select_published" ON jobs
+.\supabase_migration.sql:442:CREATE POLICY "jobs_select_own_draft" ON jobs
+.\supabase_migration.sql:447:-- Recruiters can insert their own jobs
+.\supabase_migration.sql:448:CREATE POLICY "jobs_insert_own" ON jobs
+.\supabase_migration.sql:453:-- Recruiters can update their own jobs
+.\supabase_migration.sql:454:CREATE POLICY "jobs_update_own" ON jobs
+.\supabase_migration.sql:462:-- APPLICATIONS POLICIES
+.\supabase_migration.sql:465:-- Candidates can view their own applications
+.\supabase_migration.sql:466:CREATE POLICY "applications_select_own" ON applications
+.\supabase_migration.sql:469:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:472:-- Candidates can insert applications
+.\supabase_migration.sql:473:CREATE POLICY "applications_insert_own" ON applications
+.\supabase_migration.sql:478:-- Candidates can update their own applications (withdraw)
+.\supabase_migration.sql:479:CREATE POLICY "applications_update_own" ON applications
+.\supabase_migration.sql:486:-- Recruiters can update applications for their jobs
+.\supabase_migration.sql:487:CREATE POLICY "applications_update_recruiter" ON applications
+.\supabase_migration.sql:489:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:491:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:495:-- PORTFOLIO ITEMS POLICIES
+.\supabase_migration.sql:498:-- Anyone can view portfolio items
+.\supabase_migration.sql:499:CREATE POLICY "portfolio_items_select_all" ON portfolio_items
+.\supabase_migration.sql:502:-- Users can manage their own portfolio items
+.\supabase_migration.sql:503:CREATE POLICY "portfolio_items_manage_own" ON portfolio_items
+.\supabase_migration.sql:511:-- SAVED JOBS POLICIES
+.\supabase_migration.sql:514:-- Users can view and manage their own saved jobs
+.\supabase_migration.sql:515:CREATE POLICY "saved_jobs_manage_own" ON saved_jobs
+.\supabase_migration.sql:523:-- ASSESSMENTS POLICIES
+.\supabase_migration.sql:526:-- Anyone can view assessments
+.\supabase_migration.sql:527:CREATE POLICY "assessments_select_all" ON assessments
+.\supabase_migration.sql:530:-- Recruiters can manage their own assessments
+.\supabase_migration.sql:531:CREATE POLICY "assessments_manage_own" ON assessments
+.\supabase_migration.sql:546:    assessment_id IN (SELECT id FROM assessments WHERE created_by = auth.uid()::uuid)
+.\supabase_migration.sql:571:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:580:-- Recruiters can update submissions for their jobs
+.\supabase_migration.sql:583:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:585:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_migration.sql:589:-- SUBSCRIPTIONS POLICIES
+.\supabase_migration.sql:593:CREATE POLICY "subscriptions_select_own" ON subscriptions
+.\supabase_migration.sql:599:CREATE POLICY "subscriptions_insert_own" ON subscriptions
+.\supabase_migration.sql:605:CREATE POLICY "subscriptions_update_own" ON subscriptions
+.\supabase_migration.sql:613:-- NOTIFICATIONS POLICIES
+.\supabase_migration.sql:616:-- Users can view and manage their own notifications
+.\supabase_migration.sql:617:CREATE POLICY "notifications_manage_own" ON notifications
+.\supabase_migration.sql:625:-- CONVERSATIONS & MESSAGES POLICIES
+.\supabase_migration.sql:628:-- Users can view their own conversations
+.\supabase_migration.sql:629:CREATE POLICY "conversations_select_own" ON conversations
+.\supabase_migration.sql:634:-- Users can insert conversations
+.\supabase_migration.sql:635:CREATE POLICY "conversations_insert_own" ON conversations
+.\supabase_migration.sql:640:-- Users can view messages in their conversations
+.\supabase_migration.sql:641:CREATE POLICY "messages_select_own" ON messages
+.\supabase_migration.sql:644:      SELECT id FROM conversations 
+.\supabase_migration.sql:649:-- Users can insert messages to their conversations
+.\supabase_migration.sql:650:CREATE POLICY "messages_insert_own" ON messages
+.\supabase_migration.sql:654:      SELECT id FROM conversations 
+.\supabase_migration.sql:705:CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+.\supabase_migration.sql:708:CREATE TRIGGER update_candidate_profiles_updated_at BEFORE UPDATE ON candidate_profiles
+.\supabase_migration.sql:711:CREATE TRIGGER update_recruiter_profiles_updated_at BEFORE UPDATE ON recruiter_profiles
+.\supabase_migration.sql:714:CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON jobs
+.\supabase_migration.sql:717:CREATE TRIGGER update_applications_updated_at BEFORE UPDATE ON applications
+.\supabase_migration.sql:720:CREATE TRIGGER update_portfolio_items_updated_at BEFORE UPDATE ON portfolio_items
+.\supabase_migration.sql:723:CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON assessments
+.\supabase_migration.sql:726:CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions
+.\supabase_migration.sql:729:CREATE TRIGGER update_notifications_updated_at BEFORE UPDATE ON notifications
+.\supabase_migration.sql:732:CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
+.\supabase_migration.sql:744:-- INSERT INTO profiles (auth_user_id, email, full_name, role, company_name)
+.\supabase_migration.sql:754:-- INSERT INTO profiles (auth_user_id, email, full_name, role)
+.\supabase_quick_audit.sql:8:    -- profiles
+.\supabase_quick_audit.sql:9:    ('profiles', 'id'), ('profiles', 'auth_user_id'), ('profiles', 'email'),
+.\supabase_quick_audit.sql:10:    ('profiles', 'full_name'), ('profiles', 'role'), ('profiles', 'avatar_url'),
+.\supabase_quick_audit.sql:11:    ('profiles', 'bio'), ('profiles', 'phone'), ('profiles', 'location'),
+.\supabase_quick_audit.sql:12:    ('profiles', 'timezone'), ('profiles', 'company_name'),
+.\supabase_quick_audit.sql:13:    ('profiles', 'is_verified'), ('profiles', 'created_at'),
+.\supabase_quick_audit.sql:14:    ('profiles', 'updated_at'), ('profiles', 'date_of_birth'),
+.\supabase_quick_audit.sql:16:    -- candidate_profiles
+.\supabase_quick_audit.sql:17:    ('candidate_profiles', 'id'), ('candidate_profiles', 'user_id'),
+.\supabase_quick_audit.sql:18:    ('candidate_profiles', 'full_name'), ('candidate_profiles', 'phone'),
+.\supabase_quick_audit.sql:19:    ('candidate_profiles', 'location'), ('candidate_profiles', 'bio'),
+.\supabase_quick_audit.sql:20:    ('candidate_profiles', 'date_of_birth'), ('candidate_profiles', 'headline'),
+.\supabase_quick_audit.sql:21:    ('candidate_profiles', 'skills'), ('candidate_profiles', 'years_of_experience'),
+.\supabase_quick_audit.sql:22:    ('candidate_profiles', 'experience_level'),
+.\supabase_quick_audit.sql:23:    ('candidate_profiles', 'experience_summary'),
+.\supabase_quick_audit.sql:24:    ('candidate_profiles', 'education'), ('candidate_profiles', 'certifications'),
+.\supabase_quick_audit.sql:25:    ('candidate_profiles', 'languages'), ('candidate_profiles', 'previous_companies'),
+.\supabase_quick_audit.sql:26:    ('candidate_profiles', 'achievements'), ('candidate_profiles', 'resume_url'),
+.\supabase_quick_audit.sql:27:    ('candidate_profiles', 'portfolio_url'), ('candidate_profiles', 'github_url'),
+.\supabase_quick_audit.sql:28:    ('candidate_profiles', 'linkedin_url'),
+.\supabase_quick_audit.sql:29:    ('candidate_profiles', 'preferred_work_type'),
+.\supabase_quick_audit.sql:30:    ('candidate_profiles', 'preferred_job_type'),
+.\supabase_quick_audit.sql:31:    ('candidate_profiles', 'availability'), ('candidate_profiles', 'salary_min'),
+.\supabase_quick_audit.sql:32:    ('candidate_profiles', 'salary_max'), ('candidate_profiles', 'salary_currency'),
+.\supabase_quick_audit.sql:33:    ('candidate_profiles', 'timezone'), ('candidate_profiles', 'response_rate'),
+.\supabase_quick_audit.sql:34:    ('candidate_profiles', 'response_time'),
+.\supabase_quick_audit.sql:35:    ('candidate_profiles', 'profile_completeness'),
+.\supabase_quick_audit.sql:36:    ('candidate_profiles', 'profile_completed'),
+.\supabase_quick_audit.sql:37:    ('candidate_profiles', 'current_location'), ('candidate_profiles', 'country'),
+.\supabase_quick_audit.sql:38:    ('candidate_profiles', 'state'), ('candidate_profiles', 'city'),
+.\supabase_quick_audit.sql:39:    ('candidate_profiles', 'total_experience'),
+.\supabase_quick_audit.sql:40:    ('candidate_profiles', 'current_company'),
+.\supabase_quick_audit.sql:41:    ('candidate_profiles', 'current_designation'),
+.\supabase_quick_audit.sql:42:    ('candidate_profiles', 'employment_status'),
+.\supabase_quick_audit.sql:43:    ('candidate_profiles', 'notice_period'),
+.\supabase_quick_audit.sql:44:    ('candidate_profiles', 'preferred_locations'),
+.\supabase_quick_audit.sql:45:    ('candidate_profiles', 'employment_type'), ('candidate_profiles', 'work_mode'),
+.\supabase_quick_audit.sql:46:    ('candidate_profiles', 'expected_salary'), ('candidate_profiles', 'industry'),
+.\supabase_quick_audit.sql:47:    ('candidate_profiles', 'preferred_roles'), ('candidate_profiles', 'career_level'),
+.\supabase_quick_audit.sql:48:    ('candidate_profiles', 'work_authorization'),
+.\supabase_quick_audit.sql:49:    ('candidate_profiles', 'willing_to_relocate'),
+.\supabase_quick_audit.sql:50:    ('candidate_profiles', 'available_from'),
+.\supabase_quick_audit.sql:51:    ('candidate_profiles', 'profile_last_updated'),
+.\supabase_quick_audit.sql:52:    ('candidate_profiles', 'profile_views'),
+.\supabase_quick_audit.sql:53:    ('candidate_profiles', 'email_verified'), ('candidate_profiles', 'phone_verified'),
+.\supabase_quick_audit.sql:54:    ('candidate_profiles', 'resume_verified'),
+.\supabase_quick_audit.sql:55:    ('candidate_profiles', 'created_at'), ('candidate_profiles', 'updated_at'),
+.\supabase_quick_audit.sql:57:    -- applications
+.\supabase_quick_audit.sql:58:    ('applications', 'id'), ('applications', 'job_id'),
+.\supabase_quick_audit.sql:59:    ('applications', 'candidate_id'), ('applications', 'cover_letter'),
+.\supabase_quick_audit.sql:60:    ('applications', 'cv_url'), ('applications', 'cv_file_name'),
+.\supabase_quick_audit.sql:61:    ('applications', 'status'), ('applications', 'match_score'),
+.\supabase_quick_audit.sql:62:    ('applications', 'notes'), ('applications', 'created_at'),
+.\supabase_quick_audit.sql:63:    ('applications', 'updated_at'), ('applications', 'submitted_at'),
+.\supabase_quick_audit.sql:64:    ('applications', 'recruiter_id'),
+.\supabase_quick_audit.sql:66:    -- jobs
+.\supabase_quick_audit.sql:67:    ('jobs', 'id'), ('jobs', 'recruiter_id'), ('jobs', 'title'),
+.\supabase_quick_audit.sql:68:    ('jobs', 'description'), ('jobs', 'skills'), ('jobs', 'requirements'),
+.\supabase_quick_audit.sql:69:    ('jobs', 'experience_level'), ('jobs', 'status'),
+.\supabase_quick_audit.sql:70:    ('jobs', 'job_type'), ('jobs', 'has_project'),
+.\supabase_quick_audit.sql:71:    ('jobs', 'applications_count'), ('jobs', 'created_at'),
+.\supabase_quick_audit.sql:73:    -- portfolio_items
+.\supabase_quick_audit.sql:74:    ('portfolio_items', 'id'), ('portfolio_items', 'user_id'),
+.\supabase_quick_audit.sql:75:    ('portfolio_items', 'title'), ('portfolio_items', 'project_url'),
+.\supabase_quick_audit.sql:76:    ('portfolio_items', 'live_url'), ('portfolio_items', 'github_url'),
+.\supabase_quick_audit.sql:78:    -- notifications
+.\supabase_quick_audit.sql:79:    ('notifications', 'id'), ('notifications', 'user_id'),
+.\supabase_quick_audit.sql:80:    ('notifications', 'type'), ('notifications', 'title'),
+.\supabase_quick_audit.sql:81:    ('notifications', 'message'), ('notifications', 'data'),
+.\supabase_quick_audit.sql:82:    ('notifications', 'read'), ('notifications', 'created_at'),
+.\supabase_quick_audit.sql:98:    -- recruiter_profiles
+.\supabase_quick_audit.sql:99:    ('recruiter_profiles', 'id'), ('recruiter_profiles', 'user_id'),
+.\supabase_quick_audit.sql:100:    ('recruiter_profiles', 'company_name'), ('recruiter_profiles', 'created_at'),
+.\supabase_quick_audit.sql:102:    -- subscriptions
+.\supabase_quick_audit.sql:103:    ('subscriptions', 'id'), ('subscriptions', 'user_id'),
+.\supabase_quick_audit.sql:104:    ('subscriptions', 'plan'), ('subscriptions', 'status'),
+.\supabase_quick_audit.sql:106:    -- saved_jobs
+.\supabase_quick_audit.sql:107:    ('saved_jobs', 'id'), ('saved_jobs', 'candidate_id'),
+.\supabase_quick_audit.sql:108:    ('saved_jobs', 'job_id'), ('saved_jobs', 'created_at')
+.\supabase_quick_audit.sql:130:  'profiles' AS table_name, COUNT(*) AS rows FROM public.profiles
+.\supabase_quick_audit.sql:131:UNION ALL SELECT 'candidate_profiles', COUNT(*) FROM public.candidate_profiles
+.\supabase_quick_audit.sql:132:UNION ALL SELECT 'applications', COUNT(*) FROM public.applications
+.\supabase_quick_audit.sql:133:UNION ALL SELECT 'jobs', COUNT(*) FROM public.jobs
+.\supabase_quick_audit.sql:134:UNION ALL SELECT 'portfolio_items', COUNT(*) FROM public.portfolio_items
+.\supabase_quick_audit.sql:135:UNION ALL SELECT 'notifications', COUNT(*) FROM public.notifications
+.\supabase_quick_audit.sql:137:UNION ALL SELECT 'recruiter_profiles', COUNT(*) FROM public.recruiter_profiles
+.\supabase_quick_audit.sql:138:UNION ALL SELECT 'saved_jobs', COUNT(*) FROM public.saved_jobs
+.\supabase_quick_audit.sql:139:UNION ALL SELECT 'subscriptions', COUNT(*) FROM public.subscriptions
+.\supabase_normalize_full_name.sql:4:-- trigger on candidate_profiles.full_name (and profiles.full_name
+.\supabase_normalize_full_name.sql:62:-- ---------- 2. Trigger function for candidate_profiles ----------
+.\supabase_normalize_full_name.sql:71:DROP TRIGGER IF EXISTS trg_normalize_candidate_full_name ON public.candidate_profiles;
+.\supabase_normalize_full_name.sql:73:  BEFORE INSERT OR UPDATE OF full_name ON public.candidate_profiles
+.\supabase_normalize_full_name.sql:77:-- ---------- 3. Same trigger for profiles (header shows profiles.full_name) ----------
+.\supabase_normalize_full_name.sql:86:DROP TRIGGER IF EXISTS trg_normalize_profile_full_name ON public.profiles;
+.\supabase_normalize_full_name.sql:88:  BEFORE INSERT OR UPDATE OF full_name ON public.profiles
+.\supabase_normalize_full_name.sql:94:UPDATE public.candidate_profiles
+.\supabase_normalize_full_name.sql:99:UPDATE public.profiles
+.\supabase_normalize_full_name.sql:106:FROM public.candidate_profiles
+.\supabase_missing_only.sql:11:  ('profiles', 'id'), ('profiles', 'auth_user_id'), ('profiles', 'email'),
+.\supabase_missing_only.sql:12:  ('profiles', 'full_name'), ('profiles', 'role'), ('profiles', 'avatar_url'),
+.\supabase_missing_only.sql:13:  ('profiles', 'bio'), ('profiles', 'phone'), ('profiles', 'location'),
+.\supabase_missing_only.sql:14:  ('profiles', 'timezone'), ('profiles', 'company_name'),
+.\supabase_missing_only.sql:15:  ('profiles', 'is_verified'), ('profiles', 'created_at'),
+.\supabase_missing_only.sql:16:  ('profiles', 'updated_at'), ('profiles', 'date_of_birth'),
+.\supabase_missing_only.sql:18:  ('candidate_profiles', 'id'), ('candidate_profiles', 'user_id'),
+.\supabase_missing_only.sql:19:  ('candidate_profiles', 'full_name'), ('candidate_profiles', 'phone'),
+.\supabase_missing_only.sql:20:  ('candidate_profiles', 'location'), ('candidate_profiles', 'bio'),
+.\supabase_missing_only.sql:21:  ('candidate_profiles', 'date_of_birth'), ('candidate_profiles', 'headline'),
+.\supabase_missing_only.sql:22:  ('candidate_profiles', 'skills'), ('candidate_profiles', 'years_of_experience'),
+.\supabase_missing_only.sql:23:  ('candidate_profiles', 'experience_level'),
+.\supabase_missing_only.sql:24:  ('candidate_profiles', 'experience_summary'),
+.\supabase_missing_only.sql:25:  ('candidate_profiles', 'education'), ('candidate_profiles', 'certifications'),
+.\supabase_missing_only.sql:26:  ('candidate_profiles', 'languages'), ('candidate_profiles', 'previous_companies'),
+.\supabase_missing_only.sql:27:  ('candidate_profiles', 'achievements'), ('candidate_profiles', 'resume_url'),
+.\supabase_missing_only.sql:28:  ('candidate_profiles', 'portfolio_url'), ('candidate_profiles', 'github_url'),
+.\supabase_missing_only.sql:29:  ('candidate_profiles', 'linkedin_url'),
+.\supabase_missing_only.sql:30:  ('candidate_profiles', 'preferred_work_type'),
+.\supabase_missing_only.sql:31:  ('candidate_profiles', 'preferred_job_type'),
+.\supabase_missing_only.sql:32:  ('candidate_profiles', 'availability'), ('candidate_profiles', 'salary_min'),
+.\supabase_missing_only.sql:33:  ('candidate_profiles', 'salary_max'), ('candidate_profiles', 'salary_currency'),
+.\supabase_missing_only.sql:34:  ('candidate_profiles', 'timezone'), ('candidate_profiles', 'response_rate'),
+.\supabase_missing_only.sql:35:  ('candidate_profiles', 'response_time'),
+.\supabase_missing_only.sql:36:  ('candidate_profiles', 'profile_completeness'),
+.\supabase_missing_only.sql:37:  ('candidate_profiles', 'profile_completed'),
+.\supabase_missing_only.sql:38:  ('candidate_profiles', 'current_location'), ('candidate_profiles', 'country'),
+.\supabase_missing_only.sql:39:  ('candidate_profiles', 'state'), ('candidate_profiles', 'city'),
+.\supabase_missing_only.sql:40:  ('candidate_profiles', 'total_experience'),
+.\supabase_missing_only.sql:41:  ('candidate_profiles', 'current_company'),
+.\supabase_missing_only.sql:42:  ('candidate_profiles', 'current_designation'),
+.\supabase_missing_only.sql:43:  ('candidate_profiles', 'employment_status'),
+.\supabase_missing_only.sql:44:  ('candidate_profiles', 'notice_period'),
+.\supabase_missing_only.sql:45:  ('candidate_profiles', 'preferred_locations'),
+.\supabase_missing_only.sql:46:  ('candidate_profiles', 'employment_type'), ('candidate_profiles', 'work_mode'),
+.\supabase_missing_only.sql:47:  ('candidate_profiles', 'expected_salary'), ('candidate_profiles', 'industry'),
+.\supabase_missing_only.sql:48:  ('candidate_profiles', 'preferred_roles'), ('candidate_profiles', 'career_level'),
+.\supabase_missing_only.sql:49:  ('candidate_profiles', 'work_authorization'),
+.\supabase_missing_only.sql:50:  ('candidate_profiles', 'willing_to_relocate'),
+.\supabase_missing_only.sql:51:  ('candidate_profiles', 'available_from'),
+.\supabase_missing_only.sql:52:  ('candidate_profiles', 'profile_last_updated'),
+.\supabase_missing_only.sql:53:  ('candidate_profiles', 'profile_views'),
+.\supabase_missing_only.sql:54:  ('candidate_profiles', 'email_verified'), ('candidate_profiles', 'phone_verified'),
+.\supabase_missing_only.sql:55:  ('candidate_profiles', 'resume_verified'),
+.\supabase_missing_only.sql:56:  ('candidate_profiles', 'created_at'), ('candidate_profiles', 'updated_at'),
+.\supabase_missing_only.sql:58:  ('applications', 'id'), ('applications', 'job_id'),
+.\supabase_missing_only.sql:59:  ('applications', 'candidate_id'), ('applications', 'cover_letter'),
+.\supabase_missing_only.sql:60:  ('applications', 'cv_url'), ('applications', 'cv_file_name'),
+.\supabase_missing_only.sql:61:  ('applications', 'status'), ('applications', 'match_score'),
+.\supabase_missing_only.sql:62:  ('applications', 'notes'), ('applications', 'created_at'),
+.\supabase_missing_only.sql:63:  ('applications', 'updated_at'), ('applications', 'submitted_at'),
+.\supabase_missing_only.sql:64:  ('applications', 'recruiter_id'),
+.\supabase_missing_only.sql:66:  ('jobs', 'id'), ('jobs', 'recruiter_id'), ('jobs', 'title'),
+.\supabase_missing_only.sql:67:  ('jobs', 'description'), ('jobs', 'skills'), ('jobs', 'requirements'),
+.\supabase_missing_only.sql:68:  ('jobs', 'experience_level'), ('jobs', 'status'),
+.\supabase_missing_only.sql:69:  ('jobs', 'job_type'), ('jobs', 'has_project'),
+.\supabase_missing_only.sql:70:  ('jobs', 'applications_count'), ('jobs', 'created_at'),
+.\supabase_missing_only.sql:72:  ('portfolio_items', 'id'), ('portfolio_items', 'user_id'),
+.\supabase_missing_only.sql:73:  ('portfolio_items', 'title'), ('portfolio_items', 'project_url'),
+.\supabase_missing_only.sql:74:  ('portfolio_items', 'live_url'), ('portfolio_items', 'github_url'),
+.\supabase_missing_only.sql:76:  ('notifications', 'id'), ('notifications', 'user_id'),
+.\supabase_missing_only.sql:77:  ('notifications', 'type'), ('notifications', 'title'),
+.\supabase_missing_only.sql:78:  ('notifications', 'message'), ('notifications', 'data'),
+.\supabase_missing_only.sql:79:  ('notifications', 'read'), ('notifications', 'created_at'),
+.\supabase_missing_only.sql:94:  ('recruiter_profiles', 'id'), ('recruiter_profiles', 'user_id'),
+.\supabase_missing_only.sql:95:  ('recruiter_profiles', 'company_name'), ('recruiter_profiles', 'created_at'),
+.\supabase_missing_only.sql:97:  ('subscriptions', 'id'), ('subscriptions', 'user_id'),
+.\supabase_missing_only.sql:98:  ('subscriptions', 'plan'), ('subscriptions', 'status'),
+.\supabase_missing_only.sql:100:  ('saved_jobs', 'id'), ('saved_jobs', 'candidate_id'),
+.\supabase_missing_only.sql:101:  ('saved_jobs', 'job_id'), ('saved_jobs', 'created_at')
+.\career_growth_migration.sql:7:create table if not exists public.career_growth_opportunities (
+.\career_growth_migration.sql:13:  recruiter_id uuid references public.profiles(id) on delete set null,
+.\career_growth_migration.sql:14:  created_by_profile_id uuid references public.profiles(id) on delete set null,
+.\career_growth_migration.sql:53:create table if not exists public.career_growth_applications (
+.\career_growth_migration.sql:56:  candidate_profile_id uuid not null references public.profiles(id) on delete cascade,
+.\career_growth_migration.sql:64:  unique(opportunity_id, candidate_profile_id)
+.\career_growth_migration.sql:67:alter table public.career_growth_applications
+.\career_growth_migration.sql:71:create index if not exists idx_career_growth_opportunities_type_status
+.\career_growth_migration.sql:73:create index if not exists idx_career_growth_opportunities_recruiter_id
+.\career_growth_migration.sql:75:create index if not exists idx_career_growth_opportunities_created_at
+.\career_growth_migration.sql:77:create index if not exists idx_career_growth_applications_opportunity_id
+.\career_growth_migration.sql:78:  on public.career_growth_applications(opportunity_id);
+.\career_growth_migration.sql:79:create index if not exists idx_career_growth_applications_candidate_profile_id
+.\career_growth_migration.sql:80:  on public.career_growth_applications(candidate_profile_id);
+.\career_growth_migration.sql:81:create index if not exists idx_career_growth_applications_status
+.\career_growth_migration.sql:82:  on public.career_growth_applications(status);
+.\career_growth_migration.sql:85:alter table public.career_growth_applications enable row level security;
+.\career_growth_migration.sql:94:      select 1 from public.profiles p
+.\career_growth_migration.sql:99:      select 1 from public.profiles p
+.\career_growth_migration.sql:111:      select 1 from public.profiles p
+.\career_growth_migration.sql:124:      select 1 from public.profiles p
+.\career_growth_migration.sql:131:      select 1 from public.profiles p
+.\career_growth_migration.sql:143:      select 1 from public.profiles p
+.\career_growth_migration.sql:149:drop policy if exists "career_growth_applications_select_candidate_or_recruiter" on public.career_growth_applications;
+.\career_growth_migration.sql:150:create policy "career_growth_applications_select_candidate_or_recruiter"
+.\career_growth_migration.sql:151:  on public.career_growth_applications
+.\career_growth_migration.sql:155:      select 1 from public.profiles p
+.\career_growth_migration.sql:157:      and p.id = career_growth_applications.candidate_profile_id
+.\career_growth_migration.sql:162:      join public.profiles p on p.id = o.recruiter_id
+.\career_growth_migration.sql:163:      where o.id = career_growth_applications.opportunity_id
+.\career_growth_migration.sql:168:drop policy if exists "career_growth_applications_insert_candidate_own" on public.career_growth_applications;
+.\career_growth_migration.sql:169:create policy "career_growth_applications_insert_candidate_own"
+.\career_growth_migration.sql:170:  on public.career_growth_applications
+.\career_growth_migration.sql:174:      select 1 from public.profiles p
+.\career_growth_migration.sql:177:      and p.id = career_growth_applications.candidate_profile_id
+.\career_growth_migration.sql:181:drop policy if exists "career_growth_applications_update_candidate_or_recruiter" on public.career_growth_applications;
+.\career_growth_migration.sql:182:create policy "career_growth_applications_update_candidate_or_recruiter"
+.\career_growth_migration.sql:183:  on public.career_growth_applications
+.\career_growth_migration.sql:187:      select 1 from public.profiles p
+.\career_growth_migration.sql:189:      and p.id = career_growth_applications.candidate_profile_id
+.\career_growth_migration.sql:194:      join public.profiles p on p.id = o.recruiter_id
+.\career_growth_migration.sql:195:      where o.id = career_growth_applications.opportunity_id
+.\career_growth_migration.sql:201:      select 1 from public.profiles p
+.\career_growth_migration.sql:203:      and p.id = career_growth_applications.candidate_profile_id
+.\career_growth_migration.sql:208:      join public.profiles p on p.id = o.recruiter_id
+.\career_growth_migration.sql:209:      where o.id = career_growth_applications.opportunity_id
+.\career_growth_migration.sql:215:grant select, insert, update on public.career_growth_applications to authenticated;
+.\career_growth_migration.sql:222:drop trigger if exists update_career_growth_applications_updated_at on public.career_growth_applications;
+.\career_growth_migration.sql:223:create trigger update_career_growth_applications_updated_at
+.\career_growth_migration.sql:224:  before update on public.career_growth_applications
+.\career_growth_migration.sql:232:    ('experience_builder', 'Frontend Product Experience Sprint', 'Build a production-ready customer dashboard feature with review from an engineering lead.', 'HireVify Partner Network', array['React','TypeScript','UI Implementation'], '2 weeks', 'Entry Level', 'Remote', 'remote', array['Basic React knowledge','Git workflow familiarity'], array['Portfolio-ready work sample','Professional reference consideration'], '{"commitment":"12-15 hours/week","category":"Frontend Development"}'::jsonb),
+.\career_growth_migration.sql:233:    ('experience_builder', 'Data Insights Portfolio Project', 'Analyze product usage data and prepare a short findings report for a real business case.', 'Growth Analytics Partner', array['SQL','Data Analysis','Reporting'], '1 week', 'Intermediate', 'Remote', 'remote', array['SQL basics','Comfort with spreadsheets or notebooks'], array['Business analytics experience','Review feedback'], '{"commitment":"8-10 hours/week","category":"Data Analysis"}'::jsonb),
+.\career_growth_migration.sql:236:    ('mentorship', 'Frontend Career Mentorship', 'Four guided sessions focused on portfolio review, interview preparation, and growth planning.', 'HireVify Mentors', array['React','Career Growth','Interview Prep'], '4 sessions', 'All Levels', 'Remote', 'remote', array['Bring current resume or portfolio'], array['Personalized feedback','Action plan'], '{"mentor_title":"Senior Frontend Engineer","session_format":"1-on-1 Video","price_per_session":"0"}'::jsonb),
+.\career_growth_migration.sql:237:    ('mentorship', 'Career Switch Strategy Sessions', 'Mentor-led guidance for candidates moving into product, design, analytics, or software roles.', 'HireVify Mentors', array['Career Transition','Portfolio','Planning'], '3 sessions', 'All Levels', 'Remote', 'remote', array['Define target role before first session'], array['Transition roadmap','Accountability checkpoints'], '{"mentor_title":"Career Transition Coach","session_format":"1-on-1 Video","price_per_session":"0"}'::jsonb),
+.\career_growth_migration.sql:238:    ('career_switch', 'Operations to Product Analyst Track', 'A structured path covering product metrics, SQL basics, user research, and portfolio projects.', 'HireVify Learning', array['Product Analytics','SQL','User Research'], '8 weeks', 'Beginner', 'Remote', 'remote', array['2-4 hours per week'], array['Structured milestones','Portfolio project prompts'], '{"modules":"8","projects":"2","from_careers":["Operations","Customer Support"],"to_careers":["Product Analyst"]}'::jsonb),
+.\apply_flow_migration.sql:10:-- 1. APPLICATIONS: CV upload + cover letter + state machine
+.\apply_flow_migration.sql:12:ALTER TABLE applications
+.\apply_flow_migration.sql:15:ALTER TABLE applications
+.\apply_flow_migration.sql:18:ALTER TABLE applications
+.\apply_flow_migration.sql:28:    SELECT 1 FROM pg_constraint WHERE conname = 'applications_status_check'
+.\apply_flow_migration.sql:30:    ALTER TABLE applications DROP CONSTRAINT applications_status_check;
+.\apply_flow_migration.sql:34:ALTER TABLE applications
+.\apply_flow_migration.sql:35:  ADD CONSTRAINT applications_status_check CHECK (
+.\apply_flow_migration.sql:42:CREATE INDEX IF NOT EXISTS idx_applications_cv_url ON applications(cv_url);
+.\apply_flow_migration.sql:67:  ADD COLUMN IF NOT EXISTS project_level_passed_by UUID REFERENCES profiles(id) ON DELETE SET NULL;
+.\apply_flow_migration.sql:72:CREATE INDEX IF NOT EXISTS idx_jpa_project_level_passed
+.\apply_flow_migration.sql:92:-- recruiters can read for their jobs. The application-files bucket is
+.\apply_flow_migration.sql:108:        SELECT 1 FROM jobs j
+.\apply_flow_migration.sql:130:-- 4. RELAX jobs RLS so candidates can read project fields on jobs they're
+.\apply_flow_migration.sql:134:-- (No DDL needed — the existing "jobs_select_published" policy is enough
+.\apply_flow_migration.sql:135:-- since job_project_assignments points at jobs by id and the candidate can
+.\apply_flow_migration.sql:136:-- already read the jobs row from the join.)
+.\apply_flow_migration.sql:139:-- 5. NOTIFICATIONS: allow the new event types
+.\apply_flow_migration.sql:141:-- The original CHECK constraint on notifications.type is restrictive.
+.\apply_flow_migration.sql:146:    SELECT 1 FROM pg_constraint WHERE conname = 'notifications_type_check'
+.\apply_flow_migration.sql:148:    ALTER TABLE notifications DROP CONSTRAINT notifications_type_check;
+.\apply_flow_migration.sql:152:ALTER TABLE notifications
+.\apply_flow_migration.sql:153:  ADD CONSTRAINT notifications_type_check CHECK (
+.\apply_flow_migration.sql:158:      'skill_assessment', 'project_assigned', 'project_submitted',
+.\apply_flow_migration.sql:180:--   * applications.cv_url stores the file path
+.\supabase_jobs_projects_unification.sql:5:--   * The "jobs" table is the single source of truth for BOTH jobs and
+.\supabase_jobs_projects_unification.sql:10:--       1. Adds the project_* columns to jobs (idempotent ADD COLUMN IF NOT EXISTS)
+.\supabase_jobs_projects_unification.sql:13:--          jobs with a project attached
+.\supabase_jobs_projects_unification.sql:19:-- 1. ADD PROJECT COLUMNS TO jobs (idempotent)
+.\supabase_jobs_projects_unification.sql:21:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS has_project               BOOLEAN     DEFAULT FALSE;
+.\supabase_jobs_projects_unification.sql:22:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_title              TEXT;
+.\supabase_jobs_projects_unification.sql:23:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_description        TEXT;
+.\supabase_jobs_projects_unification.sql:24:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_skills             TEXT[]      DEFAULT '{}';
+.\supabase_jobs_projects_unification.sql:25:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_timeline           TEXT;
+.\supabase_jobs_projects_unification.sql:26:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_budget_range       TEXT;
+.\supabase_jobs_projects_unification.sql:27:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_deliverables       TEXT[]      DEFAULT '{}';
+.\supabase_jobs_projects_unification.sql:28:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_name                TEXT;
+.\supabase_jobs_projects_unification.sql:30:-- Helpful indexes for the candidate-side Find Jobs page
+.\supabase_jobs_projects_unification.sql:31:CREATE INDEX IF NOT EXISTS idx_jobs_has_project     ON jobs(has_project);
+.\supabase_jobs_projects_unification.sql:32:CREATE INDEX IF NOT EXISTS idx_jobs_project_title   ON jobs(project_title);
+.\supabase_jobs_projects_unification.sql:33:CREATE INDEX IF NOT EXISTS idx_jobs_status_created  ON jobs(status, created_at DESC);
+.\supabase_jobs_projects_unification.sql:38:CREATE TABLE IF NOT EXISTS job_project_assignments (
+.\supabase_jobs_projects_unification.sql:40:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\supabase_jobs_projects_unification.sql:41:  project_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\supabase_jobs_projects_unification.sql:42:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_jobs_projects_unification.sql:43:  recruiter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\supabase_jobs_projects_unification.sql:44:  application_id UUID REFERENCES applications(id) ON DELETE SET NULL,
+.\supabase_jobs_projects_unification.sql:65:  UNIQUE(job_id, project_id, candidate_id)
+.\supabase_jobs_projects_unification.sql:68:CREATE INDEX IF NOT EXISTS idx_jpa_job_id        ON job_project_assignments(job_id);
+.\supabase_jobs_projects_unification.sql:69:CREATE INDEX IF NOT EXISTS idx_jpa_project_id    ON job_project_assignments(project_id);
+.\supabase_jobs_projects_unification.sql:70:CREATE INDEX IF NOT EXISTS idx_jpa_candidate_id  ON job_project_assignments(candidate_id);
+.\supabase_jobs_projects_unification.sql:71:CREATE INDEX IF NOT EXISTS idx_jpa_recruiter_id  ON job_project_assignments(recruiter_id);
+.\supabase_jobs_projects_unification.sql:72:CREATE INDEX IF NOT EXISTS idx_jpa_application   ON job_project_assignments(application_id);
+.\supabase_jobs_projects_unification.sql:73:CREATE INDEX IF NOT EXISTS idx_jpa_status        ON job_project_assignments(assignment_status);
+.\supabase_jobs_projects_unification.sql:74:CREATE INDEX IF NOT EXISTS idx_jpa_created_at    ON job_project_assignments(created_at DESC);
+.\supabase_jobs_projects_unification.sql:83:-- Recruiters can view assignments for their jobs
+.\supabase_jobs_projects_unification.sql:88:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_jobs_projects_unification.sql:91:-- Recruiters can insert assignments for their jobs
+.\supabase_jobs_projects_unification.sql:96:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_jobs_projects_unification.sql:105:-- Recruiters can update assignments for their jobs
+.\supabase_jobs_projects_unification.sql:109:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_jobs_projects_unification.sql:111:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\supabase_jobs_projects_unification.sql:121:-- 3. MIGRATE EXISTING PROJECT-ONLY ROWS → JOBS WITH PROJECT ATTACHED
+.\supabase_jobs_projects_unification.sql:128:UPDATE jobs
+.\supabase_jobs_projects_unification.sql:135:    (SELECT unnest(requirements) FROM jobs j2 WHERE j2.id = jobs.id
+.\supabase_jobs_projects_unification.sql:162:-- 4. CONFIRM CANDIDATES CAN READ PROJECT FIELDS ON jobs
+.\supabase_jobs_projects_unification.sql:164:-- The existing policy "jobs_select_published" already lets anyone read
+.\supabase_jobs_projects_unification.sql:171:--   DROP POLICY "jobs_select_published" ON jobs;
+.\supabase_jobs_projects_unification.sql:172:--   CREATE POLICY "jobs_select_published" ON jobs
+.\supabase_jobs_projects_unification.sql:178:--           SELECT candidate_id FROM applications
+.\supabase_jobs_projects_unification.sql:179:--           WHERE job_id = jobs.id
+.\supabase_jobs_projects_unification.sql:191:UPDATE jobs
+.\supabase_jobs_projects_unification.sql:200:-- still post new jobs, new standalone projects, or link new projects to
+.\supabase_jobs_projects_unification.sql:201:-- existing jobs via the "Post Project Only" → "Link to an existing job"
+.\job_project_attachment_migration.sql:9:--     bucket; metadata is stored on the `jobs` row.
+.\job_project_attachment_migration.sql:14:-- 1. Add attachment columns to jobs
+.\job_project_attachment_migration.sql:16:ALTER TABLE jobs
+.\job_project_attachment_migration.sql:61:      SELECT id::text FROM profiles WHERE auth_user_id = auth.uid()
+.\job_project_attachment_migration.sql:71:      SELECT id::text FROM profiles WHERE auth_user_id = auth.uid()
+.\job_project_attachment_migration.sql:81:      SELECT id::text FROM profiles WHERE auth_user_id = auth.uid()
+.\job_project_attachment_migration.sql:86:-- 4. Ensure RLS allows reading the new attachment columns on jobs
+.\job_project_attachment_migration.sql:88:-- The existing "jobs_select_published" / "jobs_select_recruiter_own" policies
+.\job_project_attachment_migration.sql:89:-- already cover SELECT on all jobs columns, so no change is needed.
+.\job_project_attachment_migration.sql:98:-- the URL/name/size/type are stored on the jobs row.
+.\supabase_candidate_profile_recruiter_fields_migration.sql:1:-- Adds recruiter-friendly professional profile fields to candidate_profiles.
+.\supabase_candidate_profile_recruiter_fields_migration.sql:2:-- This project stores candidate details in candidate_profiles rather than a candidates table.
+.\supabase_candidate_profile_recruiter_fields_migration.sql:4:ALTER TABLE public.candidate_profiles
+.\supabase_candidate_profile_recruiter_fields_migration.sql:32:ALTER TABLE public.candidate_profiles
+.\supabase_candidate_profile_recruiter_fields_migration.sql:34:  ADD COLUMN IF NOT EXISTS portfolio_url TEXT,
+.\supabase_candidate_profile_recruiter_fields_migration.sql:42:    WHERE conname = 'candidate_profiles_total_experience_non_negative'
+.\supabase_candidate_profile_recruiter_fields_migration.sql:44:    ALTER TABLE public.candidate_profiles
+.\supabase_candidate_profile_recruiter_fields_migration.sql:45:      ADD CONSTRAINT candidate_profiles_total_experience_non_negative
+.\supabase_candidate_profile_recruiter_fields_migration.sql:51:    WHERE conname = 'candidate_profiles_profile_views_non_negative'
+.\supabase_candidate_profile_recruiter_fields_migration.sql:53:    ALTER TABLE public.candidate_profiles
+.\supabase_candidate_profile_recruiter_fields_migration.sql:54:      ADD CONSTRAINT candidate_profiles_profile_views_non_negative
+.\supabase_candidate_profile_recruiter_fields_migration.sql:59:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_current_location
+.\supabase_candidate_profile_recruiter_fields_migration.sql:60:  ON public.candidate_profiles (current_location);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:62:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_country_state_city
+.\supabase_candidate_profile_recruiter_fields_migration.sql:63:  ON public.candidate_profiles (country, state, city);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:65:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_total_experience
+.\supabase_candidate_profile_recruiter_fields_migration.sql:66:  ON public.candidate_profiles (total_experience);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:68:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_employment_status
+.\supabase_candidate_profile_recruiter_fields_migration.sql:69:  ON public.candidate_profiles (employment_status);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:71:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_work_mode
+.\supabase_candidate_profile_recruiter_fields_migration.sql:72:  ON public.candidate_profiles (work_mode);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:74:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_career_level
+.\supabase_candidate_profile_recruiter_fields_migration.sql:75:  ON public.candidate_profiles (career_level);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:77:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_preferred_roles
+.\supabase_candidate_profile_recruiter_fields_migration.sql:78:  ON public.candidate_profiles USING GIN (preferred_roles);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:80:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_preferred_locations
+.\supabase_candidate_profile_recruiter_fields_migration.sql:81:  ON public.candidate_profiles USING GIN (preferred_locations);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:83:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_languages
+.\supabase_candidate_profile_recruiter_fields_migration.sql:84:  ON public.candidate_profiles USING GIN (languages);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:86:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_profile_last_updated
+.\supabase_candidate_profile_recruiter_fields_migration.sql:87:  ON public.candidate_profiles (profile_last_updated DESC);
+.\supabase_candidate_profile_recruiter_fields_migration.sql:98:DROP TRIGGER IF EXISTS trg_candidate_profiles_last_updated ON public.candidate_profiles;
+.\supabase_candidate_profile_recruiter_fields_migration.sql:100:CREATE TRIGGER trg_candidate_profiles_last_updated
+.\supabase_candidate_profile_recruiter_fields_migration.sql:101:BEFORE UPDATE ON public.candidate_profiles
+.\supabase_candidate_profile_missing_fields.sql:2:-- Catch-all migration: adds every candidate_profiles column
+.\supabase_candidate_profile_missing_fields.sql:11:ALTER TABLE public.candidate_profiles
+.\supabase_candidate_profile_missing_fields.sql:21:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_full_name
+.\supabase_candidate_profile_missing_fields.sql:22:  ON public.candidate_profiles (full_name);
+.\supabase_candidate_profile_missing_fields.sql:24:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_experience_level
+.\supabase_candidate_profile_missing_fields.sql:25:  ON public.candidate_profiles (experience_level);
+.\supabase_candidate_profile_missing_fields.sql:27:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_profile_completed
+.\supabase_candidate_profile_missing_fields.sql:28:  ON public.candidate_profiles (profile_completed);
+.\supabase_candidate_profile_missing_fields.sql:30:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_preferred_job_type
+.\supabase_candidate_profile_missing_fields.sql:31:  ON public.candidate_profiles USING GIN (preferred_job_type);
+.\supabase_candidate_profile_missing_fields.sql:33:-- Backfill full_name / phone / location from the linked profiles row
+.\supabase_candidate_profile_missing_fields.sql:34:-- so existing candidate_profiles rows aren't blank after the column is added.
+.\supabase_candidate_profile_missing_fields.sql:35:UPDATE public.candidate_profiles cp
+.\supabase_candidate_profile_missing_fields.sql:40:FROM public.profiles p
+.\add_date_of_birth_migration.sql:1:-- Add date_of_birth to candidate_profiles table
+.\add_date_of_birth_migration.sql:2:ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+.\add_date_of_birth_migration.sql:4:-- Also add to profiles table for basic info
+.\add_date_of_birth_migration.sql:5:ALTER TABLE profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+.\add_date_of_birth_migration.sql:7:-- Create index for faster lookups
+.\add_date_of_birth_migration.sql:8:CREATE INDEX IF NOT EXISTS idx_candidate_profiles_date_of_birth ON candidate_profiles(date_of_birth);
+.\supabase_full_schema_audit.sql:23:    -- profiles
+.\supabase_full_schema_audit.sql:24:    ('profiles', 'id'),
+.\supabase_full_schema_audit.sql:25:    ('profiles', 'auth_user_id'),
+.\supabase_full_schema_audit.sql:26:    ('profiles', 'email'),
+.\supabase_full_schema_audit.sql:27:    ('profiles', 'full_name'),
+.\supabase_full_schema_audit.sql:28:    ('profiles', 'role'),
+.\supabase_full_schema_audit.sql:29:    ('profiles', 'avatar_url'),
+.\supabase_full_schema_audit.sql:30:    ('profiles', 'bio'),
+.\supabase_full_schema_audit.sql:31:    ('profiles', 'phone'),
+.\supabase_full_schema_audit.sql:32:    ('profiles', 'location'),
+.\supabase_full_schema_audit.sql:33:    ('profiles', 'timezone'),
+.\supabase_full_schema_audit.sql:34:    ('profiles', 'company_name'),
+.\supabase_full_schema_audit.sql:35:    ('profiles', 'is_verified'),
+.\supabase_full_schema_audit.sql:36:    ('profiles', 'created_at'),
+.\supabase_full_schema_audit.sql:37:    ('profiles', 'updated_at'),
+.\supabase_full_schema_audit.sql:38:    ('profiles', 'date_of_birth'),
+.\supabase_full_schema_audit.sql:40:    -- candidate_profiles
+.\supabase_full_schema_audit.sql:41:    ('candidate_profiles', 'id'),
+.\supabase_full_schema_audit.sql:42:    ('candidate_profiles', 'user_id'),
+.\supabase_full_schema_audit.sql:43:    ('candidate_profiles', 'full_name'),
+.\supabase_full_schema_audit.sql:44:    ('candidate_profiles', 'phone'),
+.\supabase_full_schema_audit.sql:45:    ('candidate_profiles', 'location'),
+.\supabase_full_schema_audit.sql:46:    ('candidate_profiles', 'bio'),
+.\supabase_full_schema_audit.sql:47:    ('candidate_profiles', 'date_of_birth'),
+.\supabase_full_schema_audit.sql:48:    ('candidate_profiles', 'headline'),
+.\supabase_full_schema_audit.sql:49:    ('candidate_profiles', 'skills'),
+.\supabase_full_schema_audit.sql:50:    ('candidate_profiles', 'years_of_experience'),
+.\supabase_full_schema_audit.sql:51:    ('candidate_profiles', 'experience_level'),
+.\supabase_full_schema_audit.sql:52:    ('candidate_profiles', 'experience_summary'),
+.\supabase_full_schema_audit.sql:53:    ('candidate_profiles', 'education'),
+.\supabase_full_schema_audit.sql:54:    ('candidate_profiles', 'certifications'),
+.\supabase_full_schema_audit.sql:55:    ('candidate_profiles', 'languages'),
+.\supabase_full_schema_audit.sql:56:    ('candidate_profiles', 'previous_companies'),
+.\supabase_full_schema_audit.sql:57:    ('candidate_profiles', 'achievements'),
+.\supabase_full_schema_audit.sql:58:    ('candidate_profiles', 'resume_url'),
+.\supabase_full_schema_audit.sql:59:    ('candidate_profiles', 'portfolio_url'),
+.\supabase_full_schema_audit.sql:60:    ('candidate_profiles', 'github_url'),
+.\supabase_full_schema_audit.sql:61:    ('candidate_profiles', 'linkedin_url'),
+.\supabase_full_schema_audit.sql:62:    ('candidate_profiles', 'preferred_work_type'),
+.\supabase_full_schema_audit.sql:63:    ('candidate_profiles', 'preferred_job_type'),
+.\supabase_full_schema_audit.sql:64:    ('candidate_profiles', 'availability'),
+.\supabase_full_schema_audit.sql:65:    ('candidate_profiles', 'salary_min'),
+.\supabase_full_schema_audit.sql:66:    ('candidate_profiles', 'salary_max'),
+.\supabase_full_schema_audit.sql:67:    ('candidate_profiles', 'salary_currency'),
+.\supabase_full_schema_audit.sql:68:    ('candidate_profiles', 'timezone'),
+.\supabase_full_schema_audit.sql:69:    ('candidate_profiles', 'response_rate'),
+.\supabase_full_schema_audit.sql:70:    ('candidate_profiles', 'response_time'),
+.\supabase_full_schema_audit.sql:71:    ('candidate_profiles', 'profile_completeness'),
+.\supabase_full_schema_audit.sql:72:    ('candidate_profiles', 'profile_completed'),
+.\supabase_full_schema_audit.sql:73:    ('candidate_profiles', 'current_location'),
+.\supabase_full_schema_audit.sql:74:    ('candidate_profiles', 'country'),
+.\supabase_full_schema_audit.sql:75:    ('candidate_profiles', 'state'),
+.\supabase_full_schema_audit.sql:76:    ('candidate_profiles', 'city'),
+.\supabase_full_schema_audit.sql:77:    ('candidate_profiles', 'total_experience'),
+.\supabase_full_schema_audit.sql:78:    ('candidate_profiles', 'current_company'),
+.\supabase_full_schema_audit.sql:79:    ('candidate_profiles', 'current_designation'),
+.\supabase_full_schema_audit.sql:80:    ('candidate_profiles', 'employment_status'),
+.\supabase_full_schema_audit.sql:81:    ('candidate_profiles', 'notice_period'),
+.\supabase_full_schema_audit.sql:82:    ('candidate_profiles', 'preferred_locations'),
+.\supabase_full_schema_audit.sql:83:    ('candidate_profiles', 'employment_type'),
+.\supabase_full_schema_audit.sql:84:    ('candidate_profiles', 'work_mode'),
+.\supabase_full_schema_audit.sql:85:    ('candidate_profiles', 'expected_salary'),
+.\supabase_full_schema_audit.sql:86:    ('candidate_profiles', 'industry'),
+.\supabase_full_schema_audit.sql:87:    ('candidate_profiles', 'preferred_roles'),
+.\supabase_full_schema_audit.sql:88:    ('candidate_profiles', 'career_level'),
+.\supabase_full_schema_audit.sql:89:    ('candidate_profiles', 'work_authorization'),
+.\supabase_full_schema_audit.sql:90:    ('candidate_profiles', 'willing_to_relocate'),
+.\supabase_full_schema_audit.sql:91:    ('candidate_profiles', 'available_from'),
+.\supabase_full_schema_audit.sql:92:    ('candidate_profiles', 'profile_last_updated'),
+.\supabase_full_schema_audit.sql:93:    ('candidate_profiles', 'profile_views'),
+.\supabase_full_schema_audit.sql:94:    ('candidate_profiles', 'email_verified'),
+.\supabase_full_schema_audit.sql:95:    ('candidate_profiles', 'phone_verified'),
+.\supabase_full_schema_audit.sql:96:    ('candidate_profiles', 'resume_verified'),
+.\supabase_full_schema_audit.sql:97:    ('candidate_profiles', 'created_at'),
+.\supabase_full_schema_audit.sql:98:    ('candidate_profiles', 'updated_at'),
+.\supabase_full_schema_audit.sql:100:    -- applications
+.\supabase_full_schema_audit.sql:101:    ('applications', 'id'),
+.\supabase_full_schema_audit.sql:102:    ('applications', 'job_id'),
+.\supabase_full_schema_audit.sql:103:    ('applications', 'candidate_id'),
+.\supabase_full_schema_audit.sql:104:    ('applications', 'cover_letter'),
+.\supabase_full_schema_audit.sql:105:    ('applications', 'cv_url'),
+.\supabase_full_schema_audit.sql:106:    ('applications', 'cv_file_name'),
+.\supabase_full_schema_audit.sql:107:    ('applications', 'status'),
+.\supabase_full_schema_audit.sql:108:    ('applications', 'match_score'),
+.\supabase_full_schema_audit.sql:109:    ('applications', 'notes'),
+.\supabase_full_schema_audit.sql:110:    ('applications', 'created_at'),
+.\supabase_full_schema_audit.sql:111:    ('applications', 'updated_at'),
+.\supabase_full_schema_audit.sql:112:    ('applications', 'submitted_at'),
+.\supabase_full_schema_audit.sql:113:    ('applications', 'recruiter_id'),
+.\supabase_full_schema_audit.sql:115:    -- jobs
+.\supabase_full_schema_audit.sql:116:    ('jobs', 'id'),
+.\supabase_full_schema_audit.sql:117:    ('jobs', 'recruiter_id'),
+.\supabase_full_schema_audit.sql:118:    ('jobs', 'title'),
+.\supabase_full_schema_audit.sql:119:    ('jobs', 'description'),
+.\supabase_full_schema_audit.sql:120:    ('jobs', 'skills'),
+.\supabase_full_schema_audit.sql:121:    ('jobs', 'requirements'),
+.\supabase_full_schema_audit.sql:122:    ('jobs', 'experience_level'),
+.\supabase_full_schema_audit.sql:123:    ('jobs', 'status'),
+.\supabase_full_schema_audit.sql:124:    ('jobs', 'job_type'),
+.\supabase_full_schema_audit.sql:125:    ('jobs', 'has_project'),
+.\supabase_full_schema_audit.sql:126:    ('jobs', 'applications_count'),
+.\supabase_full_schema_audit.sql:127:    ('jobs', 'created_at'),
+.\supabase_full_schema_audit.sql:129:    -- portfolio_items
+.\supabase_full_schema_audit.sql:130:    ('portfolio_items', 'id'),
+.\supabase_full_schema_audit.sql:131:    ('portfolio_items', 'user_id'),
+.\supabase_full_schema_audit.sql:132:    ('portfolio_items', 'title'),
+.\supabase_full_schema_audit.sql:133:    ('portfolio_items', 'project_url'),
+.\supabase_full_schema_audit.sql:134:    ('portfolio_items', 'live_url'),
+.\supabase_full_schema_audit.sql:135:    ('portfolio_items', 'github_url'),
+.\supabase_full_schema_audit.sql:137:    -- notifications
+.\supabase_full_schema_audit.sql:138:    ('notifications', 'id'),
+.\supabase_full_schema_audit.sql:139:    ('notifications', 'user_id'),
+.\supabase_full_schema_audit.sql:140:    ('notifications', 'type'),
+.\supabase_full_schema_audit.sql:141:    ('notifications', 'title'),
+.\supabase_full_schema_audit.sql:142:    ('notifications', 'message'),
+.\supabase_full_schema_audit.sql:143:    ('notifications', 'data'),
+.\supabase_full_schema_audit.sql:144:    ('notifications', 'read'),
+.\supabase_full_schema_audit.sql:145:    ('notifications', 'created_at'),
+.\supabase_full_schema_audit.sql:161:    -- recruiter_profiles
+.\supabase_full_schema_audit.sql:162:    ('recruiter_profiles', 'id'),
+.\supabase_full_schema_audit.sql:163:    ('recruiter_profiles', 'user_id'),
+.\supabase_full_schema_audit.sql:164:    ('recruiter_profiles', 'company_name'),
+.\supabase_full_schema_audit.sql:165:    ('recruiter_profiles', 'created_at'),
+.\supabase_full_schema_audit.sql:167:    -- subscriptions
+.\supabase_full_schema_audit.sql:168:    ('subscriptions', 'id'),
+.\supabase_full_schema_audit.sql:169:    ('subscriptions', 'user_id'),
+.\supabase_full_schema_audit.sql:170:    ('subscriptions', 'plan'),
+.\supabase_full_schema_audit.sql:171:    ('subscriptions', 'status'),
+.\supabase_full_schema_audit.sql:173:    -- saved_jobs
+.\supabase_full_schema_audit.sql:174:    ('saved_jobs', 'id'),
+.\supabase_full_schema_audit.sql:175:    ('saved_jobs', 'candidate_id'),
+.\supabase_full_schema_audit.sql:176:    ('saved_jobs', 'job_id'),
+.\supabase_full_schema_audit.sql:177:    ('saved_jobs', 'created_at')
+.\supabase_full_schema_audit.sql:200:-- 3) Foreign keys on the main tables
+.\supabase_full_schema_audit.sql:215:WHERE tc.constraint_type = 'FOREIGN KEY'
+.\supabase_full_schema_audit.sql:218:    'candidate_profiles', 'applications', 'jobs',
+.\supabase_full_schema_audit.sql:219:    'portfolio_items', 'notifications', 'job_project_assignments',
+.\supabase_full_schema_audit.sql:220:    'recruiter_profiles', 'saved_jobs', 'subscriptions'
+.\supabase_full_schema_audit.sql:228:  'profiles' AS table_name, COUNT(*) AS rows FROM public.profiles
+.\supabase_full_schema_audit.sql:229:UNION ALL SELECT 'candidate_profiles', COUNT(*) FROM public.candidate_profiles
+.\supabase_full_schema_audit.sql:230:UNION ALL SELECT 'applications', COUNT(*) FROM public.applications
+.\supabase_full_schema_audit.sql:231:UNION ALL SELECT 'jobs', COUNT(*) FROM public.jobs
+.\supabase_full_schema_audit.sql:232:UNION ALL SELECT 'portfolio_items', COUNT(*) FROM public.portfolio_items
+.\supabase_full_schema_audit.sql:233:UNION ALL SELECT 'notifications', COUNT(*) FROM public.notifications
+.\supabase_full_schema_audit.sql:235:UNION ALL SELECT 'recruiter_profiles', COUNT(*) FROM public.recruiter_profiles
+.\supabase_full_schema_audit.sql:236:UNION ALL SELECT 'saved_jobs', COUNT(*) FROM public.saved_jobs
+.\supabase_full_schema_audit.sql:237:UNION ALL SELECT 'subscriptions', COUNT(*) FROM public.subscriptions
+.\supabase_full_schema_audit.sql:250:    'profiles', 'candidate_profiles', 'applications', 'jobs',
+.\supabase_full_schema_audit.sql:251:    'portfolio_items', 'notifications', 'job_project_assignments',
+.\supabase_full_schema_audit.sql:252:    'recruiter_profiles', 'saved_jobs', 'subscriptions'
+.\supabase_full_schema_audit.sql:266:  AND event_object_table IN ('candidate_profiles', 'profiles')
+.\job_project_assignments_migration.sql:4:-- This migration creates the job_project_assignments table to link jobs
+.\job_project_assignments_migration.sql:11:CREATE TABLE IF NOT EXISTS job_project_assignments (
+.\job_project_assignments_migration.sql:13:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\job_project_assignments_migration.sql:14:  project_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\job_project_assignments_migration.sql:15:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\job_project_assignments_migration.sql:16:  recruiter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\job_project_assignments_migration.sql:17:  application_id UUID REFERENCES applications(id) ON DELETE SET NULL,
+.\job_project_assignments_migration.sql:48:  -- Unique constraint: one assignment per candidate per project
+.\job_project_assignments_migration.sql:49:  UNIQUE(job_id, project_id, candidate_id)
+.\job_project_assignments_migration.sql:52:CREATE INDEX idx_job_project_assignments_job_id ON job_project_assignments(job_id);
+.\job_project_assignments_migration.sql:53:CREATE INDEX idx_job_project_assignments_project_id ON job_project_assignments(project_id);
+.\job_project_assignments_migration.sql:54:CREATE INDEX idx_job_project_assignments_candidate_id ON job_project_assignments(candidate_id);
+.\job_project_assignments_migration.sql:55:CREATE INDEX idx_job_project_assignments_recruiter_id ON job_project_assignments(recruiter_id);
+.\job_project_assignments_migration.sql:56:CREATE INDEX idx_job_project_assignments_application_id ON job_project_assignments(application_id);
+.\job_project_assignments_migration.sql:57:CREATE INDEX idx_job_project_assignments_status ON job_project_assignments(assignment_status);
+.\job_project_assignments_migration.sql:58:CREATE INDEX idx_job_project_assignments_created_at ON job_project_assignments(created_at DESC);
+.\job_project_assignments_migration.sql:69:-- Recruiters can view assignments for their jobs
+.\job_project_assignments_migration.sql:73:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\job_project_assignments_migration.sql:76:-- Recruiters can insert assignments for their jobs
+.\job_project_assignments_migration.sql:80:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\job_project_assignments_migration.sql:88:-- Recruiters can update assignments for their jobs
+.\job_project_assignments_migration.sql:91:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\job_project_assignments_migration.sql:93:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\job_project_assignments_migration.sql:103:-- 4. ADD PROJECT FIELDS TO JOBS TABLE (for job-specific projects)
+.\job_project_assignments_migration.sql:106:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS has_project BOOLEAN DEFAULT FALSE;
+.\job_project_assignments_migration.sql:107:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_title TEXT;
+.\job_project_assignments_migration.sql:108:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_description TEXT;
+.\job_project_assignments_migration.sql:109:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_skills TEXT[] DEFAULT '{}';
+.\job_project_assignments_migration.sql:110:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_timeline TEXT;
+.\job_project_assignments_migration.sql:111:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_budget_range TEXT;
+.\job_project_assignments_migration.sql:112:ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_deliverables TEXT[] DEFAULT '{}';
+.\job_project_assignments_migration.sql:114:-- Add RLS policy for new columns (inherits from existing jobs policies)
+.\job_project_assignments_migration.sql:115:-- No new policy needed - existing jobs policies cover these
+.\fix_career_growth_schema.sql:16:alter table public.career_growth_applications
+.\resume-builder-final-needed\supabase_migration.sql:5:-- Tables: users, candidates, recruiters, jobs, applications, portfolios, etc.
+.\resume-builder-final-needed\supabase_migration.sql:9:-- 1. PROFILES TABLE (Auth User Profiles)
+.\resume-builder-final-needed\supabase_migration.sql:11:CREATE TABLE IF NOT EXISTS profiles (
+.\resume-builder-final-needed\supabase_migration.sql:13:  auth_user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:28:CREATE INDEX idx_profiles_auth_user_id ON profiles(auth_user_id);
+.\resume-builder-final-needed\supabase_migration.sql:29:CREATE INDEX idx_profiles_role ON profiles(role);
+.\resume-builder-final-needed\supabase_migration.sql:30:CREATE INDEX idx_profiles_email ON profiles(email);
+.\resume-builder-final-needed\supabase_migration.sql:33:-- 2. CANDIDATE PROFILES TABLE
+.\resume-builder-final-needed\supabase_migration.sql:35:CREATE TABLE IF NOT EXISTS candidate_profiles (
+.\resume-builder-final-needed\supabase_migration.sql:37:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:48:  portfolio_url TEXT,
+.\resume-builder-final-needed\supabase_migration.sql:63:CREATE INDEX idx_candidate_profiles_user_id ON candidate_profiles(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:64:CREATE INDEX idx_candidate_profiles_skills ON candidate_profiles USING GIN(skills);
+.\resume-builder-final-needed\supabase_migration.sql:67:-- 3. RECRUITER PROFILES TABLE
+.\resume-builder-final-needed\supabase_migration.sql:69:CREATE TABLE IF NOT EXISTS recruiter_profiles (
+.\resume-builder-final-needed\supabase_migration.sql:71:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:84:CREATE INDEX idx_recruiter_profiles_user_id ON recruiter_profiles(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:85:CREATE INDEX idx_recruiter_profiles_company_name ON recruiter_profiles(company_name);
+.\resume-builder-final-needed\supabase_migration.sql:88:-- 4. JOBS/PROJECTS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:90:CREATE TABLE IF NOT EXISTS jobs (
+.\resume-builder-final-needed\supabase_migration.sql:92:  recruiter_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:110:  applications_count INTEGER DEFAULT 0,
+.\resume-builder-final-needed\supabase_migration.sql:112:  has_assessment BOOLEAN DEFAULT FALSE,
+.\resume-builder-final-needed\supabase_migration.sql:113:  assessment_id UUID,
+.\resume-builder-final-needed\supabase_migration.sql:120:CREATE INDEX idx_jobs_recruiter_id ON jobs(recruiter_id);
+.\resume-builder-final-needed\supabase_migration.sql:121:CREATE INDEX idx_jobs_status ON jobs(status);
+.\resume-builder-final-needed\supabase_migration.sql:122:CREATE INDEX idx_jobs_skills ON jobs USING GIN(skills);
+.\resume-builder-final-needed\supabase_migration.sql:123:CREATE INDEX idx_jobs_created_at ON jobs(created_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:126:-- 5. APPLICATIONS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:128:CREATE TABLE IF NOT EXISTS applications (
+.\resume-builder-final-needed\supabase_migration.sql:130:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:131:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:143:  UNIQUE(job_id, candidate_id)
+.\resume-builder-final-needed\supabase_migration.sql:146:CREATE INDEX idx_applications_job_id ON applications(job_id);
+.\resume-builder-final-needed\supabase_migration.sql:147:CREATE INDEX idx_applications_candidate_id ON applications(candidate_id);
+.\resume-builder-final-needed\supabase_migration.sql:148:CREATE INDEX idx_applications_status ON applications(status);
+.\resume-builder-final-needed\supabase_migration.sql:149:CREATE INDEX idx_applications_submitted_at ON applications(submitted_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:152:-- 6. PORTFOLIO ITEMS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:154:CREATE TABLE IF NOT EXISTS portfolio_items (
+.\resume-builder-final-needed\supabase_migration.sql:156:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:166:CREATE INDEX idx_portfolio_items_user_id ON portfolio_items(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:167:CREATE INDEX idx_portfolio_items_created_at ON portfolio_items(created_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:170:-- 7. SAVED JOBS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:172:CREATE TABLE IF NOT EXISTS saved_jobs (
+.\resume-builder-final-needed\supabase_migration.sql:174:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:175:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:177:  UNIQUE(candidate_id, job_id)
+.\resume-builder-final-needed\supabase_migration.sql:180:CREATE INDEX idx_saved_jobs_candidate_id ON saved_jobs(candidate_id);
+.\resume-builder-final-needed\supabase_migration.sql:181:CREATE INDEX idx_saved_jobs_job_id ON saved_jobs(job_id);
+.\resume-builder-final-needed\supabase_migration.sql:184:-- 8. ASSESSMENTS/TESTS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:186:CREATE TABLE IF NOT EXISTS assessments (
+.\resume-builder-final-needed\supabase_migration.sql:188:  created_by UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:191:  assessment_type TEXT DEFAULT 'technical' CHECK (assessment_type IN ('technical', 'soft-skills', 'coding', 'custom')),
+.\resume-builder-final-needed\supabase_migration.sql:201:CREATE INDEX idx_assessments_created_by ON assessments(created_by);
+.\resume-builder-final-needed\supabase_migration.sql:202:CREATE INDEX idx_assessments_type ON assessments(assessment_type);
+.\resume-builder-final-needed\supabase_migration.sql:207:CREATE TABLE IF NOT EXISTS test_attempts (
+.\resume-builder-final-needed\supabase_migration.sql:209:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:210:  assessment_id UUID NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:211:  job_id UUID REFERENCES jobs(id) ON DELETE SET NULL,
+.\resume-builder-final-needed\supabase_migration.sql:221:CREATE INDEX idx_test_attempts_user_id ON test_attempts(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:222:CREATE INDEX idx_test_attempts_assessment_id ON test_attempts(assessment_id);
+.\resume-builder-final-needed\supabase_migration.sql:223:CREATE INDEX idx_test_attempts_completed_at ON test_attempts(completed_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:228:CREATE TABLE IF NOT EXISTS video_submissions (
+.\resume-builder-final-needed\supabase_migration.sql:230:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:231:  job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:240:CREATE INDEX idx_video_submissions_candidate_id ON video_submissions(candidate_id);
+.\resume-builder-final-needed\supabase_migration.sql:241:CREATE INDEX idx_video_submissions_job_id ON video_submissions(job_id);
+.\resume-builder-final-needed\supabase_migration.sql:244:-- 11. SUBSCRIPTIONS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:246:CREATE TABLE IF NOT EXISTS subscriptions (
+.\resume-builder-final-needed\supabase_migration.sql:248:  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:261:CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:262:CREATE INDEX idx_subscriptions_tier ON subscriptions(tier);
+.\resume-builder-final-needed\supabase_migration.sql:263:CREATE INDEX idx_subscriptions_expires_at ON subscriptions(expires_at);
+.\resume-builder-final-needed\supabase_migration.sql:266:-- 12. NOTIFICATIONS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:268:CREATE TABLE IF NOT EXISTS notifications (
+.\resume-builder-final-needed\supabase_migration.sql:270:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:282:CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:283:CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+.\resume-builder-final-needed\supabase_migration.sql:284:CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:287:-- 13. MESSAGES/CONVERSATIONS TABLE
+.\resume-builder-final-needed\supabase_migration.sql:289:CREATE TABLE IF NOT EXISTS conversations (
+.\resume-builder-final-needed\supabase_migration.sql:291:  initiator_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:292:  recipient_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:293:  job_id UUID REFERENCES jobs(id) ON DELETE SET NULL,
+.\resume-builder-final-needed\supabase_migration.sql:299:CREATE INDEX idx_conversations_initiator_id ON conversations(initiator_id);
+.\resume-builder-final-needed\supabase_migration.sql:300:CREATE INDEX idx_conversations_recipient_id ON conversations(recipient_id);
+.\resume-builder-final-needed\supabase_migration.sql:301:CREATE INDEX idx_conversations_last_message_at ON conversations(last_message_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:303:CREATE TABLE IF NOT EXISTS messages (
+.\resume-builder-final-needed\supabase_migration.sql:305:  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:306:  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:313:CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
+.\resume-builder-final-needed\supabase_migration.sql:314:CREATE INDEX idx_messages_sender_id ON messages(sender_id);
+.\resume-builder-final-needed\supabase_migration.sql:315:CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:320:CREATE TABLE IF NOT EXISTS activity_logs (
+.\resume-builder-final-needed\supabase_migration.sql:322:  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:332:CREATE INDEX idx_activity_logs_user_id ON activity_logs(user_id);
+.\resume-builder-final-needed\supabase_migration.sql:333:CREATE INDEX idx_activity_logs_entity_type ON activity_logs(entity_type);
+.\resume-builder-final-needed\supabase_migration.sql:334:CREATE INDEX idx_activity_logs_created_at ON activity_logs(created_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:339:CREATE TABLE IF NOT EXISTS cv_evaluations (
+.\resume-builder-final-needed\supabase_migration.sql:341:  candidate_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+.\resume-builder-final-needed\supabase_migration.sql:353:CREATE INDEX idx_cv_evaluations_candidate_id ON cv_evaluations(candidate_id);
+.\resume-builder-final-needed\supabase_migration.sql:354:CREATE INDEX idx_cv_evaluations_evaluated_at ON cv_evaluations(evaluated_at DESC);
+.\resume-builder-final-needed\supabase_migration.sql:361:ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:362:ALTER TABLE candidate_profiles ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:363:ALTER TABLE recruiter_profiles ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:364:ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:365:ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:366:ALTER TABLE portfolio_items ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:367:ALTER TABLE saved_jobs ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:368:ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:371:ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:372:ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:373:ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:374:ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+.\resume-builder-final-needed\supabase_migration.sql:379:-- PROFILES POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:382:-- Users can view all profiles (public info)
+.\resume-builder-final-needed\supabase_migration.sql:383:CREATE POLICY "profiles_select_all" ON profiles
+.\resume-builder-final-needed\supabase_migration.sql:387:CREATE POLICY "profiles_update_own" ON profiles
+.\resume-builder-final-needed\supabase_migration.sql:392:CREATE POLICY "profiles_insert_own" ON profiles
+.\resume-builder-final-needed\supabase_migration.sql:396:-- CANDIDATE PROFILES POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:399:-- Candidates and recruiters can view all candidate profiles
+.\resume-builder-final-needed\supabase_migration.sql:400:CREATE POLICY "candidate_profiles_select_all" ON candidate_profiles
+.\resume-builder-final-needed\supabase_migration.sql:404:CREATE POLICY "candidate_profiles_insert_own" ON candidate_profiles
+.\resume-builder-final-needed\supabase_migration.sql:406:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\resume-builder-final-needed\supabase_migration.sql:410:CREATE POLICY "candidate_profiles_update_own" ON candidate_profiles
+.\resume-builder-final-needed\supabase_migration.sql:412:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\resume-builder-final-needed\supabase_migration.sql:414:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\resume-builder-final-needed\supabase_migration.sql:418:-- RECRUITER PROFILES POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:421:-- Recruiters can view all recruiter profiles
+.\resume-builder-final-needed\supabase_migration.sql:422:CREATE POLICY "recruiter_profiles_select_all" ON recruiter_profiles
+.\resume-builder-final-needed\supabase_migration.sql:426:CREATE POLICY "recruiter_profiles_update_own" ON recruiter_profiles
+.\resume-builder-final-needed\supabase_migration.sql:428:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\resume-builder-final-needed\supabase_migration.sql:430:    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+.\resume-builder-final-needed\supabase_migration.sql:434:-- JOBS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:437:-- Anyone can view published jobs
+.\resume-builder-final-needed\supabase_migration.sql:438:CREATE POLICY "jobs_select_published" ON jobs
+.\resume-builder-final-needed\supabase_migration.sql:442:CREATE POLICY "jobs_select_own_draft" ON jobs
+.\resume-builder-final-needed\supabase_migration.sql:447:-- Recruiters can insert their own jobs
+.\resume-builder-final-needed\supabase_migration.sql:448:CREATE POLICY "jobs_insert_own" ON jobs
+.\resume-builder-final-needed\supabase_migration.sql:453:-- Recruiters can update their own jobs
+.\resume-builder-final-needed\supabase_migration.sql:454:CREATE POLICY "jobs_update_own" ON jobs
+.\resume-builder-final-needed\supabase_migration.sql:462:-- APPLICATIONS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:465:-- Candidates can view their own applications
+.\resume-builder-final-needed\supabase_migration.sql:466:CREATE POLICY "applications_select_own" ON applications
+.\resume-builder-final-needed\supabase_migration.sql:469:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:472:-- Candidates can insert applications
+.\resume-builder-final-needed\supabase_migration.sql:473:CREATE POLICY "applications_insert_own" ON applications
+.\resume-builder-final-needed\supabase_migration.sql:478:-- Candidates can update their own applications (withdraw)
+.\resume-builder-final-needed\supabase_migration.sql:479:CREATE POLICY "applications_update_own" ON applications
+.\resume-builder-final-needed\supabase_migration.sql:486:-- Recruiters can update applications for their jobs
+.\resume-builder-final-needed\supabase_migration.sql:487:CREATE POLICY "applications_update_recruiter" ON applications
+.\resume-builder-final-needed\supabase_migration.sql:489:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:491:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:495:-- PORTFOLIO ITEMS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:498:-- Anyone can view portfolio items
+.\resume-builder-final-needed\supabase_migration.sql:499:CREATE POLICY "portfolio_items_select_all" ON portfolio_items
+.\resume-builder-final-needed\supabase_migration.sql:502:-- Users can manage their own portfolio items
+.\resume-builder-final-needed\supabase_migration.sql:503:CREATE POLICY "portfolio_items_manage_own" ON portfolio_items
+.\resume-builder-final-needed\supabase_migration.sql:511:-- SAVED JOBS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:514:-- Users can view and manage their own saved jobs
+.\resume-builder-final-needed\supabase_migration.sql:515:CREATE POLICY "saved_jobs_manage_own" ON saved_jobs
+.\resume-builder-final-needed\supabase_migration.sql:523:-- ASSESSMENTS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:526:-- Anyone can view assessments
+.\resume-builder-final-needed\supabase_migration.sql:527:CREATE POLICY "assessments_select_all" ON assessments
+.\resume-builder-final-needed\supabase_migration.sql:530:-- Recruiters can manage their own assessments
+.\resume-builder-final-needed\supabase_migration.sql:531:CREATE POLICY "assessments_manage_own" ON assessments
+.\resume-builder-final-needed\supabase_migration.sql:546:    assessment_id IN (SELECT id FROM assessments WHERE created_by = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:571:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:580:-- Recruiters can update submissions for their jobs
+.\resume-builder-final-needed\supabase_migration.sql:583:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:585:    job_id IN (SELECT id FROM jobs WHERE recruiter_id = auth.uid()::uuid)
+.\resume-builder-final-needed\supabase_migration.sql:589:-- SUBSCRIPTIONS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:593:CREATE POLICY "subscriptions_select_own" ON subscriptions
+.\resume-builder-final-needed\supabase_migration.sql:599:CREATE POLICY "subscriptions_insert_own" ON subscriptions
+.\resume-builder-final-needed\supabase_migration.sql:605:CREATE POLICY "subscriptions_update_own" ON subscriptions
+.\resume-builder-final-needed\supabase_migration.sql:613:-- NOTIFICATIONS POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:616:-- Users can view and manage their own notifications
+.\resume-builder-final-needed\supabase_migration.sql:617:CREATE POLICY "notifications_manage_own" ON notifications
+.\resume-builder-final-needed\supabase_migration.sql:625:-- CONVERSATIONS & MESSAGES POLICIES
+.\resume-builder-final-needed\supabase_migration.sql:628:-- Users can view their own conversations
+.\resume-builder-final-needed\supabase_migration.sql:629:CREATE POLICY "conversations_select_own" ON conversations
+.\resume-builder-final-needed\supabase_migration.sql:634:-- Users can insert conversations
+.\resume-builder-final-needed\supabase_migration.sql:635:CREATE POLICY "conversations_insert_own" ON conversations
+.\resume-builder-final-needed\supabase_migration.sql:640:-- Users can view messages in their conversations
+.\resume-builder-final-needed\supabase_migration.sql:641:CREATE POLICY "messages_select_own" ON messages
+.\resume-builder-final-needed\supabase_migration.sql:644:      SELECT id FROM conversations 
+.\resume-builder-final-needed\supabase_migration.sql:649:-- Users can insert messages to their conversations
+.\resume-builder-final-needed\supabase_migration.sql:650:CREATE POLICY "messages_insert_own" ON messages
+.\resume-builder-final-needed\supabase_migration.sql:654:      SELECT id FROM conversations 
+.\resume-builder-final-needed\supabase_migration.sql:705:CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+.\resume-builder-final-needed\supabase_migration.sql:708:CREATE TRIGGER update_candidate_profiles_updated_at BEFORE UPDATE ON candidate_profiles
+.\resume-builder-final-needed\supabase_migration.sql:711:CREATE TRIGGER update_recruiter_profiles_updated_at BEFORE UPDATE ON recruiter_profiles
+.\resume-builder-final-needed\supabase_migration.sql:714:CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON jobs
+.\resume-builder-final-needed\supabase_migration.sql:717:CREATE TRIGGER update_applications_updated_at BEFORE UPDATE ON applications
+.\resume-builder-final-needed\supabase_migration.sql:720:CREATE TRIGGER update_portfolio_items_updated_at BEFORE UPDATE ON portfolio_items
+.\resume-builder-final-needed\supabase_migration.sql:723:CREATE TRIGGER update_assessments_updated_at BEFORE UPDATE ON assessments
+.\resume-builder-final-needed\supabase_migration.sql:726:CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions
+.\resume-builder-final-needed\supabase_migration.sql:729:CREATE TRIGGER update_notifications_updated_at BEFORE UPDATE ON notifications
+.\resume-builder-final-needed\supabase_migration.sql:732:CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
+.\resume-builder-final-needed\supabase_migration.sql:744:-- INSERT INTO profiles (auth_user_id, email, full_name, role, company_name)
+.\resume-builder-final-needed\supabase_migration.sql:754:-- INSERT INTO profiles (auth_user_id, email, full_name, role)

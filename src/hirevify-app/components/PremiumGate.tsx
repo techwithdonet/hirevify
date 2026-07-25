@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Crown, Lock, ArrowRight } from 'lucide-react';
 import { usePremiumAccess, PremiumFeatureKey, PREMIUM_FEATURES } from '../utils/premium';
+import { useAuth } from './AuthProvider';
 
 interface PremiumGateProps {
  featureKey: PremiumFeatureKey;
@@ -29,7 +30,15 @@ export function PremiumGate({
  className = ""
 }: PremiumGateProps) {
  // Call hooks at top level
- const { checkAccess, getFeatureInfo, getSubscription } = usePremiumAccess();
+ const { authInitialized } = useAuth();
+ const { checkAccess, getFeatureInfo, getSubscription, isLoading } = usePremiumAccess();
+
+ // Stay visually inert until authentication and access are verified. This
+ // avoids both the unrelated full-page loader and mounting paid feature
+ // effects before the existing entitlement check has completed.
+ if (!authInitialized || isLoading) {
+ return null;
+ }
  
  // Simple access check
  const hasAccess = checkAccess(featureKey);
@@ -158,7 +167,11 @@ export function PremiumBadge({
  featureKey: PremiumFeatureKey;
  className?: string;
 }) {
- const { checkAccess } = usePremiumAccess();
+ const { authInitialized } = useAuth();
+ const { checkAccess, isLoading } = usePremiumAccess();
+
+ if (!authInitialized || isLoading) return null;
+
  const hasAccess = checkAccess(featureKey);
 
  if (hasAccess) return null;
@@ -180,7 +193,7 @@ export function usePremiumNavigation(onUpgrade: () => void) {
  const navigateToFeature = useCallback((
  featureKey: PremiumFeatureKey,
  navigationCallback: () => void,
- fallbackMessage?: string
+ _fallbackMessage?: string
  ) => {
  try {
  if (checkAccess(featureKey)) {

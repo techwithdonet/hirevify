@@ -2455,6 +2455,14 @@ body [role="dialog"] .auth-tab-trigger[data-state="active"] {
   gap: 10px;
 }
 
+.candidate-plan-slot {
+  display: flex;
+  min-width: 106px;
+  min-height: 38px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .candidate-upgrade-button {
   height: 38px;
   gap: 8px;
@@ -2923,6 +2931,10 @@ body [role="dialog"] .auth-tab-trigger[data-state="active"] {
   gap: 14px;
 }
 
+.candidate-plan-panel[aria-busy="true"] {
+  min-height: 184px;
+}
+
 .candidate-plan-symbol {
   display: grid;
   width: 44px;
@@ -3331,16 +3343,28 @@ body > div:first-of-type {
 
 /* Primary buttons use one consistent forest-green treatment. */
 [data-workspace-screen] :where(
-  button[class*="bg-emerald-"],
-  button[class*="bg-green-"],
-  button[class*="bg-teal-"],
-  button[class*="bg-slate-900"],
-  button[class*="bg-slate-950"],
-  a[class*="bg-emerald-"],
-  a[class*="bg-green-"],
-  a[class*="bg-teal-"],
-  a[class*="bg-slate-900"],
-  a[class*="bg-slate-950"]
+  button[class~="bg-emerald-500"],
+  button[class~="bg-emerald-600"],
+  button[class~="bg-emerald-700"],
+  button[class~="bg-green-500"],
+  button[class~="bg-green-600"],
+  button[class~="bg-green-700"],
+  button[class~="bg-teal-500"],
+  button[class~="bg-teal-600"],
+  button[class~="bg-teal-700"],
+  button[class~="bg-slate-900"],
+  button[class~="bg-slate-950"],
+  a[class~="bg-emerald-500"],
+  a[class~="bg-emerald-600"],
+  a[class~="bg-emerald-700"],
+  a[class~="bg-green-500"],
+  a[class~="bg-green-600"],
+  a[class~="bg-green-700"],
+  a[class~="bg-teal-500"],
+  a[class~="bg-teal-600"],
+  a[class~="bg-teal-700"],
+  a[class~="bg-slate-900"],
+  a[class~="bg-slate-950"]
 ) {
   color: #ffffff !important;
   background: linear-gradient(
@@ -3356,16 +3380,28 @@ body > div:first-of-type {
 
 @media (hover: hover) {
   [data-workspace-screen] :where(
-    button[class*="bg-emerald-"],
-    button[class*="bg-green-"],
-    button[class*="bg-teal-"],
-    button[class*="bg-slate-900"],
-    button[class*="bg-slate-950"],
-    a[class*="bg-emerald-"],
-    a[class*="bg-green-"],
-    a[class*="bg-teal-"],
-    a[class*="bg-slate-900"],
-    a[class*="bg-slate-950"]
+    button[class~="bg-emerald-500"],
+    button[class~="bg-emerald-600"],
+    button[class~="bg-emerald-700"],
+    button[class~="bg-green-500"],
+    button[class~="bg-green-600"],
+    button[class~="bg-green-700"],
+    button[class~="bg-teal-500"],
+    button[class~="bg-teal-600"],
+    button[class~="bg-teal-700"],
+    button[class~="bg-slate-900"],
+    button[class~="bg-slate-950"],
+    a[class~="bg-emerald-500"],
+    a[class~="bg-emerald-600"],
+    a[class~="bg-emerald-700"],
+    a[class~="bg-green-500"],
+    a[class~="bg-green-600"],
+    a[class~="bg-green-700"],
+    a[class~="bg-teal-500"],
+    a[class~="bg-teal-600"],
+    a[class~="bg-teal-700"],
+    a[class~="bg-slate-900"],
+    a[class~="bg-slate-950"]
   ):hover {
     background: var(--hv-primary-hover) !important;
     box-shadow:

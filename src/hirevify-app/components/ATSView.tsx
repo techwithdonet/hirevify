@@ -55,7 +55,7 @@ import { calculateAtsMatch, type AtsMatchResult } from '@/src/hirevify-app/servi
 import { projectAssignmentsService } from '@/src/hirevify-app/services/projectAssignmentsService';
 import { applicationsService } from '@/src/hirevify-app/services/applicationsService';
 import { dashboardTheme } from '../theme/dashboardTheme';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 
 type CandidateStatus = 'applied' | 'reviewing' | 'screening' | 'shortlisted' | 'accepted' | 'assigned' | 'in_progress' | 'completed' | 'interview' | 'offer' | 'hired' | 'rejected' | 'withdrawn';
 type AssignmentStatus = 'pending' | 'accepted' | 'rejected' | 'submitted' | 'under_review' | 'hired' | 'not_selected';
@@ -1106,14 +1106,19 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
   return (
     <div className={dashboardTheme.page}>
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl">
+      <header className="workspace-page-header workspace-ats-header border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-xl">
         <div className="mx-auto w-full max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg text-slate-600 hover:bg-slate-100">
+              <Button
+                variant="ghost"
+                onClick={onBack}
+                aria-label="Back to Dashboard"
+                className="workspace-header-back inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+              >
                 <ArrowLeft className="h-5 w-5" />
+                <span>Back to Dashboard</span>
               </Button>
-              <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="h-14 shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase text-emerald-700">Recruiter</p>
                 <h1 className="truncate text-2xl font-semibold text-slate-950">Candidate Pipeline</h1>
@@ -1122,25 +1127,30 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
             </div>
             
             {/* Tab Switcher */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+            <div className="flex items-center gap-3">
+            <div className="workspace-ats-tab-switcher flex items-center gap-1 rounded-lg bg-slate-100 p-1">
               <button
+                type="button"
                 onClick={() => setActiveTab('applicants')}
+                data-active={activeTab === 'applicants'}
                 className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
                   activeTab === 'applicants'
                     ? 'bg-white text-emerald-700 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                } workspace-ats-tab`}
               >
                 <User className="h-4 w-4" />
                 Active Jobs
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('projects')}
+                data-active={activeTab === 'projects'}
                 className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
                   activeTab === 'projects'
                     ? 'bg-white text-purple-700 shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                } workspace-ats-tab`}
               >
                 <FileCheck className="h-4 w-4" />
                 All Projects
@@ -1150,6 +1160,8 @@ export function ATSView({ onBack, onStartInterview, onViewMessages, onViewOngoin
                   </span>
                 )}
               </button>
+            </div>
+            <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
             </div>
           </div>
         </div>

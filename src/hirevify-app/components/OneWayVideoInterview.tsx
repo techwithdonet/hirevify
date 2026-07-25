@@ -23,7 +23,7 @@ import {
  Volume2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 
 interface Question {
  id: string;
@@ -637,30 +637,28 @@ export function OneWayVideoInterview({ onBack, onComplete }: OneWayVideoIntervie
  return (
  <div className="premium-page">
  {/* Header */}
- <header className="premium-header">
- <div className="premium-header-inner">
- <div className="flex items-center space-x-4">
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex items-center space-x-4">
  {interviewState === 'instructions' && (
  <Button variant="ghost" onClick={onBack} className="hover:bg-muted">
  <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- )}
- <div className="flex items-center space-x-3">
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
- </div>
- </div>
+  Back to Dashboard
+  </Button>
+  )}
+  </div>
 
- {interviewState!== 'instructions' && interviewState!== 'completed' && (
- <div className="flex items-center space-x-4">
- <Button variant="outline" className="border-border text-foreground hover:bg-muted">
- <Settings className="w-4 h-4 mr-2" />
- Settings
- </Button>
- </div>
- )}
- </div>
- </header>
+  <div className="flex items-center space-x-4">
+  {interviewState!== 'instructions' && interviewState!== 'completed' && (
+  <Button variant="outline" className="border-border text-foreground hover:bg-muted">
+  <Settings className="w-4 h-4 mr-2" />
+  Settings
+  </Button>
+  )}
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </div>
+  </header>
 
  {/* Content */}
  <main className="premium-content">

@@ -1,0 +1,517 @@
+﻿src/hirevify-app\utils\supabase\client.tsx:2: createSupabaseBrowserClient,
+src/hirevify-app\utils\supabase\client.tsx:3: getSupabaseBrowserClientInstance,
+src/hirevify-app\utils\supabase\client.tsx:9: return createSupabaseBrowserClient();
+src/hirevify-app\utils\supabase\client.tsx:21: return getSupabaseBrowserClientInstance();
+src/hirevify-app\utils\premium.ts:190:  useEffect(() => {
+src/hirevify-app\utils\api\simple-connectivity-test.tsx:24: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\simple-connectivity-test.tsx:75: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/public-health-text`);
+src/hirevify-app\utils\api\simple-backend-test.tsx:27: const response = await fetch(
+src/hirevify-app\utils\api\simple-backend-test.tsx:115: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\simple-backend-test.tsx:183: const response = await fetch(
+src/hirevify-app\utils\api\simple-backend-test.tsx:220: const response = await fetch(
+src/hirevify-app\utils\api\resilient-connectivity-test.tsx:38: const response = await fetch(url, {
+src/hirevify-app\utils\api\resilient-connectivity-test.tsx:142: const response = await fetch(`https://${projectId}.supabase.co/rest/v1/`, {
+src/hirevify-app\utils\api\resilient-connectivity-test.tsx:182: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44${endpoint}`, {
+src/hirevify-app\utils\api\resilient-connectivity-test.tsx:222: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44${endpoint}`, {
+src/hirevify-app\utils\api\resilient-connectivity-test.tsx:278: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/integrations/list`, {
+src/hirevify-app\utils\api\quick-test.tsx:34: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\quick-test.tsx:104: const response = await fetch(`${API_BASE}/ultra-ping`, {
+src/hirevify-app\utils\api\quick-integration-test.tsx:49: const response = await fetch(url, {
+app\api\supabase-test\route.ts:49:    const response = await fetch(
+src/hirevify-app\utils\api\projects.tsx:41: const response = await fetch(`${API_BASE}/projects`, {
+src/hirevify-app\utils\api\projects.tsx:76: const response = await fetch(`${API_BASE}/projects?${params}`, {
+src/hirevify-app\utils\api\projects.tsx:91: const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+src/hirevify-app\utils\api\projects.tsx:106: const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+src/hirevify-app\utils\api\projects.tsx:124: const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+src/hirevify-app\utils\api\payments.tsx:135: const response = await fetch(`${API_BASE}/payments/plans`, {
+src/hirevify-app\utils\api\payments.tsx:154: const response = await fetch(`${API_BASE}/payments/create-subscription-order`, {
+src/hirevify-app\utils\api\payments.tsx:178: const response = await fetch(`${API_BASE}/payments/create-order`, {
+src/hirevify-app\utils\api\payments.tsx:201: const response = await fetch(`${API_BASE}/payments/verify-and-activate-subscription`, {
+src/hirevify-app\utils\api\payments.tsx:225: const response = await fetch(`${API_BASE}/payments/verify-payment`, {
+src/hirevify-app\utils\api\payments.tsx:244: const response = await fetch(`${API_BASE}/payments/subscription`, {
+src/hirevify-app\utils\api\payments.tsx:263: const response = await fetch(`${API_BASE}/payments/subscription/cancel`, {
+src/hirevify-app\utils\api\payments.tsx:282: const response = await fetch(`${API_BASE}/payments/subscription/pause`, {
+src/hirevify-app\utils\api\payments.tsx:299: const response = await fetch(`${API_BASE}/payments/subscription/resume`, {
+src/hirevify-app\utils\api\payments.tsx:319: const response = await fetch(`${API_BASE}/payments/subscription/change-plan`, {
+src/hirevify-app\utils\api\payments.tsx:338: const response = await fetch(`${API_BASE}/payments/history`, {
+src/hirevify-app\utils\api\payments.tsx:354: const response = await fetch(`${API_BASE}/payments/usage`, {
+src/hirevify-app\utils\api\payments.tsx:373: const response = await fetch(`${API_BASE}/payments/feature-access/${feature}`, {
+src/hirevify-app\utils\api\payments.tsx:389: const response = await fetch(`${API_BASE}/payments/invoice/${invoiceId}`, {
+src/hirevify-app\utils\api\payments.tsx:405: const response = await fetch(`${API_BASE}/payments/invoice/${invoiceId}/download`, {
+src/hirevify-app\utils\api\integrations.tsx:50: const response = await fetch(`${API_BASE}/integrations/test-routes`, {
+src/hirevify-app\utils\api\integrations.tsx:116: response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\integrations.tsx:191: const response = await fetch(`${API_BASE}/integrations/test-kv`, {
+src/hirevify-app\utils\api\integrations.tsx:246: const response = await fetch(`${API_BASE}/integrations/debug-auth`, {
+src/hirevify-app\utils\api\integrations.tsx:331: const response = await fetch(`${API_BASE}/integrations/list`, {
+src/hirevify-app\utils\api\integrations.tsx:432: const response = await fetch(`${API_BASE}/integrations/${integrationId}`, {
+src/hirevify-app\utils\api\integrations.tsx:466: const response = await fetch(`${API_BASE}/integrations/connect`, {
+src/hirevify-app\utils\api\integrations.tsx:505: const response = await fetch(`${API_BASE}/integrations/${integrationId}/settings`, {
+src/hirevify-app\utils\api\integrations.tsx:539: const response = await fetch(`${API_BASE}/integrations/${integrationId}`, {
+src/hirevify-app\utils\api\integrations.tsx:569: const response = await fetch(`${API_BASE}/integrations/${integrationId}/sync`, {
+src/hirevify-app\utils\api\integrations.tsx:603: const response = await fetch(`${API_BASE}/integrations/${integrationId}/logs`, {
+src/hirevify-app\utils\api\integrations.tsx:635: const response = await fetch(`${API_BASE}/integrations/${integrationId}/test`, {
+src/hirevify-app\utils\api\integration-connectivity-test.tsx:56: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\integration-connectivity-test.tsx:135: const response = await fetch(listUrl, {
+src/hirevify-app\utils\api\integration-connectivity-test.tsx:190: const response = await fetch(
+src/hirevify-app\utils\database\supabaseProvider.ts:2:import { getSupabaseBrowserClient } from "./supabaseClient";
+src/hirevify-app\utils\database\supabaseProvider.ts:18:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:20:    let query = supabase.from(table).select(options?.columns || "*");
+src/hirevify-app\utils\database\supabaseProvider.ts:44:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:64:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:84:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:87:      ? supabase.from(table).upsert(payload, { onConflict: conflictColumns }).select()
+src/hirevify-app\utils\database\supabaseProvider.ts:88:      : supabase.from(table).upsert(payload).select();
+src/hirevify-app\utils\database\supabaseProvider.ts:104:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:106:    let query = supabase.from(table).update(payload).select();
+src/hirevify-app\utils\database\supabaseProvider.ts:120:    const supabase = getSupabaseBrowserClient();
+src/hirevify-app\utils\database\supabaseProvider.ts:122:    let query = supabase.from(table).delete().select();
+src/hirevify-app\utils\api\integration-auth-test.tsx:37: const healthResponse = await fetch(`${API_BASE}/integrations/health`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:72: const kvResponse = await fetch(`${API_BASE}/integrations/test-kv`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:115: const sessionResponse = await fetch(`${API_BASE}/auth/debug-session`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:173: const authResponse = await fetch(`${API_BASE}/integrations/debug-auth`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:228: const listResponse = await fetch(`${API_BASE}/integrations/list`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:356: const response = await fetch(`${API_BASE}/integrations/debug-auth`, {
+src/hirevify-app\utils\api\integration-auth-test.tsx:394: const response = await fetch(`${API_BASE}/integrations${endpoint}`, {
+src/hirevify-app\utils\database\supabaseClient.ts:5:export function getSupabaseBrowserClient(): SupabaseClient {
+src/hirevify-app\utils\api\files.tsx:64: const response = await fetch(`${API_BASE}/upload/${type}`, {
+src/hirevify-app\utils\api\files.tsx:89: const response = await fetch(`${API_BASE}/project-challenge-videos`, {
+src/hirevify-app\utils\api\files.tsx:115: const response = await fetch(url, {
+src/hirevify-app\utils\api\files.tsx:130: const response = await fetch(`${API_BASE}/files/${type}/${path}`, {
+src/hirevify-app\utils\api\files.tsx:145: const response = await fetch(`${API_BASE}/files/${type}/${path}`, {
+src/hirevify-app\utils\api\files.tsx:185: const response = await fetch(`${API_BASE}/ats/process-resume`, {
+src/hirevify-app\utils\api\files.tsx:267: const response = await fetch(`${API_BASE}/ats/bulk-process`, {
+src/hirevify-app\utils\api\files.tsx:284: const response = await fetch(`${API_BASE}/ats/history`, {
+src/hirevify-app\utils\api\endpoint-diagnosis.tsx:64: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\endpoint-diagnosis.tsx:237: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\connectivity-test.tsx:49: response = await fetch(`${API_BASE}/test-no-auth`, {
+src/hirevify-app\utils\api\connectivity-test.tsx:68: response = await fetch(`${API_BASE}/health`, {
+src/hirevify-app\utils\api\connectivity-test.tsx:128: response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\connectivity-test.tsx:180: const response = await fetch(`${API_BASE}/integrations/list`, {
+src/hirevify-app\utils\api\comprehensive-backend-test.tsx:51: const response = await fetch(url, {
+src/hirevify-app\utils\api\comprehensive-backend-test.tsx:135: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\comprehensive-backend-test.tsx:224: const response = await fetch(endpoint.url, {
+src/hirevify-app\utils\api\comprehensive-backend-test.tsx:292: const optionsResponse = await fetch(url, {
+src/hirevify-app\utils\api\comprehensive-backend-test.tsx:362: const response = await fetch(url, {
+src/hirevify-app\utils\api\communications.tsx:311:  const [{ data: profilesById, error: profilesByIdError }, { data: profilesByAuthId, error: profilesByAuthIdError }] = await Promise.all([
+src/hirevify-app\utils\api\communications.tsx:326:  const [{ data: candidatesById }, { data: candidatesByUserId }] = await Promise.all([
+src/hirevify-app\utils\api\communications.tsx:398:    const [recruiterId, candidateId, recruiterAliases, candidateAliases] = await Promise.all([
+src/hirevify-app\utils\api\communications.tsx:448:        const [legacyRecruiterId, legacyCandidateId] = await Promise.all([
+src/hirevify-app\utils\api\backend-health.tsx:55: const response = await fetch(url, {...options,
+src/hirevify-app\utils\api\auth.tsx:161: const response = await fetch(`${API_BASE}/auth/signup`, {
+src/hirevify-app\utils\api\auth.tsx:215: const response = await fetch(`${API_BASE}/auth/signin`, {
+src/hirevify-app\utils\api\auth.tsx:313: const response = await fetch(`${API_BASE}/auth/session`, {
+src/hirevify-app\utils\api\auth.tsx:346: const response = await fetch(`${API_BASE}/auth/session`, {
+src/hirevify-app\utils\api\auth.tsx:390: const response = await fetch(`${API_BASE}/auth/profile`, {
+app\api\admin\health\route.ts:111:    const { error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+app\api\admin\health\route.ts:132:  const tables = await Promise.all(
+app\api\admin\health\route.ts:135:        const { count, error } = await supabase.from(table).select("id", { count: "exact", head: true });
+src/hirevify-app\utils\api\applications.tsx:35: const response = await fetch(`${API_BASE}/applications`, {
+src/hirevify-app\utils\api\applications.tsx:53: const response = await fetch(`${API_BASE}/applications/candidate`, {
+src/hirevify-app\utils\api\applications.tsx:68: const response = await fetch(`${API_BASE}/applications/project/${projectId}`, {
+src/hirevify-app\utils\api\applications.tsx:83: const response = await fetch(`${API_BASE}/applications/${applicationId}/status`, {
+src/hirevify-app\utils\api\analytics.tsx:27: const response = await fetch(`${API_BASE}/analytics/${userId}`, {
+src/hirevify-app\utils\api\analytics.tsx:51: const response = await fetch(`${API_BASE}/analytics/platform/overview`, {
+app\api\admin\data\route.ts:36:    let query = supabase.from(table).select(columns).limit(config.limit);
+app\api\admin\data\route.ts:77:  ] = await Promise.all([
+app\api\admin\data\route.ts:135:  const { error } = await supabase.from("subscriptions").upsert(
+app\api\admin\assessments\route.ts:141:    const inserted = await supabase.from("assessment_questions").insert(
+app\api\admin\assessments\route.ts:183:  const assessment = await supabase.from("skills_assessments").delete().eq("id", id);
+app\api\ai\resume-analysis\route.ts:143:  const response = await fetch(
+app\api\ai\resume-analysis\route.ts:190:  const response = await fetch('https://api.anthropic.com/v1/messages', {
+app\admin1\page.tsx:221:      const response = await fetch("/api/admin/data", { cache: "no-store" });
+app\admin1\page.tsx:234:  useEffect(() => {
+app\admin1\page.tsx:392:      const response = await fetch("/api/admin/health", { cache: "no-store" });
+app\admin1\page.tsx:427:      const response = await fetch("/api/admin/data", {
+src/hirevify-app\utils\ai\resumeDataExtractor.tsx:155: const response = await fetch('/api/openai', {
+src/hirevify-app\utils\ai\productionResumeAnalyzer.tsx:230: const response = await fetch('https://api.openai.com/v1/chat/completions', {
+src/hirevify-app\utils\ai\openai-service.tsx:469: const response = await fetch(`${this.baseURL}/chat/completions`, {
+src/hirevify-app\utils\ai\matchingService.tsx:270: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/projects/${projectId}`, {
+src/hirevify-app\utils\ai\matchingService.tsx:295: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/candidates/${candidateId}`, {
+src/hirevify-app\utils\ai\matchingService.tsx:326: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/candidates`, {
+src/hirevify-app\utils\ai\matchingService.tsx:359: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/projects`, {
+src/hirevify-app\utils\ai\matchingService.tsx:495: await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/analytics/matches`, {
+src/hirevify-app\utils\ai\matchingService.tsx:520: await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/analytics/interactions`, {
+src/hirevify-app\utils\ai\enhanced-openai-service.tsx:290: const response = await fetch(`${this.baseURL}/chat/completions`, {
+src/hirevify-app\utils\ai\enhanced-openai-service.tsx:350: const response = await fetch(`${this.baseURL}/chat/completions`, {
+app\admin1\assessments\page.tsx:91:  useEffect(() => {
+app\admin1\assessments\page.tsx:98:      const response = await fetch("/api/admin/assessments", { cache: "no-store" });
+app\admin1\assessments\page.tsx:295:      const response = await fetch("/api/admin/assessments", {
+app\admin1\assessments\page.tsx:323:    const response = await fetch(`/api/admin/assessments?id=${encodeURIComponent(id)}`, {
+app\admin1\AdminShell.tsx:11:    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
+app\admin1\AdminLogin.tsx:19:      const response = await fetch("/api/admin/login", {
+src/hirevify-app\hooks\useNotifications.ts:2:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\hooks\useNotifications.ts:46:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\hooks\useNotifications.ts:68:  useEffect(() => {
+src/hirevify-app\hooks\useNotifications.ts:73:  useEffect(() => {
+src/hirevify-app\hooks\useNotifications.ts:76:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\hooks\useNotifications.ts:122:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\hooks\useNotifications.ts:148:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\hooks\useConversations.ts:13:  useEffect(() => {
+src/hirevify-app\hooks\useConversations.ts:36:  useEffect(() => {
+src/hirevify-app\hooks\useConversations.ts:44:  useEffect(() => {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:49: const response = await fetch('https://documentai.googleapis.com/v1/projects/YOUR_PROJECT_ID/locations/us/processors/YOUR_PROCESSOR_ID:process', {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:110: const analyzeResponse = await fetch(`${endpoint}/formrecognizer/documentModels/prebuilt-document:analyze?api-version=2022-08-31`, {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:137: const resultResponse = await fetch(operationLocation, {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:202: const response = await fetch('https://textract.us-east-1.amazonaws.com/', {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:262: const uploadResponse = await fetch('https://pdf-services.adobe.io/assets', {
+src/hirevify-app\utils\ats\professionalParsingServices.tsx:279: const extractResponse = await fetch('https://pdf-services.adobe.io/operation/extractpdf', {
+src/hirevify-app\utils\ats\productionFileStorage.tsx:114: const response = await fetch(`${apiBaseUrl}/files/ats-upload`, {
+src/hirevify-app\services\subscriptionsService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\subscriptionsService.ts:28: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\subscriptionsService.ts:60: const { data, error } = await this.supabase.from('subscriptions').select('*').eq('user_id', userId).maybeSingle<Subscription>();
+src/hirevify-app\services\subscriptionsService.ts:73: const { data, error } = await this.supabase.from('subscriptions').upsert([{...subscription, user_id: userId }], {
+src/hirevify-app\services\subscriptionsService.ts:124: const { data, error } = await this.supabase.from('subscriptions').update({
+src/hirevify-app\services\subscriptionsService.ts:163: const { data, error } = await this.supabase.from('subscriptions').update({
+src/hirevify-app\services\subscriptionsService.ts:188: const { data, error } = await this.supabase.from('subscriptions').update({
+src/hirevify-app\services\subscriptionsService.ts:209: const { data, error } = await this.supabase.from('subscriptions').update({
+src/hirevify-app\services\savedJobsService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\savedJobsService.ts:16: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\savedJobsService.ts:22: const { data, error } = await this.supabase.from('saved_jobs').select(
+src/hirevify-app\services\savedJobsService.ts:45: const { data, error } = await this.supabase.from('saved_jobs').insert([{ candidate_id: candidateId, job_id: jobId }]).select().single<SavedJob>();
+src/hirevify-app\services\savedJobsService.ts:64: const { error } = await this.supabase.from('saved_jobs').delete().eq('candidate_id', candidateId).eq('job_id', jobId);
+src/hirevify-app\services\savedJobsService.ts:78: const { data, error } = await this.supabase.from('saved_jobs').select('id').eq('candidate_id', candidateId).eq('job_id', jobId).single();
+src/hirevify-app\services\savedJobsService.ts:92: const { count, error } = await this.supabase.from('saved_jobs').select('*', { count: 'exact', head: true }).eq('candidate_id', candidateId);
+src/hirevify-app\utils\ats\enterpriseATSScorer.tsx:82: ] = await Promise.all([
+src/hirevify-app\services\careerGrowthService.ts:1:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\careerGrowthService.ts:158: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\careerGrowthService.ts:161: const { data, error } = await this.supabase.from('career_growth_opportunities').select('*').eq('type', type).eq('status', 'published').order('created_at', { ascending: false }).returns<CareerGrowthOpportunity[]>();
+src/hirevify-app\services\careerGrowthService.ts:171: const { data, error } = await this.supabase.from('career_growth_opportunities').select('*').eq('id', id).single<CareerGrowthOpportunity>();
+src/hirevify-app\services\careerGrowthService.ts:181: const { data, error } = await this.supabase.from('career_growth_applications').insert([
+src/hirevify-app\services\careerGrowthService.ts:199: const { data, error } = await this.supabase.from('career_growth_applications').select('*, opportunity:opportunity_id(*)').eq('candidate_profile_id', candidateProfileId).order('created_at', { ascending: false }).returns<CareerGrowthApplication[]>();
+src/hirevify-app\services\careerGrowthService.ts:209: let query = this.supabase.from('career_growth_opportunities').select('*').eq('recruiter_id', recruiterId).order('created_at', { ascending: false });
+src/hirevify-app\services\careerGrowthService.ts:225: const { data, error } = await this.supabase.from('career_growth_opportunities').insert([{...input, status: input.status || 'published' }]).select().single<CareerGrowthOpportunity>();
+src/hirevify-app\services\careerGrowthService.ts:235: const { data, error } = await this.supabase.from('career_growth_opportunities').update(input).eq('id', id).select().single<CareerGrowthOpportunity>();
+src/hirevify-app\services\careerGrowthService.ts:245: const { error } = await this.supabase.from('career_growth_opportunities').delete().eq('id', id);
+src/hirevify-app\services\careerGrowthService.ts:267: const { data, error } = await this.supabase.from('career_growth_applications').select('*, candidate_profile:candidate_profile_id(full_name, email, avatar_url)').in('opportunity_id', opportunityIds).order('created_at', { ascending: false }).returns<CareerGrowthApplication[]>();
+src/hirevify-app\services\careerGrowthService.ts:285: const { data, error } = await this.supabase.from('career_growth_applications').update({
+src/hirevify-app\services\careerGrowthService.ts:308: const { data, error } = await this.supabase.from('career_growth_applications').update({
+src/hirevify-app\services\careerGrowthService.ts:321: const { data, error } = await this.supabase.from('career_growth_applications').update({
+src/hirevify-app\services\careerGrowthService.ts:344: const { data, error } = await this.supabase.from('career_growth_submissions').insert([
+src/hirevify-app\services\projectAssignmentsService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\projectAssignmentsService.ts:56:  private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\projectAssignmentsService.ts:141:    const { data, error } = await this.supabase.from('job_project_assignments').select(`
+src/hirevify-app\services\projectAssignmentsService.ts:159:    const { data, error } = await this.supabase.from('job_project_assignments').select(`
+src/hirevify-app\services\projectAssignmentsService.ts:177:    const { data, error } = await this.supabase.from('job_project_assignments').select(`
+src/hirevify-app\services\projectAssignmentsService.ts:195:    const { data, error } = await this.supabase.from('job_project_assignments').select(`
+src/hirevify-app\services\projectAssignmentsService.ts:214:    const { data, error } = await this.supabase.from('job_project_assignments').select(`
+src/hirevify-app\services\projectAssignmentsService.ts:233:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:249:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:272:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:292:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:308:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:328:    const { data, error } = await this.supabase.from('job_project_assignments').update({
+src/hirevify-app\services\projectAssignmentsService.ts:348:    const { data, error } = await this.supabase.from('job_project_assignments').select('id').eq('job_id', jobId).eq('project_id', projectId).eq('candidate_id', candidateId).maybeSingle();
+src/hirevify-app\services\projectAssignmentsService.ts:362:    const { data, error } = await this.supabase.from('job_project_assignments').select('assignment_status').eq('recruiter_id', recruiterId);
+src/hirevify-app\services\profilesService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\profilesService.ts:94: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\profilesService.ts:98: const { data: byAuth, error: authError } = await this.supabase.from('profiles').select('id').eq('auth_user_id', id).maybeSingle();
+src/hirevify-app\services\profilesService.ts:104: const { data: byProfile, error: profileError } = await this.supabase.from('profiles').select('id').eq('id', id).maybeSingle();
+src/hirevify-app\services\profilesService.ts:116: const { data, error } = await this.supabase.from('profiles').select('*').eq('id', userId).maybeSingle<Profile>();
+src/hirevify-app\services\profilesService.ts:130: const { data, error } = await this.supabase.from('profiles').select('*').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle<Profile>();
+src/hirevify-app\services\profilesService.ts:149: const { data, error } = await this.supabase.from('profiles').update(updates).eq('id', userId).select().maybeSingle<Profile>();
+src/hirevify-app\services\profilesService.ts:227: let { data, error } = await this.supabase.from('candidate_profiles').select('*').eq('user_id', userId).maybeSingle<CandidateProfile>();
+src/hirevify-app\services\profilesService.ts:234: const { data: profileRow } = await this.supabase.from('profiles').select('id, auth_user_id').or(`id.eq.${userId},auth_user_id.eq.${userId}`).maybeSingle();
+src/hirevify-app\services\profilesService.ts:239: const fallback = await this.supabase.from('candidate_profiles').select('*').eq('user_id', authUserId).maybeSingle<CandidateProfile>();
+src/hirevify-app\services\profilesService.ts:273: const { data, error } = await this.supabase.from('candidate_profiles').update(updates).eq('user_id', userId).select().maybeSingle<CandidateProfile>();
+src/hirevify-app\services\assessmentsService.ts:1:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\assessmentsService.ts:14: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\assessmentsService.ts:16: const { data, error } = await supabase.from('skills_assessments').select('*').eq('status', 'active').order('created_at', { ascending: false });
+src/hirevify-app\services\assessmentsService.ts:27: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\assessmentsService.ts:29: const { data, error } = await supabase.from('assessment_results').select('*').eq('user_id', String(userId)).order('completed_at', { ascending: false });
+src/hirevify-app\services\assessmentsService.ts:52: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\assessmentsService.ts:65: const { data, error } = await supabase.from('assessment_results').upsert(payload, { onConflict: 'user_id,assessment_id' }).select('*').single();
+src/hirevify-app\services\portfolioService.ts:1:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\portfolioService.ts:56: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\portfolioService.ts:68: const { data, error } = await supabase.from('candidate_portfolio_items').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+src/hirevify-app\services\portfolioService.ts:103: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\portfolioService.ts:115: const { data, error } = await supabase.from('candidate_portfolio_items').insert({
+src/hirevify-app\services\portfolioService.ts:177: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\portfolioService.ts:203: const { data, error } = await supabase.from('candidate_portfolio_items').update(updateData).eq('id', id).eq('user_id', user.id).select().single();
+src/hirevify-app\services\portfolioService.ts:228: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\portfolioService.ts:239: const { error } = await supabase.from('candidate_portfolio_items').delete().eq('id', id).eq('user_id', user.id);
+src/hirevify-app\services\jobsService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\jobsService.ts:58: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\jobsService.ts:68: let query = this.supabase.from('jobs').select(`*, recruiter_profile:recruiter_id(company_name, company_logo_url)`).eq('status', 'published').order('created_at', { ascending: false });
+src/hirevify-app\services\jobsService.ts:111: const { data, error } = await this.supabase.from('jobs').select(`*, recruiter_profile:recruiter_id(company_name, company_logo_url, verified_recruiter)`).eq('id', jobId).single<JobWithRecruiter>();
+src/hirevify-app\services\jobsService.ts:129: let query = this.supabase.from('jobs').select('*').eq('recruiter_id', recruiterId).order('created_at', { ascending: false });
+src/hirevify-app\services\jobsService.ts:149: const { data, error } = await this.supabase.from('jobs').insert([jobData]).select().single<Job>();
+src/hirevify-app\services\jobsService.ts:163: const { data, error } = await this.supabase.from('jobs').update(updates).eq('id', jobId).select().single<Job>();
+src/hirevify-app\services\jobsService.ts:177: const { error } = await this.supabase.from('jobs').delete().eq('id', jobId);
+src/hirevify-app\services\jobsService.ts:191: let query = this.supabase.from('jobs').select('*').eq('status', 'published');
+src/hirevify-app\services\jobsService.ts:213: const { data: jobs, error: jobsError } = await this.supabase.from('jobs').select('status, applications_count').eq('recruiter_id', recruiterId).returns<{ status: string; applications_count: number }[]>();
+src/hirevify-app\components\AIChatbot.tsx:53: useEffect(() => {
+src/hirevify-app\components\AIChatbot.tsx:67: useEffect(() => {
+src/hirevify-app\components\AIChatbot.tsx:72: useEffect(() => {
+src/hirevify-app\components\AIMatchingDashboard.tsx:35:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\AIMatchingDashboard.tsx:162: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\AIMatchingDashboard.tsx:250: const scoredRows = await Promise.all(applications.map(async (application: any): Promise<LiveMatchRow> => {
+src/hirevify-app\components\AIMatchingDashboard.tsx:366: useEffect(() => {
+src/hirevify-app\components\AICareerAdvisor.tsx:124: useEffect(() => {
+src/hirevify-app\components\AIMatchingAnalytics.tsx:34: useEffect(() => {
+src/hirevify-app\components\AIATSScanner.tsx:289: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/extract-resume`, {
+src/hirevify-app\components\AIATSScanner.tsx:321: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/calculate-ats-scores`, {
+src/hirevify-app\components\AIInterviewCoach.tsx:208: useEffect(() => {
+src/hirevify-app\services\applicationsService.ts:6:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\services\applicationsService.ts:74: private supabase = createSupabaseBrowserClient();
+src/hirevify-app\services\applicationsService.ts:135:  const { data, error } = await this.supabase.from('applications').insert([
+src/hirevify-app\services\applicationsService.ts:218: await this.supabase.from('notifications').insert([
+src/hirevify-app\services\applicationsService.ts:251:  let { data, error } = await this.supabase.from('applications').select(
+src/hirevify-app\services\applicationsService.ts:260:  const { data: simpleData, error: simpleError } = await this.supabase.from('applications').select('*').eq('candidate_id', queryCandidateId).order('submitted_at', { ascending: false }).returns<Application[]>();
+src/hirevify-app\services\applicationsService.ts:361: const { data: jobs, error: jobsError } = await this.supabase.from('jobs').select('id, title, recruiter_id, job_type, has_project').eq('recruiter_id', recruiterId);
+src/hirevify-app\services\applicationsService.ts:376: const { data, error } = await this.supabase.from('applications').select('*').in('job_id', jobIds).order('submitted_at', { ascending: false }).returns<Application[]>();
+src/hirevify-app\services\applicationsService.ts:399: const { data, error } = await this.supabase.from('applications').update({ status: 'withdrawn' }).eq('id', applicationId).select().single<Application>();
+src/hirevify-app\services\applicationsService.ts:434: const { data, error } = await this.supabase.from('applications').select('status, job_id').in('job_id', jobIds).returns<any[]>();
+src/hirevify-app\services\applicationsService.ts:458: const { data, error } = await this.supabase.from('applications').select('*').eq('id', applicationId).single<Application>();
+src/hirevify-app\services\applicationsService.ts:472:  const { data, error } = await this.supabase.from('applications').select('id').eq('job_id', jobId).eq('candidate_id', candidateId).single();
+src/hirevify-app\services\applicationsService.ts:595:        const response = await fetch(path);
+src/hirevify-app\App.tsx:257:  useEffect(() => {
+src/hirevify-app\App.tsx:310:  useEffect(() => {
+src/hirevify-app\App.tsx:425:  useEffect(() => {
+src/hirevify-app\App.tsx:494:  useEffect(() => {
+src/hirevify-app\App.tsx:508:   useEffect(() => {
+src/hirevify-app\components\AISmartNotifications.tsx:163: useEffect(() => {
+src/hirevify-app\components\AIResumeBuilder.tsx:45:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\AIResumeBuilder.tsx:162: useEffect(() => {
+src/hirevify-app\components\AIResumeBuilder.tsx:175: useEffect(() => {
+src/hirevify-app\components\AIResumeBuilder.tsx:197: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\AIResumeBuilder.tsx:204: const response = await fetch('/api/ai/resume-analysis', {
+src/hirevify-app\components\AISkillsDevelopment.tsx:128: useEffect(() => {
+src/hirevify-app\components\BetaProgram.tsx:92: useEffect(() => {
+src/hirevify-app\components\ATSResumeScanner.tsx:142: useEffect(() => {
+src/hirevify-app\components\AutomatedScreening.tsx:186: useEffect(() => {
+src/hirevify-app\components\AutomatedScreening.tsx:191: useEffect(() => {
+src/hirevify-app\components\AutomatedScreening.tsx:205: useEffect(() => {
+src/hirevify-app\components\AssessmentTaking.tsx:148: useEffect(() => {
+src/hirevify-app\components\AssessmentTaking.tsx:162: useEffect(() => {
+src/hirevify-app\components\AssessmentTaking.tsx:179: useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:53:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ATSView.tsx:265:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:268:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:289:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:302:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:312:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:316:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:362:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:370:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:394:          ? await supabase.from('candidate_profiles').select('*').in('user_id', candidateDetailIds)
+src/hirevify-app\components\ATSView.tsx:397:          ? await supabase.from('portfolio_items').select('user_id, title, project_url, live_url, github_url').in('user_id', candidateDetailIds)
+src/hirevify-app\components\ATSView.tsx:400:        const mapped: JobApplication[] = await Promise.all((apps || []).map(async (app: any) => {
+src/hirevify-app\components\ATSView.tsx:438:            await supabase.from('applications').update({ match_score: atsMatch.score }).eq('id', app.id);
+src/hirevify-app\components\ATSView.tsx:521:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:541:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:565:  useEffect(() => {
+src/hirevify-app\components\ATSView.tsx:655:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:722:          await supabase.from('notifications').insert([
+src/hirevify-app\components\ATSView.tsx:789:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:843:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:863:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:870:    await supabase.from('notifications').insert([
+src/hirevify-app\components\ATSView.tsx:887:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ATSView.tsx:888:    await supabase.from('applications').update({ status }).eq('id', assignment.applicationId);
+src/hirevify-app\components\AuthProvider.tsx:83: const { data: profile, error } = await supabase.from("profiles").select("*").eq("auth_user_id", authUser.id).maybeSingle();
+src/hirevify-app\components\AuthProvider.tsx:111: const { error } = await supabase.from("profiles").select("id").limit(1);
+src/hirevify-app\components\AuthProvider.tsx:134: useEffect(() => {
+src/hirevify-app\components\AuthProvider.tsx:213:const { data: profile, error: profileError } = await supabase.from("profiles").upsert(
+src/hirevify-app\components\AuthProvider.tsx:233: const { error: recruiterProfileError } = await supabase.from("recruiter_profiles").upsert(
+src/hirevify-app\components\ATSUploadDiagnostic.tsx:130: const response = await fetch(`${apiBaseUrl}/files/ats-upload`, {
+src/hirevify-app\components\ATSUploadDiagnostic.tsx:163: const response = await fetch('/api/health', {
+src/hirevify-app\components\CreateJobFlow.tsx:56: const { data: invite, error: insertError } = await supabase.from('interview_invites').insert({
+src/hirevify-app\components\CreateJobFlow.tsx:71: const { error: updateError } = await supabase.from('interview_invites').update({
+src/hirevify-app\components\CandidatePortfolio.tsx:48: useEffect(() => {
+src/hirevify-app\components\CandidateJobDetail.tsx:8:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateJobDetail.tsx:148:  const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateJobDetail.tsx:180:  useEffect(() => {
+src/hirevify-app\components\CandidateJobDetail.tsx:225:  useEffect(() => {
+src/hirevify-app\components\CandidateJobDetail.tsx:245:  useEffect(() => {
+src/hirevify-app\components\CandidateJobDetail.tsx:251:  useEffect(() => {
+src/hirevify-app\components\CandidateJobDetail.tsx:488:      const response = await fetch('/api/ai/rewrite-resume', {
+src/hirevify-app\components\CandidateJobApply.tsx:35:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateJobApply.tsx:88:  const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateJobApply.tsx:113:  useEffect(() => {
+src/hirevify-app\components\CandidateJobApply.tsx:142:  useEffect(() => {
+src/hirevify-app\components\ChatbotIntro.tsx:22: useEffect(() => {
+src/hirevify-app\components\CandidateGrowthPage.tsx:12:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateGrowthPage.tsx:129: const [opportunityResult, applicationResult] = await Promise.all([
+src/hirevify-app\components\CandidateGrowthPage.tsx:154: useEffect(() => {
+src/hirevify-app\components\CandidateGrowthPage.tsx:208: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateGrowthPage.tsx:214: await supabase.from('notifications').insert({
+src/hirevify-app\components\CandidateGrowthPage.tsx:284: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateGrowthPage.tsx:290: await supabase.from('notifications').insert({
+src/hirevify-app\components\CandidateDashboard.tsx:157:  useEffect(() => {
+src/hirevify-app\components\CandidateAppliedJobs.tsx:180:  useEffect(() => {
+src/hirevify-app\components\CandidateAppliedJobs.tsx:271:  useEffect(() => {
+src/hirevify-app\components\BillingSettingsCard.tsx:44:  useEffect(() => {
+src/hirevify-app\components\CandidateSavedJobs.tsx:48:  useEffect(() => {
+src/hirevify-app\components\CandidateSavedJobs.tsx:115:  useEffect(() => {
+src/hirevify-app\components\CandidateSettings.tsx:12:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateSettings.tsx:40:  useEffect(() => {
+src/hirevify-app\components\CandidateSettings.tsx:51:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateSettings.tsx:91:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateSettings.tsx:109:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\integration-hub\hooks.ts:109: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/integrations/list`, {
+src/hirevify-app\components\integration-hub\hooks.ts:149: const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/integrations/connect`, {
+src/hirevify-app\components\integration-hub\hooks.ts:183: useEffect(() => {
+src/hirevify-app\components\VideoRecorder.tsx:38:  useEffect(() => {
+src/hirevify-app\components\VideoRecorder.tsx:52:  useEffect(() => {
+src/hirevify-app\components\CandidateSearch.tsx:86: useEffect(() => {
+src/hirevify-app\components\CandidateSearch.tsx:91: const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+src/hirevify-app\components\CandidateSearch.tsx:92: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateSearch.tsx:121: const [{ data: profilesById }, { data: profilesByAuthId }, { data: portfolioRows }] = await Promise.all([
+src/hirevify-app\components\CandidateSearch.tsx:123: ? supabase.from('profiles').select('*').in('id', lookupIds)
+src/hirevify-app\components\CandidateSearch.tsx:126: ? supabase.from('profiles').select('*').in('auth_user_id', lookupIds)
+src/hirevify-app\components\CandidateSearch.tsx:287: useEffect(() => {
+src/hirevify-app\components\CandidateSearch.tsx:301: useEffect(() => {
+src/hirevify-app\components\CandidateProjectAssignment.tsx:28:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateProjectAssignment.tsx:129:  const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateProjectAssignment.tsx:143:  useEffect(() => {
+src/hirevify-app\components\CandidateProjectAssignment.tsx:234:    await supabase.from('notifications').insert([
+src/hirevify-app\components\VideoPreview.tsx:29:      const response = await fetch(videoUrl);
+src/hirevify-app\components\CandidateProfileEditor.tsx:28:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\CandidateProfileEditor.tsx:628: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateProfileEditor.tsx:646:  ] = await Promise.all([profileRequest, directCandidateRequest]);
+src/hirevify-app\components\CandidateProfileEditor.tsx:773: useEffect(() => {
+src/hirevify-app\components\CandidateProfileEditor.tsx:786: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\CandidateProfileEditor.tsx:793:  const { data: profileRow, error: profileError } = await supabase.from('profiles').select('id, auth_user_id, email, role').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).maybeSingle();
+src/hirevify-app\components\CandidateProfileEditor.tsx:863: const { error: updateProfileError } = await supabase.from('profiles').update(profileUpdate).eq('id', profileRow.id);
+src/hirevify-app\components\CandidateProfileEditor.tsx:1007: const result = existingProfile?.id? await supabase.from('candidate_profiles').update(payload).eq('id', existingProfile.id).select('id, profile_completed, profile_completeness').single(): await supabase.from('candidate_profiles').insert(payload).select('id, profile_completed, profile_completeness').single();
+src/hirevify-app\components\ErrorBoundary.tsx:153: fetch('/api/errors', {
+src/hirevify-app\components\useScrollReveal.ts:4: useEffect(() => {
+src/hirevify-app\components\EnhancedVideoInterview.tsx:154: useEffect(() => {
+src/hirevify-app\components\EnhancedVideoInterview.tsx:163: useEffect(() => {
+src/hirevify-app\components\Homepage.tsx:132: useEffect(() => {
+src/hirevify-app\components\ProfessionalATSDashboard.tsx:76: useEffect(() => {
+src/hirevify-app\components\ui\use-mobile.ts:10: React.useEffect(() => {
+src/hirevify-app\components\ui\carousel.tsx:89: React.useEffect(() => {
+src/hirevify-app\components\ui\carousel.tsx:94: React.useEffect(() => {
+src/hirevify-app\components\PricingPage.tsx:48: useEffect(() => {
+src/hirevify-app\components\ui\sidebar.tsx:96: React.useEffect(() => {
+src/hirevify-app\components\SubscriptionManager.tsx:25:  useEffect(() => {
+src/hirevify-app\components\SkillsDevelopmentAI.tsx:134: useEffect(() => {
+src/hirevify-app\components\SkillsCertification.tsx:184: useEffect(() => {
+src/hirevify-app\components\SkillsAssessment.tsx:16:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\SkillsAssessment.tsx:223: useEffect(() => {
+src/hirevify-app\components\SkillsAssessment.tsx:228: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\SkillsAssessment.tsx:230: const { data, error } = await supabase.from('skills_assessments').select('*').eq('status', 'active').order('created_at', { ascending: false });
+src/hirevify-app\components\SkillsAssessment.tsx:243: const { data: loadedQuestions, error: questionsError } = await supabase.from('assessment_questions').select('*').in('assessment_id', assessmentIds).order('sort_order', { ascending: true });
+src/hirevify-app\components\SkillsAssessment.tsx:293: useEffect(() => {
+src/hirevify-app\components\SkillsAssessment.tsx:347: const supabaseClient = createSupabaseBrowserClient();
+src/hirevify-app\components\portfolio\AddPortfolioForm.tsx:31: useEffect(() => {
+src/hirevify-app\components\MediaPermissionHelper.tsx:49: useEffect(() => {
+src/hirevify-app\components\OTPVerification.tsx:28: useEffect(() => {
+src/hirevify-app\components\MarketIntelligenceDashboard.tsx:148: useEffect(() => {
+src/hirevify-app\components\ResumeBuilder.tsx:19:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ResumeBuilder.tsx:168: useEffect(() => {
+src/hirevify-app\components\ResumeBuilder.tsx:176: useEffect(() => {
+src/hirevify-app\components\ResumeBuilder.tsx:578: const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+src/hirevify-app\components\ResumeBuilder.tsx:646: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ResumeBuilder.tsx:663: const response = await fetch('/api/ai/generate-summary', {
+src/hirevify-app\components\ResumeBuilder.tsx:708: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ResumeBuilder.tsx:715: const response = await fetch('/api/ai/rewrite-resume', {
+src/hirevify-app\components\ResumeBuilder.tsx:804:  const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ResumeBuilder.tsx:836:  const downloadResponse = await fetch(signedUrl);
+src/hirevify-app\components\ResumeBuilder.tsx:847:  const aiResponse = await fetch('/api/ai/parse-resume', {
+src/hirevify-app\components\ResumeBuilder.tsx:934: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ResumeBuilder.tsx:941: const response = await fetch('/api/ai/rewrite-resume', {
+src/hirevify-app\components\OngoingProjects.tsx:30:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\OngoingProjects.tsx:206:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\OngoingProjects.tsx:343:  useEffect(() => {
+src/hirevify-app\components\OngoingProjects.tsx:346:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\OngoingProjects.tsx:367:  useEffect(() => {
+src/hirevify-app\components\ReliableATSScanner.tsx:45:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ReliableATSScanner.tsx:176: useEffect(() => {
+src/hirevify-app\components\ReliableATSScanner.tsx:181: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ReliableATSScanner.tsx:548: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ReliableATSScanner.tsx:555: const response = await fetch('/api/ai/rewrite-resume', {
+src/hirevify-app\components\ReliableATSScanner.tsx:676: const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+src/hirevify-app\components\ReliableATSScanner.tsx:754: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ReliableATSScanner.tsx:761: ? await supabase.from('profiles').select('id, auth_user_id').or(profileFilters).maybeSingle()
+src/hirevify-app\components\ReliableATSScanner.tsx:767: ? await supabase.from('candidate_profiles').select('id, user_id').or(candidateFilter).limit(1).maybeSingle()
+src/hirevify-app\components\ReliableATSScanner.tsx:789: ? await supabase.from('candidate_profiles').update(payload).eq('id', existingProfile.id)
+src/hirevify-app\components\ReliableATSScanner.tsx:797: const insertResult = await supabase.from('candidate_profiles').insert({ user_id: insertUserId, resume_url: resumeUrl });
+src/hirevify-app\components\ReliableATSScanner.tsx:815: const { error: evaluationError } = await supabase.from('cv_evaluations').insert({
+src/hirevify-app\components\LiveInterviewScreen.tsx:42: useEffect(() => {
+src/hirevify-app\components\OneWayVideoInterview.tsx:90: useEffect(() => {
+src/hirevify-app\components\OneWayVideoInterview.tsx:109: useEffect(() => {
+src/hirevify-app\components\RecruiterSettings.tsx:12:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\RecruiterSettings.tsx:36:  useEffect(() => {
+src/hirevify-app\components\RecruiterSettings.tsx:47:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\RecruiterSettings.tsx:83:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\JobApplicants.tsx:63:  useEffect(() => {
+src/hirevify-app\components\JobApplicants.tsx:87:  useEffect(() => {
+src/hirevify-app\components\RecruiterProfileEditor.tsx:16:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\RecruiterProfileEditor.tsx:203: useEffect(() => {
+src/hirevify-app\components\RecruiterProfileEditor.tsx:208: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\RecruiterProfileEditor.tsx:286: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\RecruiterProfileEditor.tsx:298: const { data: profileRow, error: profileLookupError } = await supabase.from('profiles').select('id, auth_user_id, email').or(`auth_user_id.eq.${authUserId},id.eq.${user.id}`).maybeSingle();
+src/hirevify-app\components\RecruiterProfileEditor.tsx:310: const { error: profileError } = await supabase.from('profiles').update({
+src/hirevify-app\components\RecruiterProfileEditor.tsx:348: const { data: savedRow, error: saveError } = await supabase.from('recruiter_profiles').upsert(payload, { onConflict: 'id' }).select('id, phone, website, profile_completeness, profile_completed, updated_at').single();
+src/hirevify-app\components\RecruiterProfileEditor.tsx:358: const { data: verifyRow, error: verifyError } = await supabase.from('recruiter_profiles').select('id, company_name, contact_person, email, phone, website, job_title, bio, linkedin_url, industry, company_size, location, profile_completeness, profile_completed, updated_at').eq('id', recruiterProfileId).single();
+src/hirevify-app\components\IntegrationHub.tsx:103: useEffect(() => {
+src/hirevify-app\components\IntegrationHub.tsx:156: healthResponse = await fetch(endpoint.url, {
+src/hirevify-app\components\IntegrationHub.tsx:196: const ultraResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d4feca44/ultra-ping`, {
+src/hirevify-app\components\IntegrationHub.tsx:611: const sessionDebugResponse = await fetch(`${projectId? `https://${projectId}.supabase.co/functions/v1/make-server-d4feca44`: ''}/auth/debug-session`, {
+src/hirevify-app\components\RecruiterDashboard.tsx:40:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\RecruiterDashboard.tsx:157:  useEffect(() => {
+src/hirevify-app\components\RecruiterDashboard.tsx:162:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\RecruiterDashboard.tsx:163:        const { data: profileRow } = await supabase.from('profiles').select('id').eq('auth_user_id', user.id).maybeSingle();
+src/hirevify-app\components\JobPostingFlow.tsx:9:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\JobPostingFlow.tsx:123:  useEffect(() => {
+src/hirevify-app\components\JobPostingFlow.tsx:127:      const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\JobPostingFlow.tsx:317:  useEffect(() => {
+src/hirevify-app\components\JobPostingFlow.tsx:320:        const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\JobPostingFlow.tsx:370:    const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\NotificationCenter.tsx:146:  useEffect(() => {
+src/hirevify-app\components\NotificationCenter.tsx:224:        await Promise.all(
+src/hirevify-app\components\ProjectPostingFlow.tsx:9:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ProjectPostingFlow.tsx:45: useEffect(() => {
+src/hirevify-app\components\ProjectPostingFlow.tsx:49: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectPostingFlow.tsx:95: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectPostingFlow.tsx:103: const { data: profileRow, error: profileError } = await supabase.from('profiles').select('id, role, company_name').eq('auth_user_id', authData.user.id).maybeSingle();
+src/hirevify-app\components\ProjectPostingFlow.tsx:117: const { data: recruiterProfile } = await supabase.from('recruiter_profiles').select('id, company_name').eq('id', profileRow.id).maybeSingle();
+src/hirevify-app\components\ProjectPostingFlow.tsx:195: const { data, error } = await supabase.from('jobs').update(payload).eq('id', existingProject.id).select('id, title, status, created_at, updated_at').single();
+src/hirevify-app\components\ProjectPostingFlow.tsx:208: const { data, error } = await supabase.from('jobs').insert(payload).select('id, title, status, created_at, updated_at').single();
+src/hirevify-app\components\QuestionBank.tsx:165: useEffect(() => {
+src/hirevify-app\components\ProjectManagement.tsx:12:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ProjectManagement.tsx:154: useEffect(() => {
+src/hirevify-app\components\ProjectManagement.tsx:176: const [opportunityResult, applicationResult] = await Promise.all([
+src/hirevify-app\components\ProjectManagement.tsx:204: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectManagement.tsx:211: const { data: profileRow, error: profileError } = await supabase.from('profiles').select('id, role').eq('auth_user_id', authData.user.id).maybeSingle();
+src/hirevify-app\components\ProjectManagement.tsx:224: const { data, error } = await supabase.from('jobs').select('*').eq('recruiter_id', profileRow.id).order('created_at', { ascending: false });
+src/hirevify-app\components\ProjectManagement.tsx:242: useEffect(() => {
+src/hirevify-app\components\ProjectManagement.tsx:246: useEffect(() => {
+src/hirevify-app\components\ProjectManagement.tsx:263: useEffect(() => {
+src/hirevify-app\components\ProjectManagement.tsx:398: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectManagement.tsx:404: await supabase.from('notifications').insert({
+src/hirevify-app\components\ProjectChallengeVideoRecording.tsx:153: useEffect(() => {
+src/hirevify-app\components\ProjectSearch.tsx:17:import { createSupabaseBrowserClient } from '@/src/lib/supabase';
+src/hirevify-app\components\ProjectSearch.tsx:100:  useEffect(() => {
+src/hirevify-app\components\ProjectSearch.tsx:116:  const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+src/hirevify-app\components\ProjectSearch.tsx:117:  const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectSearch.tsx:120:  const { data: jobs, error } = await supabase.from('jobs').select('*').eq('status', 'published').order('created_at', { ascending: false });
+src/hirevify-app\components\ProjectSearch.tsx:151:  const [profileResult, savedResult] = await Promise.all([
+src/hirevify-app\components\ProjectSearch.tsx:158:  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
+src/hirevify-app\components\ProjectSearch.tsx:165:  const { data: candidateProfileRows } = await supabase.from('candidate_profiles').select('user_id').or(candidateProfileFilters.join(','));
+src/hirevify-app\components\ProjectSearch.tsx:172:  const { data: applicationRows } = await supabase.from('applications').select('job_id').in('job_id', jobIds).in('candidate_id', Array.from(candidateIds));
+src/hirevify-app\components\ProjectSearch.tsx:182:  const { data: savedRows } = await supabase.from('saved_jobs').select('job_id').eq('candidate_id', authUserId);
+src/hirevify-app\components\ProjectSearch.tsx:313: useEffect(() => {
+src/hirevify-app\components\ProjectSearch.tsx:539: const { createSupabaseBrowserClient } = await import('@/src/lib/supabase');
+src/hirevify-app\components\ProjectSearch.tsx:540: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectSearch.tsx:548:  const { data: candidateProfile } = await supabase.from('profiles').select('id, full_name, email, role').or(`auth_user_id.eq.${authData.user.id},id.eq.${authData.user.id}`).single();
+src/hirevify-app\components\ProjectSearch.tsx:564:  const { data: applicationProfileRow, error: applicationProfileError } = await supabase.from('profiles').select('id, auth_user_id, full_name').or(`auth_user_id.eq.${currentAuthUserId},id.eq.${currentAuthUserId}`).maybeSingle();
+src/hirevify-app\components\ProjectSearch.tsx:594: const { data: existing } = await supabase.from('applications').select('id').eq('job_id', selectedProject.id).eq('candidate_id', candidateOwnerId).maybeSingle();
+src/hirevify-app\components\ProjectSearch.tsx:625:const { error: appError } = await supabase.from('applications').insert({
+src/hirevify-app\components\ProjectSearch.tsx:639: await supabase.from('jobs').update({ applications_count: (selectedProject.applicationsCount || 0) + 1 }).eq('id', selectedProject.id);
+src/hirevify-app\components\ProjectSearch.tsx:649: await supabase.from('notifications').insert({
+src/hirevify-app\components\ProjectSearch.tsx:698: useEffect(() => {
+src/hirevify-app\components\ProjectSearch.tsx:703: const supabaseForAppliedState = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectSearch.tsx:740: useEffect(() => {
+src/hirevify-app\components\ProjectSearch.tsx:745: const supabase = createSupabaseBrowserClient();
+src/hirevify-app\components\ProjectSearch.tsx:751:  const { data: profileRow } = await supabase.from('profiles').select('id, auth_user_id').or(`auth_user_id.eq.${authUserId},id.eq.${authUserId}`).maybeSingle();
+src/hirevify-app\components\ProjectSearch.tsx:753: const { data: candidateProfileRow } = await supabase.from('candidate_profiles').select('user_id').eq('user_id', authUserId).maybeSingle();
+src/hirevify-app\components\ProjectSearch.tsx:769: const { data: applicationRows, error } = await supabase.from('applications').select('job_id, candidate_id').in('job_id', projectIds).in('candidate_id', candidateIds);
+src/hirevify-app\components\MessagingCenter.tsx:48:  useEffect(() => {
+src/hirevify-app\components\MessagingCenter.tsx:81:  useEffect(() => {
+src/hirevify-app\components\MessagingCenter.tsx:89:  useEffect(() => {
+src/hirevify-app\components\MessagingCenter.tsx:97:  useEffect(() => {
+src/hirevify-app\components\MessagingCenter.tsx:126:  useEffect(() => {
+src/hirevify-app\components\MessagingCenter.tsx:139:  useEffect(() => {

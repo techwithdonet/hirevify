@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ArrowLeft, CheckCircle2, Link2 } from 'lucide-react';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { jobsService } from '@/src/hirevify-app/services/jobsService';
 import { toast } from 'sonner';
@@ -241,18 +241,16 @@ export function ProjectPostingFlow({ onBack, existingProject }: ProjectPostingFl
 
  return (
  <div className={dashboardTheme.page}>
- {/* Header */}
- <header className="border-b border-border bg-card">
- <div className="max-w-4xl mx-auto px-6 py-4">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
- <ArrowLeft className="w-5 h-5" />
- </Button>
- <div className="flex items-center space-x-3">
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
- </div>
- </div>
- </div>
+  {/* Header */}
+  <header className="border-b border-border bg-card">
+  <div className="max-w-4xl mx-auto px-6 py-4">
+  <div className="flex items-center justify-between gap-4">
+  <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+  <ArrowLeft className="w-5 h-5" />
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </div>
  </header>
 
  {/* Main Content */}

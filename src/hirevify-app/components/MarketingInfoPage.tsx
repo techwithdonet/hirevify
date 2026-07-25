@@ -378,8 +378,8 @@ export function MarketingInfoPage({ page, onBack, onNavigate, onOpenHomepageLogi
   const Icon = content.icon;
 
   return (
-    <div className="min-h-screen bg-[#f7faf5] text-[#0f2418]">
-      <header className="border-b border-white/10 bg-[#1f3b28]">
+    <div className="min-h-screen bg-[#f4f8f6] text-[#0f2418]">
+      <header className="border-b border-white/10 bg-[#064e3b]">
         <div className="mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
           <button
             type="button"
@@ -389,50 +389,50 @@ export function MarketingInfoPage({ page, onBack, onNavigate, onOpenHomepageLogi
           >
             <img src="/hirevify-logo-mark.png" alt="" className="h-10 w-10 object-contain opacity-90" />
             <span className="text-lg font-semibold tracking-tight text-white">
-              Hire<span className="text-lime-300">Vify</span>
+              Hire<span className="text-cyan-200">Vify</span>
             </span>
           </button>
         </div>
       </header>
 
       <main>
-        <section className="bg-[#0b1a0f] px-4 py-14 text-white sm:px-6 lg:px-8 lg:py-20">
+        <section className="workspace-marketing-hero bg-[linear-gradient(135deg,#064e3b_0%,#0369a1_100%)] px-4 py-14 text-white sm:px-6 lg:px-8 lg:py-20">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={onBack}
-                className="mb-8 h-auto rounded-none bg-transparent px-0 py-0 text-sm font-semibold text-white/60 hover:bg-transparent hover:text-lime-300"
+                className="mb-8 h-auto rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:border-white/35 hover:bg-white/15 hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to home
               </Button>
-              <div className="mb-6 flex h-12 w-12 items-center justify-center border border-lime-300/30 text-lime-300">
+              <div className="workspace-marketing-icon mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-emerald-100">
                 <Icon className="h-6 w-6" />
               </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-lime-300/70">{content.eyebrow}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100">{content.eyebrow}</p>
               <h1 className="mt-5 max-w-3xl text-4xl font-light leading-tight tracking-normal sm:text-5xl lg:text-6xl">
                 {content.title}
               </h1>
               <p className="mt-6 max-w-2xl text-base font-light leading-8 text-white/55 sm:text-lg">{content.description}</p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 {content.primaryAction.href ? (
-                  <Button asChild className="h-11 rounded-none bg-lime-400 px-6 text-sm font-semibold text-[#0b1a0f] hover:bg-lime-300">
+                  <Button asChild className="h-11 rounded-xl bg-white px-6 text-sm font-semibold text-[#0b6258] shadow-sm hover:bg-[#edf7f4]">
                     <a href={content.primaryAction.href}>{content.primaryAction.label}</a>
                   </Button>
                 ) : (
                   <Button
                     type="button"
                     onClick={() => runAction(content.primaryAction, onNavigate)}
-                    className="h-11 rounded-none bg-lime-400 px-6 text-sm font-semibold text-[#0b1a0f] hover:bg-lime-300"
+                    className="h-11 rounded-xl bg-white px-6 text-sm font-semibold text-[#0b6258] shadow-sm hover:bg-[#edf7f4]"
                   >
                     {content.primaryAction.label}
                   </Button>
                 )}
                 {content.secondaryAction && (
                   content.secondaryAction.href ? (
-                    <Button asChild variant="outline" className="h-11 rounded-none border-white/25 bg-transparent px-6 text-sm font-semibold text-white hover:border-lime-300 hover:bg-transparent hover:text-lime-300">
+                    <Button asChild variant="outline" className="h-11 rounded-xl border-white/25 bg-white/10 px-6 text-sm font-semibold text-white hover:border-white/40 hover:bg-white/15 hover:text-white">
                       <a href={content.secondaryAction.href}>{content.secondaryAction.label}</a>
                     </Button>
                   ) : (
@@ -440,7 +440,7 @@ export function MarketingInfoPage({ page, onBack, onNavigate, onOpenHomepageLogi
                       type="button"
                       variant="outline"
                       onClick={() => runAction(content.secondaryAction!, onNavigate)}
-                      className="h-11 rounded-none border-white/25 bg-transparent px-6 text-sm font-semibold text-white hover:border-lime-300 hover:bg-transparent hover:text-lime-300"
+                      className="h-11 rounded-xl border-white/25 bg-white/10 px-6 text-sm font-semibold text-white hover:border-white/40 hover:bg-white/15 hover:text-white"
                     >
                       {content.secondaryAction.label}
                     </Button>
@@ -449,12 +449,12 @@ export function MarketingInfoPage({ page, onBack, onNavigate, onOpenHomepageLogi
               </div>
             </div>
 
-            <div className="border border-white/10 bg-white/5 p-6">
+            <div className="workspace-marketing-highlights rounded-2xl border border-white/15 bg-white/10 p-6 shadow-xl backdrop-blur-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">Highlights</p>
               <div className="mt-5 grid gap-3">
                 {content.highlights.map((highlight) => (
-                  <div key={highlight} className="flex items-start gap-3 border border-white/10 bg-[#102417] p-4">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-lime-300" />
+                  <div key={highlight} className="flex items-start gap-3 rounded-xl border border-white/15 bg-white/10 p-4">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-100" />
                     <span className="text-sm leading-6 text-white/75">{highlight}</span>
                   </div>
                 ))}
@@ -466,28 +466,28 @@ export function MarketingInfoPage({ page, onBack, onNavigate, onOpenHomepageLogi
         <section className="px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
             {content.sections.map((section) => (
-              <article key={section.title} className="border border-[#dfeada] bg-white p-6 shadow-sm">
-                <div className="mb-5 flex h-10 w-10 items-center justify-center border border-[#c5dfc0] text-[#3f7a2c]">
+              <article key={section.title} className="rounded-2xl border border-[#d5e5df] bg-white p-6 shadow-sm">
+                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl border border-[#9bcdbf] bg-[#edf7f4] text-[#0b6258]">
                   <section.icon className="h-5 w-5" />
                 </div>
                 <h2 className="text-lg font-semibold text-[#0f2418]">{section.title}</h2>
-                <p className="mt-3 text-sm leading-6 text-[#526b50]">{section.description}</p>
+                <p className="mt-3 text-sm leading-6 text-[#5f6f65]">{section.description}</p>
               </article>
             ))}
           </div>
 
           {content.note && (
-            <div className="mx-auto mt-8 max-w-7xl border border-[#dfeada] bg-white p-5 text-sm leading-6 text-[#526b50]">
+            <div className="mx-auto mt-8 max-w-7xl rounded-2xl border border-[#d5e5df] bg-white p-5 text-sm leading-6 text-[#5f6f65] shadow-sm">
               {content.note}
             </div>
           )}
 
-          <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-[#dfeada] pt-8 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-[#526b50]">Ready to keep exploring HireVify?</p>
+          <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-[#d5e5df] pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[#5f6f65]">Ready to keep exploring HireVify?</p>
             <Button
               type="button"
               onClick={onOpenHomepageLogin}
-              className="h-11 rounded-none bg-[#0f2418] px-5 text-white hover:bg-[#17331f]"
+              className="h-11 rounded-xl bg-[#0f7f74] px-5 text-white shadow-sm hover:bg-[#0b665e]"
             >
               Explore Product
               <ArrowRight className="ml-2 h-4 w-4" />

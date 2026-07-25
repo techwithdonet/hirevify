@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { savedJobsService } from '../services/savedJobsService';
 import { MIN_CANDIDATE_PROFILE_COMPLETENESS } from '../services/applicationsService';
+import { usePremiumAccess } from '../utils/premium';
 
 // Local types to avoid API dependency issues
 interface Project {
@@ -56,7 +57,9 @@ interface ProjectSearchProps {
 }
 
 export function ProjectSearch({ onBack, onUpgrade, onProjectChallengeVideo, onViewJob }: ProjectSearchProps) {
- const { user, accessToken } = useAuth();
+ const { user, accessToken, authInitialized } = useAuth();
+ const { checkAccess, isLoading: isPremiumLoading } = usePremiumAccess();
+ const hasPremiumSearch = checkAccess('enhanced-project-search');
  const [projects, setProjects] = useState<Project[]>([]);
  
  const [appliedProjectIds, setAppliedProjectIds] = useState<Set<string>>(new Set());
@@ -1060,10 +1063,12 @@ const { error: appError } = await supabase.from('applications').insert({
           </p>
         </div>
 
-        <Button onClick={onUpgrade} className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20">
-          <Zap className="w-4 h-4 mr-2" />
-          Upgrade for Premium Search
-        </Button>
+        {authInitialized && !isPremiumLoading && !hasPremiumSearch && (
+          <Button onClick={onUpgrade} className="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/20 transition hover:bg-white/20">
+            <Zap className="w-4 h-4 mr-2" />
+            Upgrade for Premium Search
+          </Button>
+        )}
       </div>
     </div>
   </div>

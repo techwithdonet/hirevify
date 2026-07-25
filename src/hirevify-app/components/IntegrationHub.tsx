@@ -51,7 +51,7 @@ import { diagnoseAllEndpoints, formatDiagnosisReport } from '../utils/api/endpoi
 import { runQuickConnectivityTest } from '../utils/api/quick-test';
 import { runComprehensiveIntegrationAuthTest, quickAuthDiagnostic } from '../utils/api/integration-auth-test';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 
 interface Integration {
  id: string;
@@ -586,13 +586,10 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
   <div className="flex items-center justify-between mb-6">
  <div className="flex items-center space-x-4">
  <Button variant="ghost" onClick={onBack} className="hover:bg-muted">
- <ArrowLeft className="w-4 h-4 mr-2" />
- Back to Dashboard
- </Button>
- <div className="flex items-center space-x-3">
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
- </div>
- </div>
+  <ArrowLeft className="w-4 h-4 mr-2" />
+  Back to Dashboard
+  </Button>
+  </div>
  <div className="flex gap-2">
  <Button 
  variant="outline" 
@@ -728,10 +725,11 @@ export function IntegrationHub({ onBack, onUpgrade }: IntegrationHubProps) {
  >... Test Service
  </Button>
  <Button className="bg-primary hover:bg-primary-hover text-primary-foreground">
- <Plus className="w-4 h-4 mr-2" />
- Request Integration
- </Button>
- </div>
+  <Plus className="w-4 h-4 mr-2" />
+  Request Integration
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
  </div>
 
  <div>

@@ -372,15 +372,21 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
 
  return (
   <div className="premium-page">
-  <header className="premium-header">
+  <header className="premium-header workspace-page-header workspace-ai-matching-header">
   <div className="premium-header-inner">
   <div className="flex items-center gap-4">
-  <Button variant="ghost" size="icon" onClick={onBack} className="rounded-lg">
+  <Button
+   variant="ghost"
+   onClick={onBack}
+   aria-label="Back to Dashboard"
+   className="workspace-header-back inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+  >
   <ArrowLeft className="h-4 w-4" />
+  <span>Back to Dashboard</span>
   </Button>
   <div>
   <h1 className="flex items-center gap-3 text-3xl font-bold tracking-normal">
-  <Brain className="h-8 w-8 text-emerald-700" />
+  <Brain className="workspace-header-title-icon h-8 w-8 text-emerald-700" />
   AI Matching System
   </h1>
   <p className="text-muted-foreground">
@@ -393,12 +399,17 @@ export function AIMatchingDashboard({ onBack, onUpgrade }: AIMatchingDashboardPr
  </div>
 
  <div className="flex items-center gap-3">
- <Button onClick={() => void loadDashboardData(true)} variant="outline" disabled={isRefreshing}>
+ <Button
+  onClick={() => void loadDashboardData(true)}
+  variant="outline"
+  disabled={isRefreshing}
+  className="workspace-header-secondary-action"
+ >
  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
  Refresh
  </Button>
  {onUpgrade && (
- <Button onClick={onUpgrade} className="bg-emerald-600 text-white hover:bg-emerald-700">
+ <Button onClick={onUpgrade} className="workspace-header-secondary-action bg-emerald-600 text-white hover:bg-emerald-700">
  <Zap className="mr-2 h-4 w-4" />
  Upgrade
  </Button>

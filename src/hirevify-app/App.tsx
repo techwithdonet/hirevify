@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './components/AuthProvider';
@@ -11,6 +11,8 @@ import { useAppNavigation } from './hooks/useAppNavigation';
 import type { Application, Project, Screen, Job, JobProjectAssignment, Candidate } from './types/app';
 
 const SCREEN_STORAGE_KEY = 'hirevify_current_screen';
+const NAVIGATION_CONTEXT_STORAGE_KEY = 'hirevify_navigation_context_v1';
+const useClientLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 export type ScreenNavigationOptions = {
  replace?: boolean;
@@ -117,6 +119,21 @@ const PUBLIC_SCREENS = new Set<Screen>([
  'support-status',
 ]);
 
+type NavigationContext = {
+ screen: Screen;
+ selectedProject: Project | null;
+ selectedApplication: Application | null;
+ selectedJob: Job | null;
+ selectedAssignment: JobProjectAssignment | null;
+ selectedConversationId: string | null;
+ projectChallengeData: {
+   projectId: string;
+   projectTitle: string;
+   challengeDescription?: string;
+ } | null;
+ assessmentBuilderData: unknown;
+};
+
 function isScreen(value: unknown): value is Screen {
  return typeof value === 'string' && ALL_SCREENS.includes(value as Screen);
 }
@@ -189,7 +206,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   const [selectedAssignment, setSelectedAssignment] = useState<JobProjectAssignment | null>(null);
   // selectedCandidate must start as `null` on BOTH server and client so the
   // initial render is identical (and hydrates cleanly). We populate it from
-  // sessionStorage in a useEffect after mount.
+  // sessionStorage immediately after hydration and before the next paint.
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [savedCandidates, setSavedCandidates] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
@@ -207,9 +224,87 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     challengeDescription?: string;
   } | null>(null);
   const [assessmentBuilderData, setAssessmentBuilderData] = useState<unknown>(null);
+  const [navigationStateRestored, setNavigationStateRestored] = useState(false);
   const [loginPromptSignal, setLoginPromptSignal] = useState(0);
-  const hadAuthenticatedUser = useRef(false);
   const hasSyncedUrlScreen = useRef(false);
+
+  // Detail routes carry UI context that is intentionally not part of the API
+  // contract. Keep it in this browser tab so a refresh restores the same page
+  // instead of briefly rendering an unrelated fallback screen.
+  useClientLayoutEffect(() => {
+    try {
+      const stored = window.sessionStorage.getItem(NAVIGATION_CONTEXT_STORAGE_KEY);
+      if (stored) {
+        const context = JSON.parse(stored) as Partial<NavigationContext>;
+        if (context.screen === initialScreen) {
+          setSelectedProject(context.selectedProject ?? null);
+          setSelectedApplication(context.selectedApplication ?? null);
+          setSelectedJob(context.selectedJob ?? null);
+          setSelectedAssignment(context.selectedAssignment ?? null);
+          setSelectedConversationId(context.selectedConversationId ?? null);
+          setProjectChallengeData(context.projectChallengeData ?? null);
+          setAssessmentBuilderData(context.assessmentBuilderData ?? null);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to restore navigation context:', error);
+      window.sessionStorage.removeItem(NAVIGATION_CONTEXT_STORAGE_KEY);
+    } finally {
+      setNavigationStateRestored(true);
+    }
+  }, [initialScreen]);
+
+  useEffect(() => {
+    if (!navigationStateRestored) return;
+
+    const context: NavigationContext = {
+      screen: currentScreen,
+      selectedProject,
+      selectedApplication,
+      selectedJob,
+      selectedAssignment,
+      selectedConversationId,
+      projectChallengeData,
+      assessmentBuilderData,
+    };
+    const hasContext = Object.entries(context).some(
+      ([key, value]) => key !== 'screen' && value != null,
+    );
+
+    try {
+      if (hasContext) {
+        window.sessionStorage.setItem(NAVIGATION_CONTEXT_STORAGE_KEY, JSON.stringify(context));
+      } else {
+        window.sessionStorage.removeItem(NAVIGATION_CONTEXT_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.warn('Failed to persist navigation context:', error);
+    }
+  }, [
+    navigationStateRestored,
+    currentScreen,
+    selectedProject,
+    selectedApplication,
+    selectedJob,
+    selectedAssignment,
+    selectedConversationId,
+    projectChallengeData,
+    assessmentBuilderData,
+  ]);
+
+  const clearNavigationContext = useCallback(() => {
+    setSelectedProject(null);
+    setSelectedApplication(null);
+    setSelectedJob(null);
+    setSelectedAssignment(null);
+    setSelectedCandidate(null);
+    setSelectedConversationId(null);
+    setProjectChallengeData(null);
+    setAssessmentBuilderData(null);
+    window.sessionStorage.removeItem(NAVIGATION_CONTEXT_STORAGE_KEY);
+    window.sessionStorage.removeItem('selectedCandidate');
+    window.sessionStorage.removeItem('hirevify_candidate_detail_back_screen');
+  }, []);
 
   // Save savedCandidates to localStorage
   useEffect(() => {
@@ -223,7 +318,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   // mismatch (server has no sessionStorage, so it would render `null` while
   // the client first render would have the real candidate Ã¢â‚¬â€ causing different
   // subtrees to be rendered and a hydration error).
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     if (typeof window === 'undefined') return;
     if (!initialCandidateId) {
       setSelectedCandidate(null);
@@ -279,7 +374,7 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
  navigateScreen('homepage');
  }, [navigateScreen]);
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -312,15 +407,6 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     hasSyncedUrlScreen.current = true;
     setCurrentScreenState(nextScreen);
     
-    // Ensure URL has correct screen parameter for dashboard screens
-    if (nextScreen === 'recruiter-dashboard' || nextScreen === 'candidate-dashboard') {
-      const params = new URLSearchParams(searchParams.toString());
-      if (params.get('screen') !== nextScreen) {
-        params.set('screen', nextScreen);
-        window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-      }
-    }
-    
     if (nextCandidateId) {
       const stored = sessionStorage.getItem('selectedCandidate');
       if (stored) {
@@ -342,38 +428,23 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   }
 
   if (user) {
-  hadAuthenticatedUser.current = true;
   const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
 
-  if (isScreenForOtherRole(currentScreen, user.userType)) {
-  setSelectedProject(null);
-  setSelectedApplication(null);
+  if (currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)) {
+  clearNavigationContext();
   navigateScreen(dashboardScreen, { replace: true });
-  }
-
-  // Ensure URL has correct screen parameter when user is authenticated
-  if (currentScreen === 'homepage') {
-    const params = new URLSearchParams(window.location.search);
-    const currentScreenParam = params.get('screen');
-    const expectedScreen = dashboardScreen;
-    
-    if (currentScreenParam !== expectedScreen) {
-      params.set('screen', expectedScreen);
-      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-    }
+  return;
   }
 
   return;
   }
 
+  clearNavigationContext();
+
   if (!PUBLIC_SCREENS.has(currentScreen)) {
   navigateScreen('homepage', { replace: true });
-  setSelectedProject(null);
-  setSelectedApplication(null);
-  setProjectChallengeData(null);
-  setAssessmentBuilderData(null);
   }
-  }, [user, currentScreen, authInitialized, navigateScreen]);
+  }, [user, currentScreen, authInitialized, navigateScreen, clearNavigationContext]);
 
   const navigation = useAppNavigation({
     user,
@@ -397,18 +468,18 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
   setSelectedApplication(null);
   const dashboardScreen = userType === 'recruiter' ? 'recruiter-dashboard' : 'candidate-dashboard';
   
-  // Update URL directly before navigation
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    params.set('screen', dashboardScreen);
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-  }
-  
   navigateScreen(dashboardScreen, { replace: true });
   };
   }, [navigateScreen]);
 
  const effectiveScreen = useMemo<Screen>(() => {
+   // Until Supabase has verified the session, keep the exact URL page. Role
+   // correction belongs to the verified-auth phase and must never cause a
+   // refresh-time dashboard swap.
+   if (!authInitialized) {
+   return currentScreen;
+   }
+
    if (user) {
    const dashboardScreen: Screen = user.userType === 'recruiter'? 'recruiter-dashboard': 'candidate-dashboard';
    return currentScreen === 'homepage' || isScreenForOtherRole(currentScreen, user.userType)
@@ -416,32 +487,8 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
    : currentScreen;
    }
 
-   // Keep rendering the exact URL-resolved screen while Supabase restores the
-   // session. This prevents hard refreshes from flashing the homepage or the
-   // default dashboard before returning to the requested workspace page.
-   if (!authInitialized) {
-   return currentScreen;
-   }
-
    return PUBLIC_SCREENS.has(currentScreen)? currentScreen: 'homepage';
    }, [currentScreen, user, authInitialized]);
-
-  // Direct URL sync for dashboard screens - ensures URL is always updated when dashboard is shown
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const dashboardScreens = ['recruiter-dashboard', 'candidate-dashboard'];
-    if (!dashboardScreens.includes(effectiveScreen)) return;
-    
-    const params = new URLSearchParams(window.location.search);
-    const currentScreenParam = params.get('screen');
-    
-    // Only update URL if it's different from effectiveScreen
-    if (currentScreenParam !== effectiveScreen) {
-      params.set('screen', effectiveScreen);
-      window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-    }
-  }, [effectiveScreen]);
 
   // Scroll to top on mount (browser refresh)
   useEffect(() => {
@@ -453,32 +500,44 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
     }
   }, []);
 
-   const useWorkspaceTheme = effectiveScreen !== 'homepage';
+   const useWorkspaceTheme =
+     effectiveScreen !== 'homepage' &&
+     effectiveScreen !== 'candidate-profile-editor' &&
+     effectiveScreen !== 'recruiter-candidate-detail';
 
-   const isRestoringProtectedScreen =
-     !authInitialized && !PUBLIC_SCREENS.has(currentScreen);
+   useEffect(() => {
+     if (!useWorkspaceTheme) {
+       delete document.body.dataset.hirevifyWorkspace;
+       delete document.body.dataset.hirevifyWorkspaceScreen;
+       return;
+     }
+
+     document.body.dataset.hirevifyWorkspace = 'true';
+     document.body.dataset.hirevifyWorkspaceScreen = effectiveScreen;
+
+     return () => {
+       delete document.body.dataset.hirevifyWorkspace;
+       delete document.body.dataset.hirevifyWorkspaceScreen;
+     };
+   }, [effectiveScreen, useWorkspaceTheme]);
+
    return (
    <div
     id="main-content"
     tabIndex={-1}
     data-workspace-screen={useWorkspaceTheme ? effectiveScreen : undefined}
+    data-workspace-production={useWorkspaceTheme ? 'true' : undefined}
     className={`min-h-screen ${useWorkspaceTheme ? 'hirevify-workspace-theme' : ''}`}
    >
-    {isRestoringProtectedScreen ? (
-      <div
-        className="min-h-screen"
-        aria-hidden="true"
-      />
-    ) : (
-      <>
-
-        <ProUpgradeCleanup />
+      <ProUpgradeCleanup />
 
         <AppRouter
 
              currentScreen={effectiveScreen}
 
              user={user}
+
+             navigationStateRestored={navigationStateRestored}
 
              selectedProject={selectedProject}
 
@@ -521,9 +580,6 @@ function HireVifyApp({ initialScreen, initialCandidateId }: { initialScreen: Scr
              setUnreadNotifications={setUnreadNotifications}
 
             />
-
-      </>
-    )}
    <Toaster />
    </div>
    );

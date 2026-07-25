@@ -18,7 +18,7 @@ import {
  Camera
 } from 'lucide-react';
 import { toast } from 'sonner';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 
 interface LiveInterviewScreenProps {
  onEndInterview: () => void;
@@ -126,20 +126,19 @@ export function LiveInterviewScreen({ onEndInterview }: LiveInterviewScreenProps
 
  return (
  <div className="premium-page flex flex-col">
- {/* Header with Recording Banner */}
- <header className="premium-header">
- <div className="premium-header-inner">
- <div className="flex items-center space-x-3">
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
- </div>
-
- {/* Recording Indicator */}
- <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
- <Circle className="w-2 h-2 mr-2 fill-current animate-pulse" />
- This session is being recorded
- </Badge>
- </div>
- </header>
+  {/* Header with Recording Banner */}
+  <header className="premium-header">
+  <div className="premium-header-inner">
+  <div className="flex flex-1 items-center justify-end gap-3">
+  {/* Recording Indicator */}
+  <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
+  <Circle className="w-2 h-2 mr-2 fill-current animate-pulse" />
+  This session is being recorded
+  </Badge>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
+  </div>
+  </header>
 
  {/* Main Interview Area */}
  <main className="flex-1 flex">

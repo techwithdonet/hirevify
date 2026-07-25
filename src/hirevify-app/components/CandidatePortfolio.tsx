@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Briefcase, Plus, Crown, Loader } from 'lucide-react';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 import { PortfolioItem, NewPortfolioItem } from './portfolio/types';
 import { PortfolioItemCard } from './portfolio/PortfolioItemCard';
 import { AddPortfolioForm } from './portfolio/AddPortfolioForm';
@@ -175,20 +175,13 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
  <ArrowLeft className="w-5 h-5" />
  </Button>
 
- <div className="flex items-center space-x-3">
- <img
- src={(hirevifyLogo as any).src?? hirevifyLogo}
- alt="HireVify"
- className="h-16"
- />
- <div>
- <h1 className="text-xl text-foreground">Portfolio Manager</h1>
- <p className="text-sm text-muted-foreground">
- Showcase your work and projects
- </p>
- </div>
- </div>
- </div>
+  <div>
+  <h1 className="text-xl text-foreground">Portfolio Manager</h1>
+  <p className="text-sm text-muted-foreground">
+  Showcase your work and projects
+  </p>
+  </div>
+  </div>
 
  <div className="flex items-center space-x-3">
  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
@@ -199,10 +192,15 @@ export function CandidatePortfolio({ onBack, onUpgrade }: CandidatePortfolioProp
  <Button
  onClick={onUpgrade}
  className="bg-primary hover:bg-primary/90 text-primary-foreground"
- >
- Upgrade to Unlock
- </Button>
- </div>
+  >
+  Upgrade to Unlock
+  </Button>
+  <img
+  src={(hirevifyLogo as any).src?? hirevifyLogo}
+  alt="HireVify"
+  className="workspace-header-logo"
+  />
+  </div>
  </div>
 </div>
  </header>

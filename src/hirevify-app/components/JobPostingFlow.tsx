@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ArrowLeft, CheckCircle2, Briefcase, Plus, MapPin, DollarSign, Clock, X, Paperclip, FileText, Trash2 } from 'lucide-react';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 import { createSupabaseBrowserClient } from '@/src/lib/supabase';
 import { toast } from 'sonner';
 import { SkillMultiSelect } from './common/SkillMultiSelect';
@@ -569,13 +569,11 @@ const hasProject = Boolean(
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between gap-4">
             <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center space-x-3">
-              <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="h-16" />
-            </div>
+            <img src={(hirevifyLogo as any).src ?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
           </div>
         </div>
       </header>

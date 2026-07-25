@@ -201,9 +201,10 @@ export function CandidateDashboard({
   }, [user?.id]);
 
   const candidateName = user?.name?.split(' ')[0] || 'Candidate';
-  const planName = subscription?.tier
+  const isSubscriptionResolved = subscription !== null;
+  const planName = isSubscriptionResolved && subscription?.tier
     ? subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)
-    : 'Free';
+    : '';
   const candidateProfileCompleteness = Number(candidateProfile?.profile_completeness || 0);
   const visibleProgress = Math.min(candidateProfileCompleteness, 100);
   const hasRequiredCandidateName = hasCompleteCandidateName(candidateProfile?.full_name);
@@ -216,7 +217,13 @@ export function CandidateDashboard({
     { label: 'Applied', value: applications.length, icon: FileText, action: onViewAppliedJobs, tone: 'tone-mint' },
     { label: 'Portfolio', value: portfolio.length, icon: Award, action: onViewPortfolio, tone: 'tone-blue' },
     { label: 'Saved', value: savedJobs.length, icon: Bookmark, action: onViewSavedJobs, tone: 'tone-violet' },
-    { label: 'Plan', value: planName, icon: Crown, action: subscription?.isActive ? undefined : onUpgrade, tone: 'tone-amber' },
+    {
+      label: 'Plan',
+      value: planName,
+      icon: Crown,
+      action: isSubscriptionResolved && !subscription?.isActive ? onUpgrade : undefined,
+      tone: 'tone-amber',
+    },
   ];
 
   const workbenchActions = [
@@ -256,17 +263,21 @@ export function CandidateDashboard({
           </div>
 
           <div className="candidate-header-actions">
-            {subscription?.isActive ? (
-              <span className="candidate-plan-pill">
-                <Crown className="h-4 w-4" />
-                {planName}
-              </span>
-            ) : (
-              <Button onClick={onUpgrade} className="candidate-upgrade-button">
-                <Crown className="h-4 w-4" />
-                Upgrade
-              </Button>
-            )}
+            <div className="candidate-plan-slot">
+              {isSubscriptionResolved && (
+                subscription?.isActive ? (
+                  <span className="candidate-plan-pill">
+                    <Crown className="h-4 w-4" />
+                    {planName}
+                  </span>
+                ) : (
+                  <Button onClick={onUpgrade} className="candidate-upgrade-button">
+                    <Crown className="h-4 w-4" />
+                    Upgrade
+                  </Button>
+                )
+              )}
+            </div>
 
             <div className="candidate-icon-cluster" aria-label="Workspace actions">
               <button type="button" onClick={onViewMessages} className="candidate-icon-button" aria-label="Messages">
@@ -421,20 +432,27 @@ export function CandidateDashboard({
           </div>
 
           <aside className="candidate-workbench-rail">
-            <section className="candidate-rail-panel candidate-plan-panel">
-              <div className="candidate-plan-symbol">
-                {subscription?.isActive ? <Crown className="h-5 w-5" /> : <Rocket className="h-5 w-5" />}
-              </div>
-              <div>
-                <span className="candidate-small-label">{subscription?.isActive ? 'Current plan' : 'Upgrade path'}</span>
-                <h3>{subscription?.isActive ? `${planName} is active` : 'Make the workspace sharper'}</h3>
-                <p>{subscription?.isActive ? 'Premium tools are enabled.' : 'Unlock advanced preparation and matching tools.'}</p>
-              </div>
-              {!subscription?.isActive && (
-                <button type="button" onClick={onUpgrade} className="candidate-rail-button">
-                  Upgrade now
-                  <Zap className="h-4 w-4" />
-                </button>
+            <section
+              className="candidate-rail-panel candidate-plan-panel"
+              aria-busy={!isSubscriptionResolved}
+            >
+              {isSubscriptionResolved && (
+                <>
+                  <div className="candidate-plan-symbol">
+                    {subscription?.isActive ? <Crown className="h-5 w-5" /> : <Rocket className="h-5 w-5" />}
+                  </div>
+                  <div>
+                    <span className="candidate-small-label">{subscription?.isActive ? 'Current plan' : 'Upgrade path'}</span>
+                    <h3>{subscription?.isActive ? `${planName} is active` : 'Make the workspace sharper'}</h3>
+                    <p>{subscription?.isActive ? 'Premium tools are enabled.' : 'Unlock advanced preparation and matching tools.'}</p>
+                  </div>
+                  {!subscription?.isActive && (
+                    <button type="button" onClick={onUpgrade} className="candidate-rail-button">
+                      Upgrade now
+                      <Zap className="h-4 w-4" />
+                    </button>
+                  )}
+                </>
               )}
             </section>
 

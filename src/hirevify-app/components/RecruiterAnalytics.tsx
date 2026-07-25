@@ -2,7 +2,7 @@ import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Crown } from 'lucide-react';
-import hirevifyLogo from '../../assets/fcf1f3e4c46a5e1365f68b3abceb946b2f0a4c3c.png';
+import hirevifyLogo from '../../assets/hirevify-logo-transparent.png';
 import { MetricsCards } from './analytics/MetricsCards';
 import { HiringFunnel } from './analytics/HiringFunnel';
 import { SourceEffectiveness } from './analytics/SourceEffectiveness';
@@ -18,30 +18,34 @@ export function RecruiterAnalytics({ onBack, onUpgrade }: RecruiterAnalyticsProp
  return (
 <div className="premium-page">
  {/* Header */}
- <header className="premium-header">
+ <header className="premium-header workspace-page-header recruiter-analytics-header">
  <div className="premium-header-inner">
- <div className="flex items-center justify-between">
- <div className="flex items-center space-x-4">
- <Button variant="ghost" onClick={onBack} className="text-muted-foreground hover:text-foreground">
- <ArrowLeft className="w-5 h-5" />
- </Button>
- <div className="flex items-center space-x-3">
- <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="h-16" />
- <div>
- <h1 className="text-xl text-foreground">Advanced Analytics</h1>
- <p className="text-sm text-muted-foreground">Data-driven insights into your hiring performance</p>
- </div>
- </div>
- </div>
- <div className="flex items-center space-x-3">
- <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+ <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+ <div className="flex min-w-0 items-center gap-4">
+  <Button
+   variant="ghost"
+   onClick={onBack}
+   aria-label="Back to Dashboard"
+   className="workspace-header-back inline-flex shrink-0 items-center gap-2 whitespace-nowrap"
+  >
+  <ArrowLeft className="w-5 h-5" />
+  <span>Back to Dashboard</span>
+  </Button>
+  <div className="min-w-0">
+  <h1 className="text-xl font-bold text-foreground">Advanced Analytics</h1>
+  <p className="text-sm text-muted-foreground">Data-driven insights into your hiring performance</p>
+  </div>
+  </div>
+ <div className="recruiter-analytics-actions flex flex-wrap items-center justify-end gap-3">
+ <Badge variant="secondary" className="workspace-premium-badge bg-yellow-100 text-yellow-800">
  <Crown className="w-3 h-3 mr-1" />
  Premium Feature
  </Badge>
- <Button onClick={onUpgrade} className="bg-primary hover:bg-primary/90 text-primary-foreground">
- Upgrade to Unlock
- </Button>
- </div>
+  <Button onClick={onUpgrade} className="workspace-premium-action bg-primary text-primary-foreground hover:bg-primary/90">
+  Upgrade to Unlock
+  </Button>
+  <img src={(hirevifyLogo as any).src?? hirevifyLogo} alt="HireVify" className="workspace-header-logo" />
+  </div>
 </div>
  </div>
  </header>

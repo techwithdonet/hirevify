@@ -9,11 +9,31 @@ import { Homepage } from './Homepage'; // Homepage component
 import { RecruiterDashboard } from './RecruiterDashboard';
 import { CandidateDashboard } from './CandidateDashboard';
 import { DashboardPageLayout } from './shared/DashboardPageLayout';
+import { WorkspaceNoticeState } from './shared/WorkspaceNoticeState';
 import { PremiumGate } from './PremiumGate';
 import { toast } from 'sonner';
-import { VideoSubmissionData, UserType, Project, Application, Screen, Job, JobProjectAssignment, Candidate } from '../types/app';
+import { UserType, Project, Application, Screen, Job, JobProjectAssignment, Candidate } from '../types/app';
 
-const ScreenLoading = () => <div className="premium-loading" role="status"><div className="premium-spinner" /><span className="sr-only">Loading screen</span></div>;
+// Dynamic chunks must not replace the requested route with a generic page.
+// The server still renders the requested route on refresh; this fallback adds
+// no unrelated full-page surface while a client chunk is resolving.
+const ScreenLoading = () => null;
+
+const SESSION_CONTEXT_SCREENS = new Set<Screen>([
+  'recruiter-post-project',
+  'recruiter-post-job',
+  'recruiter-job-applicants',
+  'recruiter-application-detail',
+  'recruiter-ats',
+  'recruiter-custom-assessment-builder',
+  'recruiter-candidate-detail',
+  'candidate-job-detail',
+  'candidate-job-apply',
+  'candidate-project-assignment',
+  'candidate-project-submission',
+  'candidate-project-challenge-video',
+  'messages',
+]);
 
 const FunctionalATSScanner = dynamic(() => import('./FunctionalATSScanner').then((mod) => mod.FunctionalATSScanner), { loading: ScreenLoading });
 const AccuracyFirstATSScanner = dynamic(() => import('./AccuracyFirstATSScanner').then((mod) => mod.AccuracyFirstATSScanner), { loading: ScreenLoading });
@@ -31,6 +51,7 @@ const SkillsAssessment = dynamic(() => import('./SkillsAssessment').then((mod) =
 const OneWayVideoInterview = dynamic(() => import('./OneWayVideoInterview').then((mod) => mod.OneWayVideoInterview), { loading: ScreenLoading });
 const IntegrationHub = dynamic(() => import('./IntegrationHub').then((mod) => mod.IntegrationHub), { loading: ScreenLoading });
 const NotificationCenter = dynamic(() => import('./NotificationCenter').then((mod) => mod.NotificationCenter), { loading: ScreenLoading });
+const AISmartNotifications = dynamic(() => import('./AISmartNotifications').then((mod) => mod.AISmartNotifications), { loading: ScreenLoading });
 const MessagingCenter = dynamic(() => import('./MessagingCenter').then((mod) => mod.MessagingCenter), { loading: ScreenLoading });
 const ProjectSearch = dynamic(() => import('./ProjectSearch').then((mod) => mod.ProjectSearch), { loading: ScreenLoading });
 const CandidateSearch = dynamic(() => import('./CandidateSearch').then((mod) => mod.CandidateSearch), { loading: ScreenLoading });
@@ -174,6 +195,7 @@ const projectToJob = (p: any): Job => ({
 interface AppRouterProps {
   currentScreen: Screen;
   user: User | null;
+  navigationStateRestored: boolean;
   selectedProject: Project | null;
   selectedApplication: Application | null;
   selectedJob: Job | null;
@@ -203,6 +225,7 @@ interface AppRouterProps {
 export function AppRouter({
   currentScreen,
   user,
+  navigationStateRestored,
   selectedProject,
   selectedApplication,
   selectedJob,
@@ -224,6 +247,10 @@ export function AppRouter({
   setUnreadMessages,
   setUnreadNotifications,
 }: AppRouterProps) {
+ if (!navigationStateRestored && SESSION_CONTEXT_SCREENS.has(currentScreen)) {
+  return null;
+ }
+
  const handleCandidateDetailBack = () => {
   const backScreen = typeof window !== 'undefined'
    ? window.sessionStorage.getItem('hirevify_candidate_detail_back_screen')
@@ -359,6 +386,7 @@ case 'recruiter-projects':
   />
   );
  
+case 'recruiter-application-detail':
 case 'recruiter-ats':
   return (
   <ATSView 
@@ -707,11 +735,11 @@ case 'candidate-dashboard':
   onEditProfile={() => navigation.navigateToCandidateProfileEditor()}
   />
   ) : (
-  <ProjectSearch
-  onBack={navigation.navigateToCandidateDashboard}
-  onUpgrade={navigation.navigateToPricing}
-  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
-  onViewJob={(p) => navigation.navigateToJobDetail(projectToJob(p))}
+  <WorkspaceNoticeState
+  title="Job details are unavailable"
+  description="This page needs the job selected in your current session. Return to jobs and open it again."
+  actionLabel="Return to jobs"
+  onAction={navigation.navigateToProjectSearch}
   />
   )
   );
@@ -725,10 +753,11 @@ case 'candidate-dashboard':
   onBack={navigation.navigateToCandidateDashboard}
   />
   ) : (
-  <ProjectSearch
-  onBack={navigation.navigateToCandidateDashboard}
-  onUpgrade={navigation.navigateToPricing}
-  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
+  <WorkspaceNoticeState
+  title="Assignment details are unavailable"
+  description="This assignment could not be restored from the current session. Return to your dashboard and reopen it."
+  actionLabel="Return to dashboard"
+  onAction={navigation.navigateToCandidateDashboard}
   />
   )
   );
@@ -742,15 +771,16 @@ case 'candidate-dashboard':
   onApplied={navigation.navigateToCandidateDashboard}
   />
   ) : (
-  <ProjectSearch
-  onBack={navigation.navigateToCandidateDashboard}
-  onUpgrade={navigation.navigateToPricing}
-  onProjectChallengeVideo={navigation.navigateToProjectChallengeVideo}
-  onViewJob={(p) => navigation.navigateToJobDetail(projectToJob(p))}
+  <WorkspaceNoticeState
+  title="Application details are unavailable"
+  description="This page needs the job selected in your current session. Return to jobs and start the application again."
+  actionLabel="Return to jobs"
+  onAction={navigation.navigateToProjectSearch}
   />
   )
   );
 
+  case 'candidate-my-jobs':
   case 'candidate-applied-jobs':
   return (
   <CandidateAppliedJobs
@@ -935,6 +965,15 @@ case 'candidate-dashboard':
  />
  );
 
+ case 'ai-smart-notifications':
+ return (
+ <AISmartNotifications
+ onBack={user?.userType === 'recruiter' ? navigation.navigateToRecruiterDashboard : navigation.navigateToCandidateDashboard}
+ onUpgrade={navigation.navigateToPricing}
+ onUpdateUnreadCount={setUnreadNotifications}
+ />
+ );
+
  case 'product-features':
  case 'product-api':
  case 'product-integrations':
@@ -957,12 +996,15 @@ case 'candidate-dashboard':
  
  default:
  return (
- <Homepage 
- onSelectUserType={handleUserTypeSelection}
- onPostProject={navigation.navigateToPostProject}
- onFindProject={navigation.navigateToProjectSearch}
- onNavigateScreen={setCurrentScreen}
- loginPromptSignal={loginPromptSignal}
+ <WorkspaceNoticeState
+ title="Page unavailable"
+ description="This workspace page could not be opened. Return to your dashboard and choose where you want to go next."
+ actionLabel={user ? "Return to dashboard" : "Return home"}
+ onAction={user?.userType === 'recruiter'
+   ? navigation.navigateToRecruiterDashboard
+   : user?.userType === 'candidate'
+     ? navigation.navigateToCandidateDashboard
+     : navigation.navigateHome}
  />
  );
  }
